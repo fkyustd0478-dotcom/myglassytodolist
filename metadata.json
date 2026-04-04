@@ -1,0 +1,5 @@
+{
+  "name": "Glassy Todo",
+  "description": "High-end mobile-first To-Do PWA with glassmorphism, animated themes, and advanced task management.",
+  "requestFramePermissions": ["notifications"]
+}

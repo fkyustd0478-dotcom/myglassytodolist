@@ -1,0 +1,25 @@
+{
+  "name": "glassy-todo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "echo 'No linting needed for single HTML file'"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "lucide-vue-next": "^0.460.0",
+    "motion": "^12.23.24",
+    "tailwindcss": "^4.2.2",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "vue-tsc": "^2.1.10"
+  }
+}
