@@ -426,7 +426,7 @@ try {
                 const asset = reactive({
                     id,
                     type,
-                    file: `/pic/${file}`,
+                    file: `./pic/${file}`,
                     flip,
                     scale: 0.8 + Math.random() * 0.4,
                     x: startX,
