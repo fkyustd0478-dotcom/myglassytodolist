@@ -120,7 +120,7 @@
                             </div>
 
                             <div class="space-y-4">
-                                <div v-for="todo in group.items" :key="todo.id + '-' + (todo.completed ? 'completed' : 'active') + '-' + currentListId" class="glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
+                                <div v-for="todo in group.items" :key="todo.id + '-' + (todo.completed ? 'completed' : 'active') + '-' + Date.now()" class="glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
                                     <button @click="toggleTodo(todo.id)" class="text-blue-500">
                                         <i data-lucide="circle" class="w-6 h-6"></i>
                                     </button>
@@ -156,7 +156,7 @@
                             </div>
                         </div>
                         <div v-if="completedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noCompleted }}</div>
-                        <div v-for="todo in completedTodos" :key="todo.id + '-completed-' + currentListId" class="glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
+                        <div v-for="todo in completedTodos" :key="todo.id + '-completed-' + Date.now()" class="glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
                             <div class="flex-1 min-w-0">
                                 <p class="font-bold truncate line-through opacity-50">{{ todo.text }}</p>
                                 <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
@@ -182,7 +182,7 @@
                             </div>
                         </div>
                         <div v-if="deletedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noBin }}</div>
-                        <div v-for="todo in deletedTodos" :key="todo.id + '-deleted-' + currentListId" class="glass rounded-2xl p-4 flex items-center justify-between" :style="glassStyle">
+                        <div v-for="todo in deletedTodos" :key="todo.id + '-deleted-' + Date.now()" class="glass rounded-2xl p-4 flex items-center justify-between" :style="glassStyle">
                             <div class="flex-1 min-w-0 mr-4">
                                 <p class="opacity-50 line-through truncate">{{ todo.text }}</p>
                                 <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>

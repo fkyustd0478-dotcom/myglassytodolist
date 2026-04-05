@@ -1,6 +1,24 @@
 try {
     const { createApp, ref, reactive, onMounted, computed, watch, nextTick } = Vue;
 
+    // --- Modular Storage Provider (Firebase-Ready) ---
+    const StorageProvider = {
+        saveSettings(settings) {
+            localStorage.setItem('todo_settings', JSON.stringify(settings));
+        },
+        loadSettings() {
+            const saved = localStorage.getItem('todo_settings');
+            return saved ? JSON.parse(saved) : null;
+        },
+        saveData(data) {
+            localStorage.setItem('todo_data', JSON.stringify(data));
+        },
+        loadData() {
+            const saved = localStorage.getItem('todo_data');
+            return saved ? JSON.parse(saved) : null;
+        }
+    };
+
     createApp({
         setup() {
             // --- State ---
@@ -339,24 +357,23 @@ try {
             const restoreTodo = (id) => {
                 const index = todos.value.findIndex(x => x.id === id);
                 if (index !== -1) {
-                    // 1. Create a deep copy of the task
-                    const oldTodo = JSON.parse(JSON.stringify(todos.value[index]));
+                    // 1. Deep Copy & Re-create (Zero-Latency Rendering)
+                    const taskToRestore = JSON.parse(JSON.stringify(todos.value[index]));
                     
-                    // 2. Push to the Active List (re-create with new ID)
-                    const newTodo = {
-                        ...oldTodo,
-                        id: 'restored-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                    const restoredTask = {
+                        ...taskToRestore,
+                        id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
                         completed: false,
                         isDeleted: false,
                         notified: false,
                         createdAt: new Date().toISOString()
                     };
                     
-                    // 3. Splice from the current list
+                    // 2. Remove from current state
                     todos.value.splice(index, 1);
                     
-                    // 4. Trigger immediate UI update
-                    todos.value.unshift(newTodo);
+                    // 3. Push to Active
+                    todos.value.unshift(restoredTask);
                     
                     nextTick(() => {
                         lucide.createIcons();
@@ -669,28 +686,42 @@ try {
 
             // --- Lifecycle ---
             onMounted(() => {
-                const saved = localStorage.getItem('glassy_todo_v12');
-                if (saved) { 
-                    const d = JSON.parse(saved); 
-                    todos.value = d.todos || []; 
+                const savedSettings = StorageProvider.loadSettings();
+                const savedData = StorageProvider.loadData();
+
+                if (savedSettings) {
+                    settings.value = { ...settings.value, ...savedSettings };
+                }
+
+                if (savedData) {
+                    todos.value = savedData.todos || [];
                     
                     // Merge lists to ensure defaults exist
-                    const savedLists = d.lists || [];
+                    const savedLists = savedData.lists || [];
                     const defaults = [
                         { id: 'default', name: 'Default' },
                         { id: 'personal', name: 'Personal' },
                         { id: 'work', name: 'Work' }
                     ];
                     
-                    // Filter out any saved lists that are actually defaults but might have old names/ids
                     const customLists = savedLists.filter(l => !['default', 'personal', 'work', '1', '2'].includes(l.id));
                     lists.value = [...defaults, ...customLists];
-                    
-                    settings.value = { ...settings.value, ...d.settings }; 
                 }
                 
                 if (window.lucide) lucide.createIcons();
                 setupEffects();
+
+                // Multi-Tab Sync
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'todo_settings' && e.newValue) {
+                        settings.value = { ...settings.value, ...JSON.parse(e.newValue) };
+                    }
+                    if (e.key === 'todo_data' && e.newValue) {
+                        const data = JSON.parse(e.newValue);
+                        todos.value = data.todos || [];
+                        lists.value = data.lists || [];
+                    }
+                });
 
                 // Sortable.js Initialization
                 const el = document.getElementById('list-tabs');
@@ -728,22 +759,35 @@ try {
             });
 
             // --- Watchers ---
-            watch([todos, settings, lists], () => { 
-                localStorage.setItem('glassy_todo_v12', JSON.stringify({ todos: todos.value, settings: settings.value, lists: lists.value })); 
-                nextTick(() => lucide.createIcons()); 
+            watch(settings, (newVal) => {
+                StorageProvider.saveSettings(newVal);
             }, { deep: true });
 
+            watch([todos, lists], () => {
+                StorageProvider.saveData({ todos: todos.value, lists: lists.value });
+                nextTick(() => lucide.createIcons());
+            }, { deep: true });
+
+            // Image Sync with Timestamp Cache-Buster
             watch(() => settings.value.customBg, (newImg) => {
                 if (settings.value.useCustomBg && newImg) {
-                    themeStyle.backgroundImage = `url(${newImg}?t=${Date.now()})`;
+                    const url = `url(${newImg}?t=${Date.now()})`;
+                    document.body.style.backgroundImage = url;
+                    themeStyle.backgroundImage = url;
+                    document.body.classList.add('custom-theme');
                 }
             }, { immediate: true });
 
             watch(() => settings.value.useCustomBg, (val) => {
                 if (!val) {
+                    document.body.style.backgroundImage = '';
                     themeStyle.backgroundImage = '';
+                    document.body.classList.remove('custom-theme');
                 } else if (settings.value.customBg) {
-                    themeStyle.backgroundImage = `url(${settings.value.customBg}?t=${Date.now()})`;
+                    const url = `url(${settings.value.customBg}?t=${Date.now()})`;
+                    document.body.style.backgroundImage = url;
+                    themeStyle.backgroundImage = url;
+                    document.body.classList.add('custom-theme');
                 }
             });
 
