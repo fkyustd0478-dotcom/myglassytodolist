@@ -91,11 +91,17 @@
 
             <!-- List Tabs -->
             <div class="flex gap-2 mb-6 overflow-x-auto no-scrollbar shrink-0 bg-transparent">
-                <button v-for="list in lists" :key="list.id" @click="currentListId = list.id" 
-                    class="px-5 py-2 rounded-full glass text-sm font-bold whitespace-nowrap transition-all" 
-                    :class="currentListId === list.id ? 'bg-blue-600 text-white border-blue-600' : 'opacity-60'" :style="glassStyle">
-                    {{ list.name }}
-                </button>
+                <div v-for="list in lists" :key="list.id" class="relative group">
+                    <button @click="currentListId = list.id" 
+                        class="px-5 py-2 rounded-full glass text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2" 
+                        :class="currentListId === list.id ? 'bg-blue-600 text-white border-blue-600' : 'opacity-60'" :style="glassStyle">
+                        {{ list.name }}
+                        <div v-if="currentListId === list.id" class="flex gap-1 ml-1">
+                            <i data-lucide="edit-3" class="w-3 h-3 hover:text-white/80" @click.stop="editList(list)"></i>
+                            <i data-lucide="trash-2" class="w-3 h-3 hover:text-red-400" @click.stop="deleteListPrompt(list)"></i>
+                        </div>
+                    </button>
+                </div>
                 <button @click="addNewList" class="p-2 rounded-full glass opacity-60"><i data-lucide="plus" class="w-4 h-4"></i></button>
             </div>
 
@@ -227,10 +233,10 @@
                                         <label class="text-[10px] font-bold opacity-40 uppercase tracking-widest">{{ t.custom }}</label>
                                         <div class="flex gap-3">
                                             <button v-if="settings.customBg" @click="clearCustomBg" class="text-[10px] font-black text-red-500 uppercase tracking-widest">
-                                                {{ t.delete }}
+                                                {{ t.removeImg }}
                                             </button>
                                             <button v-if="settings.customBg" @click="toggleCustomBg" class="text-[10px] font-black text-blue-500 uppercase tracking-widest">
-                                                {{ settings.useCustomBg ? 'Disable' : 'Enable' }}
+                                                {{ settings.useCustomBg ? t.disable : t.enable }}
                                             </button>
                                         </div>
                                     </div>
@@ -447,6 +453,31 @@
                     <span class="text-[10px] font-bold uppercase">{{ t.settings }}</span>
                 </button>
             </nav>
+            <!-- List Management Modal -->
+            <transition name="fade">
+                <div v-if="listModal.show" class="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md" @click.self="closeListModal">
+                    <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center" :style="glassStyle">
+                        <h3 class="text-xl font-black tracking-tight">
+                            {{ listModal.mode === 'add' ? t.newList : (listModal.mode === 'edit' ? t.editList : t.deleteList) }}
+                        </h3>
+                        
+                        <div v-if="listModal.mode !== 'delete'" class="space-y-2 text-left">
+                            <label class="text-[10px] font-bold opacity-40 uppercase tracking-widest ml-1">{{ t.listName }}</label>
+                            <input v-model="listModal.name" type="text" class="w-full glass rounded-2xl p-4 text-sm font-bold outline-none" :style="glassStyle" :placeholder="t.placeholder">
+                        </div>
+                        <p v-else class="text-sm opacity-60 leading-relaxed">
+                            {{ t.confirmDeleteList }}
+                        </p>
+
+                        <div class="flex gap-3">
+                            <button @click="closeListModal" class="flex-1 py-3 rounded-xl glass text-xs font-bold">{{ t.cancel }}</button>
+                            <button @click="confirmListModal" class="flex-1 py-3 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest">
+                                {{ listModal.mode === 'delete' ? t.confirm : t.save }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
         </div>
     </div>
 </body>

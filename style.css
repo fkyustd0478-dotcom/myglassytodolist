@@ -286,7 +286,27 @@ body {
     50% { transform: translateX(-50%) scale(1.05); opacity: 1; }
 }
 
-/* UI Components */
+/* List Tabs */
+.group:hover .group-hover\:opacity-100 {
+    opacity: 1;
+}
+
+.group i {
+    transition: all 0.2s ease;
+    opacity: 0.4;
+}
+
+.group i:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.glass-modal {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
 
 /* Clock Picker */
 .clock-dial {

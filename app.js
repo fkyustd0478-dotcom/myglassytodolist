@@ -7,11 +7,20 @@ try {
             const todos = ref([]);
             const lists = ref([{ id: '1', name: 'Personal' }, { id: '2', name: 'Work' }]);
             const currentListId = ref('1');
+            
+            // Custom Modal State
+            const listModal = ref({
+                show: false,
+                mode: 'add', // 'add', 'edit', 'delete'
+                id: null,
+                name: ''
+            });
+
             const settings = ref({ 
                 theme: 'sky', 
                 customBgOpacity: 0.5, 
                 notificationsEnabled: false, 
-                lang: 'zh', // Default to Chinese as per request
+                lang: 'zh',
                 customBg: '', 
                 useCustomBg: false 
             });
@@ -46,13 +55,17 @@ try {
                     noTasks: 'No active tasks', completed: 'Completed Records', settings: 'Settings', theme: 'Theme', uiOpacity: 'Custom Image Opacity', lang: 'Language', notifications: 'Notifications', back: 'Back', emptyBin: 'Empty Bin', newTask: 'New Task', editTask: 'Edit Task', placeholder: 'Task title...', category: 'Category', recurring: 'Recurring', date: 'Date', time: 'Time', add: 'Add', save: 'Save', nextGen: 'Next generation', custom: 'Custom (Upload)', upload: 'Upload Photo', light: 'Light', dark: 'Dark', otherThemes: 'Other Themes',
                     daily: 'Daily', normal: 'Normal', important: 'Important', urgent: 'Urgent', memo: 'Memo', none: 'None', weekly: 'Weekly', monthly: 'Monthly', cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset', forest: 'Forest', sea: 'Sea',
                     active: 'Active', bin: 'Recycle Bin', noCompleted: 'No completed records', tasks: 'Tasks', day: 'Day', month: 'Month',
-                    alertBefore: 'Alert before (mins)', edit: 'Edit'
+                    alertBefore: 'Alert before (mins)', edit: 'Edit', enable: 'Enable', disable: 'Disable', removeImg: 'Remove Image',
+                    editList: 'Edit List', deleteList: 'Delete List', newList: 'New List', confirmDeleteList: 'Are you sure you want to delete this list and all its tasks?',
+                    cancel: 'Cancel', confirm: 'Confirm', listName: 'List Name'
                 },
                 zh: {
                     noTasks: '暫無任務', completed: '已完成紀錄', settings: '設置', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知', back: '返回', emptyBin: '清空回收站', newTask: '新任務', editTask: '編輯任務', placeholder: '任務內容...', category: '分類', recurring: '重複', date: '日期', time: '時間', add: '添加', save: '保存', nextGen: '下次生成', custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
                     daily: '日常', normal: '一般', important: '重要', urgent: '緊急', memo: '備忘錄', none: '無', weekly: '每週', monthly: '每月', cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落', forest: '森林', sea: '大海',
                     active: '進行中', bin: '回收站', noCompleted: '暫無完成紀錄', tasks: '項任務', day: '日', month: '月',
-                    alertBefore: '提醒時間 (分鐘前)', edit: '編輯'
+                    alertBefore: '提醒時間 (分鐘前)', edit: '編輯', enable: '啟用', disable: '停用', removeImg: '移除圖片',
+                    editList: '編輯名稱', deleteList: '刪除清單', newList: '新增清單', confirmDeleteList: '確定要刪除此清單及其所有任務嗎？',
+                    cancel: '取消', confirm: '確認', listName: '清單名稱'
                 }
             };
 
@@ -278,8 +291,38 @@ try {
             const emptyBin = () => todos.value = todos.value.filter(x => !x.isDeleted);
             
             const addNewList = () => { 
-                const name = prompt('List Name:'); 
-                if (name) lists.value.push({ id: Date.now().toString(36), name }); 
+                listModal.value = { show: true, mode: 'add', id: null, name: '' };
+            };
+
+            const editList = (list) => {
+                listModal.value = { show: true, mode: 'edit', id: list.id, name: list.name };
+            };
+
+            const deleteListPrompt = (list) => {
+                listModal.value = { show: true, mode: 'delete', id: list.id, name: list.name };
+            };
+
+            const confirmListModal = () => {
+                const { mode, id, name } = listModal.value;
+                if (mode === 'add' && name.trim()) {
+                    const newId = Date.now().toString(36);
+                    lists.value.push({ id: newId, name });
+                    currentListId.value = newId;
+                } else if (mode === 'edit' && name.trim()) {
+                    const list = lists.value.find(l => l.id === id);
+                    if (list) list.name = name;
+                } else if (mode === 'delete') {
+                    lists.value = lists.value.filter(l => l.id !== id);
+                    todos.value = todos.value.filter(t => t.listId !== id);
+                    if (currentListId.value === id) {
+                        currentListId.value = lists.value[0]?.id || '';
+                    }
+                }
+                closeListModal();
+            };
+
+            const closeListModal = () => {
+                listModal.value.show = false;
             };
 
             const openDatePicker = () => showDatePicker.value = true;
@@ -561,7 +604,8 @@ try {
                 isClockNumberActive, handleDateInteraction, handleDateMove, 
                 getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
-                activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, clearCustomBg
+                activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, clearCustomBg,
+                listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal
             };
         }
     }).mount('#app');
