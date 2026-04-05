@@ -20,6 +20,13 @@ try {
                 name: ''
             });
 
+            const confirmModal = ref({
+                show: false,
+                title: '',
+                message: '',
+                onConfirm: null
+            });
+
             const settings = ref({ 
                 theme: 'sky', 
                 customBgOpacity: 0.5, 
@@ -63,7 +70,10 @@ try {
                     alertBefore: 'Alert before (mins)', edit: 'Edit', enable: 'Enable', disable: 'Disable', removeImg: 'Remove Image',
                     editList: 'Edit List', deleteList: 'Delete List', newList: 'New List', confirmDeleteList: 'Are you sure you want to delete this list and all its tasks?',
                     cancel: 'Cancel', confirm: 'Confirm', listName: 'List Name',
-                    default: 'Default', personal: 'Personal', work: 'Work'
+                    default: 'Default', personal: 'Personal', work: 'Work',
+                    clearAll: 'Clear All', restore: 'Restore', permDelete: 'Permanent Delete', noBin: 'Recycle Bin is empty',
+                    confirmClearCompleted: 'Are you sure you want to permanently delete all completed tasks?',
+                    confirmClearBin: 'Are you sure you want to permanently delete all items in the recycle bin?'
                 },
                 zh: {
                     noTasks: '暫無任務', completed: '已完成紀錄', settings: '設置', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知', back: '返回', emptyBin: '清空回收站', newTask: '新任務', editTask: '編輯任務', placeholder: '任務內容...', category: '分類', recurring: '重複', date: '日期', time: '時間', add: '添加', save: '保存', nextGen: '下次生成', custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
@@ -72,7 +82,10 @@ try {
                     alertBefore: '提醒時間 (分鐘前)', edit: '編輯', enable: '啟用', disable: '停用', removeImg: '移除圖片',
                     editList: '編輯名稱', deleteList: '刪除清單', newList: '新增清單', confirmDeleteList: '確定要刪除此清單及其所有任務嗎？',
                     cancel: '取消', confirm: '確認', listName: '清單名稱',
-                    default: '預設', personal: '個人', work: '工作'
+                    default: '預設', personal: '個人', work: '工作',
+                    clearAll: '全部清空', restore: '還原', permDelete: '永久刪除', noBin: '回收站是空的',
+                    confirmClearCompleted: '確定要永久刪除所有已完成的任務嗎？',
+                    confirmClearBin: '確定要永久刪除回收站中的所有項目嗎？'
                 }
             };
 
@@ -309,8 +322,34 @@ try {
             const deleteTodo = (id) => { const t = todos.value.find(x => x.id === id); if (t) t.isDeleted = true; };
             const restoreTodo = (id) => { const t = todos.value.find(x => x.id === id); if (t) t.isDeleted = false; };
             const permanentDelete = (id) => todos.value = todos.value.filter(x => x.id !== id);
-            const emptyBin = () => todos.value = todos.value.filter(x => !x.isDeleted);
             
+            const promptClearCompleted = () => {
+                confirmModal.value = {
+                    show: true,
+                    title: t.value.clearAll,
+                    message: t.value.confirmClearCompleted,
+                    onConfirm: () => {
+                        todos.value = todos.value.filter(x => !x.completed || x.isDeleted);
+                    }
+                };
+            };
+
+            const promptClearBin = () => {
+                confirmModal.value = {
+                    show: true,
+                    title: t.value.clearAll,
+                    message: t.value.confirmClearBin,
+                    onConfirm: () => {
+                        todos.value = todos.value.filter(x => !x.isDeleted);
+                    }
+                };
+            };
+
+            const executeConfirm = () => {
+                if (confirmModal.value.onConfirm) confirmModal.value.onConfirm();
+                confirmModal.value.show = false;
+            };
+
             const addNewList = () => { 
                 listModal.value = { show: true, mode: 'add', id: null, name: '' };
             };
@@ -347,6 +386,15 @@ try {
             };
 
             const openDatePicker = () => showDatePicker.value = true;
+
+            const scrollActiveTabIntoView = () => {
+                nextTick(() => {
+                    const activeTab = document.querySelector('.list-tab-item.active-tab');
+                    if (activeTab) {
+                        activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                });
+            };
 
             // --- Clock & Date Interaction ---
             const handleClockInteraction = (e) => {
@@ -642,7 +690,10 @@ try {
                 nextTick(() => lucide.createIcons()); 
             }, { deep: true });
 
-            watch([view, isAdding, isEditing, showTimePicker, showDatePicker, currentListId], () => nextTick(() => lucide.createIcons()));
+            watch([view, isAdding, isEditing, showTimePicker, showDatePicker, currentListId], () => {
+                nextTick(() => lucide.createIcons());
+                if (currentListId) scrollActiveTabIntoView();
+            });
 
             return { 
                 todos, lists, currentListId, settings, view, isAdding, isEditing, form, 
@@ -653,14 +704,14 @@ try {
                 deletedTodos, toggleLang, toggleNotifications, selectTheme, 
                 toggleCustomBg, triggerUpload, handleUpload, startAdding, editTodo, 
                 saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, 
-                permanentDelete, emptyBin, addNewList, openDatePicker, 
+                permanentDelete, addNewList, openDatePicker, 
                 handleClockInteraction, handleClockMove, getClockPos, 
                 isClockNumberActive, handleDateInteraction, handleDateMove, 
                 getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
                 activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, clearCustomBg,
                 listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal,
-                isDefaultList, uploadProgress
+                isDefaultList, uploadProgress, confirmModal, promptClearCompleted, promptClearBin, executeConfirm
             };
         }
     }).mount('#app');
