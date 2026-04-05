@@ -696,11 +696,13 @@ try {
                     activeAssets.value = []; // Clear current objects
                     
                     // 15s Delay for Background Animations
-                    effectTimeout = setTimeout(() => {
-                        if (theme === 'sky') spawnBatch('airplane');
-                        if (theme === 'seaside') spawnBatch('crab');
-                        if (theme === 'sea') spawnBatch('ship');
-                    }, 15000);
+                    if (!settings.value.useCustomBg) {
+                        effectTimeout = setTimeout(() => {
+                            if (theme === 'sky') spawnBatch('airplane');
+                            if (theme === 'seaside') spawnBatch('crab');
+                            if (theme === 'sea') spawnBatch('ship');
+                        }, 15000);
+                    }
                 };
 
                 // Initial load delay
@@ -723,6 +725,21 @@ try {
             // --- Watches ---
             watch(currentListId, () => {
                 scrollActiveTabIntoView();
+            });
+
+            watch(() => settings.value.customBg, (newVal) => {
+                nextTick(() => {
+                    if (newVal && settings.value.useCustomBg) {
+                        const url = `url(${newVal}?t=${Date.now()})`;
+                        document.body.style.backgroundImage = url;
+                        themeStyle.backgroundImage = url;
+                        document.body.classList.add('custom-theme');
+                    } else if (!newVal) {
+                        document.body.style.backgroundImage = '';
+                        themeStyle.backgroundImage = '';
+                        document.body.classList.remove('custom-theme');
+                    }
+                });
             });
 
             watch(view, () => {

@@ -627,6 +627,10 @@ input[type=range]::-webkit-slider-runnable-track {
 .settings-item-enter-from { transform: translateY(20px); opacity: 0; }
 
 /* Settings Panel UI */
+.setting-overlay {
+    transition: opacity 0.4s ease;
+}
+
 .nav-item {
     display: flex;
     flex-direction: column;
