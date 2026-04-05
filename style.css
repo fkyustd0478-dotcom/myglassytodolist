@@ -213,7 +213,11 @@ body {
 .theme-forest { background: linear-gradient(180deg, #134e5e 0%, #71b280 100%); }
 .theme-sea { background: linear-gradient(180deg, #2c3e50 0%, #000000 100%); }
 .theme-light { background: #f8fafc; }
-.theme-dark { background: #0f172a; }
+.custom-theme {
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
 
 /* Cherry Blossom */
 .petal {
@@ -478,7 +482,8 @@ body {
 
 /* Action Buttons */
 .btn-action {
-    display: flex;
+    display: flex !important;
+    opacity: 1 !important;
     align-items: center;
     justify-content: center;
     width: 42px;

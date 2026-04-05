@@ -229,10 +229,22 @@ try {
 
             const saveCustomBg = () => {
                 if (tempCustomBg.value) {
-                    settings.value.customBg = tempCustomBg.value;
+                    const base64Data = tempCustomBg.value;
+                    settings.value.customBg = base64Data;
                     settings.value.useCustomBg = true;
                     activeAssets.value = []; // Clear assets when using custom bg
                     tempCustomBg.value = '';
+                    
+                    // FORCED FIX: Direct DOM Manipulation with Timestamp Cache-Busting
+                    const timestamp = Date.now();
+                    document.body.style.backgroundImage = 'none';
+                    nextTick(() => {
+                        document.body.style.backgroundImage = `url(${base64Data})`;
+                        // Note: base64 doesn't strictly need ?t= but user requested it for "Zero-Latency" logic
+                        // and to ensure browser treats it as a fresh resource if it was a URL.
+                        // For base64, we just ensure the style is reapplied.
+                        document.body.classList.add('custom-theme');
+                    });
                 }
             };
 
@@ -327,20 +339,26 @@ try {
             const restoreTodo = (id) => {
                 const index = todos.value.findIndex(x => x.id === id);
                 if (index !== -1) {
-                    const oldTodo = todos.value[index];
-                    // Capture and Create NEW identical task object
+                    // 1. Create a deep copy of the task
+                    const oldTodo = JSON.parse(JSON.stringify(todos.value[index]));
+                    
+                    // 2. Push to the Active List (re-create with new ID)
                     const newTodo = {
                         ...oldTodo,
-                        id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                        id: 'restored-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
                         completed: false,
                         isDeleted: false,
                         notified: false,
                         createdAt: new Date().toISOString()
                     };
-                    // Remove original record
+                    
+                    // 3. Splice from the current list
                     todos.value.splice(index, 1);
-                    // Add to Active list
+                    
+                    // 4. Trigger immediate UI update
                     todos.value.unshift(newTodo);
+                    
+                    nextTick(() => lucide.createIcons());
                 }
             };
 
@@ -731,6 +749,17 @@ try {
             });
 
             watch([view, isAdding, isEditing, showTimePicker, showDatePicker, currentListId], () => {
+                if (view.value === 'settings') {
+                    // Forced reflow / nextTick for settings panel initial visibility
+                    nextTick(() => {
+                        const panel = document.querySelector('.setting-window');
+                        if (panel) {
+                            panel.style.display = 'none';
+                            panel.offsetHeight; // force reflow
+                            panel.style.display = 'block';
+                        }
+                    });
+                }
                 nextTick(() => lucide.createIcons());
                 if (currentListId) scrollActiveTabIntoView();
             });
