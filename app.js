@@ -199,12 +199,23 @@ try {
                 activeAssets.value = []; // Clear assets immediately
                 settings.value.theme = id;
                 settings.value.useCustomBg = false;
+                document.body.classList.remove('custom-theme');
+                document.body.style.backgroundImage = '';
             };
 
             const toggleCustomBg = () => {
                 if (settings.value.customBg) {
                     settings.value.useCustomBg = !settings.value.useCustomBg;
-                    if (settings.value.useCustomBg) activeAssets.value = [];
+                    if (settings.value.useCustomBg) {
+                        activeAssets.value = [];
+                        document.body.classList.add('custom-theme');
+                        const url = `url(${settings.value.customBg})`;
+                        document.body.style.backgroundImage = url;
+                        themeStyle.backgroundImage = url;
+                    } else {
+                        document.body.classList.remove('custom-theme');
+                        document.body.style.backgroundImage = '';
+                    }
                 } else {
                     triggerUpload();
                 }
@@ -242,6 +253,7 @@ try {
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
                         
+                        // Convert to Base64 for instant preview
                         const compressedData = canvas.toDataURL('image/jpeg', 0.7);
                         tempCustomBg.value = compressedData;
                         uploadProgress.value = 100;
@@ -262,7 +274,10 @@ try {
                     tempCustomBg.value = '';
                     
                     // Reactive update with Timestamp Cache-Busting
-                    themeStyle.backgroundImage = `url(${base64Data}?t=${Date.now()})`;
+                    const url = `url(${base64Data}?t=${Date.now()})`;
+                    document.body.style.backgroundImage = url;
+                    themeStyle.backgroundImage = url;
+                    document.body.classList.add('custom-theme');
                 }
             };
 
@@ -270,6 +285,8 @@ try {
                 tempCustomBg.value = '';
                 settings.value.customBg = '';
                 settings.value.useCustomBg = false;
+                document.body.classList.remove('custom-theme');
+                document.body.style.backgroundImage = '';
             };
 
             const startAdding = () => {
@@ -357,7 +374,7 @@ try {
             const restoreTodo = (id) => {
                 const index = todos.value.findIndex(x => x.id === id);
                 if (index !== -1) {
-                    // 1. Deep Copy & Re-create (Zero-Latency Rendering)
+                    // Capture-Create-Remove logic
                     const taskToRestore = JSON.parse(JSON.stringify(todos.value[index]));
                     
                     const restoredTask = {
@@ -369,10 +386,10 @@ try {
                         createdAt: new Date().toISOString()
                     };
                     
-                    // 2. Remove from current state
+                    // Remove original
                     todos.value.splice(index, 1);
                     
-                    // 3. Push to Active
+                    // Create new active task
                     todos.value.unshift(restoredTask);
                     
                     nextTick(() => {
@@ -672,17 +689,47 @@ try {
             };
 
             const setupEffects = () => {
-                setTimeout(() => { if (settings.value.theme === 'sky') spawnBatch('airplane'); }, 1000);
-                setTimeout(() => { if (settings.value.theme === 'seaside') spawnBatch('crab'); }, 2000);
-                setTimeout(() => { if (settings.value.theme === 'sea') spawnBatch('ship'); }, 3000);
+                let effectTimeout = null;
+
+                const clearAndSchedule = (theme) => {
+                    if (effectTimeout) clearTimeout(effectTimeout);
+                    activeAssets.value = []; // Clear current objects
+                    
+                    // 15s Delay for Background Animations
+                    effectTimeout = setTimeout(() => {
+                        if (theme === 'sky') spawnBatch('airplane');
+                        if (theme === 'seaside') spawnBatch('crab');
+                        if (theme === 'sea') spawnBatch('ship');
+                    }, 15000);
+                };
+
+                // Initial load delay
+                clearAndSchedule(settings.value.theme);
                 
                 watch(() => settings.value.theme, (newTheme) => {
-                    activeAssets.value = []; // Clear assets on theme change
-                    if (newTheme === 'sky' && !activeAssets.value.some(a => a.type === 'airplane')) spawnBatch('airplane');
-                    if (newTheme === 'seaside' && !activeAssets.value.some(a => a.type === 'crab')) spawnBatch('crab');
-                    if (newTheme === 'sea' && !activeAssets.value.some(a => a.type === 'ship')) spawnBatch('ship');
+                    clearAndSchedule(newTheme);
+                });
+
+                watch(() => settings.value.useCustomBg, (isCustom) => {
+                    if (isCustom) {
+                        if (effectTimeout) clearTimeout(effectTimeout);
+                        activeAssets.value = [];
+                    } else {
+                        clearAndSchedule(settings.value.theme);
+                    }
                 });
             };
+
+            // --- Watches ---
+            watch(currentListId, () => {
+                scrollActiveTabIntoView();
+            });
+
+            watch(view, () => {
+                nextTick(() => {
+                    if (window.lucide) lucide.createIcons();
+                });
+            });
 
             // --- Lifecycle ---
             onMounted(() => {
@@ -695,6 +742,14 @@ try {
 
                     if (savedSettings) {
                         settings.value = { ...settings.value, ...savedSettings };
+                        
+                        // Apply custom theme class if needed
+                        if (settings.value.useCustomBg && settings.value.customBg) {
+                            document.body.classList.add('custom-theme');
+                            const url = `url(${settings.value.customBg})`;
+                            document.body.style.backgroundImage = url;
+                            themeStyle.backgroundImage = url;
+                        }
                     }
 
                     if (savedData) {
@@ -715,6 +770,7 @@ try {
                     // Phase 3: DOM-dependent initializations
                     nextTick(() => {
                         if (window.lucide) lucide.createIcons();
+                        scrollActiveTabIntoView();
                         
                         // Sortable.js Initialization
                         const el = document.getElementById('list-tabs');

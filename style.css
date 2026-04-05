@@ -488,9 +488,16 @@ main {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Action Buttons */
+.task-item .actions {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
 .btn-action {
     display: flex !important;
     opacity: 1 !important;
+    visibility: visible !important;
     align-items: center;
     justify-content: center;
     width: 42px;
