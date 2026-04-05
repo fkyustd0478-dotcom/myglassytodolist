@@ -497,6 +497,10 @@ main {
     z-index: 50;
 }
 
+.is-hidden {
+    display: none !important;
+}
+
 .btn-action {
     display: flex !important;
     opacity: 1 !important;
