@@ -332,10 +332,15 @@ try {
                 }
                 settings.value.customBg = '';
                 settings.value.useCustomBg = false;
-                await ImageDB.deleteBlob('custom-bg');
-                document.body.classList.remove('custom-theme');
+                
+                // Instant UI reset
                 document.body.style.backgroundImage = '';
+                themeStyle.backgroundImage = '';
+                document.body.classList.remove('custom-theme');
+                
+                await ImageDB.deleteBlob('custom-bg');
                 StorageProvider.saveSettings(settings.value);
+                renderTrigger.value++;
             };
 
             const startAdding = () => {
@@ -430,9 +435,13 @@ try {
             const restoreTodo = (id) => {
                 const index = todos.value.findIndex(x => x.id === id);
                 if (index !== -1) {
-                    const taskToRestore = JSON.parse(JSON.stringify(todos.value[index]));
+                    // Triple-Action Logic: Clone-and-Kill
+                    // 1. Deep-copy the task object
+                    const originalTask = todos.value[index];
+                    
+                    // 2. Reset status to 'active' and update timestamp
                     const restoredTask = {
-                        ...taskToRestore,
+                        ...JSON.parse(JSON.stringify(originalTask)),
                         id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
                         completed: false,
                         isDeleted: false,
@@ -440,8 +449,13 @@ try {
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString()
                     };
-                    todos.value.splice(index, 1);
+                    
+                    // 3. Push the new copy to the main tasks array
                     todos.value.unshift(restoredTask);
+                    
+                    // 4. Immediately delete the original record
+                    todos.value.splice(index + 1, 1); // index + 1 because we unshifted
+                    
                     renderTrigger.value++;
                     nextTick(() => {
                         if (window.lucide) lucide.createIcons();
@@ -449,7 +463,10 @@ try {
                 }
             };
 
-            const permanentDelete = (id) => todos.value = todos.value.filter(x => x.id !== id);
+            const permanentDelete = (id) => {
+                todos.value = todos.value.filter(x => x.id !== id);
+                renderTrigger.value++;
+            };
             
             const promptClearCompleted = () => {
                 confirmModal.value = {
@@ -458,6 +475,7 @@ try {
                     message: t.value.confirmClearCompleted,
                     onConfirm: () => {
                         todos.value = todos.value.filter(x => !x.completed || x.isDeleted);
+                        renderTrigger.value++;
                     }
                 };
             };
@@ -469,6 +487,7 @@ try {
                     message: t.value.confirmClearBin,
                     onConfirm: () => {
                         todos.value = todos.value.filter(x => !x.isDeleted);
+                        renderTrigger.value++;
                     }
                 };
             };
@@ -804,6 +823,13 @@ try {
             // --- Lifecycle ---
             onMounted(async () => {
                 await ImageDB.init();
+
+                // Force initial reflow for layout visibility
+                window.dispatchEvent(new Event('resize'));
+                nextTick(() => {
+                    window.dispatchEvent(new Event('resize'));
+                    document.body.offsetHeight; // force reflow
+                });
 
                 // Phase 2: Data Hydration
                 const hydrateData = async () => {

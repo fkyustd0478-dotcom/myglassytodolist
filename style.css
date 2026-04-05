@@ -414,12 +414,15 @@ body {
     left: 0;
     right: 0;
     height: 90px;
-    display: flex;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
     align-items: center;
     justify-content: space-around;
     padding-bottom: env(safe-area-inset-bottom, 20px);
-    z-index: 100;
+    z-index: 1000;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    transform: none !important;
 }
 .nav-item {
     display: flex;
@@ -629,7 +632,11 @@ input[type=range]::-webkit-slider-runnable-track {
     z-index: 999;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     transition: opacity 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .setting-window {
