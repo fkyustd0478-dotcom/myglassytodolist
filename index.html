@@ -109,93 +109,91 @@
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto no-scrollbar pb-40">
                 <transition name="fade" mode="out-in">
-                    <div :key="view" class="w-full">
-                        <!-- Active Tasks -->
-                        <div v-if="view === 'active'">
-                            <div v-if="sortedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noTasks }}</div>
-                            
-                            <template v-for="(group, gIdx) in groupedTodos" :key="group.category + '-' + currentListId">
-                                <!-- Divider -->
-                                <div class="category-divider">
-                                    <span class="category-label">{{ t[group.category] }}</span>
-                                </div>
-    
-                                <div class="space-y-4">
-                                    <div v-for="todo in group.items" :key="todo.id" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
-                                        <button @click="toggleTodo(todo.id)" class="text-blue-500">
-                                            <i data-lucide="circle" class="w-6 h-6"></i>
-                                        </button>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="font-bold truncate">{{ todo.text }}</p>
-                                            <div class="flex items-center gap-2 mt-1">
-                                                <span class="text-[10px] font-black uppercase opacity-60">{{ t[todo.category] }}</span>
-                                                <span v-if="todo.dueDate" class="text-[10px] opacity-60 flex items-center gap-1">
-                                                    <i data-lucide="clock" class="w-3 h-3"></i> {{ formatDateTime(todo.dueDate) }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="actions flex gap-2">
-                                            <button @click="editTodo(todo)" class="btn-action btn-edit">
-                                                <i data-lucide="edit-3" class="w-5 h-5"></i>
-                                            </button>
-                                            <button @click="deleteTodo(todo.id)" class="btn-action btn-delete">
-                                                <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                            </button>
+                    <!-- Active Tasks -->
+                    <div v-if="view === 'active'" :key="'active-' + renderTrigger">
+                        <div v-if="sortedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noTasks }}</div>
+                        
+                        <template v-for="(group, gIdx) in groupedTodos" :key="group.category + '-' + currentListId">
+                            <!-- Divider -->
+                            <div class="category-divider">
+                                <span class="category-label">{{ t[group.category] }}</span>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div v-for="todo in group.items" :key="todo.id + '-' + todo.completed + '-' + (todo.updatedAt || 'init') + '-' + renderTrigger" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
+                                    <button @click="toggleTodo(todo.id)" class="text-blue-500">
+                                        <i data-lucide="circle" class="w-6 h-6"></i>
+                                    </button>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-bold truncate">{{ todo.text }}</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="text-[10px] font-black uppercase opacity-60">{{ t[todo.category] }}</span>
+                                            <span v-if="todo.dueDate" class="text-[10px] opacity-60 flex items-center gap-1">
+                                                <i data-lucide="clock" class="w-3 h-3"></i> {{ formatDateTime(todo.dueDate) }}
+                                            </span>
                                         </div>
                                     </div>
-                                </div>
-                            </template>
-                        </div>
-    
-                        <!-- Completed Records -->
-                        <div v-else-if="view === 'completed'" class="space-y-4">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-xl font-black">{{ t.completed }}</h2>
-                                <div class="flex gap-4 items-center">
-                                    <span class="text-[10px] font-black opacity-40 uppercase">{{ completedTodos.length }} {{ t.tasks }}</span>
-                                    <button v-if="completedTodos.length > 0" @click="promptClearCompleted" class="text-red-500 text-xs font-black uppercase tracking-widest">{{ t.clearAll }}</button>
+                                    <div class="actions flex gap-2">
+                                        <button @click="editTodo(todo)" class="btn-action btn-edit">
+                                            <i data-lucide="edit-3" class="w-5 h-5"></i>
+                                        </button>
+                                        <button @click="deleteTodo(todo.id)" class="btn-action btn-delete">
+                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div v-if="completedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noCompleted }}</div>
-                            <div v-for="todo in completedTodos" :key="'comp-' + todo.id" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-bold truncate line-through opacity-50">{{ todo.text }}</p>
-                                    <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
-                                </div>
-                                <div class="actions flex gap-2">
-                                    <button @click="restoreTodo(todo.id)" class="btn-action btn-restore" :title="t.restore">
-                                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                                    </button>
-                                    <button @click="permanentDelete(todo.id)" class="btn-action btn-delete" :title="t.permDelete">
-                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                    </button>
-                                </div>
+                        </template>
+                    </div>
+
+                    <!-- Completed Records -->
+                    <div v-else-if="view === 'completed'" :key="'completed-' + renderTrigger" class="space-y-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-black">{{ t.completed }}</h2>
+                            <div class="flex gap-4 items-center">
+                                <span class="text-[10px] font-black opacity-40 uppercase">{{ completedTodos.length }} {{ t.tasks }}</span>
+                                <button v-if="completedTodos.length > 0" @click="promptClearCompleted" class="text-red-500 text-xs font-black uppercase tracking-widest">{{ t.clearAll }}</button>
                             </div>
                         </div>
-    
-                        <!-- Recycle Bin -->
-                        <div v-else-if="view === 'bin'" class="space-y-4">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-xl font-black">{{ t.bin }}</h2>
-                                <div class="flex gap-4 items-center">
-                                    <span class="text-[10px] font-black opacity-40 uppercase">{{ deletedTodos.length }} {{ t.tasks }}</span>
-                                    <button v-if="deletedTodos.length > 0" @click="promptClearBin" class="text-red-500 text-xs font-black uppercase tracking-widest">{{ t.clearAll }}</button>
-                                </div>
+                        <div v-if="completedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noCompleted }}</div>
+                        <div v-for="todo in completedTodos" :key="'comp-' + todo.id + '-' + (todo.updatedAt || 'init') + '-' + renderTrigger" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold truncate line-through opacity-50">{{ todo.text }}</p>
+                                <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
                             </div>
-                            <div v-if="deletedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noBin }}</div>
-                            <div v-for="todo in deletedTodos" :key="'bin-' + todo.id" class="task-item glass rounded-2xl p-4 flex items-center justify-between" :style="glassStyle">
-                                <div class="flex-1 min-w-0 mr-4">
-                                    <p class="opacity-50 line-through truncate">{{ todo.text }}</p>
-                                    <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
-                                </div>
-                                <div class="actions flex gap-2">
-                                    <button @click="restoreTodo(todo.id)" class="btn-action btn-restore" :title="t.restore">
-                                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                                    </button>
-                                    <button @click="permanentDelete(todo.id)" class="btn-action btn-delete" :title="t.permDelete">
-                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                    </button>
-                                </div>
+                            <div class="actions flex gap-2">
+                                <button @click="restoreTodo(todo.id)" class="btn-action btn-restore" :title="t.restore">
+                                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                                </button>
+                                <button @click="permanentDelete(todo.id)" class="btn-action btn-delete" :title="t.permDelete">
+                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recycle Bin -->
+                    <div v-else-if="view === 'bin'" :key="'bin-' + renderTrigger" class="space-y-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-black">{{ t.bin }}</h2>
+                            <div class="flex gap-4 items-center">
+                                <span class="text-[10px] font-black opacity-40 uppercase">{{ deletedTodos.length }} {{ t.tasks }}</span>
+                                <button v-if="deletedTodos.length > 0" @click="promptClearBin" class="text-red-500 text-xs font-black uppercase tracking-widest">{{ t.clearAll }}</button>
+                            </div>
+                        </div>
+                        <div v-if="deletedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noBin }}</div>
+                        <div v-for="todo in deletedTodos" :key="'bin-' + todo.id + '-' + (todo.updatedAt || 'init') + '-' + renderTrigger" class="task-item glass rounded-2xl p-4 flex items-center justify-between" :style="glassStyle">
+                            <div class="flex-1 min-w-0 mr-4">
+                                <p class="opacity-50 line-through truncate">{{ todo.text }}</p>
+                                <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
+                            </div>
+                            <div class="actions flex gap-2">
+                                <button @click="restoreTodo(todo.id)" class="btn-action btn-restore" :title="t.restore">
+                                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                                </button>
+                                <button @click="permanentDelete(todo.id)" class="btn-action btn-delete" :title="t.permDelete">
+                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                </button>
                             </div>
                         </div>
                     </div>

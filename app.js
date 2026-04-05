@@ -1,13 +1,10 @@
 try {
     const { createApp, ref, reactive, onMounted, computed, watch, nextTick } = Vue;
 
-    // --- Modular Storage Provider (Firebase-Ready) ---
+    // --- Modular Storage Provider ---
     const StorageProvider = {
         saveSettings(settings) {
-            // Exclude large image data from localStorage
-            const settingsToSave = { ...settings };
-            delete settingsToSave.customBg; 
-            localStorage.setItem('todo_settings', JSON.stringify(settingsToSave));
+            localStorage.setItem('todo_settings', JSON.stringify(settings));
         },
         loadSettings() {
             const saved = localStorage.getItem('todo_settings');
@@ -19,63 +16,6 @@ try {
         loadData() {
             const saved = localStorage.getItem('todo_data');
             return saved ? JSON.parse(saved) : null;
-        }
-    };
-
-    // --- IndexedDB Provider for Images (Base64 Storage) ---
-    const ImageDB = {
-        dbName: 'glassy-todo-storage',
-        storeName: 'images',
-        db: null,
-
-        async init() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(this.dbName, 1);
-                request.onupgradeneeded = (e) => {
-                    const db = e.target.result;
-                    if (!db.objectStoreNames.contains(this.storeName)) {
-                        db.createObjectStore(this.storeName);
-                    }
-                };
-                request.onsuccess = (e) => {
-                    this.db = e.target.result;
-                    resolve();
-                };
-                request.onerror = (e) => reject(e);
-            });
-        },
-
-        async saveImage(id, base64) {
-            if (!this.db) await this.init();
-            return new Promise((resolve, reject) => {
-                const transaction = this.db.transaction([this.storeName], 'readwrite');
-                const store = transaction.objectStore(this.storeName);
-                const request = store.put(base64, id);
-                request.onsuccess = () => resolve();
-                request.onerror = (e) => reject(e);
-            });
-        },
-
-        async getImage(id) {
-            if (!this.db) await this.init();
-            return new Promise((resolve, reject) => {
-                const transaction = this.db.transaction([this.storeName], 'readonly');
-                const store = transaction.objectStore(this.storeName);
-                const request = store.get(id);
-                request.onsuccess = (e) => resolve(e.target.result);
-                request.onerror = (e) => reject(e);
-            });
-        },
-
-        async deleteImage(id) {
-            if (!this.db) await this.init();
-            return new Promise((resolve, reject) => {
-                const transaction = this.db.transaction([this.storeName], 'readwrite');
-                const store = transaction.objectStore(this.storeName);
-                const request = store.delete(id);
-                request.onsuccess = () => resolve();
-                request.onerror = (e) => reject(e);
-            });
         }
     };
 
@@ -128,6 +68,8 @@ try {
             const dateMode = ref('day');
             
             const fileInput = ref(null);
+            
+            const renderTrigger = ref(0);
             
             const form = ref({ 
                 text: '', 
@@ -300,31 +242,19 @@ try {
                     }
                 };
                 reader.onload = (evt) => {
-                    tempCustomBg.value = evt.target.result; // Base64
+                    settings.value.customBg = evt.target.result; // Base64
+                    settings.value.useCustomBg = true;
                     uploadProgress.value = 100;
                     setTimeout(() => uploadProgress.value = 0, 500);
+                    StorageProvider.saveSettings(settings.value);
                 };
                 reader.readAsDataURL(file);
                 e.target.value = '';
             };
 
-            const saveCustomBg = async () => {
-                if (!tempCustomBg.value) return;
-                
-                // Save Base64 directly to IndexedDB
-                await ImageDB.saveImage('custom-bg', tempCustomBg.value);
-                
-                settings.value.customBg = tempCustomBg.value;
-                settings.value.useCustomBg = true;
-                activeAssets.value = []; 
+            const saveCustomBg = () => {
+                // Legacy method, logic moved to handleUpload for stability
                 tempCustomBg.value = '';
-                
-                const cssUrl = `url(${settings.value.customBg})`;
-                document.body.style.backgroundImage = cssUrl;
-                themeStyle.backgroundImage = cssUrl;
-                document.body.classList.add('custom-theme');
-                
-                StorageProvider.saveSettings(settings.value);
             };
 
             const cancelUpload = () => {
@@ -332,15 +262,9 @@ try {
                 uploadProgress.value = 0;
             };
 
-            const clearCustomBg = async () => {
-                if (settings.value.customBg && settings.value.customBg.startsWith('blob:')) {
-                    URL.revokeObjectURL(settings.value.customBg);
-                }
-                tempCustomBg.value = '';
-                originalCustomBg.value = '';
+            const clearCustomBg = () => {
                 settings.value.customBg = '';
                 settings.value.useCustomBg = false;
-                await ImageDB.deleteImage('custom-bg');
                 document.body.classList.remove('custom-theme');
                 document.body.style.backgroundImage = '';
                 StorageProvider.saveSettings(settings.value);
@@ -390,14 +314,17 @@ try {
                 
                 if (isEditing.value) {
                     const t = todos.value.find(x => x.id === editingId.value);
-                    if (t) Object.assign(t, { 
-                        text: form.value.text, 
-                        category: form.value.category, 
-                        recurring: form.value.recurring, 
-                        dueDate: due, 
-                        notified: false,
-                        alertMinutes: form.value.alertMinutes
-                    });
+                    if (t) {
+                        Object.assign(t, { 
+                            text: form.value.text, 
+                            category: form.value.category, 
+                            recurring: form.value.recurring, 
+                            dueDate: due, 
+                            notified: false,
+                            alertMinutes: form.value.alertMinutes,
+                            updatedAt: new Date().toISOString()
+                        });
+                    }
                 } else {
                     todos.value.unshift({ 
                         id: Date.now().toString(36), 
@@ -409,10 +336,12 @@ try {
                         completed: false, 
                         isDeleted: false, 
                         notified: false,
-                        alertMinutes: form.value.alertMinutes
+                        alertMinutes: form.value.alertMinutes,
+                        updatedAt: new Date().toISOString()
                     });
                 }
-                closeModal();
+                renderTrigger.value++;
+                nextTick(() => closeModal());
                 form.value.text = ''; // Clear top input
             };
 
@@ -423,6 +352,8 @@ try {
                 if (t) {
                     t.completed = !t.completed;
                     t.notified = false;
+                    t.updatedAt = new Date().toISOString();
+                    renderTrigger.value++;
                 }
             };
             
@@ -431,24 +362,19 @@ try {
             const restoreTodo = (id) => {
                 const index = todos.value.findIndex(x => x.id === id);
                 if (index !== -1) {
-                    // Capture-Create-Remove logic (Forced Fix)
                     const taskToRestore = JSON.parse(JSON.stringify(todos.value[index]));
-                    
                     const restoredTask = {
                         ...taskToRestore,
                         id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
                         completed: false,
                         isDeleted: false,
                         notified: false,
-                        createdAt: new Date().toISOString()
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
                     };
-                    
-                    // Remove original from whatever state it was in
                     todos.value.splice(index, 1);
-                    
-                    // Create new active task
                     todos.value.unshift(restoredTask);
-                    
+                    renderTrigger.value++;
                     nextTick(() => {
                         if (window.lucide) lucide.createIcons();
                     });
@@ -808,28 +734,18 @@ try {
             });
 
             // --- Lifecycle ---
-            onMounted(async () => {
-                // Initialize IndexedDB
-                await ImageDB.init();
-
-                // Phase 2: Deferred Data Hydration (Bypass main thread blocking)
-                const hydrateData = async () => {
+            onMounted(() => {
+                // Phase 2: Data Hydration
+                const hydrateData = () => {
                     const savedSettings = StorageProvider.loadSettings();
                     const savedData = StorageProvider.loadData();
 
                     if (savedSettings) {
                         settings.value = { ...settings.value, ...savedSettings };
-                        
-                        // Load image from IndexedDB (Base64)
-                        const base64 = await ImageDB.getImage('custom-bg');
-                        if (base64) {
-                            settings.value.customBg = base64;
-                            
-                            if (settings.value.useCustomBg) {
-                                document.body.classList.add('custom-theme');
-                                document.body.style.backgroundImage = `url(${base64})`;
-                                themeStyle.backgroundImage = `url(${base64})`;
-                            }
+                        if (settings.value.useCustomBg && settings.value.customBg) {
+                            document.body.classList.add('custom-theme');
+                            document.body.style.backgroundImage = `url(${settings.value.customBg})`;
+                            themeStyle.backgroundImage = `url(${settings.value.customBg})`;
                         }
                     }
 
@@ -883,13 +799,13 @@ try {
                 if ('requestIdleCallback' in window) {
                     requestIdleCallback(() => {
                         hydrateData();
-                        requestIdleCallback(initEffects);
+                        setTimeout(initEffects, 15000); // 15s Delay for UI priority
                     });
                 } else {
                     // Fallback for browsers without requestIdleCallback
                     setTimeout(() => {
                         hydrateData();
-                        setTimeout(initEffects, 100);
+                        setTimeout(initEffects, 15000); // 15s Delay for UI priority
                     }, 50);
                 }
 
@@ -982,6 +898,7 @@ try {
                 saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, 
                 permanentDelete, addNewList, openDatePicker, closeSettings,
                 handleClockInteraction, handleClockMove, getClockPos, 
+                renderTrigger,
                 isClockNumberActive, handleDateInteraction, handleDateMove, 
                 getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
