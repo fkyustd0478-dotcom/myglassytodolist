@@ -60,6 +60,7 @@ body {
     transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     background-size: cover;
     background-position: center;
+    contain: strict;
 }
 
 /* Animated Assets */
@@ -69,7 +70,7 @@ body {
     background-repeat: no-repeat;
     z-index: 3;
     pointer-events: none !important;
-    will-change: transform, left, top, bottom;
+    will-change: transform, left, top;
 }
 
 .airplane { width: 120px; height: 60px; }
@@ -84,6 +85,7 @@ body {
     pointer-events: none;
     background-size: cover;
     background-position: center;
+    contain: strict;
 }
 
 /* Themes */
@@ -475,6 +477,11 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 .toggle-switch.pm .toggle-thumb { transform: translateX(40px); }
+
+/* Main Content Containment */
+main {
+    contain: content;
+}
 
 /* Scrollbar */
 .no-scrollbar::-webkit-scrollbar { display: none; }

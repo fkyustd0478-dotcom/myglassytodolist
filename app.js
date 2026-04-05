@@ -686,32 +686,77 @@ try {
 
             // --- Lifecycle ---
             onMounted(() => {
-                const savedSettings = StorageProvider.loadSettings();
-                const savedData = StorageProvider.loadData();
-
-                if (savedSettings) {
-                    settings.value = { ...settings.value, ...savedSettings };
-                }
-
-                if (savedData) {
-                    todos.value = savedData.todos || [];
-                    
-                    // Merge lists to ensure defaults exist
-                    const savedLists = savedData.lists || [];
-                    const defaults = [
-                        { id: 'default', name: 'Default' },
-                        { id: 'personal', name: 'Personal' },
-                        { id: 'work', name: 'Work' }
-                    ];
-                    
-                    const customLists = savedLists.filter(l => !['default', 'personal', 'work', '1', '2'].includes(l.id));
-                    lists.value = [...defaults, ...customLists];
-                }
+                // Phase 1: Immediate UI Shell is already rendered by Vue
                 
-                if (window.lucide) lucide.createIcons();
-                setupEffects();
+                // Phase 2: Deferred Data Hydration (Bypass main thread blocking)
+                const hydrateData = () => {
+                    const savedSettings = StorageProvider.loadSettings();
+                    const savedData = StorageProvider.loadData();
 
-                // Multi-Tab Sync
+                    if (savedSettings) {
+                        settings.value = { ...settings.value, ...savedSettings };
+                    }
+
+                    if (savedData) {
+                        todos.value = savedData.todos || [];
+                        
+                        // Merge lists to ensure defaults exist
+                        const savedLists = savedData.lists || [];
+                        const defaults = [
+                            { id: 'default', name: 'Default' },
+                            { id: 'personal', name: 'Personal' },
+                            { id: 'work', name: 'Work' }
+                        ];
+                        
+                        const customLists = savedLists.filter(l => !['default', 'personal', 'work', '1', '2'].includes(l.id));
+                        lists.value = [...defaults, ...customLists];
+                    }
+                    
+                    // Phase 3: DOM-dependent initializations
+                    nextTick(() => {
+                        if (window.lucide) lucide.createIcons();
+                        
+                        // Sortable.js Initialization
+                        const el = document.getElementById('list-tabs');
+                        if (el) {
+                            Sortable.create(el, {
+                                animation: 150,
+                                draggable: '.list-tab-item',
+                                onEnd: (evt) => {
+                                    const newOrder = [];
+                                    const items = el.querySelectorAll('.list-tab-item');
+                                    items.forEach(item => {
+                                        const id = item.getAttribute('data-id');
+                                        const list = lists.value.find(l => l.id === id);
+                                        if (list) newOrder.push(list);
+                                    });
+                                    lists.value = newOrder;
+                                }
+                            });
+                        }
+                    });
+                };
+
+                // Phase 4: Background Effects (Lowest priority)
+                const initEffects = () => {
+                    setupEffects();
+                };
+
+                // Use requestIdleCallback for non-critical hydration and effects
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(() => {
+                        hydrateData();
+                        requestIdleCallback(initEffects);
+                    });
+                } else {
+                    // Fallback for browsers without requestIdleCallback
+                    setTimeout(() => {
+                        hydrateData();
+                        setTimeout(initEffects, 100);
+                    }, 50);
+                }
+
+                // Multi-Tab Sync (Always active)
                 window.addEventListener('storage', (e) => {
                     if (e.key === 'todo_settings' && e.newValue) {
                         settings.value = { ...settings.value, ...JSON.parse(e.newValue) };
@@ -722,27 +767,8 @@ try {
                         lists.value = data.lists || [];
                     }
                 });
-
-                // Sortable.js Initialization
-                const el = document.getElementById('list-tabs');
-                if (el) {
-                    Sortable.create(el, {
-                        animation: 150,
-                        draggable: '.list-tab-item',
-                        onEnd: (evt) => {
-                            const newOrder = [];
-                            const items = el.querySelectorAll('.list-tab-item');
-                            items.forEach(item => {
-                                const id = item.getAttribute('data-id');
-                                const list = lists.value.find(l => l.id === id);
-                                if (list) newOrder.push(list);
-                            });
-                            lists.value = newOrder;
-                        }
-                    });
-                }
                 
-                // Notification Checker
+                // Notification Checker (Background task)
                 setInterval(() => {
                     if (!settings.value.notificationsEnabled) return;
                     const now = Date.now();
