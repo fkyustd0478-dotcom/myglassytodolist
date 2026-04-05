@@ -666,7 +666,7 @@ try {
     }).mount('#app');
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js');
+        navigator.serviceWorker.register('./sw.js');
     }
 } catch (e) { 
     const errorReporter = document.getElementById('error-reporter');
