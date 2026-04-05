@@ -68,7 +68,7 @@ body {
     background-size: contain;
     background-repeat: no-repeat;
     z-index: 3;
-    pointer-events: none;
+    pointer-events: none !important;
     will-change: transform, left, top, bottom;
 }
 
@@ -232,15 +232,40 @@ body {
     100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
 
-/* Sky */
+/* Sky & Clouds - Seamless Loop */
 .cloud {
     position: absolute;
-    animation: floatCloud 30s linear infinite;
+    animation: floatCloud linear infinite;
     z-index: 1;
+    pointer-events: none;
 }
+
 @keyframes floatCloud {
-    from { left: -20%; }
-    to { left: 120%; }
+    from { transform: translateX(-150%); }
+    to { transform: translateX(100vw); }
+}
+
+/* Seaside & Sea - Dynamic Wave Effect */
+.wave-svg {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 150px;
+    z-index: 1;
+    pointer-events: none;
+    animation: waveFlow 8s ease-in-out infinite;
+}
+
+@keyframes waveFlow {
+    0%, 100% { 
+        height: 140px; 
+        transform: translateY(0) scaleY(1); 
+    }
+    50% { 
+        height: 160px; 
+        transform: translateY(-10px) scaleY(1.05); 
+    }
 }
 
 /* Sunset */

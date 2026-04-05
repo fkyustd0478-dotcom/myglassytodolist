@@ -178,13 +178,17 @@
                         </div>
                     </div>
 
-                    <!-- Settings -->
-                    <div v-else-if="view === 'settings'" key="settings" class="space-y-6">
-                        <div class="flex items-center gap-4 mb-2">
-                            <h2 class="text-2xl font-black tracking-tight">{{ t.settings }}</h2>
-                        </div>
-
-                        <div class="glass rounded-[2rem] p-6 space-y-8" :style="glassStyle">
+                    <!-- Settings Modal -->
+                    <div v-else-if="view === 'settings'" key="settings" 
+                        class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm"
+                        @click.self="view = 'active'">
+                        <div class="glass rounded-[2.5rem] p-8 space-y-8 w-full max-w-md setting-window relative overflow-y-auto max-h-[85vh]" :style="glassStyle">
+                            <div class="flex items-center justify-between mb-2">
+                                <h2 class="text-2xl font-black tracking-tight">{{ t.settings }}</h2>
+                                <button @click="view = 'active'" class="p-2 opacity-40 hover:opacity-100 transition-opacity">
+                                    <i data-lucide="x" class="w-6 h-6"></i>
+                                </button>
+                            </div>
                             <!-- Theme Section -->
                             <section class="space-y-4">
                                 <div class="flex items-center gap-2 opacity-40">
@@ -221,18 +225,36 @@
                                 <div class="space-y-3 pt-2">
                                     <div class="flex justify-between items-center px-1">
                                         <label class="text-[10px] font-bold opacity-40 uppercase tracking-widest">{{ t.custom }}</label>
-                                        <button v-if="settings.customBg" @click="toggleCustomBg" class="text-[10px] font-black text-blue-500 uppercase tracking-widest">
-                                            {{ settings.useCustomBg ? 'Disable' : 'Enable' }}
-                                        </button>
+                                        <div class="flex gap-3">
+                                            <button v-if="settings.customBg" @click="clearCustomBg" class="text-[10px] font-black text-red-500 uppercase tracking-widest">
+                                                {{ t.delete }}
+                                            </button>
+                                            <button v-if="settings.customBg" @click="toggleCustomBg" class="text-[10px] font-black text-blue-500 uppercase tracking-widest">
+                                                {{ settings.useCustomBg ? 'Disable' : 'Enable' }}
+                                            </button>
+                                        </div>
                                     </div>
-                                    <button @click="triggerUpload" class="w-full h-14 rounded-2xl border-2 border-dashed flex items-center justify-center gap-3 transition-all overflow-hidden relative"
-                                        :class="settings.useCustomBg ? 'border-blue-500 bg-blue-500/10' : 'border-white/10 bg-white/5'">
-                                        <template v-if="settings.customBg">
-                                            <img :src="settings.customBg" class="absolute inset-0 w-full h-full object-cover opacity-20">
-                                        </template>
-                                        <i data-lucide="image" class="w-5 h-5 relative z-10"></i>
-                                        <span class="text-xs font-bold relative z-10">{{ settings.customBg ? 'Change Photo' : t.upload }}</span>
-                                    </button>
+                                    
+                                    <div class="relative group">
+                                        <button @click="triggerUpload" class="w-full h-24 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all overflow-hidden relative"
+                                            :class="(settings.useCustomBg || tempCustomBg) ? 'border-blue-500 bg-blue-500/10' : 'border-white/10 bg-white/5'">
+                                            <template v-if="tempCustomBg || settings.customBg">
+                                                <img :src="tempCustomBg || settings.customBg" class="absolute inset-0 w-full h-full object-cover opacity-40">
+                                            </template>
+                                            <i data-lucide="image" class="w-6 h-6 relative z-10"></i>
+                                            <span class="text-xs font-bold relative z-10">{{ (tempCustomBg || settings.customBg) ? 'Change Photo' : t.upload }}</span>
+                                        </button>
+                                        
+                                        <!-- Save/Cancel Preview -->
+                                        <div v-if="tempCustomBg" class="absolute inset-0 z-20 flex items-center justify-center gap-4 bg-black/60 backdrop-blur-sm rounded-2xl">
+                                            <button @click.stop="saveCustomBg" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-500 transition-colors">
+                                                {{ t.save }}
+                                            </button>
+                                            <button @click.stop="tempCustomBg = ''" class="bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-colors">
+                                                {{ t.cancel }}
+                                            </button>
+                                        </div>
+                                    </div>
                                     <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleUpload">
                                 </div>
                             </section>

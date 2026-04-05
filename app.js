@@ -20,6 +20,7 @@ try {
             const isAdding = ref(false);
             const isEditing = ref(false);
             const editingId = ref(null);
+            const tempCustomBg = ref('');
             
             const showTimePicker = ref(false);
             const showDatePicker = ref(false);
@@ -172,13 +173,26 @@ try {
                         
                         // Compression: JPEG 0.7 quality
                         const compressedData = canvas.toDataURL('image/jpeg', 0.7);
-                        settings.value.customBg = compressedData;
-                        settings.value.useCustomBg = true;
+                        tempCustomBg.value = compressedData;
                         e.target.value = '';
                     };
                     img.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
+            };
+
+            const saveCustomBg = () => {
+                if (tempCustomBg.value) {
+                    settings.value.customBg = tempCustomBg.value;
+                    settings.value.useCustomBg = true;
+                    tempCustomBg.value = '';
+                }
+            };
+
+            const clearCustomBg = () => {
+                tempCustomBg.value = '';
+                settings.value.customBg = '';
+                settings.value.useCustomBg = false;
             };
 
             const startAdding = () => {
@@ -333,7 +347,7 @@ try {
                 const style = {
                     left: asset.x + '%',
                     backgroundImage: `url(${asset.file})`,
-                    transform: asset.flip ? 'scaleX(-1)' : 'none'
+                    transform: `${asset.flip ? 'scaleX(-1)' : 'scaleX(1)'} scale(${asset.scale})`
                 };
                 if (asset.type === 'airplane') {
                     style.top = asset.y + '%';
@@ -371,6 +385,7 @@ try {
                     type,
                     file: `/pic/${file}`,
                     flip,
+                    scale: 0.8 + Math.random() * 0.4,
                     x: startX,
                     y: 0,
                     bottom: 0
@@ -382,7 +397,8 @@ try {
                     const duration = 8000 + Math.random() * 6000;
                     animateAsset(asset, startX, endX, asset.y, endY, duration);
                 } else if (type === 'crab') {
-                    asset.bottom = 100;
+                    // Restrict to bottom 20-30%
+                    asset.bottom = 20 + Math.random() * 80; // px from bottom
                     const duration = 40000 + Math.random() * 20000;
                     animateCrab(asset, startX, endX, duration);
                 } else if (type === 'ship') {
@@ -459,27 +475,39 @@ try {
                 requestAnimationFrame(step);
             };
 
+            const spawnBatch = (type) => {
+                const count = Math.floor(Math.random() * 3) + 1;
+                for (let i = 0; i < count; i++) {
+                    setTimeout(() => {
+                        const currentTheme = settings.value.theme;
+                        if ((type === 'airplane' && currentTheme === 'sky') ||
+                            (type === 'crab' && currentTheme === 'seaside') ||
+                            (type === 'ship' && currentTheme === 'sea')) {
+                            spawnAsset(type);
+                        }
+                    }, i * (1000 + Math.random() * 2000));
+                }
+            };
+
             const removeAsset = (id, type) => {
                 activeAssets.value = activeAssets.value.filter(a => a.id !== id);
-                setTimeout(() => {
-                    const currentTheme = settings.value.theme;
-                    if ((type === 'airplane' && currentTheme === 'sky') ||
-                        (type === 'crab' && currentTheme === 'seaside') ||
-                        (type === 'ship' && currentTheme === 'sea')) {
-                        spawnAsset(type);
-                    }
-                }, 3000 + Math.random() * 5000);
+                // Only spawn a new batch if no more of this type are active
+                if (!activeAssets.value.some(a => a.type === type)) {
+                    setTimeout(() => {
+                        spawnBatch(type);
+                    }, 3000 + Math.random() * 5000);
+                }
             };
 
             const setupEffects = () => {
-                setTimeout(() => { if (settings.value.theme === 'sky') spawnAsset('airplane'); }, 1000);
-                setTimeout(() => { if (settings.value.theme === 'seaside') spawnAsset('crab'); }, 2000);
-                setTimeout(() => { if (settings.value.theme === 'sea') spawnAsset('ship'); }, 3000);
+                setTimeout(() => { if (settings.value.theme === 'sky') spawnBatch('airplane'); }, 1000);
+                setTimeout(() => { if (settings.value.theme === 'seaside') spawnBatch('crab'); }, 2000);
+                setTimeout(() => { if (settings.value.theme === 'sea') spawnBatch('ship'); }, 3000);
                 
                 watch(() => settings.value.theme, (newTheme) => {
-                    if (newTheme === 'sky' && !activeAssets.value.some(a => a.type === 'airplane')) spawnAsset('airplane');
-                    if (newTheme === 'seaside' && !activeAssets.value.some(a => a.type === 'crab')) spawnAsset('crab');
-                    if (newTheme === 'sea' && !activeAssets.value.some(a => a.type === 'ship')) spawnAsset('ship');
+                    if (newTheme === 'sky' && !activeAssets.value.some(a => a.type === 'airplane')) spawnBatch('airplane');
+                    if (newTheme === 'seaside' && !activeAssets.value.some(a => a.type === 'crab')) spawnBatch('crab');
+                    if (newTheme === 'sea' && !activeAssets.value.some(a => a.type === 'ship')) spawnBatch('ship');
                 });
             };
 
@@ -533,7 +561,7 @@ try {
                 isClockNumberActive, handleDateInteraction, handleDateMove, 
                 getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
-                activeAssets, getAssetStyle
+                activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, clearCustomBg
             };
         }
     }).mount('#app');
