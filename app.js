@@ -22,7 +22,7 @@ try {
         }
     };
 
-    // --- IndexedDB Provider for Images ---
+    // --- IndexedDB Provider for Images (Base64 Storage) ---
     const ImageDB = {
         dbName: 'glassy-todo-storage',
         storeName: 'images',
@@ -45,12 +45,12 @@ try {
             });
         },
 
-        async saveImage(id, blob) {
+        async saveImage(id, base64) {
             if (!this.db) await this.init();
             return new Promise((resolve, reject) => {
                 const transaction = this.db.transaction([this.storeName], 'readwrite');
                 const store = transaction.objectStore(this.storeName);
-                const request = store.put(blob, id);
+                const request = store.put(base64, id);
                 request.onsuccess = () => resolve();
                 request.onerror = (e) => reject(e);
             });
@@ -292,54 +292,44 @@ try {
                 const file = e.target.files[0];
                 if (!file) return;
                 
-                // Store original to revert if cancel
-                originalCustomBg.value = settings.value.customBg;
-
                 uploadProgress.value = 10;
-                // We store the actual file/blob for IndexedDB
-                tempCustomBg.value = file;
-                
-                // Create a temporary preview URL
-                const previewUrl = URL.createObjectURL(file);
-                settings.value.customBg = previewUrl;
-                uploadProgress.value = 100;
-                setTimeout(() => uploadProgress.value = 0, 500);
+                const reader = new FileReader();
+                reader.onprogress = (evt) => {
+                    if (evt.lengthComputable) {
+                        uploadProgress.value = Math.round((evt.loaded / evt.total) * 90);
+                    }
+                };
+                reader.onload = (evt) => {
+                    tempCustomBg.value = evt.target.result; // Base64
+                    uploadProgress.value = 100;
+                    setTimeout(() => uploadProgress.value = 0, 500);
+                };
+                reader.readAsDataURL(file);
                 e.target.value = '';
             };
 
             const saveCustomBg = async () => {
-                if (tempCustomBg.value instanceof File || tempCustomBg.value instanceof Blob) {
-                    const blob = tempCustomBg.value;
-                    await ImageDB.saveImage('custom-bg', blob);
-                    
-                    // Revoke original if it was a blob and different from current preview
-                    if (originalCustomBg.value && originalCustomBg.value.startsWith('blob:')) {
-                        URL.revokeObjectURL(originalCustomBg.value);
-                    }
-                    
-                    // Current preview is already the new blob URL
-                    settings.value.useCustomBg = true;
-                    activeAssets.value = []; 
-                    tempCustomBg.value = '';
-                    originalCustomBg.value = '';
-                    
-                    const cssUrl = `url(${settings.value.customBg})`;
-                    document.body.style.backgroundImage = cssUrl;
-                    themeStyle.backgroundImage = cssUrl;
-                    document.body.classList.add('custom-theme');
-                    
-                    StorageProvider.saveSettings(settings.value);
-                }
+                if (!tempCustomBg.value) return;
+                
+                // Save Base64 directly to IndexedDB
+                await ImageDB.saveImage('custom-bg', tempCustomBg.value);
+                
+                settings.value.customBg = tempCustomBg.value;
+                settings.value.useCustomBg = true;
+                activeAssets.value = []; 
+                tempCustomBg.value = '';
+                
+                const cssUrl = `url(${settings.value.customBg})`;
+                document.body.style.backgroundImage = cssUrl;
+                themeStyle.backgroundImage = cssUrl;
+                document.body.classList.add('custom-theme');
+                
+                StorageProvider.saveSettings(settings.value);
             };
 
             const cancelUpload = () => {
-                // Revoke the temporary preview URL
-                if (settings.value.customBg && settings.value.customBg.startsWith('blob:') && settings.value.customBg !== originalCustomBg.value) {
-                    URL.revokeObjectURL(settings.value.customBg);
-                }
-                settings.value.customBg = originalCustomBg.value;
                 tempCustomBg.value = '';
-                originalCustomBg.value = '';
+                uploadProgress.value = 0;
             };
 
             const clearCustomBg = async () => {
@@ -446,7 +436,7 @@ try {
                     
                     const restoredTask = {
                         ...taskToRestore,
-                        id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+                        id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
                         completed: false,
                         isDeleted: false,
                         notified: false,
@@ -762,12 +752,14 @@ try {
                     if (effectTimeout) clearTimeout(effectTimeout);
                     activeAssets.value = []; // Clear current objects
                     
-                    // 15s Delay for Background Animations
+                    // 15s Delay for Background Animations (Zero Latency UI)
                     if (!settings.value.useCustomBg) {
                         effectTimeout = setTimeout(() => {
                             if (theme === 'sky') spawnBatch('airplane');
                             if (theme === 'seaside') spawnBatch('crab');
                             if (theme === 'sea') spawnBatch('ship');
+                            if (theme === 'sunset') { spawnBatch('airplane'); spawnBatch('ship'); }
+                            if (theme === 'forest') spawnBatch('airplane');
                         }, 15000);
                     }
                 };
@@ -828,17 +820,15 @@ try {
                     if (savedSettings) {
                         settings.value = { ...settings.value, ...savedSettings };
                         
-                        // Load image from IndexedDB
-                        const blob = await ImageDB.getImage('custom-bg');
-                        if (blob) {
-                            const url = URL.createObjectURL(blob);
-                            settings.value.customBg = url;
+                        // Load image from IndexedDB (Base64)
+                        const base64 = await ImageDB.getImage('custom-bg');
+                        if (base64) {
+                            settings.value.customBg = base64;
                             
                             if (settings.value.useCustomBg) {
                                 document.body.classList.add('custom-theme');
-                                const cssUrl = `url(${url})`;
-                                document.body.style.backgroundImage = cssUrl;
-                                themeStyle.backgroundImage = cssUrl;
+                                document.body.style.backgroundImage = `url(${base64})`;
+                                themeStyle.backgroundImage = `url(${base64})`;
                             }
                         }
                     }
@@ -941,7 +931,7 @@ try {
                 nextTick(() => lucide.createIcons());
             }, { deep: true });
 
-            // Image Sync with Object URL
+            // Image Sync with Base64
             watch(() => settings.value.customBg, (newImg) => {
                 if (settings.value.useCustomBg && newImg) {
                     const url = `url(${newImg})`;

@@ -109,216 +109,219 @@
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto no-scrollbar pb-40">
                 <transition name="fade" mode="out-in">
-                    <!-- Active Tasks -->
-                    <div v-if="view === 'active'" key="active-view">
-                        <div v-if="sortedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noTasks }}</div>
-                        
-                        <template v-for="(group, gIdx) in groupedTodos" :key="group.category + '-' + currentListId">
-                            <!-- Divider -->
-                            <div class="category-divider">
-                                <span class="category-label">{{ t[group.category] }}</span>
-                            </div>
-
-                            <div class="space-y-4">
-                                <div v-for="todo in group.items" :key="todo.id + '-' + todo.completed + '-' + Date.now()" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
-                                    <button @click="toggleTodo(todo.id)" class="text-blue-500">
-                                        <i data-lucide="circle" class="w-6 h-6"></i>
-                                    </button>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="font-bold truncate">{{ todo.text }}</p>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <span class="text-[10px] font-black uppercase opacity-60">{{ t[todo.category] }}</span>
-                                            <span v-if="todo.dueDate" class="text-[10px] opacity-60 flex items-center gap-1">
-                                                <i data-lucide="clock" class="w-3 h-3"></i> {{ formatDateTime(todo.dueDate) }}
-                                            </span>
+                    <div :key="view" class="w-full">
+                        <!-- Active Tasks -->
+                        <div v-if="view === 'active'">
+                            <div v-if="sortedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noTasks }}</div>
+                            
+                            <template v-for="(group, gIdx) in groupedTodos" :key="group.category + '-' + currentListId">
+                                <!-- Divider -->
+                                <div class="category-divider">
+                                    <span class="category-label">{{ t[group.category] }}</span>
+                                </div>
+    
+                                <div class="space-y-4">
+                                    <div v-for="todo in group.items" :key="todo.id" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
+                                        <button @click="toggleTodo(todo.id)" class="text-blue-500">
+                                            <i data-lucide="circle" class="w-6 h-6"></i>
+                                        </button>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-bold truncate">{{ todo.text }}</p>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="text-[10px] font-black uppercase opacity-60">{{ t[todo.category] }}</span>
+                                                <span v-if="todo.dueDate" class="text-[10px] opacity-60 flex items-center gap-1">
+                                                    <i data-lucide="clock" class="w-3 h-3"></i> {{ formatDateTime(todo.dueDate) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="actions flex gap-2">
+                                            <button @click="editTodo(todo)" class="btn-action btn-edit">
+                                                <i data-lucide="edit-3" class="w-5 h-5"></i>
+                                            </button>
+                                            <button @click="deleteTodo(todo.id)" class="btn-action btn-delete">
+                                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                            </button>
                                         </div>
                                     </div>
-                                    <div class="actions flex gap-2">
-                                        <button @click="editTodo(todo)" class="btn-action btn-edit">
-                                            <i data-lucide="edit-3" class="w-5 h-5"></i>
-                                        </button>
-                                        <button @click="deleteTodo(todo.id)" class="btn-action btn-delete">
-                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                        </button>
-                                    </div>
+                                </div>
+                            </template>
+                        </div>
+    
+                        <!-- Completed Records -->
+                        <div v-else-if="view === 'completed'" class="space-y-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-black">{{ t.completed }}</h2>
+                                <div class="flex gap-4 items-center">
+                                    <span class="text-[10px] font-black opacity-40 uppercase">{{ completedTodos.length }} {{ t.tasks }}</span>
+                                    <button v-if="completedTodos.length > 0" @click="promptClearCompleted" class="text-red-500 text-xs font-black uppercase tracking-widest">{{ t.clearAll }}</button>
                                 </div>
                             </div>
-                        </template>
-                    </div>
-
-                    <!-- Completed Records -->
-                    <div v-else-if="view === 'completed'" key="completed-view" class="space-y-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-black">{{ t.completed }}</h2>
-                            <div class="flex gap-4 items-center">
-                                <span class="text-[10px] font-black opacity-40 uppercase">{{ completedTodos.length }} {{ t.tasks }}</span>
-                                <button v-if="completedTodos.length > 0" @click="promptClearCompleted" class="text-red-500 text-xs font-black uppercase tracking-widest">{{ t.clearAll }}</button>
+                            <div v-if="completedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noCompleted }}</div>
+                            <div v-for="todo in completedTodos" :key="'comp-' + todo.id" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-bold truncate line-through opacity-50">{{ todo.text }}</p>
+                                    <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
+                                </div>
+                                <div class="actions flex gap-2">
+                                    <button @click="restoreTodo(todo.id)" class="btn-action btn-restore" :title="t.restore">
+                                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                                    </button>
+                                    <button @click="permanentDelete(todo.id)" class="btn-action btn-delete" :title="t.permDelete">
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div v-if="completedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noCompleted }}</div>
-                    <div v-for="todo in completedTodos" :key="'comp-' + todo.id + '-' + Date.now()" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
-                            <div class="flex-1 min-w-0">
-                                <p class="font-bold truncate line-through opacity-50">{{ todo.text }}</p>
-                                <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
+    
+                        <!-- Recycle Bin -->
+                        <div v-else-if="view === 'bin'" class="space-y-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-black">{{ t.bin }}</h2>
+                                <div class="flex gap-4 items-center">
+                                    <span class="text-[10px] font-black opacity-40 uppercase">{{ deletedTodos.length }} {{ t.tasks }}</span>
+                                    <button v-if="deletedTodos.length > 0" @click="promptClearBin" class="text-red-500 text-xs font-black uppercase tracking-widest">{{ t.clearAll }}</button>
+                                </div>
                             </div>
-                            <div class="actions flex gap-2">
-                                <button @click="restoreTodo(todo.id)" class="btn-action btn-restore" :title="t.restore">
-                                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                                </button>
-                                <button @click="permanentDelete(todo.id)" class="btn-action btn-delete" :title="t.permDelete">
-                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recycle Bin -->
-                    <div v-else-if="view === 'bin'" key="bin-view" class="space-y-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-black">{{ t.bin }}</h2>
-                            <div class="flex gap-4 items-center">
-                                <span class="text-[10px] font-black opacity-40 uppercase">{{ deletedTodos.length }} {{ t.tasks }}</span>
-                                <button v-if="deletedTodos.length > 0" @click="promptClearBin" class="text-red-500 text-xs font-black uppercase tracking-widest">{{ t.clearAll }}</button>
-                            </div>
-                        </div>
-                        <div v-if="deletedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noBin }}</div>
-                        <div v-for="todo in deletedTodos" :key="todo.id + '-' + todo.isDeleted + '-' + Date.now()" class="task-item glass rounded-2xl p-4 flex items-center justify-between" :style="glassStyle">
-                            <div class="flex-1 min-w-0 mr-4">
-                                <p class="opacity-50 line-through truncate">{{ todo.text }}</p>
-                                <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
-                            </div>
-                            <div class="actions flex gap-2">
-                                <button @click="restoreTodo(todo.id)" class="btn-action btn-restore" :title="t.restore">
-                                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                                </button>
-                                <button @click="permanentDelete(todo.id)" class="btn-action btn-delete" :title="t.permDelete">
-                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                </button>
+                            <div v-if="deletedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noBin }}</div>
+                            <div v-for="todo in deletedTodos" :key="'bin-' + todo.id" class="task-item glass rounded-2xl p-4 flex items-center justify-between" :style="glassStyle">
+                                <div class="flex-1 min-w-0 mr-4">
+                                    <p class="opacity-50 line-through truncate">{{ todo.text }}</p>
+                                    <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
+                                </div>
+                                <div class="actions flex gap-2">
+                                    <button @click="restoreTodo(todo.id)" class="btn-action btn-restore" :title="t.restore">
+                                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                                    </button>
+                                    <button @click="permanentDelete(todo.id)" class="btn-action btn-delete" :title="t.permDelete">
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div v-else key="empty-view" class="hidden"></div>
                 </transition>
             </main>
 
             <!-- Settings Modal (Persistent DOM) -->
             <transition name="fade">
-                <div v-show="view === 'settings'" :key="'settings-panel-' + settings.theme" class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
-                    <div class="setting-overlay" @click="view = 'active'"></div>
-                    <div class="glass rounded-[2.5rem] p-8 space-y-8 w-full max-w-md setting-window relative overflow-y-auto max-h-[85vh]" :style="glassStyle" @click.stop>
-                        <div class="flex items-center justify-between mb-2">
-                            <h2 class="text-2xl font-black tracking-tight">{{ t.settings }}</h2>
-                        </div>
-                        <!-- Theme Section -->
-                        <section class="space-y-4">
-                            <div class="flex items-center gap-2 opacity-40">
-                                <i data-lucide="palette" class="w-4 h-4"></i>
-                                <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.theme }}</h3>
+                <div v-show="view === 'settings'" class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
+                    <div key="settings-root" class="w-full h-full flex items-center justify-center">
+                        <div class="setting-overlay" @click="closeSettings"></div>
+                        <div class="glass rounded-[2.5rem] p-8 space-y-8 w-full max-w-md setting-window relative overflow-y-auto max-h-[85vh]" :style="glassStyle" @click.stop>
+                            <div class="flex items-center justify-between mb-2">
+                                <h2 class="text-2xl font-black tracking-tight">{{ t.settings }}</h2>
                             </div>
-                            
-                            <div class="grid grid-cols-2 gap-3">
-                                <button @click="selectTheme('light')" 
-                                    class="h-14 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1"
-                                    :class="(!settings.useCustomBg && settings.theme === 'light') ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
-                                    <i data-lucide="sun" class="w-5 h-5"></i>
-                                    <span class="text-[10px] font-bold">{{ t.light }}</span>
-                                </button>
-                                <button @click="selectTheme('dark')" 
-                                    class="h-14 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1"
-                                    :class="(!settings.useCustomBg && settings.theme === 'dark') ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
-                                    <i data-lucide="moon" class="w-5 h-5"></i>
-                                    <span class="text-[10px] font-bold">{{ t.dark }}</span>
-                                </button>
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-bold opacity-40 ml-1">{{ t.otherThemes }}</label>
-                                <div class="relative">
-                                    <select v-model="settings.theme" @change="settings.useCustomBg = false" 
-                                        class="w-full glass rounded-2xl p-4 text-sm font-bold outline-none appearance-none pr-10" :style="glassStyle">
-                                        <option v-for="th in otherThemes" :key="th.id" :value="th.id">{{ t[th.id] }}</option>
-                                    </select>
-                                    <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40"></i>
-                                </div>
-                            </div>
-
-                            <div class="space-y-3 pt-2">
-                                <div class="flex justify-between items-center px-1">
-                                    <label class="text-[10px] font-bold opacity-40 uppercase tracking-widest">{{ t.custom }}</label>
-                                    <div class="flex gap-3">
-                                        <button v-if="settings.customBg" @click="clearCustomBg" class="text-[10px] font-black text-red-500 uppercase tracking-widest">
-                                            {{ t.removeImg }}
-                                        </button>
-                                        <button v-if="settings.customBg" @click="toggleCustomBg" class="text-[10px] font-black text-blue-500 uppercase tracking-widest">
-                                            {{ settings.useCustomBg ? t.disable : t.enable }}
-                                        </button>
-                                    </div>
+                            <!-- Theme Section -->
+                            <section class="space-y-4">
+                                <div class="flex items-center gap-2 opacity-40">
+                                    <i data-lucide="palette" class="w-4 h-4"></i>
+                                    <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.theme }}</h3>
                                 </div>
                                 
-                                <div class="relative group">
-                                    <button @click="triggerUpload" class="w-full h-24 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all overflow-hidden relative"
-                                        :class="(settings.useCustomBg || tempCustomBg) ? 'border-blue-500 bg-blue-500/10' : 'border-white/10 bg-white/5'">
-                                        <template v-if="settings.customBg">
-                                            <img :src="settings.customBg" class="absolute inset-0 w-full h-full object-cover opacity-40">
-                                        </template>
-                                        <i data-lucide="image" class="w-6 h-6 relative z-10"></i>
-                                        <span class="text-xs font-bold relative z-10">{{ (tempCustomBg || settings.customBg) ? 'Change Photo' : t.upload }}</span>
-                                        
-                                        <!-- Progress Bar -->
-                                        <div v-if="uploadProgress > 0" class="absolute bottom-0 left-0 h-1 bg-blue-500 transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button @click="selectTheme('light')" 
+                                        class="h-14 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1"
+                                        :class="(!settings.useCustomBg && settings.theme === 'light') ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                                        <i data-lucide="sun" class="w-5 h-5"></i>
+                                        <span class="text-[10px] font-bold">{{ t.light }}</span>
                                     </button>
-                                    
-                                    <!-- Save/Cancel Preview -->
-                                    <div v-if="tempCustomBg" class="absolute inset-0 z-20 flex items-center justify-center gap-4 bg-black/60 backdrop-blur-sm rounded-2xl">
-                                        <button @click.stop="saveCustomBg" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-500 transition-colors">
-                                            {{ t.save }}
-                                        </button>
-                                        <button @click.stop="cancelUpload" class="bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-colors">
-                                            {{ t.cancel }}
-                                        </button>
+                                    <button @click="selectTheme('dark')" 
+                                        class="h-14 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1"
+                                        :class="(!settings.useCustomBg && settings.theme === 'dark') ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                                        <i data-lucide="moon" class="w-5 h-5"></i>
+                                        <span class="text-[10px] font-bold">{{ t.dark }}</span>
+                                    </button>
+                                </div>
+    
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-bold opacity-40 ml-1">{{ t.otherThemes }}</label>
+                                    <div class="relative">
+                                        <select v-model="settings.theme" @change="settings.useCustomBg = false" 
+                                            class="w-full glass rounded-2xl p-4 text-sm font-bold outline-none appearance-none pr-10" :style="glassStyle">
+                                            <option v-for="th in otherThemes" :key="th.id" :value="th.id">{{ t[th.id] }}</option>
+                                        </select>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40"></i>
                                     </div>
                                 </div>
-                                <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleUpload">
-                            </div>
-                        </section>
-
-                        <!-- Opacity Slider -->
-                        <section v-if="settings.useCustomBg" class="space-y-4 pt-2">
-                            <div class="flex justify-between items-center px-1">
-                                <h3 class="text-[10px] font-black opacity-40 uppercase tracking-widest">{{ t.uiOpacity }}</h3>
-                                <span class="text-[10px] font-black text-blue-500">{{ Math.round(settings.customBgOpacity * 100) }}%</span>
-                            </div>
-                            <div class="px-1">
-                                <input type="range" min="0" max="1" step="0.01" v-model="settings.customBgOpacity" class="w-full">
-                            </div>
-                            <p class="text-[9px] opacity-30 italic px-1">0% = Full Image, 100% = Hidden (Reveals Light Theme)</p>
-                        </section>
-
-                        <div class="h-px bg-white/10 mx-2"></div>
-
-                        <!-- Language & Notifications -->
-                        <div class="space-y-4">
-                            <section class="flex items-center justify-between px-1">
-                                <div class="flex items-center gap-3">
-                                    <div class="p-2 rounded-lg bg-white/5"><i data-lucide="languages" class="w-4 h-4 opacity-60"></i></div>
-                                    <h3 class="text-sm font-bold">{{ t.lang }}</h3>
+    
+                                <div class="space-y-3 pt-2">
+                                    <div class="flex justify-between items-center px-1">
+                                        <label class="text-[10px] font-bold opacity-40 uppercase tracking-widest">{{ t.custom }}</label>
+                                        <div class="flex gap-3">
+                                            <button v-if="settings.customBg" @click="clearCustomBg" class="text-[10px] font-black text-red-500 uppercase tracking-widest">
+                                                {{ t.removeImg }}
+                                            </button>
+                                            <button v-if="settings.customBg" @click="toggleCustomBg" class="text-[10px] font-black text-blue-500 uppercase tracking-widest">
+                                                {{ settings.useCustomBg ? t.disable : t.enable }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="relative group">
+                                        <button @click="triggerUpload" class="w-full h-24 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all overflow-hidden relative"
+                                            :class="(settings.useCustomBg || tempCustomBg) ? 'border-blue-500 bg-blue-500/10' : 'border-white/10 bg-white/5'">
+                                            <template v-if="settings.customBg">
+                                                <img :src="settings.customBg" class="absolute inset-0 w-full h-full object-cover opacity-40">
+                                            </template>
+                                            <i data-lucide="image" class="w-6 h-6 relative z-10"></i>
+                                            <span class="text-xs font-bold relative z-10">{{ (tempCustomBg || settings.customBg) ? 'Change Photo' : t.upload }}</span>
+                                            
+                                            <!-- Progress Bar -->
+                                            <div v-if="uploadProgress > 0" class="absolute bottom-0 left-0 h-1 bg-blue-500 transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
+                                        </button>
+                                        
+                                        <!-- Save/Cancel Preview -->
+                                        <div v-if="tempCustomBg" class="absolute inset-0 z-20 flex items-center justify-center gap-4 bg-black/60 backdrop-blur-sm rounded-2xl">
+                                            <button @click.stop="saveCustomBg" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-500 transition-colors">
+                                                {{ t.save }}
+                                            </button>
+                                            <button @click.stop="cancelUpload" class="bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-colors">
+                                                {{ t.cancel }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleUpload">
                                 </div>
-                                <button @click="toggleLang" class="px-4 py-2 rounded-xl glass text-xs font-bold border border-white/5" :style="glassStyle">
-                                    {{ settings.lang === 'en' ? 'English' : '繁體中文' }}
-                                </button>
                             </section>
-
-                            <section class="flex items-center justify-between px-1">
-                                <div class="flex items-center gap-3">
-                                    <div class="p-2 rounded-lg bg-white/5"><i data-lucide="bell" class="w-4 h-4 opacity-60"></i></div>
-                                    <h3 class="text-sm font-bold">{{ t.notifications }}</h3>
+    
+                            <!-- Opacity Slider -->
+                            <section v-if="settings.useCustomBg" class="space-y-4 pt-2">
+                                <div class="flex justify-between items-center px-1">
+                                    <h3 class="text-[10px] font-black opacity-40 uppercase tracking-widest">{{ t.uiOpacity }}</h3>
+                                    <span class="text-[10px] font-black text-blue-500">{{ Math.round(settings.customBgOpacity * 100) }}%</span>
                                 </div>
-                                <button @click="toggleNotifications" class="w-12 h-6 rounded-full relative transition-all duration-300" 
-                                    :class="settings.notificationsEnabled ? 'bg-blue-500' : 'bg-white/10'">
-                                    <div class="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300" 
-                                        :style="{ left: settings.notificationsEnabled ? '26px' : '4px' }"></div>
-                                </button>
+                                <div class="px-1">
+                                    <input type="range" min="0" max="1" step="0.01" v-model="settings.customBgOpacity" class="w-full">
+                                </div>
+                                <p class="text-[9px] opacity-30 italic px-1">0% = Full Image, 100% = Hidden (Reveals Light Theme)</p>
                             </section>
+    
+                            <div class="h-px bg-white/10 mx-2"></div>
+    
+                            <!-- Language & Notifications -->
+                            <div class="space-y-4">
+                                <section class="flex items-center justify-between px-1">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 rounded-lg bg-white/5"><i data-lucide="languages" class="w-4 h-4 opacity-60"></i></div>
+                                        <h3 class="text-sm font-bold">{{ t.lang }}</h3>
+                                    </div>
+                                    <button @click="toggleLang" class="px-4 py-2 rounded-xl glass text-xs font-bold border border-white/5" :style="glassStyle">
+                                        {{ settings.lang === 'en' ? 'English' : '繁體中文' }}
+                                    </button>
+                                </section>
+    
+                                <section class="flex items-center justify-between px-1">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 rounded-lg bg-white/5"><i data-lucide="bell" class="w-4 h-4 opacity-60"></i></div>
+                                        <h3 class="text-sm font-bold">{{ t.notifications }}</h3>
+                                    </div>
+                                    <button @click="toggleNotifications" class="w-12 h-6 rounded-full relative transition-all duration-300" 
+                                        :class="settings.notificationsEnabled ? 'bg-blue-500' : 'bg-white/10'">
+                                        <div class="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300" 
+                                            :style="{ left: settings.notificationsEnabled ? '26px' : '4px' }"></div>
+                                    </button>
+                                </section>
+                            </div>
                         </div>
                     </div>
                 </div>
