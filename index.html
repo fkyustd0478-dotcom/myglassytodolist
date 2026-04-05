@@ -134,10 +134,10 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-2">
-                                        <button @click="editTodo(todo)" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors">
+                                        <button @click="editTodo(todo)" class="btn-action btn-edit">
                                             <i data-lucide="edit-3" class="w-5 h-5"></i>
                                         </button>
-                                        <button @click="deleteTodo(todo.id)" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-colors">
+                                        <button @click="deleteTodo(todo.id)" class="btn-action btn-delete">
                                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                                         </button>
                                     </div>
@@ -162,11 +162,11 @@
                                 <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
                             </div>
                             <div class="flex gap-2">
-                                <button @click="toggleTodo(todo.id)" class="p-2 bg-green-500/10 text-green-500 rounded-xl hover:bg-green-500/20 transition-colors" :title="t.restore">
+                                <button @click="restoreTodo(todo.id)" class="btn-action btn-restore" :title="t.restore">
                                     <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
                                 </button>
-                                <button @click="permanentDelete(todo.id)" class="p-2 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors" :title="t.permDelete">
-                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                <button @click="permanentDelete(todo.id)" class="btn-action btn-delete" :title="t.permDelete">
+                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
                                 </button>
                             </div>
                         </div>
@@ -188,11 +188,11 @@
                                 <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
                             </div>
                             <div class="flex gap-2">
-                                <button @click="restoreTodo(todo.id)" class="p-2 bg-green-500/10 text-green-500 rounded-xl hover:bg-green-500/20 transition-colors" :title="t.restore">
+                                <button @click="restoreTodo(todo.id)" class="btn-action btn-restore" :title="t.restore">
                                     <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
                                 </button>
-                                <button @click="permanentDelete(todo.id)" class="p-2 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors" :title="t.permDelete">
-                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                <button @click="permanentDelete(todo.id)" class="btn-action btn-delete" :title="t.permDelete">
+                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
                                 </button>
                             </div>
                         </div>

@@ -316,11 +316,34 @@ try {
             
             const toggleTodo = (id) => { 
                 const t = todos.value.find(x => x.id === id); 
-                if (t) t.completed = !t.completed; 
+                if (t) {
+                    t.completed = !t.completed;
+                    t.notified = false;
+                }
             };
             
             const deleteTodo = (id) => { const t = todos.value.find(x => x.id === id); if (t) t.isDeleted = true; };
-            const restoreTodo = (id) => { const t = todos.value.find(x => x.id === id); if (t) t.isDeleted = false; };
+            
+            const restoreTodo = (id) => {
+                const index = todos.value.findIndex(x => x.id === id);
+                if (index !== -1) {
+                    const oldTodo = todos.value[index];
+                    // Capture and Create NEW identical task object
+                    const newTodo = {
+                        ...oldTodo,
+                        id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                        completed: false,
+                        isDeleted: false,
+                        notified: false,
+                        createdAt: new Date().toISOString()
+                    };
+                    // Remove original record
+                    todos.value.splice(index, 1);
+                    // Add to Active list
+                    todos.value.unshift(newTodo);
+                }
+            };
+
             const permanentDelete = (id) => todos.value = todos.value.filter(x => x.id !== id);
             
             const promptClearCompleted = () => {
@@ -689,6 +712,23 @@ try {
                 localStorage.setItem('glassy_todo_v12', JSON.stringify({ todos: todos.value, settings: settings.value, lists: lists.value })); 
                 nextTick(() => lucide.createIcons()); 
             }, { deep: true });
+
+            // CRITICAL FIX: Instant Background Sync Watcher
+            watch(() => settings.value.customBg, (newImg) => {
+                if (settings.value.useCustomBg && newImg) {
+                    document.body.style.backgroundImage = `url(${newImg})`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                }
+            }, { immediate: true });
+
+            watch(() => settings.value.useCustomBg, (val) => {
+                if (!val) {
+                    document.body.style.backgroundImage = '';
+                } else if (settings.value.customBg) {
+                    document.body.style.backgroundImage = `url(${settings.value.customBg})`;
+                }
+            });
 
             watch([view, isAdding, isEditing, showTimePicker, showDatePicker, currentListId], () => {
                 nextTick(() => lucide.createIcons());
