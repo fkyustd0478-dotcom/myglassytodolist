@@ -4,7 +4,10 @@ try {
     // --- Modular Storage Provider (Firebase-Ready) ---
     const StorageProvider = {
         saveSettings(settings) {
-            localStorage.setItem('todo_settings', JSON.stringify(settings));
+            // Exclude large image data from localStorage
+            const settingsToSave = { ...settings };
+            delete settingsToSave.customBg; 
+            localStorage.setItem('todo_settings', JSON.stringify(settingsToSave));
         },
         loadSettings() {
             const saved = localStorage.getItem('todo_settings');
@@ -16,6 +19,63 @@ try {
         loadData() {
             const saved = localStorage.getItem('todo_data');
             return saved ? JSON.parse(saved) : null;
+        }
+    };
+
+    // --- IndexedDB Provider for Images ---
+    const ImageDB = {
+        dbName: 'glassy-todo-storage',
+        storeName: 'images',
+        db: null,
+
+        async init() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(this.dbName, 1);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(this.storeName)) {
+                        db.createObjectStore(this.storeName);
+                    }
+                };
+                request.onsuccess = (e) => {
+                    this.db = e.target.result;
+                    resolve();
+                };
+                request.onerror = (e) => reject(e);
+            });
+        },
+
+        async saveImage(id, blob) {
+            if (!this.db) await this.init();
+            return new Promise((resolve, reject) => {
+                const transaction = this.db.transaction([this.storeName], 'readwrite');
+                const store = transaction.objectStore(this.storeName);
+                const request = store.put(blob, id);
+                request.onsuccess = () => resolve();
+                request.onerror = (e) => reject(e);
+            });
+        },
+
+        async getImage(id) {
+            if (!this.db) await this.init();
+            return new Promise((resolve, reject) => {
+                const transaction = this.db.transaction([this.storeName], 'readonly');
+                const store = transaction.objectStore(this.storeName);
+                const request = store.get(id);
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e);
+            });
+        },
+
+        async deleteImage(id) {
+            if (!this.db) await this.init();
+            return new Promise((resolve, reject) => {
+                const transaction = this.db.transaction([this.storeName], 'readwrite');
+                const store = transaction.objectStore(this.storeName);
+                const request = store.delete(id);
+                request.onsuccess = () => resolve();
+                request.onerror = (e) => reject(e);
+            });
         }
     };
 
@@ -50,7 +110,7 @@ try {
                 customBgOpacity: 0.5, 
                 notificationsEnabled: false, 
                 lang: 'zh',
-                customBg: '', 
+                customBg: '', // This will hold the Object URL
                 useCustomBg: false 
             });
             
@@ -59,6 +119,7 @@ try {
             const isEditing = ref(false);
             const editingId = ref(null);
             const tempCustomBg = ref('');
+            const originalCustomBg = ref('');
             const uploadProgress = ref(0);
             
             const showTimePicker = ref(false);
@@ -227,66 +288,68 @@ try {
                 const file = e.target.files[0];
                 if (!file) return;
                 
+                // Store original to revert if cancel
+                originalCustomBg.value = settings.value.customBg;
+
                 uploadProgress.value = 10;
-                const reader = new FileReader();
-                reader.onprogress = (event) => {
-                    if (event.lengthComputable) {
-                        uploadProgress.value = 10 + (event.loaded / event.total) * 40;
-                    }
-                };
-                reader.onload = (event) => {
-                    uploadProgress.value = 60;
-                    const img = new Image();
-                    img.onload = () => {
-                        uploadProgress.value = 80;
-                        const canvas = document.createElement('canvas');
-                        let w = img.width, h = img.height;
-                        const max = 1280;
-                        
-                        if (w > max || h > max) { 
-                            if (w > h) { h *= max / w; w = max; } 
-                            else { w *= max / h; h = max; } 
-                        }
-                        
-                        canvas.width = w; 
-                        canvas.height = h;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, w, h);
-                        
-                        // Convert to Base64 for instant preview
-                        const compressedData = canvas.toDataURL('image/jpeg', 0.7);
-                        tempCustomBg.value = compressedData;
-                        uploadProgress.value = 100;
-                        setTimeout(() => uploadProgress.value = 0, 500);
-                        e.target.value = '';
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
+                // We store the actual file/blob for IndexedDB
+                tempCustomBg.value = file;
+                
+                // Create a temporary preview URL
+                const previewUrl = URL.createObjectURL(file);
+                settings.value.customBg = previewUrl;
+                uploadProgress.value = 100;
+                setTimeout(() => uploadProgress.value = 0, 500);
+                e.target.value = '';
             };
 
-            const saveCustomBg = () => {
-                if (tempCustomBg.value) {
-                    const base64Data = tempCustomBg.value;
-                    settings.value.customBg = base64Data;
-                    settings.value.useCustomBg = true;
-                    activeAssets.value = []; // Clear assets when using custom bg
-                    tempCustomBg.value = '';
+            const saveCustomBg = async () => {
+                if (tempCustomBg.value instanceof File || tempCustomBg.value instanceof Blob) {
+                    const blob = tempCustomBg.value;
+                    await ImageDB.saveImage('custom-bg', blob);
                     
-                    // Reactive update with Timestamp Cache-Busting
-                    const url = `url(${base64Data}?t=${Date.now()})`;
-                    document.body.style.backgroundImage = url;
-                    themeStyle.backgroundImage = url;
+                    // Revoke original if it was a blob and different from current preview
+                    if (originalCustomBg.value && originalCustomBg.value.startsWith('blob:')) {
+                        URL.revokeObjectURL(originalCustomBg.value);
+                    }
+                    
+                    // Current preview is already the new blob URL
+                    settings.value.useCustomBg = true;
+                    activeAssets.value = []; 
+                    tempCustomBg.value = '';
+                    originalCustomBg.value = '';
+                    
+                    const cssUrl = `url(${settings.value.customBg})`;
+                    document.body.style.backgroundImage = cssUrl;
+                    themeStyle.backgroundImage = cssUrl;
                     document.body.classList.add('custom-theme');
+                    
+                    StorageProvider.saveSettings(settings.value);
                 }
             };
 
-            const clearCustomBg = () => {
+            const cancelUpload = () => {
+                // Revoke the temporary preview URL
+                if (settings.value.customBg && settings.value.customBg.startsWith('blob:') && settings.value.customBg !== originalCustomBg.value) {
+                    URL.revokeObjectURL(settings.value.customBg);
+                }
+                settings.value.customBg = originalCustomBg.value;
                 tempCustomBg.value = '';
+                originalCustomBg.value = '';
+            };
+
+            const clearCustomBg = async () => {
+                if (settings.value.customBg && settings.value.customBg.startsWith('blob:')) {
+                    URL.revokeObjectURL(settings.value.customBg);
+                }
+                tempCustomBg.value = '';
+                originalCustomBg.value = '';
                 settings.value.customBg = '';
                 settings.value.useCustomBg = false;
+                await ImageDB.deleteImage('custom-bg');
                 document.body.classList.remove('custom-theme');
                 document.body.style.backgroundImage = '';
+                StorageProvider.saveSettings(settings.value);
             };
 
             const startAdding = () => {
@@ -749,23 +812,30 @@ try {
             });
 
             // --- Lifecycle ---
-            onMounted(() => {
-                // Phase 1: Immediate UI Shell is already rendered by Vue
-                
+            onMounted(async () => {
+                // Initialize IndexedDB
+                await ImageDB.init();
+
                 // Phase 2: Deferred Data Hydration (Bypass main thread blocking)
-                const hydrateData = () => {
+                const hydrateData = async () => {
                     const savedSettings = StorageProvider.loadSettings();
                     const savedData = StorageProvider.loadData();
 
                     if (savedSettings) {
                         settings.value = { ...settings.value, ...savedSettings };
                         
-                        // Apply custom theme class if needed
-                        if (settings.value.useCustomBg && settings.value.customBg) {
-                            document.body.classList.add('custom-theme');
-                            const url = `url(${settings.value.customBg})`;
-                            document.body.style.backgroundImage = url;
-                            themeStyle.backgroundImage = url;
+                        // Load image from IndexedDB
+                        const blob = await ImageDB.getImage('custom-bg');
+                        if (blob) {
+                            const url = URL.createObjectURL(blob);
+                            settings.value.customBg = url;
+                            
+                            if (settings.value.useCustomBg) {
+                                document.body.classList.add('custom-theme');
+                                const cssUrl = `url(${url})`;
+                                document.body.style.backgroundImage = cssUrl;
+                                themeStyle.backgroundImage = cssUrl;
+                            }
                         }
                     }
 
@@ -867,10 +937,10 @@ try {
                 nextTick(() => lucide.createIcons());
             }, { deep: true });
 
-            // Image Sync with Timestamp Cache-Buster
+            // Image Sync with Object URL
             watch(() => settings.value.customBg, (newImg) => {
                 if (settings.value.useCustomBg && newImg) {
-                    const url = `url(${newImg}?t=${Date.now()})`;
+                    const url = `url(${newImg})`;
                     document.body.style.backgroundImage = url;
                     themeStyle.backgroundImage = url;
                     document.body.classList.add('custom-theme');
@@ -883,7 +953,7 @@ try {
                     themeStyle.backgroundImage = '';
                     document.body.classList.remove('custom-theme');
                 } else if (settings.value.customBg) {
-                    const url = `url(${settings.value.customBg}?t=${Date.now()})`;
+                    const url = `url(${settings.value.customBg})`;
                     document.body.style.backgroundImage = url;
                     themeStyle.backgroundImage = url;
                     document.body.classList.add('custom-theme');
@@ -921,7 +991,7 @@ try {
                 isClockNumberActive, handleDateInteraction, handleDateMove, 
                 getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
-                activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, clearCustomBg,
+                activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, cancelUpload, clearCustomBg,
                 listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal,
                 isDefaultList, uploadProgress, confirmModal, promptClearCompleted, promptClearBin, executeConfirm
             };
