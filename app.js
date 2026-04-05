@@ -1,5 +1,5 @@
 try {
-    const { createApp, ref, onMounted, computed, watch, nextTick } = Vue;
+    const { createApp, ref, reactive, onMounted, computed, watch, nextTick } = Vue;
 
     createApp({
         setup() {
@@ -324,45 +324,163 @@ try {
             const formatDateTime = (s) => new Date(s).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             
             // --- Visual Effects ---
+            const activeAssets = ref([]);
             const petalStyle = (n) => ({ left: (n * 5) + '%', animationDuration: (5 + Math.random() * 5) + 's', animationDelay: (Math.random() * 5) + 's' });
             const cloudStyle = (n) => ({ top: (n * 15) + '%', animationDuration: (20 + Math.random() * 20) + 's', animationDelay: (-Math.random() * 20) + 's' });
             const rainStyle = (n) => ({ left: (n * 7) + '%', animationDelay: (Math.random() * 2) + 's' });
 
-            const triggerEffect = (name, duration) => {
-                effects.value[name] = true;
-                nextTick(() => {
-                    const elements = document.querySelectorAll(`.${name}`);
-                    elements.forEach((el, index) => {
-                        const dir = Math.random() > 0.5 ? 'left' : 'right';
-                        const dur = (name === 'ship' ? (20 + Math.random() * 20) : (5 + Math.random() * 10)).toFixed(1);
-                        const delay = (index * (2 + Math.random() * 5)).toFixed(1);
-                        
-                        el.classList.remove('left', 'right');
-                        el.classList.add(dir);
-                        el.style.animationDuration = `${dur}s`;
-                        el.style.animationDelay = `${delay}s`;
-                        
-                        if (name === 'airplane') {
-                            el.style.setProperty('--start-y', `${10 + Math.random() * 40}%`);
-                            el.style.setProperty('--mid-y', `${10 + Math.random() * 40}%`);
-                            el.style.setProperty('--end-y', `${10 + Math.random() * 40}%`);
-                        }
-                        if (name === 'ship') {
-                            el.style.bottom = `${35 + Math.random() * 10}%`;
-                        }
-                    });
+            const getAssetStyle = (asset) => {
+                const style = {
+                    left: asset.x + '%',
+                    backgroundImage: `url(${asset.file})`,
+                    transform: asset.flip ? 'scaleX(-1)' : 'none'
+                };
+                if (asset.type === 'airplane') {
+                    style.top = asset.y + '%';
+                } else if (asset.type === 'crab' || asset.type === 'ship') {
+                    style.bottom = asset.bottom + (asset.type === 'ship' ? '%' : 'px');
+                }
+                return style;
+            };
+
+            const spawnAsset = (type) => {
+                const inventory = {
+                    airplane: ['plane-1-l.png', 'plane-2-l.png', 'plane-3-l.png'],
+                    crab: ['crab-1-l.png', 'crab-2-r.png'],
+                    ship: ['ship-1-l.png', 'ship-2-r.png', 'ship-3-l.png', 'ship-4-l.png', 'ship-5-l.png']
+                };
+
+                const files = inventory[type];
+                const file = files[Math.floor(Math.random() * files.length)];
+                const inherentDir = file.includes('-l') ? 'right' : 'left';
+                
+                const moveDir = Math.random() > 0.5 ? 'LtoR' : 'RtoL';
+                const startX = moveDir === 'LtoR' ? -25 : 125;
+                const endX = moveDir === 'LtoR' ? 125 : -25;
+                
+                let flip = false;
+                if (moveDir === 'LtoR') {
+                    if (inherentDir === 'left') flip = true;
+                } else {
+                    if (inherentDir === 'right') flip = true;
+                }
+
+                const id = Math.random().toString(36).substr(2, 9);
+                const asset = reactive({
+                    id,
+                    type,
+                    file: `/pic/${file}`,
+                    flip,
+                    x: startX,
+                    y: 0,
+                    bottom: 0
                 });
+
+                if (type === 'airplane') {
+                    asset.y = 10 + Math.random() * 40;
+                    const endY = 10 + Math.random() * 40;
+                    const duration = 8000 + Math.random() * 6000;
+                    animateAsset(asset, startX, endX, asset.y, endY, duration);
+                } else if (type === 'crab') {
+                    asset.bottom = 100;
+                    const duration = 40000 + Math.random() * 20000;
+                    animateCrab(asset, startX, endX, duration);
+                } else if (type === 'ship') {
+                    asset.bottom = 35 + Math.random() * 10;
+                    const duration = 25000 + Math.random() * 15000;
+                    animateAsset(asset, startX, endX, null, null, duration);
+                }
+
+                activeAssets.value.push(asset);
+            };
+
+            const animateAsset = (asset, startX, endX, startY, endY, duration) => {
+                const startTime = performance.now();
+                const step = (now) => {
+                    if (!activeAssets.value.find(a => a.id === asset.id)) return;
+                    
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    asset.x = startX + (endX - startX) * progress;
+                    if (startY !== null && endY !== null) {
+                        asset.y = startY + (endY - startY) * progress;
+                    }
+
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        removeAsset(asset.id, asset.type);
+                    }
+                };
+                requestAnimationFrame(step);
+            };
+
+            const animateCrab = (asset, startX, endX, duration) => {
+                const startTime = performance.now();
+                let pausedTime = 0;
+                let lastPauseEnd = startTime;
+                let isPaused = false;
+                let pauseUntil = 0;
+
+                const step = (now) => {
+                    if (!activeAssets.value.find(a => a.id === asset.id)) return;
+
+                    if (isPaused) {
+                        if (now >= pauseUntil) {
+                            isPaused = false;
+                            lastPauseEnd = now;
+                        } else {
+                            requestAnimationFrame(step);
+                            return;
+                        }
+                    }
+
+                    if (!isPaused && now - lastPauseEnd > 5000 + Math.random() * 5000) {
+                        isPaused = true;
+                        const pauseDuration = 1000 + Math.random() * 1000;
+                        pauseUntil = now + pauseDuration;
+                        pausedTime += pauseDuration;
+                        requestAnimationFrame(step);
+                        return;
+                    }
+
+                    const elapsed = now - startTime - pausedTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    asset.x = startX + (endX - startX) * progress;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        removeAsset(asset.id, asset.type);
+                    }
+                };
+                requestAnimationFrame(step);
+            };
+
+            const removeAsset = (id, type) => {
+                activeAssets.value = activeAssets.value.filter(a => a.id !== id);
                 setTimeout(() => {
-                    effects.value[name] = false;
-                }, duration);
+                    const currentTheme = settings.value.theme;
+                    if ((type === 'airplane' && currentTheme === 'sky') ||
+                        (type === 'crab' && currentTheme === 'seaside') ||
+                        (type === 'ship' && currentTheme === 'sea')) {
+                        spawnAsset(type);
+                    }
+                }, 3000 + Math.random() * 5000);
             };
 
             const setupEffects = () => {
-                setInterval(() => {
-                    if (settings.value.theme === 'sky' && !effects.value.airplane) triggerEffect('airplane', 15000);
-                    if (settings.value.theme === 'seaside' && !effects.value.crab) triggerEffect('crab', 80000);
-                    if (settings.value.theme === 'sea' && !effects.value.ship) triggerEffect('ship', 45000);
-                }, 2000 + Math.random() * 10000);
+                setTimeout(() => { if (settings.value.theme === 'sky') spawnAsset('airplane'); }, 1000);
+                setTimeout(() => { if (settings.value.theme === 'seaside') spawnAsset('crab'); }, 2000);
+                setTimeout(() => { if (settings.value.theme === 'sea') spawnAsset('ship'); }, 3000);
+                
+                watch(() => settings.value.theme, (newTheme) => {
+                    if (newTheme === 'sky' && !activeAssets.value.some(a => a.type === 'airplane')) spawnAsset('airplane');
+                    if (newTheme === 'seaside' && !activeAssets.value.some(a => a.type === 'crab')) spawnAsset('crab');
+                    if (newTheme === 'sea' && !activeAssets.value.some(a => a.type === 'ship')) spawnAsset('ship');
+                });
             };
 
             // --- Lifecycle ---
@@ -414,13 +532,14 @@ try {
                 handleClockInteraction, handleClockMove, getClockPos, 
                 isClockNumberActive, handleDateInteraction, handleDateMove, 
                 getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 
-                formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects 
+                formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
+                activeAssets, getAssetStyle
             };
         }
     }).mount('#app');
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js');
+        navigator.serviceWorker.register('/sw.js');
     }
 } catch (e) { 
     const errorReporter = document.getElementById('error-reporter');

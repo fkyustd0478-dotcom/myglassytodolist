@@ -50,13 +50,31 @@ body {
 /* Background Layers */
 .bg-layer {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 0;
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
     pointer-events: none;
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     background-size: cover;
     background-position: center;
 }
+
+/* Animated Assets */
+.animated-asset {
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+    z-index: 3;
+    pointer-events: none;
+    will-change: transform, left, top, bottom;
+}
+
+.airplane { width: 120px; height: 60px; }
+.crab { width: 60px; height: 50px; }
+.ship { width: 100px; height: 80px; opacity: 0.9; }
 
 .custom-bg-layer {
     position: fixed;
@@ -186,111 +204,61 @@ body {
 }
 
 /* Airplane */
-@keyframes flyRight {
-    0% { left: -25%; top: var(--start-y, 20%); transform: rotate(2deg) scaleX(1); opacity: 0; }
-    10% { opacity: 1; }
-    50% { left: 50%; top: var(--mid-y, 15%); transform: rotate(0deg) scaleX(1); }
-    90% { opacity: 1; }
-    100% { left: 125%; top: var(--end-y, 25%); transform: rotate(-2deg) scaleX(1); opacity: 0; }
-}
-@keyframes flyLeft {
-    0% { left: 125%; top: var(--start-y, 20%); transform: rotate(-2deg) scaleX(-1); opacity: 0; }
-    10% { opacity: 1; }
-    50% { left: 50%; top: var(--mid-y, 15%); transform: rotate(0deg) scaleX(-1); }
-    90% { opacity: 1; }
-    100% { left: -25%; top: var(--end-y, 25%); transform: rotate(2deg) scaleX(-1); opacity: 0; }
-}
-.airplane {
-    position: absolute;
-    z-index: 3;
-    width: 120px;
-    height: 60px;
-    background-image: url("./pic/plane-1-l.png");
-    background-size: contain;
-    background-repeat: no-repeat;
-    animation: flyRight 12s linear infinite;
-    animation-fill-mode: both;
-}
-.airplane.left { animation-name: flyLeft; }
-.airplane.right { animation-name: flyRight; }
 
-/* Crab */
-@keyframes crawlRight {
-    0% { left: -20%; transform: translateY(0) scaleX(1); }
-    10% { left: 5%; transform: translateY(-5px) scaleX(1); }
-    20% { left: 15%; transform: translateY(0) scaleX(1); }
-    30% { left: 15%; transform: translateY(0) scaleX(1); } /* Pause */
-    40% { left: 35%; transform: translateY(5px) scaleX(1); }
-    50% { left: 50%; transform: translateY(0) scaleX(1); }
-    60% { left: 50%; transform: translateY(0) scaleX(1); } /* Pause */
-    70% { left: 70%; transform: translateY(-5px) scaleX(1); }
-    80% { left: 85%; transform: translateY(0) scaleX(1); }
-    90% { left: 85%; transform: translateY(0) scaleX(1); } /* Pause */
-    100% { left: 120%; transform: translateY(0) scaleX(1); }
-}
-@keyframes crawlLeft {
-    0% { left: 120%; transform: translateY(0) scaleX(-1); }
-    10% { left: 95%; transform: translateY(-5px) scaleX(-1); }
-    20% { left: 85%; transform: translateY(0) scaleX(-1); }
-    30% { left: 85%; transform: translateY(0) scaleX(-1); } /* Pause */
-    40% { left: 65%; transform: translateY(5px) scaleX(-1); }
-    50% { left: 50%; transform: translateY(0) scaleX(-1); }
-    60% { left: 50%; transform: translateY(0) scaleX(-1); } /* Pause */
-    70% { left: 30%; transform: translateY(-5px) scaleX(-1); }
-    80% { left: 15%; transform: translateY(0) scaleX(-1); }
-    90% { left: 15%; transform: translateY(0) scaleX(-1); } /* Pause */
-    100% { left: -20%; transform: translateY(0) scaleX(-1); }
-}
-.crab {
-    position: absolute;
-    bottom: 100px;
-    z-index: 3;
-    width: 60px;
-    height: 50px;
-    background-image: url("./pic/crab-1-l.png");
-    background-size: contain;
-    background-repeat: no-repeat;
-    animation: crawlRight 75s linear infinite;
-}
-.crab.left { animation-name: crawlLeft; }
-.crab.right { animation-name: crawlRight; }
+/* Theme Backgrounds */
+.theme-cherry { background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); }
+.theme-sky { background: linear-gradient(180deg, #87CEEB 0%, #E0F7FA 100%); }
+.theme-seaside { background: linear-gradient(180deg, #4da3ff 0%, #ffd89b 100%); }
+.theme-sunset { background: linear-gradient(180deg, #ff512f 0%, #dd2476 100%); }
+.theme-forest { background: linear-gradient(180deg, #134e5e 0%, #71b280 100%); }
+.theme-sea { background: linear-gradient(180deg, #2c3e50 0%, #000000 100%); }
+.theme-light { background: #f8fafc; }
+.theme-dark { background: #0f172a; }
 
-/* Ship */
-@keyframes sailRight {
-    0% { left: -25%; transform: scaleX(1); }
-    100% { left: 125%; transform: scaleX(1); }
-}
-@keyframes sailLeft {
-    0% { left: 125%; transform: scaleX(-1); }
-    100% { left: -25%; transform: scaleX(-1); }
-}
-.ship {
+/* Cherry Blossom */
+.petal {
     position: absolute;
-    bottom: 40%;
+    width: 15px;
+    height: 15px;
+    background: #ffc0cb;
+    border-radius: 150% 0 150% 0;
+    animation: fall 10s linear infinite;
+    z-index: 1;
+}
+@keyframes fall {
+    0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* Sky */
+.cloud {
+    position: absolute;
+    animation: floatCloud 30s linear infinite;
+    z-index: 1;
+}
+@keyframes floatCloud {
+    from { left: -20%; }
+    to { left: 120%; }
+}
+
+/* Sunset */
+.sun {
+    position: absolute;
+    bottom: 20%;
+    left: 50%;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, #ff8c00 0%, #ff4500 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 100px #ff4500;
     z-index: 2;
-    width: 100px;
-    height: 80px;
-    background-image: url("./pic/ship-1-l.png");
-    background-size: contain;
-    background-repeat: no-repeat;
-    animation: sailRight 30s linear infinite;
-    opacity: 0.9;
+    animation: pulseSun 10s ease-in-out infinite;
 }
-.ship.left { animation-name: sailLeft; }
-.ship.right { animation-name: sailRight; }
-
-/* Rain */
-@keyframes rainFall {
-    from { transform: translateY(-10vh) translateX(0); }
-    to { transform: translateY(110vh) translateX(20px); }
-}
-.raindrop {
-    position: absolute;
-    width: 1.5px;
-    height: 25px;
-    background: rgba(255, 255, 255, 0.4);
-    animation: rainFall 0.5s linear infinite;
-    z-index: 3;
+@keyframes pulseSun {
+    0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
+    50% { transform: translateX(-50%) scale(1.05); opacity: 1; }
 }
 
 /* UI Components */
