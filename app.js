@@ -284,6 +284,10 @@ try {
 
             const triggerUpload = () => fileInput.value.click();
 
+            const closeSettings = () => {
+                view.value = 'active';
+            };
+
             const handleUpload = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -437,7 +441,7 @@ try {
             const restoreTodo = (id) => {
                 const index = todos.value.findIndex(x => x.id === id);
                 if (index !== -1) {
-                    // Capture-Create-Remove logic
+                    // Capture-Create-Remove logic (Forced Fix)
                     const taskToRestore = JSON.parse(JSON.stringify(todos.value[index]));
                     
                     const restoredTask = {
@@ -449,14 +453,14 @@ try {
                         createdAt: new Date().toISOString()
                     };
                     
-                    // Remove original
+                    // Remove original from whatever state it was in
                     todos.value.splice(index, 1);
                     
                     // Create new active task
                     todos.value.unshift(restoredTask);
                     
                     nextTick(() => {
-                        lucide.createIcons();
+                        if (window.lucide) lucide.createIcons();
                     });
                 }
             };
@@ -986,7 +990,7 @@ try {
                 deletedTodos, toggleLang, toggleNotifications, selectTheme, 
                 toggleCustomBg, triggerUpload, handleUpload, startAdding, editTodo, 
                 saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, 
-                permanentDelete, addNewList, openDatePicker, 
+                permanentDelete, addNewList, openDatePicker, closeSettings,
                 handleClockInteraction, handleClockMove, getClockPos, 
                 isClockNumberActive, handleDateInteraction, handleDateMove, 
                 getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 

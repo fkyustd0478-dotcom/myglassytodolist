@@ -488,10 +488,11 @@ main {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Action Buttons */
-.task-item .actions {
-    display: flex !important;
-    opacity: 1 !important;
-    visibility: visible !important;
+.task-item .actions { 
+    display: flex !important; 
+    opacity: 1 !important; 
+    visibility: visible !important; 
+    pointer-events: auto !important;
 }
 
 .btn-action {
@@ -628,7 +629,16 @@ input[type=range]::-webkit-slider-runnable-track {
 
 /* Settings Panel UI */
 .setting-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
     transition: opacity 0.4s ease;
+}
+
+.setting-window {
+    z-index: 1000;
 }
 
 .nav-item {

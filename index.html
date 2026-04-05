@@ -156,7 +156,7 @@
                             </div>
                         </div>
                         <div v-if="completedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noCompleted }}</div>
-                        <div v-for="todo in completedTodos" :key="todo.id + '-' + todo.completed + '-' + Date.now()" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
+                    <div v-for="todo in completedTodos" :key="'comp-' + todo.id + '-' + Date.now()" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
                             <div class="flex-1 min-w-0">
                                 <p class="font-bold truncate line-through opacity-50">{{ todo.text }}</p>
                                 <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
@@ -203,8 +203,8 @@
 
             <!-- Settings Modal (Persistent DOM) -->
             <transition name="fade">
-                <div v-show="view === 'settings'" :key="'settings-panel-' + settings.theme" class="fixed inset-0 z-[100] flex items-center justify-center p-6">
-                    <div class="setting-overlay absolute inset-0 bg-black/40 backdrop-blur-sm" @click="view = 'active'"></div>
+                <div v-show="view === 'settings'" :key="'settings-panel-' + settings.theme" class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
+                    <div class="setting-overlay" @click="view = 'active'"></div>
                     <div class="glass rounded-[2.5rem] p-8 space-y-8 w-full max-w-md setting-window relative overflow-y-auto max-h-[85vh]" :style="glassStyle" @click.stop>
                         <div class="flex items-center justify-between mb-2">
                             <h2 class="text-2xl font-black tracking-tight">{{ t.settings }}</h2>
@@ -258,8 +258,8 @@
                                 <div class="relative group">
                                     <button @click="triggerUpload" class="w-full h-24 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all overflow-hidden relative"
                                         :class="(settings.useCustomBg || tempCustomBg) ? 'border-blue-500 bg-blue-500/10' : 'border-white/10 bg-white/5'">
-                                        <template v-if="tempCustomBg || settings.customBg">
-                                            <img :src="tempCustomBg || settings.customBg" class="absolute inset-0 w-full h-full object-cover opacity-40">
+                                        <template v-if="settings.customBg">
+                                            <img :src="settings.customBg" class="absolute inset-0 w-full h-full object-cover opacity-40">
                                         </template>
                                         <i data-lucide="image" class="w-6 h-6 relative z-10"></i>
                                         <span class="text-xs font-bold relative z-10">{{ (tempCustomBg || settings.customBg) ? 'Change Photo' : t.upload }}</span>
