@@ -94,6 +94,14 @@ try {
             const otherThemes = [{ id: 'cherry' }, { id: 'sky' }, { id: 'seaside' }, { id: 'sunset' }, { id: 'forest' }, { id: 'sea' }];
 
             // --- Computed ---
+            const themeStyle = reactive({
+                backgroundImage: '',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed',
+                transition: 'background-image 0.5s ease'
+            });
+
             const t = computed(() => translations[settings.value.lang]);
             
             const isDarkTheme = computed(() => {
@@ -235,16 +243,8 @@ try {
                     activeAssets.value = []; // Clear assets when using custom bg
                     tempCustomBg.value = '';
                     
-                    // FORCED FIX: Direct DOM Manipulation with Timestamp Cache-Busting
-                    const timestamp = Date.now();
-                    document.body.style.backgroundImage = 'none';
-                    nextTick(() => {
-                        document.body.style.backgroundImage = `url(${base64Data})`;
-                        // Note: base64 doesn't strictly need ?t= but user requested it for "Zero-Latency" logic
-                        // and to ensure browser treats it as a fresh resource if it was a URL.
-                        // For base64, we just ensure the style is reapplied.
-                        document.body.classList.add('custom-theme');
-                    });
+                    // Reactive update with Timestamp Cache-Busting
+                    themeStyle.backgroundImage = `url(${base64Data}?t=${Date.now()})`;
                 }
             };
 
@@ -358,7 +358,9 @@ try {
                     // 4. Trigger immediate UI update
                     todos.value.unshift(newTodo);
                     
-                    nextTick(() => lucide.createIcons());
+                    nextTick(() => {
+                        lucide.createIcons();
+                    });
                 }
             };
 
@@ -731,20 +733,17 @@ try {
                 nextTick(() => lucide.createIcons()); 
             }, { deep: true });
 
-            // CRITICAL FIX: Instant Background Sync Watcher
             watch(() => settings.value.customBg, (newImg) => {
                 if (settings.value.useCustomBg && newImg) {
-                    document.body.style.backgroundImage = `url(${newImg})`;
-                    document.body.style.backgroundSize = 'cover';
-                    document.body.style.backgroundPosition = 'center';
+                    themeStyle.backgroundImage = `url(${newImg}?t=${Date.now()})`;
                 }
             }, { immediate: true });
 
             watch(() => settings.value.useCustomBg, (val) => {
                 if (!val) {
-                    document.body.style.backgroundImage = '';
+                    themeStyle.backgroundImage = '';
                 } else if (settings.value.customBg) {
-                    document.body.style.backgroundImage = `url(${settings.value.customBg})`;
+                    themeStyle.backgroundImage = `url(${settings.value.customBg}?t=${Date.now()})`;
                 }
             });
 
@@ -765,6 +764,7 @@ try {
             });
 
             return { 
+                themeStyle,
                 todos, lists, currentListId, settings, view, isAdding, isEditing, form, 
                 showTimePicker, showDatePicker, clockMode, dateMode, fileInput, t, 
                 categories, recurringTypes, otherThemes, glassStyle, themeClasses, 
