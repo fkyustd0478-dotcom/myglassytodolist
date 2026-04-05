@@ -5,8 +5,12 @@ try {
         setup() {
             // --- State ---
             const todos = ref([]);
-            const lists = ref([{ id: '1', name: 'Personal' }, { id: '2', name: 'Work' }]);
-            const currentListId = ref('1');
+            const lists = ref([
+                { id: 'default', name: 'Default' },
+                { id: 'personal', name: 'Personal' },
+                { id: 'work', name: 'Work' }
+            ]);
+            const currentListId = ref('default');
             
             // Custom Modal State
             const listModal = ref({
@@ -30,6 +34,7 @@ try {
             const isEditing = ref(false);
             const editingId = ref(null);
             const tempCustomBg = ref('');
+            const uploadProgress = ref(0);
             
             const showTimePicker = ref(false);
             const showDatePicker = ref(false);
@@ -57,7 +62,8 @@ try {
                     active: 'Active', bin: 'Recycle Bin', noCompleted: 'No completed records', tasks: 'Tasks', day: 'Day', month: 'Month',
                     alertBefore: 'Alert before (mins)', edit: 'Edit', enable: 'Enable', disable: 'Disable', removeImg: 'Remove Image',
                     editList: 'Edit List', deleteList: 'Delete List', newList: 'New List', confirmDeleteList: 'Are you sure you want to delete this list and all its tasks?',
-                    cancel: 'Cancel', confirm: 'Confirm', listName: 'List Name'
+                    cancel: 'Cancel', confirm: 'Confirm', listName: 'List Name',
+                    default: 'Default', personal: 'Personal', work: 'Work'
                 },
                 zh: {
                     noTasks: '暫無任務', completed: '已完成紀錄', settings: '設置', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知', back: '返回', emptyBin: '清空回收站', newTask: '新任務', editTask: '編輯任務', placeholder: '任務內容...', category: '分類', recurring: '重複', date: '日期', time: '時間', add: '添加', save: '保存', nextGen: '下次生成', custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
@@ -65,7 +71,8 @@ try {
                     active: '進行中', bin: '回收站', noCompleted: '暫無完成紀錄', tasks: '項任務', day: '日', month: '月',
                     alertBefore: '提醒時間 (分鐘前)', edit: '編輯', enable: '啟用', disable: '停用', removeImg: '移除圖片',
                     editList: '編輯名稱', deleteList: '刪除清單', newList: '新增清單', confirmDeleteList: '確定要刪除此清單及其所有任務嗎？',
-                    cancel: '取消', confirm: '確認', listName: '清單名稱'
+                    cancel: '取消', confirm: '確認', listName: '清單名稱',
+                    default: '預設', personal: '個人', work: '工作'
                 }
             };
 
@@ -80,6 +87,8 @@ try {
                 if (settings.value.useCustomBg) return false;
                 return ['dark', 'sunset', 'sky', 'forest', 'sea'].includes(settings.value.theme);
             });
+
+            const isDefaultList = (id) => ['default', 'personal', 'work'].includes(id);
 
             const glassStyle = computed(() => ({ 
                 backgroundColor: isDarkTheme.value ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)', 
@@ -148,6 +157,7 @@ try {
             };
             
             const selectTheme = (id) => {
+                activeAssets.value = []; // Clear assets immediately
                 settings.value.theme = id;
                 settings.value.useCustomBg = false;
             };
@@ -155,6 +165,7 @@ try {
             const toggleCustomBg = () => {
                 if (settings.value.customBg) {
                     settings.value.useCustomBg = !settings.value.useCustomBg;
+                    if (settings.value.useCustomBg) activeAssets.value = [];
                 } else {
                     triggerUpload();
                 }
@@ -166,10 +177,18 @@ try {
                 const file = e.target.files[0];
                 if (!file) return;
                 
+                uploadProgress.value = 10;
                 const reader = new FileReader();
+                reader.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        uploadProgress.value = 10 + (event.loaded / event.total) * 40;
+                    }
+                };
                 reader.onload = (event) => {
+                    uploadProgress.value = 60;
                     const img = new Image();
                     img.onload = () => {
+                        uploadProgress.value = 80;
                         const canvas = document.createElement('canvas');
                         let w = img.width, h = img.height;
                         const max = 1280;
@@ -184,9 +203,10 @@ try {
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
                         
-                        // Compression: JPEG 0.7 quality
                         const compressedData = canvas.toDataURL('image/jpeg', 0.7);
                         tempCustomBg.value = compressedData;
+                        uploadProgress.value = 100;
+                        setTimeout(() => uploadProgress.value = 0, 500);
                         e.target.value = '';
                     };
                     img.src = event.target.result;
@@ -198,6 +218,7 @@ try {
                 if (tempCustomBg.value) {
                     settings.value.customBg = tempCustomBg.value;
                     settings.value.useCustomBg = true;
+                    activeAssets.value = []; // Clear assets when using custom bg
                     tempCustomBg.value = '';
                 }
             };
@@ -548,6 +569,7 @@ try {
                 setTimeout(() => { if (settings.value.theme === 'sea') spawnBatch('ship'); }, 3000);
                 
                 watch(() => settings.value.theme, (newTheme) => {
+                    activeAssets.value = []; // Clear assets on theme change
                     if (newTheme === 'sky' && !activeAssets.value.some(a => a.type === 'airplane')) spawnBatch('airplane');
                     if (newTheme === 'seaside' && !activeAssets.value.some(a => a.type === 'crab')) spawnBatch('crab');
                     if (newTheme === 'sea' && !activeAssets.value.some(a => a.type === 'ship')) spawnBatch('ship');
@@ -560,11 +582,43 @@ try {
                 if (saved) { 
                     const d = JSON.parse(saved); 
                     todos.value = d.todos || []; 
-                    lists.value = d.lists || lists.value; 
+                    
+                    // Merge lists to ensure defaults exist
+                    const savedLists = d.lists || [];
+                    const defaults = [
+                        { id: 'default', name: 'Default' },
+                        { id: 'personal', name: 'Personal' },
+                        { id: 'work', name: 'Work' }
+                    ];
+                    
+                    // Filter out any saved lists that are actually defaults but might have old names/ids
+                    const customLists = savedLists.filter(l => !['default', 'personal', 'work', '1', '2'].includes(l.id));
+                    lists.value = [...defaults, ...customLists];
+                    
                     settings.value = { ...settings.value, ...d.settings }; 
                 }
+                
                 if (window.lucide) lucide.createIcons();
                 setupEffects();
+
+                // Sortable.js Initialization
+                const el = document.getElementById('list-tabs');
+                if (el) {
+                    Sortable.create(el, {
+                        animation: 150,
+                        draggable: '.list-tab-item',
+                        onEnd: (evt) => {
+                            const newOrder = [];
+                            const items = el.querySelectorAll('.list-tab-item');
+                            items.forEach(item => {
+                                const id = item.getAttribute('data-id');
+                                const list = lists.value.find(l => l.id === id);
+                                if (list) newOrder.push(list);
+                            });
+                            lists.value = newOrder;
+                        }
+                    });
+                }
                 
                 // Notification Checker
                 setInterval(() => {
@@ -605,13 +659,14 @@ try {
                 getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
                 activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, clearCustomBg,
-                listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal
+                listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal,
+                isDefaultList, uploadProgress
             };
         }
     }).mount('#app');
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js');
+        navigator.serviceWorker.register('/sw.js');
     }
 } catch (e) { 
     const errorReporter = document.getElementById('error-reporter');

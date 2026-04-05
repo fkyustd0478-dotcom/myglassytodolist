@@ -16,6 +16,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
     <script src="app.js" defer></script>
@@ -90,19 +91,19 @@
             </header>
 
             <!-- List Tabs -->
-            <div class="flex gap-2 mb-6 overflow-x-auto no-scrollbar shrink-0 bg-transparent">
-                <div v-for="list in lists" :key="list.id" class="relative group">
+            <div id="list-tabs" class="flex gap-3 mb-6 overflow-x-auto no-scrollbar shrink-0 bg-transparent py-1">
+                <div v-for="list in lists" :key="list.id" :data-id="list.id" class="relative group list-tab-item">
                     <button @click="currentListId = list.id" 
-                        class="px-5 py-2 rounded-full glass text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2" 
+                        class="px-5 py-2 rounded-full glass text-sm font-bold whitespace-nowrap transition-all flex items-center gap-3" 
                         :class="currentListId === list.id ? 'bg-blue-600 text-white border-blue-600' : 'opacity-60'" :style="glassStyle">
                         {{ list.name }}
-                        <div v-if="currentListId === list.id" class="flex gap-1 ml-1">
-                            <i data-lucide="edit-3" class="w-3 h-3 hover:text-white/80" @click.stop="editList(list)"></i>
-                            <i data-lucide="trash-2" class="w-3 h-3 hover:text-red-400" @click.stop="deleteListPrompt(list)"></i>
+                        <div v-if="currentListId === list.id && !isDefaultList(list.id)" class="flex gap-3 ml-1">
+                            <i data-lucide="edit-3" class="w-3 h-3 hover:text-white/80 cursor-pointer" @click.stop="editList(list)"></i>
+                            <i data-lucide="trash-2" class="w-3 h-3 hover:text-red-400 cursor-pointer" @click.stop="deleteListPrompt(list)"></i>
                         </div>
                     </button>
                 </div>
-                <button @click="addNewList" class="p-2 rounded-full glass opacity-60"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                <button @click="addNewList" class="p-2 rounded-full glass opacity-60 shrink-0"><i data-lucide="plus" class="w-4 h-4"></i></button>
             </div>
 
             <!-- Main Content -->
@@ -249,6 +250,9 @@
                                             </template>
                                             <i data-lucide="image" class="w-6 h-6 relative z-10"></i>
                                             <span class="text-xs font-bold relative z-10">{{ (tempCustomBg || settings.customBg) ? 'Change Photo' : t.upload }}</span>
+                                            
+                                            <!-- Progress Bar -->
+                                            <div v-if="uploadProgress > 0" class="absolute bottom-0 left-0 h-1 bg-blue-500 transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
                                         </button>
                                         
                                         <!-- Save/Cancel Preview -->

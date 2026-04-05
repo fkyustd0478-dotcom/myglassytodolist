@@ -287,6 +287,28 @@ body {
 }
 
 /* List Tabs */
+#list-tabs {
+    user-select: none;
+}
+
+.list-tab-item {
+    cursor: grab;
+}
+
+.list-tab-item:active {
+    cursor: grabbing;
+}
+
+.sortable-ghost {
+    opacity: 0.2;
+    transform: scale(0.9);
+}
+
+.sortable-drag {
+    opacity: 1;
+    cursor: grabbing;
+}
+
 .group:hover .group-hover\:opacity-100 {
     opacity: 1;
 }
@@ -308,7 +330,16 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Clock Picker */
+/* Progress Bar */
+.upload-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: var(--primary);
+    transition: width 0.3s ease;
+    z-index: 20;
+}
 .clock-dial {
     position: relative;
     width: 260px;
