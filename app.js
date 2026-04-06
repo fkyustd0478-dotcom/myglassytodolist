@@ -656,8 +656,12 @@ try {
                     const duration = 8000 + Math.random() * 6000;
                     animateAsset(asset, startX, endX, asset.y, endY, duration);
                 } else if (type === 'crab') {
-                    // Restrict to bottom 20-30%
-                    asset.bottom = 20 + Math.random() * 80; // px from bottom
+                    // Restrict to Sand area: between 90px (nav) and 50% height (wave)
+                    const navHeight = 90;
+                    const sandTop = window.innerHeight * 0.5;
+                    const crabHeight = 50;
+                    const maxBottom = Math.max(navHeight, sandTop - crabHeight);
+                    asset.bottom = navHeight + Math.random() * (maxBottom - navHeight);
                     const duration = 40000 + Math.random() * 20000;
                     animateCrab(asset, startX, endX, duration);
                 } else if (type === 'ship') {
