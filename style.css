@@ -296,15 +296,33 @@ body {
 #list-tabs {
     user-select: none;
     scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    padding-left: 25%;
+    padding-right: 25%;
+    display: flex;
+    gap: 60px; /* Increased gap for focus */
+    align-items: center;
 }
 
 .list-tab-item {
     cursor: grab;
     flex-shrink: 0;
+    scroll-snap-align: center;
+    min-width: 150px; /* Consistent width for snapping */
+    display: flex;
+    justify-content: center;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+}
+
+.list-tab-item:not(.active-tab) {
+    opacity: 0.4;
+    transform: scale(0.85);
 }
 
 .list-tab-item.active-tab {
     z-index: 10;
+    transform: scale(1.1);
+    opacity: 1;
 }
 
 .list-tab-item:active {

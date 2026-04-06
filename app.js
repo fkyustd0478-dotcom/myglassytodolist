@@ -502,30 +502,43 @@ try {
             };
 
             const editList = (list) => {
+                if (isDefaultList(list.id)) return;
                 listModal.value = { show: true, mode: 'edit', id: list.id, name: list.name };
             };
-
+            
             const deleteListPrompt = (list) => {
+                if (isDefaultList(list.id)) return;
                 listModal.value = { show: true, mode: 'delete', id: list.id, name: list.name };
             };
 
             const confirmListModal = () => {
                 const { mode, id, name } = listModal.value;
                 if (mode === 'add' && name.trim()) {
-                    const newId = Date.now().toString(36);
-                    lists.value.push({ id: newId, name });
+                    const newId = 'list-' + Date.now().toString(36);
+                    lists.value.push({ id: newId, name: name.trim() });
                     currentListId.value = newId;
                 } else if (mode === 'edit' && name.trim()) {
                     const list = lists.value.find(l => l.id === id);
-                    if (list) list.name = name;
+                    if (list) list.name = name.trim();
                 } else if (mode === 'delete') {
+                    // Cascading Delete: Remove list and ALL associated tasks
                     lists.value = lists.value.filter(l => l.id !== id);
                     todos.value = todos.value.filter(t => t.listId !== id);
+                    
                     if (currentListId.value === id) {
-                        currentListId.value = lists.value[0]?.id || '';
+                        currentListId.value = lists.value[0]?.id || 'default';
                     }
                 }
-                closeListModal();
+                
+                // Immediate Sync & Force Re-render
+                StorageProvider.saveData({ todos: todos.value, lists: lists.value });
+                renderTrigger.value++;
+                
+                nextTick(() => {
+                    closeListModal();
+                    scrollActiveTabIntoView();
+                    if (window.lucide) lucide.createIcons();
+                });
             };
 
             const closeListModal = () => {
@@ -992,7 +1005,7 @@ try {
                     });
                 }
                 nextTick(() => lucide.createIcons());
-                if (currentListId) scrollActiveTabIntoView();
+                scrollActiveTabIntoView();
             });
 
             return { 

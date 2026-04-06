@@ -91,19 +91,19 @@
             </header>
 
             <!-- List Tabs -->
-            <div id="list-tabs" class="flex gap-3 mb-6 overflow-x-auto no-scrollbar shrink-0 bg-transparent py-1 px-2">
+            <div id="list-tabs" class="mb-6 overflow-x-auto no-scrollbar shrink-0 bg-transparent py-4">
                 <div v-for="list in lists" :key="list.id" :data-id="list.id" class="relative group list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
                     <button @click="currentListId = list.id" 
-                        class="px-5 py-2 rounded-full glass text-sm font-bold whitespace-nowrap transition-all flex items-center gap-3" 
-                        :class="currentListId === list.id ? 'bg-blue-600 text-white border-blue-600' : 'opacity-60'" :style="glassStyle">
+                        class="w-full px-4 py-3 rounded-full glass text-sm font-bold whitespace-nowrap transition-all flex items-center justify-center gap-3 shadow-lg" 
+                        :class="currentListId === list.id ? 'bg-blue-600 text-white border-blue-600 scale-110' : 'opacity-60'" :style="glassStyle">
                         {{ isDefaultList(list.id) ? t[list.id] : list.name }}
                         <div v-show="currentListId === list.id && !isDefaultList(list.id)" class="flex gap-4 ml-1">
-                            <i data-lucide="edit-3" class="w-3.5 h-3.5 hover:text-white/80 cursor-pointer" @click.stop="editList(list)"></i>
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5 hover:text-red-400 cursor-pointer" @click.stop="deleteListPrompt(list)"></i>
+                            <i data-lucide="edit-3" class="w-4 h-4 hover:text-white/80 cursor-pointer" @click.stop="editList(list)"></i>
+                            <i data-lucide="trash-2" class="w-4 h-4 hover:text-red-400 cursor-pointer" @click.stop="deleteListPrompt(list)"></i>
                         </div>
                     </button>
                 </div>
-                <button @click="addNewList" class="p-2 rounded-full glass opacity-60 shrink-0"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                <button @click="addNewList" class="p-3 rounded-full glass opacity-60 shrink-0 ml-10"><i data-lucide="plus" class="w-5 h-5"></i></button>
             </div>
 
             <!-- Main Content -->
