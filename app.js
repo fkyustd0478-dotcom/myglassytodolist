@@ -95,6 +95,19 @@ try {
                 name: ''
             });
 
+            const manageModal = ref({
+                show: false
+            });
+
+            const saveLists = () => {
+                StorageProvider.saveData({ todos: todos.value, lists: lists.value });
+                renderTrigger.value++;
+                nextTick(() => {
+                    if (window.lucide) lucide.createIcons();
+                    scrollActiveTabIntoView();
+                });
+            };
+
             const confirmModal = ref({
                 show: false,
                 title: '',
@@ -837,9 +850,47 @@ try {
                 });
             });
 
+            const initSortable = () => {
+                const listTabs = document.getElementById('list-tabs');
+                if (listTabs) {
+                    Sortable.create(listTabs, {
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        dragClass: 'sortable-drag',
+                        onEnd: (evt) => {
+                            const { oldIndex, newIndex } = evt;
+                            if (oldIndex !== newIndex) {
+                                const item = lists.value.splice(oldIndex, 1)[0];
+                                lists.value.splice(newIndex, 0, item);
+                                saveLists();
+                            }
+                        }
+                    });
+                }
+
+                const manageItems = document.getElementById('manage-list-items');
+                if (manageItems) {
+                    Sortable.create(manageItems, {
+                        animation: 150,
+                        handle: '.list-grip',
+                        ghostClass: 'sortable-ghost',
+                        dragClass: 'sortable-drag',
+                        onEnd: (evt) => {
+                            const { oldIndex, newIndex } = evt;
+                            if (oldIndex !== newIndex) {
+                                const item = lists.value.splice(oldIndex, 1)[0];
+                                lists.value.splice(newIndex, 0, item);
+                                saveLists();
+                            }
+                        }
+                    });
+                }
+            };
+
             // --- Lifecycle ---
             onMounted(async () => {
                 await ImageDB.init();
+                initSortable();
 
                 // Force initial reflow for layout visibility
                 window.dispatchEvent(new Event('resize'));
@@ -992,6 +1043,14 @@ try {
                 }
             });
 
+            watch(() => manageModal.value.show, (val) => {
+                if (val) {
+                    nextTick(() => {
+                        if (window.lucide) lucide.createIcons();
+                    });
+                }
+            });
+
             watch([view, isAdding, isEditing, showTimePicker, showDatePicker, currentListId], () => {
                 if (view.value === 'settings') {
                     // Forced reflow / nextTick for settings panel initial visibility
@@ -1026,7 +1085,10 @@ try {
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
                 activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, cancelUpload, clearCustomBg,
                 listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal,
-                isDefaultList, uploadProgress, confirmModal, promptClearCompleted, promptClearBin, executeConfirm
+                isDefaultList, uploadProgress, confirmModal, promptClearCompleted, promptClearBin, executeConfirm,
+                manageModal, openManageModal: () => manageModal.value.show = true,
+                closeManageModal: () => manageModal.value.show = false,
+                saveLists
             };
         }
     }).mount('#app');

@@ -90,20 +90,25 @@
                 <h1 class="text-2xl font-extrabold tracking-tight cursor-pointer" @click="view = 'active'">Glassy Todo</h1>
             </header>
 
-            <!-- List Tabs -->
-            <div id="list-tabs" class="mb-6 overflow-x-auto no-scrollbar shrink-0 bg-transparent py-4">
-                <div v-for="list in lists" :key="list.id" :data-id="list.id" class="relative group list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
-                    <button @click="currentListId = list.id" 
-                        class="w-full px-4 py-3 rounded-full glass text-sm font-bold whitespace-nowrap transition-all flex items-center justify-center gap-3 shadow-lg" 
-                        :class="currentListId === list.id ? 'bg-blue-600 text-white border-blue-600 scale-110' : 'opacity-60'" :style="glassStyle">
-                        {{ isDefaultList(list.id) ? t[list.id] : list.name }}
-                        <div v-show="currentListId === list.id && !isDefaultList(list.id)" class="flex gap-4 ml-1">
-                            <i data-lucide="edit-3" class="w-4 h-4 hover:text-white/80 cursor-pointer" @click.stop="editList(list)"></i>
-                            <i data-lucide="trash-2" class="w-4 h-4 hover:text-red-400 cursor-pointer" @click.stop="deleteListPrompt(list)"></i>
-                        </div>
+            <!-- List Navigation Bar -->
+            <div class="flex items-center gap-2 mb-6 shrink-0">
+                <div id="list-tabs" class="flex-1 overflow-x-auto no-scrollbar bg-transparent py-2 flex items-center">
+                    <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
+                        <button @click="currentListId = list.id" 
+                            class="px-5 py-2.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-md border-none" 
+                            :class="currentListId === list.id ? 'bg-blue-600 text-white scale-105' : 'opacity-60'" :style="glassStyle">
+                            {{ isDefaultList(list.id) ? t[list.id] : list.name }}
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button @click="addNewList" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                    </button>
+                    <button @click="openManageModal" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
+                        <i data-lucide="settings-2" class="w-5 h-5"></i>
                     </button>
                 </div>
-                <button @click="addNewList" class="p-3 rounded-full glass opacity-60 shrink-0 ml-10"><i data-lucide="plus" class="w-5 h-5"></i></button>
             </div>
 
             <!-- Main Content -->
@@ -512,9 +517,49 @@
                     <span class="text-[10px] font-bold uppercase">{{ t.settings }}</span>
                 </button>
             </nav>
-            <!-- List Management Modal -->
+            <!-- Manage Lists Modal -->
             <transition name="fade">
-                <div v-show="listModal.show" :key="'list-mgmt-modal'" class="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md" @click.self="closeListModal">
+                <div v-show="manageModal.show" class="fixed inset-0 z-[1100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl">
+                    <div class="glass rounded-[2.5rem] p-8 w-full max-w-md flex flex-col max-h-[85vh]" :style="glassStyle">
+                        <div class="flex justify-between items-center mb-8">
+                            <h2 class="text-2xl font-black tracking-tight">Manage Lists</h2>
+                            <button @click="closeManageModal" class="opacity-40 hover:opacity-100 transition-opacity">
+                                <i data-lucide="x" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+
+                        <div id="manage-list-items" class="flex-1 overflow-y-auto no-scrollbar space-y-3 pr-2">
+                            <div v-for="list in lists" :key="list.id" :data-id="list.id" class="manage-list-row glass rounded-2xl p-4 flex items-center gap-4 group" :style="glassStyle">
+                                <!-- Delete Button -->
+                                <button v-if="!isDefaultList(list.id)" @click="deleteListPrompt(list)" class="w-8 h-8 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                                <div v-else class="w-8 h-8 flex items-center justify-center opacity-10">
+                                    <i data-lucide="lock" class="w-4 h-4"></i>
+                                </div>
+
+                                <!-- List Name (Inline Edit) -->
+                                <div class="flex-1">
+                                    <input v-if="!isDefaultList(list.id)" v-model="list.name" @change="saveLists" class="bg-transparent border-none outline-none font-bold w-full focus:text-blue-500 transition-colors">
+                                    <span v-else class="font-bold opacity-40">{{ t[list.id] }}</span>
+                                </div>
+
+                                <!-- Grip Icon -->
+                                <div class="list-grip cursor-grab active:cursor-grabbing opacity-30 hover:opacity-100 transition-opacity">
+                                    <i data-lucide="menu" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button @click="closeManageModal" class="w-full mt-8 py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-95 transition-transform">
+                            Done
+                        </button>
+                    </div>
+                </div>
+            </transition>
+            <!-- List Management Modal (Add/Delete) -->
+            <transition name="fade">
+                <div v-show="listModal.show" :key="'list-mgmt-modal'" class="fixed inset-0 z-[1200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md" @click.self="closeListModal">
                     <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center" :style="glassStyle">
                         <h3 class="text-xl font-black tracking-tight">
                             {{ listModal.mode === 'add' ? t.newList : (listModal.mode === 'edit' ? t.editList : t.deleteList) }}
@@ -537,6 +582,7 @@
                     </div>
                 </div>
             </transition>
+
             <!-- Confirmation Modal -->
             <transition name="fade">
                 <div v-show="confirmModal.show" :key="'confirm-modal'" class="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md" @click.self="confirmModal.show = false">

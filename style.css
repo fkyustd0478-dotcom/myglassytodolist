@@ -297,10 +297,10 @@ body {
     user-select: none;
     scroll-behavior: smooth;
     scroll-snap-type: x mandatory;
-    padding-left: 25%;
-    padding-right: 25%;
+    padding-left: 40%;
+    padding-right: 40%;
     display: flex;
-    gap: 60px; /* Increased gap for focus */
+    gap: 5px;
     align-items: center;
 }
 
@@ -308,25 +308,37 @@ body {
     cursor: grab;
     flex-shrink: 0;
     scroll-snap-align: center;
-    min-width: 150px; /* Consistent width for snapping */
     display: flex;
     justify-content: center;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
 }
 
 .list-tab-item:not(.active-tab) {
-    opacity: 0.4;
-    transform: scale(0.85);
+    opacity: 0.6;
 }
 
 .list-tab-item.active-tab {
     z-index: 10;
-    transform: scale(1.1);
-    opacity: 1;
 }
 
 .list-tab-item:active {
     cursor: grabbing;
+}
+
+/* Manage List Row */
+.manage-list-row {
+    transition: all 0.3s ease;
+}
+
+.manage-list-row.sortable-ghost {
+    opacity: 0.3;
+    background: rgba(59, 130, 246, 0.2) !important;
+}
+
+.manage-list-row.sortable-drag {
+    cursor: grabbing;
+    transform: scale(1.02);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
 .sortable-ghost {
