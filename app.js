@@ -206,12 +206,10 @@ try {
                 return darkThemes.includes(settings.value.theme);
             });
 
-            const isDefaultList = (id) => ['default', 'personal', 'work'].includes(id);
-
             const glassStyle = computed(() => ({ 
                 backgroundColor: isDarkTheme.value ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)', 
                 backdropFilter: 'blur(12px)',
-                borderColor: 'rgba(255,255,255,0.1)' 
+                border: isDarkTheme.value ? '2.5px solid rgba(255, 255, 255, 0.55)' : '2.5px solid rgba(0, 0, 0, 0.45)'
             }));
             
             const themeClasses = computed(() => {
@@ -401,8 +399,12 @@ try {
                 let h = form.value.time.hour;
                 if (form.value.time.period === 'PM' && h < 12) h += 12;
                 if (form.value.time.period === 'AM' && h === 12) h = 0;
-                const due = `${form.value.date}T${h.toString().padStart(2, '0')}:${form.value.time.minute.toString().padStart(2, '0')}:00`;
+                const dueStr = `${form.value.date}T${h.toString().padStart(2, '0')}:${form.value.time.minute.toString().padStart(2, '0')}:00`;
+                const dueDate = new Date(dueStr);
                 
+                // Notification Guard: Only schedule if in the future
+                const isFuture = dueDate.getTime() > Date.now();
+
                 if (isEditing.value) {
                     const t = todos.value.find(x => x.id === editingId.value);
                     if (t) {
@@ -410,8 +412,8 @@ try {
                             text: form.value.text, 
                             category: form.value.category, 
                             recurring: form.value.recurring, 
-                            dueDate: due, 
-                            notified: false,
+                            dueDate: dueStr, 
+                            notified: !isFuture, // Mark as notified if in past to prevent triggers
                             alertMinutes: form.value.alertMinutes,
                             updatedAt: new Date().toISOString()
                         });
@@ -423,10 +425,10 @@ try {
                         text: form.value.text, 
                         category: form.value.category, 
                         recurring: form.value.recurring, 
-                        dueDate: due, 
+                        dueDate: dueStr, 
                         completed: false, 
                         isDeleted: false, 
-                        notified: false,
+                        notified: !isFuture,
                         alertMinutes: form.value.alertMinutes,
                         updatedAt: new Date().toISOString()
                     });
@@ -612,12 +614,49 @@ try {
                 form.value.date = tomorrow.toISOString().split('T')[0];
             };
 
-            const updatePickerDate = (type, val) => {
+            const wrapValue = (val, min, max) => {
+                if (val < min) return max;
+                if (val > max) return min;
+                return val;
+            };
+
+            const isLeapYear = (year) => (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+
+            const getMaxDays = (month, year) => {
+                if ([4, 6, 9, 11].includes(month)) return 30;
+                if (month === 2) return isLeapYear(year) ? 29 : 28;
+                return 31;
+            };
+
+            const updatePickerDate = (type, val, direction = 0) => {
                 const d = new Date(form.value.date);
-                if (type === 'year') d.setFullYear(val);
-                if (type === 'month') d.setMonth(val - 1);
-                if (type === 'day') d.setDate(val);
-                form.value.date = d.toISOString().split('T')[0];
+                let year = d.getFullYear();
+                let month = d.getMonth() + 1;
+                let day = d.getDate();
+
+                if (type === 'year') {
+                    year = val;
+                } else if (type === 'month') {
+                    month = wrapValue(val, 1, 12);
+                } else if (type === 'day') {
+                    const max = getMaxDays(month, year);
+                    day = wrapValue(val, 1, max);
+                }
+
+                // Snap day if invalid for new month/year
+                const max = getMaxDays(month, year);
+                if (day > max) day = max;
+
+                const newDate = new Date(year, month - 1, day);
+                form.value.date = newDate.toISOString().split('T')[0];
+            };
+
+            const updatePickerTime = (type, val) => {
+                if (type === 'hour') {
+                    form.value.time.hour = wrapValue(val, 1, 12);
+                } else if (type === 'minute') {
+                    form.value.time.minute = wrapValue(val, 0, 59);
+                }
             };
 
             const scrollActiveTabIntoView = () => {
@@ -1165,7 +1204,7 @@ try {
                 activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, cancelUpload, clearCustomBg,
                 showPetals,
                 dropdowns, toggleDropdown, selectDropdownOption,
-                pickerData, setToday, setTomorrow, updatePickerDate,
+                pickerData, setToday, setTomorrow, updatePickerDate, updatePickerTime,
                 listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal,
                 isDefaultList, uploadProgress, confirmModal, promptClearCompleted, promptClearBin, executeConfirm,
                 manageModal, openManageModal: () => manageModal.value.show = true,

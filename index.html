@@ -477,25 +477,37 @@
                         
                         <div class="flex justify-center gap-4">
                             <!-- Hour -->
-                            <div class="picker-list w-16 no-scrollbar">
-                                <div v-for="h in pickerData.hours" :key="h" 
-                                    class="picker-item" :class="{ active: form.time.hour === h }"
-                                    @click="form.time.hour = h">
-                                    {{ h }}
+                            <div class="flex flex-col items-center gap-2">
+                                <button @click="updatePickerTime('hour', form.time.hour - 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
+                                <div class="picker-list w-16 no-scrollbar">
+                                    <div v-for="h in pickerData.hours" :key="h" 
+                                        class="picker-item" :class="{ active: form.time.hour === h }"
+                                        @click="form.time.hour = h">
+                                        {{ h }}
+                                    </div>
                                 </div>
+                                <button @click="updatePickerTime('hour', form.time.hour + 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
                             </div>
                             <!-- Minute -->
-                            <div class="picker-list w-16 no-scrollbar">
-                                <div v-for="m in pickerData.minutes" :key="m" 
-                                    class="picker-item" :class="{ active: form.time.minute === m }"
-                                    @click="form.time.minute = m">
-                                    {{ m.toString().padStart(2, '0') }}
+                            <div class="flex flex-col items-center gap-2">
+                                <button @click="updatePickerTime('minute', form.time.minute - 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
+                                <div class="picker-list w-16 no-scrollbar">
+                                    <div v-for="m in pickerData.minutes" :key="m" 
+                                        class="picker-item" :class="{ active: form.time.minute === m }"
+                                        @click="form.time.minute = m">
+                                        {{ m.toString().padStart(2, '0') }}
+                                    </div>
                                 </div>
+                                <button @click="updatePickerTime('minute', form.time.minute + 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
                             </div>
                             <!-- Period -->
-                            <div class="picker-list w-16 no-scrollbar">
-                                <div class="picker-item" :class="{ active: form.time.period === 'AM' }" @click="form.time.period = 'AM'">AM</div>
-                                <div class="picker-item" :class="{ active: form.time.period === 'PM' }" @click="form.time.period = 'PM'">PM</div>
+                            <div class="flex flex-col items-center gap-2">
+                                <button @click="form.time.period = form.time.period === 'AM' ? 'PM' : 'AM'" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
+                                <div class="picker-list w-16 no-scrollbar">
+                                    <div class="picker-item" :class="{ active: form.time.period === 'AM' }" @click="form.time.period = 'AM'">AM</div>
+                                    <div class="picker-item" :class="{ active: form.time.period === 'PM' }" @click="form.time.period = 'PM'">PM</div>
+                                </div>
+                                <button @click="form.time.period = form.time.period === 'AM' ? 'PM' : 'AM'" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
                             </div>
                         </div>
 
@@ -517,28 +529,40 @@
 
                         <div class="flex justify-center gap-2">
                             <!-- Year -->
-                            <div class="picker-list w-20 no-scrollbar">
-                                <div v-for="y in pickerData.years" :key="y" 
-                                    class="picker-item" :class="{ active: new Date(form.date).getFullYear() === y }"
-                                    @click="updatePickerDate('year', y)">
-                                    {{ y }}
+                            <div class="flex flex-col items-center gap-2">
+                                <button @click="updatePickerDate('year', new Date(form.date).getFullYear() - 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
+                                <div class="picker-list w-20 no-scrollbar">
+                                    <div v-for="y in pickerData.years" :key="y" 
+                                        class="picker-item" :class="{ active: new Date(form.date).getFullYear() === y }"
+                                        @click="updatePickerDate('year', y)">
+                                        {{ y }}
+                                    </div>
                                 </div>
+                                <button @click="updatePickerDate('year', new Date(form.date).getFullYear() + 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
                             </div>
                             <!-- Month -->
-                            <div class="picker-list w-16 no-scrollbar">
-                                <div v-for="m in pickerData.months" :key="m" 
-                                    class="picker-item" :class="{ active: (new Date(form.date).getMonth() + 1) === m }"
-                                    @click="updatePickerDate('month', m)">
-                                    {{ m }}
+                            <div class="flex flex-col items-center gap-2">
+                                <button @click="updatePickerDate('month', new Date(form.date).getMonth())" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
+                                <div class="picker-list w-16 no-scrollbar">
+                                    <div v-for="m in pickerData.months" :key="m" 
+                                        class="picker-item" :class="{ active: (new Date(form.date).getMonth() + 1) === m }"
+                                        @click="updatePickerDate('month', m)">
+                                        {{ m }}
+                                    </div>
                                 </div>
+                                <button @click="updatePickerDate('month', new Date(form.date).getMonth() + 2)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
                             </div>
                             <!-- Day -->
-                            <div class="picker-list w-16 no-scrollbar">
-                                <div v-for="d in pickerData.days" :key="d" 
-                                    class="picker-item" :class="{ active: new Date(form.date).getDate() === d }"
-                                    @click="updatePickerDate('day', d)">
-                                    {{ d }}
+                            <div class="flex flex-col items-center gap-2">
+                                <button @click="updatePickerDate('day', new Date(form.date).getDate() - 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
+                                <div class="picker-list w-16 no-scrollbar">
+                                    <div v-for="d in pickerData.days" :key="d" 
+                                        class="picker-item" :class="{ active: new Date(form.date).getDate() === d }"
+                                        @click="updatePickerDate('day', d)">
+                                        {{ d }}
+                                    </div>
                                 </div>
+                                <button @click="updatePickerDate('day', new Date(form.date).getDate() + 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
                             </div>
                         </div>
 
