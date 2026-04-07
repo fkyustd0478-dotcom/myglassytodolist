@@ -88,19 +88,6 @@
             <!-- Header -->
             <header class="flex justify-between items-center mb-6 shrink-0">
                 <h1 class="text-2xl font-extrabold tracking-tight cursor-pointer" @click="view = 'active'">Glassy Todo</h1>
-            </header>
-
-            <!-- List Navigation Bar -->
-            <div class="flex items-center gap-2 mb-6 shrink-0">
-                <div id="list-tabs" class="flex-1 overflow-x-auto no-scrollbar bg-transparent py-2 flex items-center">
-                    <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
-                        <button @click="currentListId = list.id" 
-                            class="px-5 py-2.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-md border-none" 
-                            :class="currentListId === list.id ? 'bg-blue-600 text-white scale-105' : 'opacity-60'" :style="glassStyle">
-                            {{ isDefaultList(list.id) ? t[list.id] : list.name }}
-                        </button>
-                    </div>
-                </div>
                 <div class="flex items-center gap-2 shrink-0">
                     <button @click="addNewList" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
                         <i data-lucide="plus" class="w-5 h-5"></i>
@@ -108,6 +95,19 @@
                     <button @click="openManageModal" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
                         <i data-lucide="settings-2" class="w-5 h-5"></i>
                     </button>
+                </div>
+            </header>
+
+            <!-- List Navigation Bar -->
+            <div class="mb-6 shrink-0 -mx-6 relative">
+                <div id="list-tabs" class="overflow-x-auto no-scrollbar bg-transparent py-4 flex items-center">
+                    <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
+                        <button @click="currentListId = list.id" 
+                            class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none" 
+                            :class="currentListId === list.id ? 'bg-blue-600 text-white' : 'opacity-60'" :style="glassStyle">
+                            {{ isDefaultList(list.id) ? t[list.id] : list.name }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
