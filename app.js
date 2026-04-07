@@ -637,7 +637,7 @@ try {
                 let day = d.getDate();
 
                 if (type === 'year') {
-                    year = val;
+                    year = wrapValue(val, 1900, 2099);
                 } else if (type === 'month') {
                     month = wrapValue(val, 1, 12);
                 } else if (type === 'day') {
@@ -727,7 +727,7 @@ try {
             const activeAssets = ref([]);
             const petalStyle = (n) => ({ 
                 left: (n * 5) + '%', 
-                top: (-200 + Math.random() * 100) + 'px',
+                top: (-200 + Math.random() * 50) + 'px',
                 animationDuration: (5 + Math.random() * 5) + 's', 
                 animationDelay: (Math.random() * 5) + 's' 
             });
