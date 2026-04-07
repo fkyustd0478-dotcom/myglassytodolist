@@ -7,6 +7,18 @@
     --sand: #fde68a;
     --ocean: #1d4ed8;
     --forest-deep: #022c22;
+    --text-primary: #000000;
+    --text-secondary: rgba(0, 0, 0, 0.6);
+}
+
+.theme-dark-mode {
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+}
+
+.theme-light-mode {
+    --text-primary: #000000;
+    --text-secondary: rgba(0, 0, 0, 0.6);
 }
 
 body {
@@ -19,6 +31,7 @@ body {
     height: 100vh;
     width: 100vw;
     background: #000;
+    color: var(--text-primary);
 }
 
 [v-cloak] { display: none; }
@@ -96,7 +109,7 @@ body {
 .theme-seaside { background: linear-gradient(to bottom, #0ea5e9 0%, #38bdf8 50%, #fef3c7 50%, #fde68a 100%); overflow: visible !important; }
 .theme-sunset { background: linear-gradient(to bottom, #312e81, #581c87, #9333ea, #f97316); overflow: visible !important; }
 .theme-forest { background: linear-gradient(to bottom, #064e3b, #065f46, #047857); overflow: visible !important; }
-.theme-sea { background: linear-gradient(to bottom, #1e3a8a, #1e40af, #1d4ed8); overflow: visible !important; }
+.theme-sea { background: linear-gradient(to bottom, #00d2ff, #3a7bd5, #004e92); overflow: visible !important; }
 
 /* Theme Specific Decorations */
 .theme-forest::before {
@@ -213,7 +226,7 @@ body {
 .theme-seaside { background: linear-gradient(180deg, #4da3ff 0%, #ffd89b 100%); }
 .theme-sunset { background: linear-gradient(180deg, #ff512f 0%, #dd2476 100%); }
 .theme-forest { background: linear-gradient(180deg, #134e5e 0%, #71b280 100%); }
-.theme-sea { background: linear-gradient(180deg, #2c3e50 0%, #000000 100%); }
+.theme-sea { background: linear-gradient(180deg, #00d2ff 0%, #3a7bd5 100%); }
 .theme-light { background: #f8fafc; }
 .custom-theme {
     background-size: cover;
@@ -232,7 +245,7 @@ body {
     z-index: 1;
 }
 @keyframes fall {
-    0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+    0% { transform: translateY(-150px) rotate(0deg); opacity: 0; }
     10% { opacity: 1; }
     90% { opacity: 1; }
     100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
@@ -478,6 +491,7 @@ body {
     align-items: center;
     gap: 6px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-primary);
     opacity: 0.4;
     min-width: 80px;
 }
@@ -606,7 +620,8 @@ main {
     align-items: center;
     gap: 16px;
     margin: 32px 0 16px 0;
-    opacity: 0.4;
+    color: var(--text-secondary);
+    opacity: 0.6;
 }
 .category-divider::before, .category-divider::after {
     content: "";

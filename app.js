@@ -133,6 +133,7 @@ try {
             const tempCustomBg = ref('');
             const originalCustomBg = ref('');
             const uploadProgress = ref(0);
+            const showPetals = ref(false);
             
             const showTimePicker = ref(false);
             const showDatePicker = ref(false);
@@ -198,14 +199,18 @@ try {
             const t = computed(() => translations[settings.value.lang]);
             
             const isDarkTheme = computed(() => {
-                if (settings.value.useCustomBg) return false;
-                return ['dark', 'sunset', 'sky', 'forest', 'sea'].includes(settings.value.theme);
+                const darkThemes = ['dark', 'sunset', 'sky', 'forest', 'sea'];
+                if (settings.value.useCustomBg) {
+                    return settings.value.customBgOpacity < 0.5;
+                }
+                return darkThemes.includes(settings.value.theme);
             });
 
             const isDefaultList = (id) => ['default', 'personal', 'work'].includes(id);
 
             const glassStyle = computed(() => ({ 
                 backgroundColor: isDarkTheme.value ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)', 
+                backdropFilter: 'blur(12px)',
                 borderColor: 'rgba(255,255,255,0.1)' 
             }));
             
@@ -790,10 +795,13 @@ try {
 
             const setupEffects = () => {
                 let effectTimeout = null;
+                let petalTimeout = null;
 
                 const clearAndSchedule = (theme) => {
                     if (effectTimeout) clearTimeout(effectTimeout);
+                    if (petalTimeout) clearTimeout(petalTimeout);
                     activeAssets.value = []; // Clear current objects
+                    showPetals.value = false;
                     
                     // 15s Delay for Background Animations (Zero Latency UI)
                     if (!settings.value.useCustomBg) {
@@ -804,6 +812,12 @@ try {
                             if (theme === 'sunset') { spawnBatch('airplane'); spawnBatch('ship'); }
                             if (theme === 'forest') spawnBatch('airplane');
                         }, 15000);
+
+                        if (theme === 'cherry') {
+                            petalTimeout = setTimeout(() => {
+                                showPetals.value = true;
+                            }, 15000);
+                        }
                     }
                 };
 
@@ -825,6 +839,11 @@ try {
             };
 
             // --- Watches ---
+            watch(isDarkTheme, (val) => {
+                document.body.classList.remove('theme-light-mode', 'theme-dark-mode');
+                document.body.classList.add(val ? 'theme-dark-mode' : 'theme-light-mode');
+            }, { immediate: true });
+
             watch(currentListId, () => {
                 scrollActiveTabIntoView();
             });
@@ -972,13 +991,13 @@ try {
                 if ('requestIdleCallback' in window) {
                     requestIdleCallback(() => {
                         hydrateData();
-                        setTimeout(initEffects, 15000); // 15s Delay
+                        initEffects();
                     });
                 } else {
                     // Fallback for browsers without requestIdleCallback
                     setTimeout(() => {
                         hydrateData();
-                        setTimeout(initEffects, 15000); // 15s Delay
+                        initEffects();
                     }, 50);
                 }
 
@@ -1084,6 +1103,7 @@ try {
                 getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
                 activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, cancelUpload, clearCustomBg,
+                showPetals,
                 listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal,
                 isDefaultList, uploadProgress, confirmModal, promptClearCompleted, promptClearBin, executeConfirm,
                 manageModal, openManageModal: () => manageModal.value.show = true,

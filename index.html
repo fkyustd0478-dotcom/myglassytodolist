@@ -29,7 +29,7 @@
         <div class="bg-layer" :class="themeClasses" :key="settings.theme">
             <template v-if="!settings.useCustomBg">
                 <!-- Cherry Blossom -->
-                <template v-if="settings.theme === 'cherry'">
+                <template v-if="settings.theme === 'cherry' && showPetals">
                     <div v-for="n in 20" :key="'p'+n" class="petal" :style="petalStyle(n)"></div>
                 </template>
                 
@@ -84,7 +84,7 @@
         <div v-show="settings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
         <!-- Foreground Content -->
-        <div class="relative z-10 h-screen flex flex-col p-6 overflow-hidden" :class="isDarkTheme ? 'text-white' : 'text-gray-900'">
+        <div class="relative z-10 h-screen flex flex-col p-6 overflow-hidden">
             <!-- Header -->
             <header class="flex justify-between items-center mb-6 shrink-0">
                 <h1 class="text-2xl font-extrabold tracking-tight cursor-pointer" @click="view = 'active'">Glassy Todo</h1>
