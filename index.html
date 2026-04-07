@@ -282,12 +282,20 @@
     
                                 <div class="space-y-2">
                                     <label class="text-[10px] font-bold opacity-40 ml-1">{{ t.otherThemes }}</label>
-                                    <div class="relative">
-                                        <select v-model="settings.theme" @change="settings.useCustomBg = false" 
-                                            class="w-full glass rounded-2xl p-4 text-sm font-bold outline-none appearance-none pr-10" :style="glassStyle">
-                                            <option v-for="th in otherThemes" :key="th.id" :value="th.id">{{ t[th.id] }}</option>
-                                        </select>
-                                        <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40"></i>
+                                    <div class="custom-dropdown">
+                                        <div class="dropdown-trigger glass rounded-2xl p-4 text-sm font-bold" :style="glassStyle" @click="toggleDropdown('theme')">
+                                            <span>{{ t[settings.theme] || settings.theme }}</span>
+                                            <i data-lucide="chevron-down" class="w-4 h-4 opacity-40" :class="{ 'rotate-180': dropdowns.theme }"></i>
+                                        </div>
+                                        <transition name="fade">
+                                            <div v-show="dropdowns.theme" class="dropdown-menu glass" :style="glassStyle">
+                                                <div v-for="th in otherThemes" :key="th.id" 
+                                                    class="dropdown-item" :class="{ active: settings.theme === th.id }"
+                                                    @click="selectDropdownOption('theme', th.id)">
+                                                    {{ t[th.id] }}
+                                                </div>
+                                            </div>
+                                        </transition>
                                     </div>
                                 </div>
     
@@ -391,15 +399,39 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black opacity-40 uppercase tracking-widest">{{ t.category }}</label>
-                                <select v-model="form.category" class="w-full glass rounded-xl p-3 text-xs font-bold outline-none" :style="glassStyle">
-                                    <option v-for="c in categories" :key="c" :value="c">{{ t[c] }}</option>
-                                </select>
+                                <div class="custom-dropdown">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('category')">
+                                        <span>{{ t[form.category] }}</span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
+                                    </div>
+                                    <transition name="fade">
+                                        <div v-show="dropdowns.category" class="dropdown-menu glass" :style="glassStyle">
+                                            <div v-for="c in categories" :key="c" 
+                                                class="dropdown-item" :class="{ active: form.category === c }"
+                                                @click="selectDropdownOption('category', c)">
+                                                {{ t[c] }}
+                                            </div>
+                                        </div>
+                                    </transition>
+                                </div>
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black opacity-40 uppercase tracking-widest">{{ t.recurring }}</label>
-                                <select v-model="form.recurring" class="w-full glass rounded-xl p-3 text-xs font-bold outline-none" :style="glassStyle">
-                                    <option v-for="r in recurringTypes" :key="r" :value="r">{{ t[r] }}</option>
-                                </select>
+                                <div class="custom-dropdown">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('recurring')">
+                                        <span>{{ t[form.recurring] }}</span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
+                                    </div>
+                                    <transition name="fade">
+                                        <div v-show="dropdowns.recurring" class="dropdown-menu glass" :style="glassStyle">
+                                            <div v-for="r in recurringTypes" :key="r" 
+                                                class="dropdown-item" :class="{ active: form.recurring === r }"
+                                                @click="selectDropdownOption('recurring', r)">
+                                                {{ t[r] }}
+                                            </div>
+                                        </div>
+                                    </transition>
+                                </div>
                             </div>
                         </div>
 
@@ -437,26 +469,33 @@
                 </div>
             </transition>
 
-            <!-- Circular Time Picker -->
+            <!-- Custom Linear Time Picker -->
             <transition name="fade">
-                <div v-show="showTimePicker" :key="'time-picker-modal'" class="fixed inset-0 z-[70] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl">
-                    <div class="glass rounded-[2.5rem] p-8 flex flex-col items-center space-y-8 w-full max-w-xs" :style="glassStyle">
-                        <div class="flex w-full justify-between items-center">
-                            <div class="flex gap-2">
-                                <button @click="clockMode = 'hour'" class="text-4xl font-black" :class="clockMode === 'hour' ? 'text-blue-500' : 'opacity-30'">{{ form.time.hour }}</button>
-                                <span class="text-4xl font-black opacity-20">:</span>
-                                <button @click="clockMode = 'minute'" class="text-4xl font-black" :class="clockMode === 'minute' ? 'text-blue-500' : 'opacity-30'">{{ form.time.minute.toString().padStart(2, '0') }}</button>
+                <div v-show="showTimePicker" :key="'time-picker-modal'" class="fixed inset-0 z-[1100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl">
+                    <div class="glass rounded-[2.5rem] p-8 flex flex-col space-y-6 w-full max-w-xs" :style="glassStyle">
+                        <h3 class="text-xl font-black text-center">{{ t.time }}</h3>
+                        
+                        <div class="flex justify-center gap-4">
+                            <!-- Hour -->
+                            <div class="picker-list w-16 no-scrollbar">
+                                <div v-for="h in pickerData.hours" :key="h" 
+                                    class="picker-item" :class="{ active: form.time.hour === h }"
+                                    @click="form.time.hour = h">
+                                    {{ h }}
+                                </div>
                             </div>
-                            <div class="toggle-switch" :class="{ pm: form.time.period === 'PM' }" @click="form.time.period = form.time.period === 'AM' ? 'PM' : 'AM'">
-                                <div class="toggle-thumb">{{ form.time.period }}</div>
+                            <!-- Minute -->
+                            <div class="picker-list w-16 no-scrollbar">
+                                <div v-for="m in pickerData.minutes" :key="m" 
+                                    class="picker-item" :class="{ active: form.time.minute === m }"
+                                    @click="form.time.minute = m">
+                                    {{ m.toString().padStart(2, '0') }}
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="clock-dial" @mousedown="handleClockInteraction" @touchstart.prevent="handleClockInteraction" @mousemove="handleClockMove" @touchmove.prevent="handleClockMove">
-                            <div class="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                            <div class="clock-hand" :style="{ transform: `rotate(${clockRotation}deg)`, height: clockMode === 'hour' ? '70px' : '95px' }"></div>
-                            <div v-for="(num, i) in clockNumbers" :key="i" class="clock-number" :class="{ active: isClockNumberActive(num) }" :style="getClockPos(i)">
-                                {{ num }}
+                            <!-- Period -->
+                            <div class="picker-list w-16 no-scrollbar">
+                                <div class="picker-item" :class="{ active: form.time.period === 'AM' }" @click="form.time.period = 'AM'">AM</div>
+                                <div class="picker-item" :class="{ active: form.time.period === 'PM' }" @click="form.time.period = 'PM'">PM</div>
                             </div>
                         </div>
 
@@ -465,32 +504,42 @@
                 </div>
             </transition>
 
-            <!-- Circular Date Picker -->
+            <!-- Custom Linear Date Picker -->
             <transition name="fade">
-                <div v-show="showDatePicker" :key="'date-picker-modal'" class="fixed inset-0 z-[70] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl">
-                    <div class="glass rounded-[2.5rem] p-8 flex flex-col items-center space-y-6 w-full max-w-xs" :style="glassStyle">
-                        <div class="flex w-full justify-between items-center">
-                            <div class="flex flex-col">
-                                <span class="text-[10px] font-black opacity-40 uppercase tracking-widest">{{ t.date }}</span>
-                                <h3 class="text-2xl font-black">{{ form.date }}</h3>
-                            </div>
-                            <div class="flex gap-2">
-                                <button @click="dateMode = 'month'" class="px-3 py-1 rounded-lg glass text-xs font-bold" :class="{ 'bg-blue-600 text-white': dateMode === 'month' }">{{ t.month }}</button>
-                                <button @click="dateMode = 'day'" class="px-3 py-1 rounded-lg glass text-xs font-bold" :class="{ 'bg-blue-600 text-white': dateMode === 'day' }">{{ t.day }}</button>
-                            </div>
+                <div v-show="showDatePicker" :key="'date-picker-modal'" class="fixed inset-0 z-[1100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl">
+                    <div class="glass rounded-[2.5rem] p-8 flex flex-col space-y-6 w-full max-w-sm" :style="glassStyle">
+                        <h3 class="text-xl font-black text-center">{{ t.date }}</h3>
+                        
+                        <div class="flex gap-2 mb-4">
+                            <button @click="setToday" class="flex-1 py-2 rounded-xl glass text-[10px] font-black uppercase tracking-widest" :style="glassStyle">Today</button>
+                            <button @click="setTomorrow" class="flex-1 py-2 rounded-xl glass text-[10px] font-black uppercase tracking-widest" :style="glassStyle">Tomorrow</button>
                         </div>
 
-                        <div class="clock-dial" @mousedown="handleDateInteraction" @touchstart.prevent="handleDateInteraction" @mousemove="handleDateMove" @touchmove.prevent="handleDateMove">
-                            <div class="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                            <div class="clock-hand" :style="{ transform: `rotate(${dateRotation}deg)`, height: '95px' }"></div>
-                            <div v-for="(num, i) in dateNumbers" :key="i" class="clock-number" :class="{ active: isDateNumberActive(num) }" :style="getDatePos(i)">
-                                {{ num }}
+                        <div class="flex justify-center gap-2">
+                            <!-- Year -->
+                            <div class="picker-list w-20 no-scrollbar">
+                                <div v-for="y in pickerData.years" :key="y" 
+                                    class="picker-item" :class="{ active: new Date(form.date).getFullYear() === y }"
+                                    @click="updatePickerDate('year', y)">
+                                    {{ y }}
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="flex w-full gap-2">
-                            <button @click="adjustYear(-1)" class="flex-1 py-3 rounded-xl glass text-xs font-bold">- Year</button>
-                            <button @click="adjustYear(1)" class="flex-1 py-3 rounded-xl glass text-xs font-bold">+ Year</button>
+                            <!-- Month -->
+                            <div class="picker-list w-16 no-scrollbar">
+                                <div v-for="m in pickerData.months" :key="m" 
+                                    class="picker-item" :class="{ active: (new Date(form.date).getMonth() + 1) === m }"
+                                    @click="updatePickerDate('month', m)">
+                                    {{ m }}
+                                </div>
+                            </div>
+                            <!-- Day -->
+                            <div class="picker-list w-16 no-scrollbar">
+                                <div v-for="d in pickerData.days" :key="d" 
+                                    class="picker-item" :class="{ active: new Date(form.date).getDate() === d }"
+                                    @click="updatePickerDate('day', d)">
+                                    {{ d }}
+                                </div>
+                            </div>
                         </div>
 
                         <button @click="showDatePicker = false" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg">OK</button>

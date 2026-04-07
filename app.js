@@ -565,6 +565,61 @@ try {
 
             const openDatePicker = () => showDatePicker.value = true;
 
+            const dropdowns = reactive({
+                theme: false,
+                category: false,
+                recurring: false
+            });
+
+            const toggleDropdown = (key) => {
+                Object.keys(dropdowns).forEach(k => {
+                    if (k !== key) dropdowns[k] = false;
+                });
+                dropdowns[key] = !dropdowns[key];
+            };
+
+            const selectDropdownOption = (key, val) => {
+                if (key === 'theme') {
+                    settings.value.theme = val;
+                    settings.value.useCustomBg = false;
+                } else {
+                    form.value[key] = val;
+                }
+                dropdowns[key] = false;
+            };
+
+            const pickerData = reactive({
+                years: Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i),
+                months: Array.from({ length: 12 }, (_, i) => i + 1),
+                days: computed(() => {
+                    const d = new Date(form.value.date);
+                    const year = d.getFullYear();
+                    const month = d.getMonth() + 1;
+                    return Array.from({ length: new Date(year, month, 0).getDate() }, (_, i) => i + 1);
+                }),
+                hours: Array.from({ length: 12 }, (_, i) => i + 1),
+                minutes: Array.from({ length: 60 }, (_, i) => i)
+            });
+
+            const setToday = () => {
+                const now = new Date();
+                form.value.date = now.toISOString().split('T')[0];
+            };
+
+            const setTomorrow = () => {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                form.value.date = tomorrow.toISOString().split('T')[0];
+            };
+
+            const updatePickerDate = (type, val) => {
+                const d = new Date(form.value.date);
+                if (type === 'year') d.setFullYear(val);
+                if (type === 'month') d.setMonth(val - 1);
+                if (type === 'day') d.setDate(val);
+                form.value.date = d.toISOString().split('T')[0];
+            };
+
             const scrollActiveTabIntoView = () => {
                 nextTick(() => {
                     const activeTab = document.querySelector('.list-tab-item.active-tab');
@@ -629,7 +684,12 @@ try {
             
             // --- Visual Effects ---
             const activeAssets = ref([]);
-            const petalStyle = (n) => ({ left: (n * 5) + '%', animationDuration: (5 + Math.random() * 5) + 's', animationDelay: (Math.random() * 5) + 's' });
+            const petalStyle = (n) => ({ 
+                left: (n * 5) + '%', 
+                top: (-200 + Math.random() * 100) + 'px',
+                animationDuration: (5 + Math.random() * 5) + 's', 
+                animationDelay: (Math.random() * 5) + 's' 
+            });
             const cloudStyle = (n) => ({ top: (n * 15) + '%', animationDuration: (20 + Math.random() * 20) + 's', animationDelay: (-Math.random() * 20) + 's' });
             const rainStyle = (n) => ({ left: (n * 7) + '%', animationDelay: (Math.random() * 2) + 's' });
 
@@ -1104,6 +1164,8 @@ try {
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
                 activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, cancelUpload, clearCustomBg,
                 showPetals,
+                dropdowns, toggleDropdown, selectDropdownOption,
+                pickerData, setToday, setTomorrow, updatePickerDate,
                 listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal,
                 isDefaultList, uploadProgress, confirmModal, promptClearCompleted, promptClearBin, executeConfirm,
                 manageModal, openManageModal: () => manageModal.value.show = true,
