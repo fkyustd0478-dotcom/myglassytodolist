@@ -206,6 +206,8 @@ try {
                 return darkThemes.includes(settings.value.theme);
             });
 
+            const isDefaultList = (id) => ['default', 'personal', 'work'].includes(id);
+
             const glassStyle = computed(() => ({ 
                 backgroundColor: isDarkTheme.value ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)', 
                 backdropFilter: 'blur(12px)',
