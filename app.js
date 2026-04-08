@@ -728,12 +728,12 @@ try {
             // --- Visual Effects ---
             const activeAssets = ref([]);
             const petalStyle = (n) => {
-                const drift = (Math.random() * 400 - 200) + 'px';
-                const rotation = (360 + Math.random() * 720) + 'deg';
+                const drift = (Math.random() * 600 - 300) + 'px'; // Enhanced drift range
+                const rotation = (360 + Math.random() * 1080) + 'deg';
                 return { 
                     left: (Math.random() * 100) + '%', 
-                    top: '-150px',
-                    animationDuration: (6 + Math.random() * 6) + 's', 
+                    top: (Math.random() * -50 - 150) + 'px', // Range: -150px to -200px
+                    animationDuration: (7 + Math.random() * 8) + 's', 
                     animationDelay: (Math.random() * 10) + 's',
                     '--drift': drift,
                     '--rotation': rotation
@@ -912,7 +912,7 @@ try {
                     activeAssets.value = []; // Clear current objects
                     showPetals.value = false;
                     
-                    // Background Image Migration
+                    // Forced Static Backgrounds
                     const themeImages = {
                         cherry: './theme/cherry.png',
                         seaside: './theme/seaside.png',
@@ -924,6 +924,7 @@ try {
                             document.body.style.backgroundImage = `url(${themeImages[theme]})`;
                             document.body.style.backgroundSize = 'cover';
                             document.body.style.backgroundPosition = 'center';
+                            document.body.style.backgroundAttachment = 'fixed';
                         } else {
                             document.body.style.backgroundImage = '';
                         }

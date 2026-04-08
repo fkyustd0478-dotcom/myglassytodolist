@@ -56,12 +56,12 @@ body {
     backdrop-filter: blur(12px) brightness(0.85);
     -webkit-backdrop-filter: blur(12px) brightness(0.85);
     background: var(--glass-bg);
-    border: 2.5px solid rgba(0, 0, 0, 0.45);
+    border: 2.5px solid rgba(0, 0, 0, 0.8);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
 }
 
 .theme-dark-mode .glass {
-    border: 2.5px solid rgba(255, 255, 255, 0.55);
+    border: 2.5px solid rgba(255, 255, 255, 0.8);
 }
 
 /* Background Layers */
@@ -105,7 +105,7 @@ body {
     contain: strict;
 }
 
-/* Themes */
+/* Themes - Migrated to Static Images */
 .theme-light { background: #f8f9fa; }
 .theme-dark { background: #0f172a; }
 .theme-cherry { background: #fff1f2; }
@@ -116,18 +116,8 @@ body {
 .theme-sea { background: #00d2ff; overflow: visible !important; }
 
 /* Theme Specific Decorations - Migrated to Static Images */
-
 .theme-seaside::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 50%; /* 50/50 split */
-    background: var(--sand);
-    z-index: 1;
-    box-shadow: 0 -15px 30px rgba(0,0,0,0.1);
-    border-top: 4px solid rgba(255,255,255,0.3);
+    display: none;
 }
 
 /* Animations */
@@ -174,42 +164,6 @@ body {
     animation: drift linear infinite;
     z-index: 2;
     opacity: 0.5;
-}
-
-/* Waves */
-@keyframes waveMove {
-    0%, 100% { transform: scaleY(1) translateY(0); }
-    50% { transform: scaleY(1.15) translateY(-15px); }
-}
-.wave-svg {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 180px;
-    fill: rgba(255, 255, 255, 0.2);
-    animation: waveMove 8s ease-in-out infinite;
-    z-index: 2;
-}
-
-/* Sunset Sun */
-.sun {
-    position: absolute;
-    bottom: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 180px;
-    height: 180px;
-    background: radial-gradient(circle, #fff700 0%, #ff8c00 100%);
-    border-radius: 50%;
-    filter: blur(2px);
-    box-shadow: 0 0 100px #ff8c00, 0 0 200px rgba(255, 140, 0, 0.3);
-    z-index: 2;
-    animation: pulseSun 10s ease-in-out infinite;
-}
-@keyframes pulseSun {
-    0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
-    50% { transform: translateX(-50%) scale(1.05); opacity: 1; }
 }
 
 .no-scrollbar::-webkit-scrollbar {
