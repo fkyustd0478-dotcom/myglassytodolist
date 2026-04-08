@@ -21,6 +21,7 @@
     --text-secondary: rgba(0, 0, 0, 0.6);
 }
 
+/* LEVEL 0: Base Layer */
 body {
     margin: 0;
     padding: 0;
@@ -36,6 +37,7 @@ body {
     background-attachment: fixed !important;
     color: #000000;
     transition: color 0.3s ease;
+    z-index: 0;
 }
 
 /* Mandatory Theme Backgrounds */
@@ -51,7 +53,32 @@ body {
     color: #000000 !important;
 }
 
-[v-cloak] { display: none; }
+/* LEVEL 1: Background Particles */
+.petal, .raindrop, .cloud, .animated-asset {
+    z-index: 1000 !important;
+}
+
+/* LEVEL 2: Fixed Navigation & Controls */
+header, #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
+    z-index: 7000 !important;
+}
+
+/* LEVEL 3: Overlay Modals */
+.setting-overlay, .fixed.inset-0.z-\[1000\] {
+    z-index: 8000 !important;
+}
+
+/* LEVEL 4: Highest - Always on Top */
+.fixed.inset-0.z-\[1100\], .fixed.inset-0.z-\[1200\], .fixed.inset-0.z-\[120\] {
+    z-index: 9000 !important;
+}
+
+/* Modal Size Optimization */
+.setting-window, .glass.rounded-t-\[2\.5rem\], .glass.rounded-\[2\.5rem\] {
+    width: 85% !important;
+    max-width: 400px !important;
+    margin: auto;
+}
 
 #error-reporter {
     display: none;

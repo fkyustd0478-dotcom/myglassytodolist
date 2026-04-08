@@ -171,8 +171,8 @@ try {
                     clearAll: 'Clear All', restore: 'Restore', permDelete: 'Permanent Delete', noBin: 'Recycle Bin is empty',
                     confirmClearCompleted: 'Are you sure you want to permanently delete all completed tasks?',
                     confirmClearBin: 'Are you sure you want to permanently delete all items in the recycle bin?',
-                    clearCache: 'Clear Storage & Reload',
-                    confirmClearCache: 'This will clear all your settings and tasks. Are you sure?'
+                    clearCache: 'Clear UI Cache & Update',
+                    confirmClearCache: 'This will reset your theme and language settings, but your tasks will be preserved. Continue?'
                 },
                 zh: {
                     noTasks: '暫無任務', completed: '已完成紀錄', settings: '設置', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知', back: '返回', emptyBin: '清空回收站', newTask: '新任務', editTask: '編輯任務', placeholder: '任務內容...', category: '分類', recurring: '重複', date: '日期', time: '時間', add: '添加', save: '保存', nextGen: '下次生成', custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
@@ -185,8 +185,8 @@ try {
                     clearAll: '全部清空', restore: '還原', permDelete: '永久刪除', noBin: '回收站是空的',
                     confirmClearCompleted: '確定要永久刪除所有已完成的任務嗎？',
                     confirmClearBin: '確定要永久刪除回收站中的所有項目嗎？',
-                    clearCache: '清除暫存並更新',
-                    confirmClearCache: '確定要清除暫存並更新嗎？這將會刪除所有任務與設置。'
+                    clearCache: '清除介面暫存並更新',
+                    confirmClearCache: '這將會重置主題與語言設置，但您的任務資料將會保留。確定要繼續嗎？'
                 }
             };
 
@@ -1196,6 +1196,10 @@ try {
             });
 
             // --- Watchers ---
+            watch(() => settings.value.theme, () => {
+                setupEffects();
+            });
+
             watch(settings, (newVal) => {
                 StorageProvider.saveSettings(newVal);
             }, { deep: true });
@@ -1258,8 +1262,10 @@ try {
                     title: t.value.clearCache,
                     message: t.value.confirmClearCache,
                     onConfirm: () => {
-                        localStorage.clear();
-                        sessionStorage.clear();
+                        // Smart Cache Clearing: UI settings only
+                        localStorage.removeItem('todo_settings');
+                        localStorage.removeItem('app_version');
+                        // Do NOT clear 'todo_data' or 'glassy-todo-blobs' (IndexedDB)
                         location.reload(true);
                     }
                 };
