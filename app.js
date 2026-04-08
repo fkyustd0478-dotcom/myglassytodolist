@@ -136,6 +136,7 @@ try {
             const originalCustomBg = ref('');
             const uploadProgress = ref(0);
             const showPetals = ref(false);
+            const showRain = ref(false);
             
             const showTimePicker = ref(false);
             const showDatePicker = ref(false);
@@ -169,7 +170,9 @@ try {
                     default: 'Default', personal: 'Personal', work: 'Work',
                     clearAll: 'Clear All', restore: 'Restore', permDelete: 'Permanent Delete', noBin: 'Recycle Bin is empty',
                     confirmClearCompleted: 'Are you sure you want to permanently delete all completed tasks?',
-                    confirmClearBin: 'Are you sure you want to permanently delete all items in the recycle bin?'
+                    confirmClearBin: 'Are you sure you want to permanently delete all items in the recycle bin?',
+                    clearCache: 'Clear Storage & Reload',
+                    confirmClearCache: 'This will clear all your settings and tasks. Are you sure?'
                 },
                 zh: {
                     noTasks: '暫無任務', completed: '已完成紀錄', settings: '設置', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知', back: '返回', emptyBin: '清空回收站', newTask: '新任務', editTask: '編輯任務', placeholder: '任務內容...', category: '分類', recurring: '重複', date: '日期', time: '時間', add: '添加', save: '保存', nextGen: '下次生成', custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
@@ -181,7 +184,9 @@ try {
                     default: '預設', personal: '個人', work: '工作',
                     clearAll: '全部清空', restore: '還原', permDelete: '永久刪除', noBin: '回收站是空的',
                     confirmClearCompleted: '確定要永久刪除所有已完成的任務嗎？',
-                    confirmClearBin: '確定要永久刪除回收站中的所有項目嗎？'
+                    confirmClearBin: '確定要永久刪除回收站中的所有項目嗎？',
+                    clearCache: '清除暫存並更新',
+                    confirmClearCache: '確定要清除暫存並更新嗎？這將會刪除所有任務與設置。'
                 }
             };
 
@@ -915,6 +920,7 @@ try {
                     if (petalTimeout) clearTimeout(petalTimeout);
                     activeAssets.value = []; // Clear current objects
                     showPetals.value = false;
+                    showRain.value = false;
                     
                     // Forced Static Backgrounds
                     const themeImages = {
@@ -947,6 +953,12 @@ try {
                         if (theme === 'cherry') {
                             petalTimeout = setTimeout(() => {
                                 showPetals.value = true;
+                            }, 15000);
+                        }
+
+                        if (theme === 'forest') {
+                            petalTimeout = setTimeout(() => {
+                                showRain.value = true;
                             }, 15000);
                         }
                     }
@@ -1229,11 +1241,16 @@ try {
             });
 
             const clearCacheAndUpdate = () => {
-                if (confirm('This will clear all your settings and tasks. Are you sure?')) {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    location.reload(true);
-                }
+                confirmModal.value = {
+                    show: true,
+                    title: t.value.clearCache,
+                    message: t.value.confirmClearCache,
+                    onConfirm: () => {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        location.reload(true);
+                    }
+                };
             };
 
             return { 
@@ -1253,7 +1270,7 @@ try {
                 getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
                 activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, cancelUpload, clearCustomBg,
-                showPetals,
+                showPetals, showRain,
                 dropdowns, toggleDropdown, selectDropdownOption,
                 pickerData, setToday, setTomorrow, updatePickerDate, updatePickerTime,
                 listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal,

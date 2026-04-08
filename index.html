@@ -56,7 +56,7 @@
                 </template>
 
                 <!-- Forest -->
-                <template v-if="settings.theme === 'forest'">
+                <template v-if="settings.theme === 'forest' && showRain">
                     <div v-for="n in 15" :key="'rd'+n" class="raindrop" :style="rainStyle(n)"></div>
                 </template>
 
@@ -350,7 +350,7 @@
                                     <h3 class="text-[9px] font-black uppercase tracking-widest">System</h3>
                                 </div>
                                 <button @click="clearCacheAndUpdate" class="w-full py-3 rounded-xl bg-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
-                                    Clear Storage & Reload
+                                    {{ t.clearCache }}
                                 </button>
                                 <p class="text-[8px] opacity-30 text-center">App Version: 1.2.0</p>
                             </section>
@@ -468,7 +468,7 @@
                             {{ t.nextGen }}: {{ calculateNextGen(form.recurring, form.date) }}
                         </p>
 
-                        <button @click="saveTodo" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform text-xl">
+                        <button @click="saveTodo" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform text-xl border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
                             {{ isEditing ? t.save : t.add }}
                         </button>
                     </div>
@@ -517,7 +517,7 @@
                             </div>
                         </div>
 
-                        <button @click="showTimePicker = false" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg">OK</button>
+                        <button @click="showTimePicker = false" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">OK</button>
                     </div>
                 </div>
             </transition>
@@ -572,7 +572,7 @@
                             </div>
                         </div>
 
-                        <button @click="showDatePicker = false" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg">OK</button>
+                        <button @click="showDatePicker = false" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">OK</button>
                     </div>
                 </div>
             </transition>
@@ -654,7 +654,7 @@
 
                         <div class="flex gap-3">
                             <button @click="closeListModal" class="flex-1 py-3 rounded-xl glass text-xs font-bold">{{ t.cancel }}</button>
-                            <button @click="confirmListModal" class="flex-1 py-3 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest">
+                            <button @click="confirmListModal" class="flex-1 py-3 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
                                 {{ listModal.mode === 'delete' ? t.confirm : t.save }}
                             </button>
                         </div>
@@ -670,7 +670,7 @@
                         <p class="text-sm opacity-60 leading-relaxed">{{ confirmModal.message }}</p>
                         <div class="flex gap-3">
                             <button @click="confirmModal.show = false" class="flex-1 py-3 rounded-xl glass text-xs font-bold">{{ t.cancel }}</button>
-                            <button @click="executeConfirm" class="flex-1 py-3 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-widest">
+                            <button @click="executeConfirm" class="flex-1 py-3 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-widest border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
                                 {{ t.confirm }}
                             </button>
                         </div>
