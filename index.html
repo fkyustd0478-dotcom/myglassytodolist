@@ -94,8 +94,8 @@
             <div class="mb-6 shrink-0 -mx-6 relative">
                 <div id="list-tabs" class="overflow-x-auto no-scrollbar bg-transparent py-4 flex items-center">
                     <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
-                        <button @click="currentListId = list.id" 
-                            class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none" 
+                        <button @click="currentListId = list.id" @touchstart="currentListId = list.id"
+                            class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none pointer-events-auto z-10" 
                             :class="currentListId === list.id ? 'bg-blue-600 text-white' : 'opacity-60'" :style="glassStyle">
                             {{ isDefaultList(list.id) ? t[list.id] : list.name }}
                         </button>
@@ -339,6 +339,20 @@
                                     <input type="range" min="0" max="1" step="0.01" v-model="settings.customBgOpacity" class="w-full">
                                 </div>
                                 <p class="text-[9px] opacity-30 italic px-1">0% = Full Image, 100% = Hidden (Reveals Light Theme)</p>
+                            </section>
+
+                            <div class="h-px bg-white/10 mx-2"></div>
+
+                            <!-- Cache Management -->
+                            <section class="space-y-4 pt-2">
+                                <div class="flex items-center gap-2 opacity-40 px-1">
+                                    <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                                    <h3 class="text-[9px] font-black uppercase tracking-widest">System</h3>
+                                </div>
+                                <button @click="clearCacheAndUpdate" class="w-full py-3 rounded-xl bg-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
+                                    Clear Storage & Reload
+                                </button>
+                                <p class="text-[8px] opacity-30 text-center">App Version: 1.2.0</p>
                             </section>
     
                             <div class="h-px bg-white/10 mx-2"></div>

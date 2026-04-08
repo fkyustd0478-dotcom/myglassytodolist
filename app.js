@@ -1,6 +1,8 @@
 try {
     const { createApp, ref, reactive, onMounted, computed, watch, nextTick } = Vue;
 
+    const APP_VERSION = '1.2.0';
+
     // --- Modular Storage Provider ---
     const StorageProvider = {
         saveSettings(settings) {
@@ -213,12 +215,14 @@ try {
             const glassStyle = computed(() => ({ 
                 backgroundColor: isDarkTheme.value ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)', 
                 backdropFilter: 'blur(12px)',
-                border: isDarkTheme.value ? '2.5px solid rgba(255, 255, 255, 0.55)' : '2.5px solid rgba(0, 0, 0, 0.45)'
+                border: isDarkTheme.value ? '2.5px solid rgba(255, 255, 255, 0.9)' : '2.5px solid rgba(0, 0, 0, 0.9)',
+                color: isDarkTheme.value ? '#FFFFFF' : '#000000'
             }));
             
             const themeClasses = computed(() => {
-                if (settings.value.useCustomBg) return 'theme-light';
-                return `theme-${settings.value.theme}`;
+                let classes = isDarkTheme.value ? 'theme-dark-mode ' : '';
+                if (settings.value.useCustomBg) return classes + 'theme-light';
+                return classes + `theme-${settings.value.theme}`;
             });
 
             const customBgStyle = computed(() => ({
@@ -647,7 +651,7 @@ try {
                     day = wrapValue(val, 1, max);
                 }
 
-                // Snap day if invalid for new month/year
+                // Snap day if invalid for new month/year (Dynamic Calibration)
                 const max = getMaxDays(month, year);
                 if (day > max) day = max;
 
@@ -667,7 +671,7 @@ try {
                 nextTick(() => {
                     const activeTab = document.querySelector('.list-tab-item.active-tab');
                     if (activeTab) {
-                        activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                        activeTab.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
                     }
                 });
             };
@@ -1035,6 +1039,17 @@ try {
 
             // --- Lifecycle ---
             onMounted(async () => {
+                // Version Check & Cache Clear
+                const storedVersion = localStorage.getItem('app_version');
+                if (storedVersion !== APP_VERSION) {
+                    console.log(`Version mismatch: ${storedVersion} -> ${APP_VERSION}. Clearing cache...`);
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    localStorage.setItem('app_version', APP_VERSION);
+                    location.reload(true);
+                    return;
+                }
+
                 await ImageDB.init();
                 initSortable();
 
@@ -1213,6 +1228,14 @@ try {
                 scrollActiveTabIntoView();
             });
 
+            const clearCacheAndUpdate = () => {
+                if (confirm('This will clear all your settings and tasks. Are you sure?')) {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    location.reload(true);
+                }
+            };
+
             return { 
                 themeStyle,
                 todos, lists, currentListId, settings, view, isAdding, isEditing, form, 
@@ -1237,7 +1260,8 @@ try {
                 isDefaultList, uploadProgress, confirmModal, promptClearCompleted, promptClearBin, executeConfirm,
                 manageModal, openManageModal: () => manageModal.value.show = true,
                 closeManageModal: () => manageModal.value.show = false,
-                saveLists
+                saveLists,
+                clearCacheAndUpdate
             };
         }
     }).mount('#app');
