@@ -40,10 +40,15 @@ body {
     z-index: 0;
 }
 
-/* Mandatory Theme Backgrounds */
+/* Mandatory Theme Backgrounds - Static Images Only */
 .theme-cherry { background-image: url('./theme/cherry.png') !important; }
-.theme-seaside { background-image: url('./theme/seaside.png') !important; }
 .theme-forest { background-image: url('./theme/forest.png') !important; }
+.theme-night { background-image: url('./theme/night.png') !important; }
+.theme-sea { background-image: url('./theme/sea.png') !important; }
+.theme-seaside { background-image: url('./theme/seaside.png') !important; }
+.theme-sky { background-image: url('./theme/sky.png') !important; }
+.theme-sunset { background-image: url('./theme/sunset.png') !important; }
+.theme-torii { background-image: url('./theme/torii.png') !important; }
 
 .theme-dark-mode {
     color: #FFFFFF !important;
@@ -63,14 +68,20 @@ header, #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
     z-index: 7000 !important;
 }
 
-/* LEVEL 3: Overlay Modals */
-.setting-overlay, .fixed.inset-0.z-\[1000\] {
+/* LEVEL 3: Overlay Modals & Backdrops */
+.modal-backdrop-level-3 {
     z-index: 8000 !important;
+}
+.modal-content-level-3 {
+    z-index: 8001 !important;
 }
 
 /* LEVEL 4: Highest - Always on Top */
-.fixed.inset-0.z-\[1100\], .fixed.inset-0.z-\[1200\], .fixed.inset-0.z-\[120\] {
+.modal-backdrop-level-4 {
     z-index: 9000 !important;
+}
+.modal-content-level-4 {
+    z-index: 9001 !important;
 }
 
 /* Modal Size Optimization */

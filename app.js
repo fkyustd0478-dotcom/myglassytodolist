@@ -192,7 +192,11 @@ try {
 
             const categories = ['urgent', 'important', 'normal', 'daily', 'memo'];
             const recurringTypes = ['none', 'daily', 'weekly', 'monthly'];
-            const otherThemes = [{ id: 'cherry' }, { id: 'sky' }, { id: 'seaside' }, { id: 'sunset' }, { id: 'forest' }, { id: 'sea' }];
+            const otherThemes = [
+                { id: 'cherry' }, { id: 'sky' }, { id: 'seaside' }, 
+                { id: 'sunset' }, { id: 'forest' }, { id: 'sea' },
+                { id: 'night' }, { id: 'torii' }
+            ];
 
             // --- Computed ---
             const themeStyle = reactive({
@@ -206,15 +210,12 @@ try {
             const t = computed(() => translations[settings.value.lang]);
             
             const isDarkTheme = computed(() => {
-                // Bright Themes (Cherry, Seaside) -> Black text (isDarkTheme = false)
-                // Dark Themes (Forest, Dark, Sunset, Sea, Sky) -> White text (isDarkTheme = true)
-                const darkThemes = ['dark', 'sunset', 'sky', 'forest', 'sea'];
+                // Bright Themes (Cherry, Sea, Seaside, Sky, Sunset) -> Black text (#000000)
+                // Dark Themes (Forest, Night, Torii) -> White text (#FFFFFF)
+                const darkThemes = ['forest', 'night', 'torii'];
                 if (settings.value.useCustomBg) {
                     return settings.value.customBgOpacity < 0.5;
                 }
-                // Cherry and Seaside are light themes (Black text)
-                if (['cherry', 'seaside'].includes(settings.value.theme)) return false;
-                // Forest and others are dark themes (White text)
                 return darkThemes.includes(settings.value.theme);
             });
 
@@ -934,11 +935,16 @@ try {
                     showPetals.value = false;
                     showRain.value = false;
                     
-                    // Forced Static Backgrounds
+                    // Forced Static Backgrounds - Mandatory Image Mapping
                     const themeImages = {
                         cherry: './theme/cherry.png',
+                        forest: './theme/forest.png',
+                        night: './theme/night.png',
+                        sea: './theme/sea.png',
                         seaside: './theme/seaside.png',
-                        forest: './theme/forest.png'
+                        sky: './theme/sky.png',
+                        sunset: './theme/sunset.png',
+                        torii: './theme/torii.png'
                     };
                     
                     if (!settings.value.useCustomBg) {

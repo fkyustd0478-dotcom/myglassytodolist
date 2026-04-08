@@ -243,10 +243,10 @@
 
             <!-- Settings Modal (Persistent DOM) -->
             <transition name="fade">
-                <div v-show="view === 'settings'" class="fixed inset-0 z-[8000] flex items-center justify-center p-6">
+                <div v-show="view === 'settings'" class="fixed inset-0 z-[8001] flex items-center justify-center p-6">
                     <div key="settings-root" class="w-full h-full flex items-center justify-center">
-                        <div class="setting-overlay absolute inset-0 bg-black/60 backdrop-blur-md" @click="closeSettings"></div>
-                        <div class="glass rounded-[2.5rem] p-8 space-y-8 w-full max-w-md setting-window relative overflow-y-auto max-h-[85vh]" :style="glassStyle" @click.stop>
+                        <div class="setting-overlay absolute inset-0 bg-black/60 backdrop-blur-md modal-backdrop-level-3" @click="closeSettings"></div>
+                        <div class="glass rounded-[2.5rem] p-8 space-y-8 w-full max-w-md setting-window relative overflow-y-auto max-h-[85vh] modal-content-level-3" :style="glassStyle" @click.stop>
                             <div class="flex items-center justify-between mb-2">
                                 <h2 class="text-2xl font-black tracking-tight">{{ t.settings }}</h2>
                             </div>
@@ -393,8 +393,8 @@
 
             <!-- Add/Edit Modal -->
             <transition name="slide-up">
-                <div v-show="isAdding || isEditing" :key="'add-edit-modal'" class="fixed inset-0 z-[8000] flex items-end justify-center p-4 bg-black/40 backdrop-blur-sm" @click.self="closeModal">
-                    <div class="w-full max-w-md glass rounded-t-[2.5rem] p-8 space-y-6 max-h-[80vh] overflow-y-auto" :style="glassStyle" @click.stop>
+                <div v-show="isAdding || isEditing" :key="'add-edit-modal'" class="fixed inset-0 z-[8000] flex items-end justify-center p-4 bg-black/40 backdrop-blur-sm modal-backdrop-level-3" @click.self="closeModal">
+                    <div class="w-full max-w-md glass rounded-t-[2.5rem] p-8 space-y-6 max-h-[80vh] overflow-y-auto modal-content-level-3" :style="glassStyle" @click.stop>
                         <div class="flex justify-between items-center">
                             <h2 class="text-2xl font-black">{{ isEditing ? t.editTask : t.newTask }}</h2>
                             <button @click="closeModal" class="opacity-40"><i data-lucide="x" class="w-6 h-6"></i></button>
@@ -477,8 +477,8 @@
 
             <!-- Custom Linear Time Picker -->
             <transition name="fade">
-                <div v-show="showTimePicker" :key="'time-picker-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl" @click.self="showTimePicker = false">
-                    <div class="glass rounded-[2.5rem] p-8 flex flex-col space-y-6 w-full max-w-xs" :style="glassStyle" @click.stop>
+                <div v-show="showTimePicker" :key="'time-picker-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl modal-backdrop-level-3" @click.self="showTimePicker = false">
+                    <div class="glass rounded-[2.5rem] p-8 flex flex-col space-y-6 w-full max-w-xs modal-content-level-3" :style="glassStyle" @click.stop>
                         <h3 class="text-xl font-black text-center">{{ t.time }}</h3>
                         
                         <div class="flex justify-center gap-4">
@@ -524,8 +524,8 @@
 
             <!-- Custom Linear Date Picker -->
             <transition name="fade">
-                <div v-show="showDatePicker" :key="'date-picker-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl" @click.self="showDatePicker = false">
-                    <div class="glass rounded-[2.5rem] p-8 flex flex-col space-y-6 w-full max-w-sm" :style="glassStyle" @click.stop>
+                <div v-show="showDatePicker" :key="'date-picker-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl modal-backdrop-level-3" @click.self="showDatePicker = false">
+                    <div class="glass rounded-[2.5rem] p-8 flex flex-col space-y-6 w-full max-w-sm modal-content-level-3" :style="glassStyle" @click.stop>
                         <h3 class="text-xl font-black text-center">{{ t.date }}</h3>
                         
                         <div class="flex gap-2 mb-4">
@@ -598,8 +598,8 @@
             </nav>
             <!-- Manage Lists Modal -->
             <transition name="fade">
-                <div v-show="manageModal.show" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl" @click.self="closeManageModal">
-                    <div class="glass rounded-[2.5rem] p-8 w-full max-w-md flex flex-col max-h-[85vh]" :style="glassStyle" @click.stop>
+                <div v-show="manageModal.show" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl modal-backdrop-level-3" @click.self="closeManageModal">
+                    <div class="glass rounded-[2.5rem] p-8 w-full max-w-md flex flex-col max-h-[85vh] modal-content-level-3" :style="glassStyle" @click.stop>
                         <div class="flex justify-between items-center mb-8">
                             <h2 class="text-2xl font-black tracking-tight">Manage Lists</h2>
                             <button @click="closeManageModal" class="opacity-40 hover:opacity-100 transition-opacity">
@@ -638,8 +638,8 @@
             </transition>
             <!-- List Management Modal (Add/Delete) -->
             <transition name="fade">
-                <div v-show="listModal.show" :key="'list-mgmt-modal'" class="fixed inset-0 z-[1200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md" @click.self="closeListModal">
-                    <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center" :style="glassStyle">
+                <div v-show="listModal.show" :key="'list-mgmt-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-3" @click.self="closeListModal">
+                    <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center modal-content-level-3" :style="glassStyle">
                         <h3 class="text-xl font-black tracking-tight">
                             {{ listModal.mode === 'add' ? t.newList : (listModal.mode === 'edit' ? t.editList : t.deleteList) }}
                         </h3>
@@ -664,8 +664,8 @@
 
             <!-- Confirmation Modal -->
             <transition name="fade">
-                <div v-show="confirmModal.show" :key="'confirm-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md" @click.self="confirmModal.show = false">
-                    <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center" :style="glassStyle" @click.stop>
+                <div v-show="confirmModal.show" :key="'confirm-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-4" @click.self="confirmModal.show = false">
+                    <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center modal-content-level-4" :style="glassStyle" @click.stop>
                         <h3 class="text-xl font-black tracking-tight">{{ confirmModal.title }}</h3>
                         <p class="text-sm opacity-60 leading-relaxed">{{ confirmModal.message }}</p>
                         <div class="flex gap-3">
