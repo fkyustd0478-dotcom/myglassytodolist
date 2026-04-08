@@ -106,40 +106,16 @@ body {
 }
 
 /* Themes */
-.theme-light { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); }
-.theme-dark { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
-.theme-cherry { background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); }
-.theme-sky { background: linear-gradient(to bottom, #0ea5e9, #38bdf8); overflow: visible !important; }
-.theme-seaside { background: linear-gradient(to bottom, #0ea5e9 0%, #38bdf8 50%, #fef3c7 50%, #fde68a 100%); overflow: visible !important; }
-.theme-sunset { background: linear-gradient(to bottom, #312e81, #581c87, #9333ea, #f97316); overflow: visible !important; }
-.theme-forest { background: linear-gradient(to bottom, #064e3b, #065f46, #047857); overflow: visible !important; }
-.theme-sea { background: linear-gradient(to bottom, #00d2ff, #3a7bd5, #004e92); overflow: visible !important; }
+.theme-light { background: #f8f9fa; }
+.theme-dark { background: #0f172a; }
+.theme-cherry { background: #fff1f2; }
+.theme-sky { background: #0ea5e9; overflow: visible !important; }
+.theme-seaside { background: #0ea5e9; overflow: visible !important; }
+.theme-sunset { background: #312e81; overflow: visible !important; }
+.theme-forest { background: #064e3b; overflow: visible !important; }
+.theme-sea { background: #00d2ff; overflow: visible !important; }
 
-/* Theme Specific Decorations */
-.theme-forest::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3E%3Cdefs%3E%3Cg id='tree-s'%3E%3Cpath d='M20,60 L30,20 L40,60 Z' fill='%23022c22'/%3E%3Cpath d='M15,50 L30,30 L45,50 Z' fill='%23064e3b'/%3E%3Crect x='28' y='60' width='4' height='10' fill='%231a0f00'/%3E%3C/g%3E%3Cg id='tree-m'%3E%3Cpath d='M30,100 L50,30 L70,100 Z' fill='%23022c22'/%3E%3Cpath d='M20,80 L50,40 L80,80 Z' fill='%23065f46'/%3E%3Cpath d='M10,110 L50,60 L90,110 Z' fill='%23047857'/%3E%3Crect x='46' y='110' width='8' height='20' fill='%231a0f00'/%3E%3C/g%3E%3Cg id='tree-l'%3E%3Cpath d='M40,150 L80,20 L120,150 Z' fill='%23022c22'/%3E%3Cpath d='M30,120 L80,40 L130,120 Z' fill='%23064e3b'/%3E%3Cpath d='M20,160 L80,70 L140,160 Z' fill='%23065f46'/%3E%3Crect x='74' y='160' width='12' height='30' fill='%231a0f00'/%3E%3C/g%3E%3C/defs%3E%3Cuse href='%23tree-l' x='20' y='800'/%3E%3Cuse href='%23tree-m' x='150' y='850'/%3E%3Cuse href='%23tree-s' x='300' y='900'/%3E%3Cuse href='%23tree-l' x='450' y='750'/%3E%3Cuse href='%23tree-m' x='600' y='820'/%3E%3Cuse href='%23tree-s' x='700' y='880'/%3E%3Cuse href='%23tree-l' x='50' y='400' opacity='0.3'/%3E%3Cuse href='%23tree-m' x='250' y='450' opacity='0.3'/%3E%3Cuse href='%23tree-s' x='400' y='500' opacity='0.3'/%3E%3Cuse href='%23tree-l' x='650' y='350' opacity='0.3'/%3E%3Cuse href='%23tree-m' x='100' y='100' opacity='0.1'/%3E%3Cuse href='%23tree-s' x='350' y='150' opacity='0.1'/%3E%3Cuse href='%23tree-l' x='550' y='50' opacity='0.1'/%3E%3Cuse href='%23tree-m' x='750' y='200' opacity='0.1'/%3E%3Cuse href='%23tree-l' x='120' y='600' opacity='0.5'/%3E%3Cuse href='%23tree-m' x='380' y='650' opacity='0.5'/%3E%3Cuse href='%23tree-s' x='520' y='700' opacity='0.5'/%3E%3Cuse href='%23tree-l' x='200' y='950'/%3E%3Cuse href='%23tree-m' x='400' y='1000'/%3E%3Cuse href='%23tree-s' x='600' y='1050'/%3E%3Cuse href='%23tree-l' x='50' y='1050'/%3E%3Cuse href='%23tree-m' x='700' y='950'/%3E%3Cuse href='%23tree-s' x='300' y='1100'/%3E%3C/svg%3E");
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
-    z-index: 0;
-    opacity: 0.8;
-}
-
-.theme-forest::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 220px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200'%3E%3Cdefs%3E%3Cpath id='t1' d='M20,180 L40,100 L60,180 Z M35,180 L40,160 L45,180' fill='%23022c22'/%3E%3Cpath id='t2' d='M80,180 Q100,60 120,180 Z' fill='%23064e3b'/%3E%3Cpath id='t3' d='M150,180 L170,80 L190,180 M160,140 L170,130 L180,140' fill='%23065f46'/%3E%3C/defs%3E%3Cuse href='%23t1' x='0'/%3E%3Cuse href='%23t2' x='20'/%3E%3Cuse href='%23t3' x='40'/%3E%3Cuse href='%23t1' x='100'/%3E%3Cuse href='%23t2' x='150'/%3E%3Cuse href='%23t3' x='200'/%3E%3Cuse href='%23t1' x='280'/%3E%3Cuse href='%23t2' x='320'/%3E%3C/svg%3E");
-    background-size: 400px 200px;
-    background-repeat: repeat-x;
-    opacity: 0.9;
-    z-index: 1;
-}
+/* Theme Specific Decorations - Migrated to Static Images */
 
 .theme-seaside::after {
     content: "";
@@ -158,10 +134,10 @@ body {
 
 /* Cherry Blossom Petals */
 @keyframes fall {
-    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+    0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
     10% { opacity: 1; }
     90% { opacity: 1; }
-    100% { transform: translateY(120vh) rotate(720deg); opacity: 0; }
+    100% { transform: translateY(120vh) translateX(var(--drift)) rotate(var(--rotation)); opacity: 0; }
 }
 .petal {
     position: absolute;
@@ -172,6 +148,20 @@ body {
     animation: fall linear infinite;
     z-index: 2;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+}
+
+/* Raindrops */
+@keyframes rain {
+    from { transform: translateY(-100px); }
+    to { transform: translateY(100vh); }
+}
+.raindrop {
+    position: absolute;
+    width: 2px;
+    height: 15px;
+    background: rgba(255, 255, 255, 0.4);
+    animation: rain 0.8s linear infinite;
+    z-index: 2;
 }
 
 /* Clouds */

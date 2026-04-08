@@ -199,6 +199,8 @@ try {
             const t = computed(() => translations[settings.value.lang]);
             
             const isDarkTheme = computed(() => {
+                // Bright Themes (Cherry, Seaside) -> Black text (isDarkTheme = false)
+                // Dark Themes (Forest, Dark, Sunset, Sea, Sky) -> White text (isDarkTheme = true)
                 const darkThemes = ['dark', 'sunset', 'sky', 'forest', 'sea'];
                 if (settings.value.useCustomBg) {
                     return settings.value.customBgOpacity < 0.5;
@@ -725,12 +727,18 @@ try {
             
             // --- Visual Effects ---
             const activeAssets = ref([]);
-            const petalStyle = (n) => ({ 
-                left: (n * 5) + '%', 
-                top: (-200 + Math.random() * 50) + 'px',
-                animationDuration: (5 + Math.random() * 5) + 's', 
-                animationDelay: (Math.random() * 5) + 's' 
-            });
+            const petalStyle = (n) => {
+                const drift = (Math.random() * 400 - 200) + 'px';
+                const rotation = (360 + Math.random() * 720) + 'deg';
+                return { 
+                    left: (Math.random() * 100) + '%', 
+                    top: '-150px',
+                    animationDuration: (6 + Math.random() * 6) + 's', 
+                    animationDelay: (Math.random() * 10) + 's',
+                    '--drift': drift,
+                    '--rotation': rotation
+                };
+            };
             const cloudStyle = (n) => ({ top: (n * 15) + '%', animationDuration: (20 + Math.random() * 20) + 's', animationDelay: (-Math.random() * 20) + 's' });
             const rainStyle = (n) => ({ left: (n * 7) + '%', animationDelay: (Math.random() * 2) + 's' });
 
@@ -904,6 +912,23 @@ try {
                     activeAssets.value = []; // Clear current objects
                     showPetals.value = false;
                     
+                    // Background Image Migration
+                    const themeImages = {
+                        cherry: './theme/cherry.png',
+                        seaside: './theme/seaside.png',
+                        forest: './theme/forest.png'
+                    };
+                    
+                    if (!settings.value.useCustomBg) {
+                        if (themeImages[theme]) {
+                            document.body.style.backgroundImage = `url(${themeImages[theme]})`;
+                            document.body.style.backgroundSize = 'cover';
+                            document.body.style.backgroundPosition = 'center';
+                        } else {
+                            document.body.style.backgroundImage = '';
+                        }
+                    }
+
                     // 15s Delay for Background Animations (Zero Latency UI)
                     if (!settings.value.useCustomBg) {
                         effectTimeout = setTimeout(() => {
