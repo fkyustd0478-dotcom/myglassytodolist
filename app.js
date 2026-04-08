@@ -212,6 +212,9 @@ try {
                 if (settings.value.useCustomBg) {
                     return settings.value.customBgOpacity < 0.5;
                 }
+                // Cherry and Seaside are light themes (Black text)
+                if (['cherry', 'seaside'].includes(settings.value.theme)) return false;
+                // Forest and others are dark themes (White text)
                 return darkThemes.includes(settings.value.theme);
             });
 
@@ -641,22 +644,31 @@ try {
                 return 31;
             };
 
-            const updatePickerDate = (type, val, direction = 0) => {
+            const updatePickerDate = (type, val) => {
                 const d = new Date(form.value.date);
                 let year = d.getFullYear();
                 let month = d.getMonth() + 1;
                 let day = d.getDate();
 
                 if (type === 'year') {
-                    year = wrapValue(val, 1900, 2099);
+                    // Year Loop (1900-2099)
+                    if (val < 1900) year = 2099;
+                    else if (val > 2099) year = 1900;
+                    else year = val;
                 } else if (type === 'month') {
-                    month = wrapValue(val, 1, 12);
+                    // Month Loop (1-12)
+                    if (val < 1) month = 12;
+                    else if (val > 12) month = 1;
+                    else month = val;
                 } else if (type === 'day') {
                     const max = getMaxDays(month, year);
-                    day = wrapValue(val, 1, max);
+                    // Day Loop (1-MaxDay)
+                    if (val < 1) day = max;
+                    else if (val > max) day = 1;
+                    else day = val;
                 }
 
-                // Snap day if invalid for new month/year (Dynamic Calibration)
+                // Dynamic Calibration: Snap day if invalid for new month/year
                 const max = getMaxDays(month, year);
                 if (day > max) day = max;
 
@@ -737,13 +749,13 @@ try {
             // --- Visual Effects ---
             const activeAssets = ref([]);
             const petalStyle = (n) => {
-                const drift = (Math.random() * 600 - 300) + 'px'; // Enhanced drift range
+                const drift = (Math.random() * 800 - 400) + 'px'; // Angled Wind: Horizontal drift
                 const rotation = (360 + Math.random() * 1080) + 'deg';
                 return { 
-                    left: (Math.random() * 100) + '%', 
-                    top: (Math.random() * -50 - 150) + 'px', // Range: -150px to -200px
-                    animationDuration: (7 + Math.random() * 8) + 's', 
-                    animationDelay: (Math.random() * 10) + 's',
+                    left: (Math.random() * 120 - 10) + '%', // Spawn slightly outside width
+                    top: '-150px', // Mandatory spawn above viewport
+                    animationDuration: (8 + Math.random() * 10) + 's', 
+                    animationDelay: (Math.random() * 15) + 's',
                     '--drift': drift,
                     '--rotation': rotation
                 };

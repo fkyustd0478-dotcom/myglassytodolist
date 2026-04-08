@@ -31,15 +31,24 @@ body {
     height: 100vh;
     width: 100vw;
     background: #000;
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
     color: #000000;
     transition: color 0.3s ease;
 }
 
+/* Mandatory Theme Backgrounds */
+.theme-cherry { background-image: url('./theme/cherry.png') !important; }
+.theme-seaside { background-image: url('./theme/seaside.png') !important; }
+.theme-forest { background-image: url('./theme/forest.png') !important; }
+
 .theme-dark-mode {
     color: #FFFFFF !important;
+}
+
+.theme-light-mode {
+    color: #000000 !important;
 }
 
 [v-cloak] { display: none; }
@@ -116,11 +125,8 @@ body {
 /* Themes - Migrated to Static Images */
 .theme-light { background: #f8f9fa; }
 .theme-dark { background: #0f172a; }
-.theme-cherry { background: #fff1f2; }
 .theme-sky { background: #0ea5e9; overflow: visible !important; }
-.theme-seaside { background: #0ea5e9; overflow: visible !important; }
 .theme-sunset { background: #312e81; overflow: visible !important; }
-.theme-forest { background: #064e3b; overflow: visible !important; }
 .theme-sea { background: #00d2ff; overflow: visible !important; }
 
 /* Theme Specific Decorations - Migrated to Static Images */
@@ -250,14 +256,7 @@ body {
     color: white;
 }
 
-/* Theme Backgrounds */
-.theme-cherry { background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); }
-.theme-sky { background: linear-gradient(180deg, #87CEEB 0%, #E0F7FA 100%); }
-.theme-seaside { background: linear-gradient(180deg, #4da3ff 0%, #ffd89b 100%); }
-.theme-sunset { background: linear-gradient(180deg, #ff512f 0%, #dd2476 100%); }
-.theme-forest { background: linear-gradient(180deg, #134e5e 0%, #71b280 100%); }
-.theme-sea { background: linear-gradient(180deg, #00d2ff 0%, #3a7bd5 100%); }
-.theme-light { background: #f8fafc; }
+/* Theme Backgrounds - Deprecated in favor of static images */
 .custom-theme {
     background-size: cover;
     background-position: center;

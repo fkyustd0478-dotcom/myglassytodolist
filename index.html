@@ -24,46 +24,46 @@
 <body>
     <div id="error-reporter"></div>
 
-    <div id="app" v-cloak :style="themeStyle">
+    <div id="app" v-cloak :style="themeStyle" :class="isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode'">
         <!-- Background Layers -->
         <div class="bg-layer" :class="themeClasses" :key="settings.theme">
-            <template v-if="!settings.useCustomBg">
+            <div v-show="!settings.useCustomBg">
                 <!-- Cherry Blossom -->
-                <template v-if="settings.theme === 'cherry' && showPetals">
+                <div v-show="settings.theme === 'cherry' && showPetals">
                     <div v-for="n in 20" :key="'p'+n" class="petal" :style="petalStyle(n)"></div>
-                </template>
+                </div>
                 
                 <!-- Sky -->
-                <template v-if="settings.theme === 'sky'">
+                <div v-show="settings.theme === 'sky'">
                     <div v-for="n in 6" :key="'c'+n" class="cloud" :style="cloudStyle(n)">
                         <svg width="120" height="80" viewBox="0 0 24 24" fill="white" opacity="0.5">
                             <path d="M17.5,19c-3.037,0-5.5-2.463-5.5-5.5c0-0.038,0.001-0.076,0.003-0.113C10.966,13.84,9.791,14,8.5,14c-2.485,0-4.5-2.015-4.5-4.5S6.015,5,8.5,5c0.41,0,0.803,0.055,1.177,0.158C10.51,3.31,12.35,2,14.5,2c2.81,0,5.12,2.12,5.45,4.87C21.19,7.41,22,8.85,22,10.5c0,2.485-2.015,4.5-4.5,4.5c-0.038,0-0.076-0.001-0.113-0.003C17.16,16.034,16,17.209,16,18.5c0,0.276,0.224,0.5,0.5,0.5H17.5z"/>
                         </svg>
                     </div>
-                </template>
+                </div>
 
                 <!-- Seaside -->
-                <template v-if="settings.theme === 'seaside'">
-                </template>
+                <div v-show="settings.theme === 'seaside'">
+                </div>
 
                 <!-- Sunset -->
-                <template v-if="settings.theme === 'sunset'">
+                <div v-show="settings.theme === 'sunset'">
                     <div v-for="n in 4" :key="'sc'+n" class="cloud" :style="cloudStyle(n)">
                         <svg width="150" height="100" viewBox="0 0 24 24" fill="#ffedd5" opacity="0.4">
                             <path d="M17.5,19c-3.037,0-5.5-2.463-5.5-5.5c0-0.038,0.001-0.076,0.003-0.113C10.966,13.84,9.791,14,8.5,14c-2.485,0-4.5-2.015-4.5-4.5S6.015,5,8.5,5c0.41,0,0.803,0.055,1.177,0.158C10.51,3.31,12.35,2,14.5,2c2.81,0,5.12,2.12,5.45,4.87C21.19,7.41,22,8.85,22,10.5c0,2.485-2.015,4.5-4.5,4.5c-0.038,0-0.076-0.001-0.113-0.003C17.16,16.034,16,17.209,16,18.5c0,0.276,0.224,0.5,0.5,0.5H17.5z"/>
                         </svg>
                     </div>
-                </template>
+                </div>
 
                 <!-- Forest -->
-                <template v-if="settings.theme === 'forest' && showRain">
+                <div v-show="settings.theme === 'forest' && showRain">
                     <div v-for="n in 15" :key="'rd'+n" class="raindrop" :style="rainStyle(n)"></div>
-                </template>
+                </div>
 
                 <!-- Sea -->
-                <template v-if="settings.theme === 'sea'">
-                </template>
-            </template>
+                <div v-show="settings.theme === 'sea'">
+                </div>
+            </div>
 
             <!-- Dynamic Assets (Plane, Crab, Ship) -->
             <div v-for="asset in activeAssets" :key="asset.id" 
@@ -91,11 +91,11 @@
             </header>
 
             <!-- List Navigation Bar -->
-            <div class="mb-6 shrink-0 -mx-6 relative">
-                <div id="list-tabs" class="overflow-x-auto no-scrollbar bg-transparent py-4 flex items-center">
+            <div class="mb-6 shrink-0 -mx-6 relative z-[9999]">
+                <div id="list-tabs" class="overflow-x-auto no-scrollbar bg-transparent py-4 flex items-center pointer-events-auto">
                     <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
                         <button @click="currentListId = list.id" @touchstart="currentListId = list.id"
-                            class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none pointer-events-auto z-10" 
+                            class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none pointer-events-auto z-[9999]" 
                             :class="currentListId === list.id ? 'bg-blue-600 text-white' : 'opacity-60'" :style="glassStyle">
                             {{ isDefaultList(list.id) ? t[list.id] : list.name }}
                         </button>
