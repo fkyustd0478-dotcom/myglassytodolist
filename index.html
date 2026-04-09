@@ -340,9 +340,9 @@
                                 </div>
                                 <p class="text-[9px] opacity-30 italic px-1">0% = Full Image, 100% = Hidden (Reveals Light Theme)</p>
                             </section>
-
+    
                             <div class="h-px bg-white/10 mx-2"></div>
-
+    
                             <!-- Cache Management -->
                             <section class="space-y-4 pt-2">
                                 <div class="flex items-center gap-2 opacity-40 px-1">
@@ -582,6 +582,7 @@
                     <span class="text-[10px] font-bold uppercase">{{ t.settings }}</span>
                 </button>
             </nav>
+
             <!-- Manage Lists Modal -->
             <transition name="fade">
                 <div v-show="manageModal.show" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl modal-backdrop-level-3" @click.self="closeManageModal">
@@ -622,6 +623,7 @@
                     </div>
                 </div>
             </transition>
+
             <!-- List Management Modal (Add/Delete) -->
             <transition name="fade">
                 <div v-show="listModal.show" :key="'list-mgmt-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-3" @click.self="closeListModal">

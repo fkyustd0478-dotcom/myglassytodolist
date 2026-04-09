@@ -118,7 +118,7 @@ try {
             });
 
             const settings = ref({ 
-                theme: 'sky', 
+                theme: 'cherry', 
                 customBgOpacity: 0.5, 
                 notificationsEnabled: false, 
                 lang: 'zh',
@@ -150,8 +150,8 @@ try {
                 text: '', 
                 category: 'normal', 
                 recurring: 'none', 
-                date: '', 
-                time: { hour: 12, minute: 0, period: 'AM' },
+                date: new Date().toISOString().split('T')[0], 
+                time: { hour: new Date().getHours(), minute: new Date().getMinutes() },
                 alertMinutes: 15
             });
             
@@ -161,7 +161,7 @@ try {
             const translations = {
                 en: {
                     noTasks: 'No active tasks', completed: 'Completed Records', settings: 'Settings', theme: 'Theme', uiOpacity: 'Custom Image Opacity', lang: 'Language', notifications: 'Notifications', back: 'Back', emptyBin: 'Empty Bin', newTask: 'New Task', editTask: 'Edit Task', placeholder: 'Task title...', category: 'Category', recurring: 'Recurring', date: 'Date', time: 'Time', add: 'Add', save: 'Save', nextGen: 'Next generation', custom: 'Custom (Upload)', upload: 'Upload Photo', light: 'Light', dark: 'Dark', otherThemes: 'Other Themes',
-                    daily: 'Daily', normal: 'Normal', important: 'Important', urgent: 'Urgent', memo: 'Memo', none: 'None', weekly: 'Weekly', monthly: 'Monthly', cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset', forest: 'Forest', sea: 'Sea',
+                    daily: 'Daily', normal: 'Normal', important: 'Important', urgent: 'Urgent', memo: 'Memo', none: 'None', weekly: 'Weekly', monthly: 'Monthly', cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset', forest: 'Forest', sea: 'Sea', night: 'Night', torii: 'Torii',
                     active: 'Active', bin: 'Recycle Bin', noCompleted: 'No completed records', tasks: 'Tasks', day: 'Day', month: 'Month',
                     alertBefore: 'Alert before (mins)', edit: 'Edit', enable: 'Enable', disable: 'Disable', removeImg: 'Remove Image',
                     editList: 'Edit List', deleteList: 'Delete List', newList: 'New List', confirmDeleteList: 'Are you sure you want to delete this list and all its tasks?',
@@ -175,7 +175,7 @@ try {
                 },
                 zh: {
                     noTasks: '暫無任務', completed: '已完成紀錄', settings: '設置', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知', back: '返回', emptyBin: '清空回收站', newTask: '新任務', editTask: '編輯任務', placeholder: '任務內容...', category: '分類', recurring: '重複', date: '日期', time: '時間', add: '添加', save: '保存', nextGen: '下次生成', custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
-                    daily: '日常', normal: '一般', important: '重要', urgent: '緊急', memo: '備忘錄', none: '無', weekly: '每週', monthly: '每月', cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落', forest: '森林', sea: '大海',
+                    daily: '日常', normal: '一般', important: '重要', urgent: '緊急', memo: '備忘錄', none: '無', weekly: '每週', monthly: '每月', cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落', forest: '森林', sea: '大海', night: '夜景', torii: '鳥居',
                     active: '進行中', bin: '回收站', noCompleted: '暫無完成紀錄', tasks: '項任務', day: '日', month: '月',
                     alertBefore: '提醒時間 (分鐘前)', edit: '編輯', enable: '啟用', disable: '停用', removeImg: '移除圖片',
                     editList: '編輯名稱', deleteList: '刪除清單', newList: '新增清單', confirmDeleteList: '確定要刪除此清單及其所有任務嗎？',
@@ -192,9 +192,9 @@ try {
             const categories = ['urgent', 'important', 'normal', 'daily', 'memo'];
             const recurringTypes = ['none', 'daily', 'weekly', 'monthly'];
             const otherThemes = [
-                { id: 'cherry' }, { id: 'sky' }, { id: 'seaside' }, 
-                { id: 'sunset' }, { id: 'forest' }, { id: 'sea' },
-                { id: 'night' }, { id: 'torii' }
+                { id: 'cherry' }, { id: 'forest' }, { id: 'night' }, 
+                { id: 'sea' }, { id: 'seaside' }, { id: 'sky' },
+                { id: 'sunset' }, { id: 'torii' }
             ];
 
             // --- Computed ---
@@ -238,21 +238,8 @@ try {
                 opacity: 1 - settings.value.customBgOpacity // 100% opacity slider = 0% image opacity (Invisible)
             }));
 
-            const formatTimeDisplay = computed(() => `${form.value.time.hour}:${form.value.time.minute.toString().padStart(2, '0')} ${form.value.time.period}`);
+            const formatTimeDisplay = computed(() => `${form.value.time.hour.toString().padStart(2, '0')}:${form.value.time.minute.toString().padStart(2, '0')}`);
             
-            const clockNumbers = computed(() => clockMode.value === 'hour' ? [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] : [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]);
-            const clockRotation = computed(() => clockMode.value === 'hour' ? (form.value.time.hour % 12) * 30 : form.value.time.minute * 6);
-
-            const dateNumbers = computed(() => {
-                if (dateMode.value === 'month') return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-                return [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30].slice(0, 12);
-            });
-            const dateRotation = computed(() => {
-                const d = new Date(form.value.date);
-                if (dateMode.value === 'month') return (d.getMonth() + 1) * 30;
-                return (d.getDate() % 12 || 12) * 30;
-            });
-
             const sortedTodos = computed(() => {
                 const priority = { urgent: 0, important: 1, normal: 2, daily: 3, memo: 4 };
                 return todos.value.filter(t => !t.isDeleted && !t.completed && t.listId === currentListId.value).sort((a, b) => {
@@ -348,7 +335,6 @@ try {
             };
 
             const saveCustomBg = () => {
-                // Legacy method, logic moved to handleUpload for stability
                 tempCustomBg.value = '';
             };
 
@@ -379,14 +365,13 @@ try {
                 isAdding.value = true;
                 const now = new Date();
                 form.value = { 
-                    text: form.value.text || '', // Keep text from top input if any
+                    text: form.value.text || '', 
                     category: 'normal', 
                     recurring: 'none', 
                     date: now.toISOString().split('T')[0], 
                     time: { 
-                        hour: now.getHours() % 12 || 12, 
-                        minute: Math.floor(now.getMinutes() / 5) * 5, 
-                        period: now.getHours() >= 12 ? 'PM' : 'AM' 
+                        hour: now.getHours(), 
+                        minute: now.getMinutes()
                     },
                     alertMinutes: 15
                 };
@@ -402,9 +387,8 @@ try {
                     recurring: todo.recurring, 
                     date: d.toISOString().split('T')[0], 
                     time: { 
-                        hour: d.getHours() % 12 || 12, 
-                        minute: d.getMinutes(), 
-                        period: d.getHours() >= 12 ? 'PM' : 'AM' 
+                        hour: d.getHours(), 
+                        minute: d.getMinutes()
                     },
                     alertMinutes: todo.alertMinutes || 15
                 };
@@ -412,13 +396,9 @@ try {
 
             const saveTodo = () => {
                 if (!form.value.text.trim()) return;
-                let h = form.value.time.hour;
-                if (form.value.time.period === 'PM' && h < 12) h += 12;
-                if (form.value.time.period === 'AM' && h === 12) h = 0;
-                const dueStr = `${form.value.date}T${h.toString().padStart(2, '0')}:${form.value.time.minute.toString().padStart(2, '0')}:00`;
+                const dueStr = `${form.value.date}T${form.value.time.hour.toString().padStart(2, '0')}:${form.value.time.minute.toString().padStart(2, '0')}:00`;
                 const dueDate = new Date(dueStr);
                 
-                // Notification Guard: Only schedule if in the future
                 const isFuture = dueDate.getTime() > Date.now();
 
                 if (isEditing.value) {
@@ -429,7 +409,7 @@ try {
                             category: form.value.category, 
                             recurring: form.value.recurring, 
                             dueDate: dueStr, 
-                            notified: !isFuture, // Mark as notified if in past to prevent triggers
+                            notified: !isFuture,
                             alertMinutes: form.value.alertMinutes,
                             updatedAt: new Date().toISOString()
                         });
@@ -451,7 +431,7 @@ try {
                 }
                 renderTrigger.value++;
                 nextTick(() => closeModal());
-                form.value.text = ''; // Clear top input
+                form.value.text = ''; 
             };
 
             const closeModal = () => { isAdding.value = isEditing.value = false; editingId.value = null; };
@@ -471,11 +451,7 @@ try {
             const restoreTodo = (id) => {
                 const index = todos.value.findIndex(x => x.id === id);
                 if (index !== -1) {
-                    // Triple-Action Logic: Clone-and-Kill
-                    // 1. Deep-copy the task object
                     const originalTask = todos.value[index];
-                    
-                    // 2. Reset status to 'active' and update timestamp
                     const restoredTask = {
                         ...JSON.parse(JSON.stringify(originalTask)),
                         id: 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
@@ -485,13 +461,8 @@ try {
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString()
                     };
-                    
-                    // 3. Push the new copy to the main tasks array
                     todos.value.unshift(restoredTask);
-                    
-                    // 4. Immediately delete the original record
-                    todos.value.splice(index + 1, 1); // index + 1 because we unshifted
-                    
+                    todos.value.splice(index + 1, 1); 
                     renderTrigger.value++;
                     nextTick(() => {
                         if (window.lucide) lucide.createIcons();
@@ -557,19 +528,14 @@ try {
                     const list = lists.value.find(l => l.id === id);
                     if (list) list.name = name.trim();
                 } else if (mode === 'delete') {
-                    // Cascading Delete: Remove list and ALL associated tasks
                     lists.value = lists.value.filter(l => l.id !== id);
                     todos.value = todos.value.filter(t => t.listId !== id);
-                    
                     if (currentListId.value === id) {
                         currentListId.value = lists.value[0]?.id || 'default';
                     }
                 }
-                
-                // Immediate Sync & Force Re-render
                 StorageProvider.saveData({ todos: todos.value, lists: lists.value });
                 renderTrigger.value++;
-                
                 nextTick(() => {
                     closeListModal();
                     scrollActiveTabIntoView();
@@ -666,24 +632,14 @@ try {
                 let day = d.getDate();
 
                 if (type === 'year') {
-                    // Year Loop (1900-2099)
-                    if (val < 1900) year = 2099;
-                    else if (val > 2099) year = 1900;
-                    else year = val;
+                    year = wrapValue(val, 1970, 2099);
                 } else if (type === 'month') {
-                    // Month Loop (1-12)
-                    if (val < 1) month = 12;
-                    else if (val > 12) month = 1;
-                    else month = val;
+                    month = wrapValue(val, 1, 12);
                 } else if (type === 'day') {
                     const max = getMaxDays(month, year);
-                    // Day Loop (1-MaxDay)
-                    if (val < 1) day = max;
-                    else if (val > max) day = 1;
-                    else day = val;
+                    day = wrapValue(val, 1, max);
                 }
 
-                // Dynamic Calibration: Snap day if invalid for new month/year
                 const max = getMaxDays(month, year);
                 if (day > max) day = max;
 
@@ -708,48 +664,6 @@ try {
                 });
             };
 
-            // --- Clock & Date Interaction ---
-            const handleClockInteraction = (e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-                const x = e.touches ? e.touches[0].clientX : e.clientX, y = e.touches ? e.touches[0].clientY : e.clientY;
-                const angle = (Math.atan2(y - cy, x - cx) * 180 / Math.PI + 450) % 360;
-                if (clockMode.value === 'hour') form.value.time.hour = Math.round(angle / 30) || 12;
-                else form.value.time.minute = Math.round(angle / 6) % 60;
-            };
-            const handleClockMove = (e) => { if (e.buttons === 1 || e.touches) handleClockInteraction(e); };
-            const getClockPos = (i) => { const a = (i * 30 - 90) * (Math.PI / 180), r = clockMode.value === 'hour' ? 90 : 115; return { left: `${130 + r * Math.cos(a) - 17}px`, top: `${130 + r * Math.sin(a) - 17}px` }; };
-            const isClockNumberActive = (n) => clockMode.value === 'hour' ? form.value.time.hour === n : form.value.time.minute === n;
-
-            const handleDateInteraction = (e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-                const x = e.touches ? e.touches[0].clientX : e.clientX, y = e.touches ? e.touches[0].clientY : e.clientY;
-                const angle = (Math.atan2(y - cy, x - cx) * 180 / Math.PI + 450) % 360;
-                const val = Math.round(angle / 30) || 12;
-                const d = new Date(form.value.date);
-                if (dateMode.value === 'month') d.setMonth(val - 1);
-                else {
-                    const currentDay = d.getDate();
-                    const offset = Math.floor((currentDay - 1) / 12) * 12;
-                    d.setDate(offset + val);
-                }
-                form.value.date = d.toISOString().split('T')[0];
-            };
-            const handleDateMove = (e) => { if (e.buttons === 1 || e.touches) handleDateInteraction(e); };
-            const getDatePos = (i) => { const a = (i * 30 - 90) * (Math.PI / 180), r = 115; return { left: `${130 + r * Math.cos(a) - 17}px`, top: `${130 + r * Math.sin(a) - 17}px` }; };
-            const isDateNumberActive = (n) => {
-                const d = new Date(form.value.date);
-                if (dateMode.value === 'month') return (d.getMonth() + 1) === n;
-                return d.getDate() === n;
-            };
-            const adjustYear = (v) => {
-                const d = new Date(form.value.date);
-                d.setFullYear(d.getFullYear() + v);
-                form.value.date = d.toISOString().split('T')[0];
-            };
-            
-            // --- Recurring Logic ---
             const calculateNextGen = (r, d) => { 
                 if (r === 'none') return ''; 
                 const date = new Date(`${d}T00:00:00`); 
@@ -761,14 +675,13 @@ try {
 
             const formatDateTime = (s) => new Date(s).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             
-            // --- Visual Effects ---
             const activeAssets = ref([]);
             const petalStyle = (n) => {
-                const drift = (Math.random() * 800 - 400) + 'px'; // Angled Wind: Horizontal drift
+                const drift = (Math.random() * 800 - 400) + 'px'; 
                 const rotation = (360 + Math.random() * 1080) + 'deg';
                 return { 
-                    left: (Math.random() * 120 - 10) + '%', // Spawn slightly outside width
-                    top: '-150px', // Mandatory spawn above viewport
+                    left: (Math.random() * 120 - 10) + '%', 
+                    top: '-150px', 
                     animationDuration: (8 + Math.random() * 10) + 's', 
                     animationDelay: (Math.random() * 15) + 's',
                     '--drift': drift,
@@ -832,7 +745,6 @@ try {
                     const duration = 8000 + Math.random() * 6000;
                     animateAsset(asset, startX, endX, asset.y, endY, duration);
                 } else if (type === 'crab') {
-                    // Restrict to Sand area: between 90px (nav) and 50% height (wave)
                     const navHeight = 90;
                     const sandTop = window.innerHeight * 0.5;
                     const crabHeight = 50;
@@ -853,15 +765,12 @@ try {
                 const startTime = performance.now();
                 const step = (now) => {
                     if (!activeAssets.value.find(a => a.id === asset.id)) return;
-                    
                     const elapsed = now - startTime;
                     const progress = Math.min(elapsed / duration, 1);
-                    
                     asset.x = startX + (endX - startX) * progress;
                     if (startY !== null && endY !== null) {
                         asset.y = startY + (endY - startY) * progress;
                     }
-
                     if (progress < 1) {
                         requestAnimationFrame(step);
                     } else {
@@ -880,7 +789,6 @@ try {
 
                 const step = (now) => {
                     if (!activeAssets.value.find(a => a.id === asset.id)) return;
-
                     if (isPaused) {
                         if (now >= pauseUntil) {
                             isPaused = false;
@@ -890,7 +798,6 @@ try {
                             return;
                         }
                     }
-
                     if (!isPaused && now - lastPauseEnd > 5000 + Math.random() * 5000) {
                         isPaused = true;
                         const pauseDuration = 1000 + Math.random() * 1000;
@@ -899,12 +806,9 @@ try {
                         requestAnimationFrame(step);
                         return;
                     }
-
                     const elapsed = now - startTime - pausedTime;
                     const progress = Math.min(elapsed / duration, 1);
-                    
                     asset.x = startX + (endX - startX) * progress;
-
                     if (progress < 1) {
                         requestAnimationFrame(step);
                     } else {
@@ -930,7 +834,6 @@ try {
 
             const removeAsset = (id, type) => {
                 activeAssets.value = activeAssets.value.filter(a => a.id !== id);
-                // Only spawn a new batch if no more of this type are active
                 if (!activeAssets.value.some(a => a.type === type)) {
                     setTimeout(() => {
                         spawnBatch(type);
@@ -945,11 +848,10 @@ try {
                 const clearAndSchedule = (theme) => {
                     if (effectTimeout) clearTimeout(effectTimeout);
                     if (petalTimeout) clearTimeout(petalTimeout);
-                    activeAssets.value = []; // Clear current objects
+                    activeAssets.value = []; 
                     showPetals.value = false;
                     showRain.value = false;
                     
-                    // Forced Static Backgrounds - Mandatory Image Mapping
                     const themeImages = {
                         cherry: './theme/cherry.png',
                         forest: './theme/forest.png',
@@ -972,7 +874,6 @@ try {
                         }
                     }
 
-                    // 15s Delay for Background Animations (Zero Latency UI)
                     if (!settings.value.useCustomBg) {
                         effectTimeout = setTimeout(() => {
                             if (theme === 'sky') spawnBatch('airplane');
@@ -996,7 +897,6 @@ try {
                     }
                 };
 
-                // Initial load delay
                 clearAndSchedule(settings.value.theme);
                 
                 watch(() => settings.value.theme, (newTheme) => {
@@ -1013,80 +913,9 @@ try {
                 });
             };
 
-            // --- Watches ---
-            watch(isDarkTheme, (val) => {
-                document.body.classList.remove('theme-light-mode', 'theme-dark-mode');
-                document.body.classList.add(val ? 'theme-dark-mode' : 'theme-light-mode');
-            }, { immediate: true });
-
-            watch(currentListId, () => {
-                scrollActiveTabIntoView();
-            });
-
-            watch(() => settings.value.customBg, (newVal) => {
-                nextTick(() => {
-                    if (newVal && settings.value.useCustomBg) {
-                        const url = `url(${newVal}?t=${Date.now()})`;
-                        document.body.style.backgroundImage = url;
-                        themeStyle.backgroundImage = url;
-                        document.body.classList.add('custom-theme');
-                    } else if (!newVal) {
-                        document.body.style.backgroundImage = '';
-                        themeStyle.backgroundImage = '';
-                        document.body.classList.remove('custom-theme');
-                    }
-                });
-            });
-
-            watch(view, () => {
-                nextTick(() => {
-                    if (window.lucide) lucide.createIcons();
-                });
-            });
-
-            const initSortable = () => {
-                const listTabs = document.getElementById('list-tabs');
-                if (listTabs) {
-                    Sortable.create(listTabs, {
-                        animation: 150,
-                        ghostClass: 'sortable-ghost',
-                        dragClass: 'sortable-drag',
-                        onEnd: (evt) => {
-                            const { oldIndex, newIndex } = evt;
-                            if (oldIndex !== newIndex) {
-                                const item = lists.value.splice(oldIndex, 1)[0];
-                                lists.value.splice(newIndex, 0, item);
-                                saveLists();
-                            }
-                        }
-                    });
-                }
-
-                const manageItems = document.getElementById('manage-list-items');
-                if (manageItems) {
-                    Sortable.create(manageItems, {
-                        animation: 150,
-                        handle: '.list-grip',
-                        ghostClass: 'sortable-ghost',
-                        dragClass: 'sortable-drag',
-                        onEnd: (evt) => {
-                            const { oldIndex, newIndex } = evt;
-                            if (oldIndex !== newIndex) {
-                                const item = lists.value.splice(oldIndex, 1)[0];
-                                lists.value.splice(newIndex, 0, item);
-                                saveLists();
-                            }
-                        }
-                    });
-                }
-            };
-
-            // --- Lifecycle ---
             onMounted(async () => {
-                // Version Check & Cache Clear
                 const storedVersion = localStorage.getItem('app_version');
                 if (storedVersion !== APP_VERSION) {
-                    console.log(`Version mismatch: ${storedVersion} -> ${APP_VERSION}. Clearing cache...`);
                     localStorage.clear();
                     sessionStorage.clear();
                     localStorage.setItem('app_version', APP_VERSION);
@@ -1095,99 +924,43 @@ try {
                 }
 
                 await ImageDB.init();
-                initSortable();
+                
+                const savedSettings = StorageProvider.loadSettings();
+                const savedData = StorageProvider.loadData();
 
-                // Force initial reflow for layout visibility
-                window.dispatchEvent(new Event('resize'));
-                nextTick(() => {
-                    window.dispatchEvent(new Event('resize'));
-                    document.body.offsetHeight; // force reflow
-                });
-
-                // Phase 2: Data Hydration
-                const hydrateData = async () => {
-                    const savedSettings = StorageProvider.loadSettings();
-                    const savedData = StorageProvider.loadData();
-
-                    if (savedSettings) {
-                        settings.value = { ...settings.value, ...savedSettings };
-                        
-                        // Load Blob from IndexedDB
-                        const blob = await ImageDB.getBlob('custom-bg');
-                        if (blob) {
-                            const url = URL.createObjectURL(blob);
-                            currentObjectUrl.value = url;
-                            settings.value.customBg = url;
-                            
-                            if (settings.value.useCustomBg) {
-                                document.body.classList.add('custom-theme');
-                                document.body.style.backgroundImage = `url(${url})`;
-                                themeStyle.backgroundImage = `url(${url})`;
-                            }
+                if (savedSettings) {
+                    settings.value = { ...settings.value, ...savedSettings };
+                    const blob = await ImageDB.getBlob('custom-bg');
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        currentObjectUrl.value = url;
+                        settings.value.customBg = url;
+                        if (settings.value.useCustomBg) {
+                            document.body.classList.add('custom-theme');
+                            document.body.style.backgroundImage = `url(${url})`;
+                            themeStyle.backgroundImage = `url(${url})`;
                         }
                     }
-
-                    if (savedData) {
-                        todos.value = savedData.todos || [];
-                        
-                        // Merge lists to ensure defaults exist
-                        const savedLists = savedData.lists || [];
-                        const defaults = [
-                            { id: 'default', name: 'Default' },
-                            { id: 'personal', name: 'Personal' },
-                            { id: 'work', name: 'Work' }
-                        ];
-                        
-                        const customLists = savedLists.filter(l => !['default', 'personal', 'work', '1', '2'].includes(l.id));
-                        lists.value = [...defaults, ...customLists];
-                    }
-                    
-                    // Phase 3: DOM-dependent initializations
-                    nextTick(() => {
-                        if (window.lucide) lucide.createIcons();
-                        scrollActiveTabIntoView();
-                        
-                        // Sortable.js Initialization
-                        const el = document.getElementById('list-tabs');
-                        if (el) {
-                            Sortable.create(el, {
-                                animation: 150,
-                                draggable: '.list-tab-item',
-                                onEnd: (evt) => {
-                                    const newOrder = [];
-                                    const items = el.querySelectorAll('.list-tab-item');
-                                    items.forEach(item => {
-                                        const id = item.getAttribute('data-id');
-                                        const list = lists.value.find(l => l.id === id);
-                                        if (list) newOrder.push(list);
-                                    });
-                                    lists.value = newOrder;
-                                }
-                            });
-                        }
-                    });
-                };
-
-                // Phase 4: Background Effects (Lowest priority)
-                const initEffects = () => {
-                    setupEffects();
-                };
-
-                // Use requestIdleCallback for non-critical hydration and effects
-                if ('requestIdleCallback' in window) {
-                    requestIdleCallback(() => {
-                        hydrateData();
-                        initEffects();
-                    });
-                } else {
-                    // Fallback for browsers without requestIdleCallback
-                    setTimeout(() => {
-                        hydrateData();
-                        initEffects();
-                    }, 50);
                 }
 
-                // Multi-Tab Sync (Always active)
+                if (savedData) {
+                    todos.value = savedData.todos || [];
+                    const savedLists = savedData.lists || [];
+                    const defaults = [
+                        { id: 'default', name: 'Default' },
+                        { id: 'personal', name: 'Personal' },
+                        { id: 'work', name: 'Work' }
+                    ];
+                    const customLists = savedLists.filter(l => !['default', 'personal', 'work'].includes(l.id));
+                    lists.value = [...defaults, ...customLists];
+                }
+                
+                nextTick(() => {
+                    if (window.lucide) lucide.createIcons();
+                    scrollActiveTabIntoView();
+                    setupEffects();
+                });
+
                 window.addEventListener('storage', (e) => {
                     if (e.key === 'todo_settings' && e.newValue) {
                         settings.value = { ...settings.value, ...JSON.parse(e.newValue) };
@@ -1199,7 +972,6 @@ try {
                     }
                 });
                 
-                // Notification Checker (Background task)
                 setInterval(() => {
                     if (!settings.value.notificationsEnabled) return;
                     const now = Date.now();
@@ -1215,11 +987,6 @@ try {
                 }, 30000);
             });
 
-            // --- Watchers ---
-            watch(() => settings.value.theme, () => {
-                setupEffects();
-            });
-
             watch(settings, (newVal) => {
                 StorageProvider.saveSettings(newVal);
             }, { deep: true });
@@ -1229,63 +996,14 @@ try {
                 nextTick(() => lucide.createIcons());
             }, { deep: true });
 
-            // Image Sync with Base64
-            watch(() => settings.value.customBg, (newImg) => {
-                if (settings.value.useCustomBg && newImg) {
-                    const url = `url(${newImg})`;
-                    document.body.style.backgroundImage = url;
-                    themeStyle.backgroundImage = url;
-                    document.body.classList.add('custom-theme');
-                }
-            }, { immediate: true });
-
-            watch(() => settings.value.useCustomBg, (val) => {
-                if (!val) {
-                    document.body.style.backgroundImage = '';
-                    themeStyle.backgroundImage = '';
-                    document.body.classList.remove('custom-theme');
-                } else if (settings.value.customBg) {
-                    const url = `url(${settings.value.customBg})`;
-                    document.body.style.backgroundImage = url;
-                    themeStyle.backgroundImage = url;
-                    document.body.classList.add('custom-theme');
-                }
-            });
-
-            watch(() => manageModal.value.show, (val) => {
-                if (val) {
-                    nextTick(() => {
-                        if (window.lucide) lucide.createIcons();
-                    });
-                }
-            });
-
-            watch([view, isAdding, isEditing, showDateTimePicker, currentListId], () => {
-                if (view.value === 'settings') {
-                    // Forced reflow / nextTick for settings panel initial visibility
-                    nextTick(() => {
-                        const panel = document.querySelector('.setting-window');
-                        if (panel) {
-                            panel.style.display = 'none';
-                            panel.offsetHeight; // force reflow
-                            panel.style.display = 'block';
-                        }
-                    });
-                }
-                nextTick(() => lucide.createIcons());
-                scrollActiveTabIntoView();
-            });
-
             const clearCacheAndUpdate = () => {
                 confirmModal.value = {
                     show: true,
                     title: t.value.clearCache,
                     message: t.value.confirmClearCache,
                     onConfirm: () => {
-                        // Smart Cache Clearing: UI settings only
                         localStorage.removeItem('todo_settings');
                         localStorage.removeItem('app_version');
-                        // Do NOT clear 'todo_data' or 'glassy-todo-blobs' (IndexedDB)
                         location.reload(true);
                     }
                 };
@@ -1296,16 +1014,12 @@ try {
                 todos, lists, currentListId, settings, view, isAdding, isEditing, form, 
                 showDateTimePicker, clockMode, dateMode, fileInput, t, 
                 categories, recurringTypes, otherThemes, glassStyle, themeClasses, 
-                customBgStyle, formatTimeDisplay, clockNumbers, clockRotation, 
-                dateNumbers, dateRotation, sortedTodos, completedTodos, groupedTodos, 
+                customBgStyle, formatTimeDisplay, sortedTodos, completedTodos, groupedTodos, 
                 deletedTodos, toggleLang, toggleNotifications, selectTheme, 
                 toggleCustomBg, triggerUpload, handleUpload, startAdding, editTodo, 
                 saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, 
                 permanentDelete, addNewList, openDatePicker, closeSettings,
-                handleClockInteraction, handleClockMove, getClockPos, 
-                renderTrigger,
-                isClockNumberActive, handleDateInteraction, handleDateMove, 
-                getDatePos, isDateNumberActive, adjustYear, calculateNextGen, 
+                renderTrigger, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
                 activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, cancelUpload, clearCustomBg,
                 showPetals, showRain,
@@ -1321,15 +1035,6 @@ try {
             };
         }
     }).mount('#app');
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js');
-    }
 } catch (e) { 
-    const errorReporter = document.getElementById('error-reporter');
-    if (errorReporter) {
-        errorReporter.style.display = 'block'; 
-        errorReporter.innerText = 'ERROR: ' + e.message; 
-    }
     console.error(e); 
 }
