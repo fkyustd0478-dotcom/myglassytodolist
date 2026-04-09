@@ -122,10 +122,11 @@ try {
                 customBgOpacity: 0.5, 
                 notificationsEnabled: false, 
                 lang: 'zh',
-                customBg: '', // This will hold the Object URL
+                customBg: '', 
                 useCustomBg: false 
             });
 
+            const isMenuOpen = ref(false);
             const currentObjectUrl = ref(null);
             
             const view = ref('active');
@@ -170,8 +171,9 @@ try {
                     clearAll: 'Clear All', restore: 'Restore', permDelete: 'Permanent Delete', noBin: 'Recycle Bin is empty',
                     confirmClearCompleted: 'Are you sure you want to permanently delete all completed tasks?',
                     confirmClearBin: 'Are you sure you want to permanently delete all items in the recycle bin?',
-                    clearCache: 'Clear UI Cache & Update',
-                    confirmClearCache: 'This will reset your theme and language settings, but your tasks will be preserved. Continue?'
+                    clearCache: '清除介面暫存並更新',
+                    confirmClearCache: 'This will reset your theme and language settings, but your tasks will be preserved. Continue?',
+                    menu: 'Menu', analytics: 'Analytics', taskList: 'Task List'
                 },
                 zh: {
                     noTasks: '暫無任務', completed: '已完成紀錄', settings: '設置', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知', back: '返回', emptyBin: '清空回收站', newTask: '新任務', editTask: '編輯任務', placeholder: '任務內容...', category: '分類', recurring: '重複', date: '日期', time: '時間', add: '添加', save: '保存', nextGen: '下次生成', custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
@@ -185,7 +187,8 @@ try {
                     confirmClearCompleted: '確定要永久刪除所有已完成的任務嗎？',
                     confirmClearBin: '確定要永久刪除回收站中的所有項目嗎？',
                     clearCache: '清除介面暫存並更新',
-                    confirmClearCache: '這將會重置主題與語言設置，但您的任務資料將會保留。確定要繼續嗎？'
+                    confirmClearCache: '這將會重置主題與語言設置，但您的任務資料將會保留。確定要繼續嗎？',
+                    menu: '選單', analytics: '數據分析', taskList: '任務列表'
                 }
             };
 
@@ -209,8 +212,6 @@ try {
             const t = computed(() => translations[settings.value.lang]);
             
             const isDarkTheme = computed(() => {
-                // Bright Themes (Cherry, Sea, Seaside, Sky, Sunset) -> Black text (#000000)
-                // Dark Themes (Forest, Night, Torii) -> White text (#FFFFFF)
                 const darkThemes = ['forest', 'night', 'torii'];
                 if (settings.value.useCustomBg) {
                     return settings.value.customBgOpacity < 0.5;
@@ -556,7 +557,8 @@ try {
                        manageModal.value.show || 
                        listModal.value.show || 
                        showDateTimePicker.value || 
-                       confirmModal.value.show;
+                       confirmModal.value.show ||
+                       isMenuOpen.value;
             });
 
             const dropdowns = reactive({
@@ -632,12 +634,15 @@ try {
                 let day = d.getDate();
 
                 if (type === 'year') {
-                    year = wrapValue(val, 1970, 2099);
+                    // Circular Loop 1970-2099
+                    year = ((val - 1970 + 130) % 130) + 1970;
                 } else if (type === 'month') {
-                    month = wrapValue(val, 1, 12);
+                    // Circular Loop 1-12
+                    month = ((val - 1 + 12) % 12) + 1;
                 } else if (type === 'day') {
                     const max = getMaxDays(month, year);
-                    day = wrapValue(val, 1, max);
+                    // Circular Loop 1-Max
+                    day = ((val - 1 + max) % max) + 1;
                 }
 
                 const max = getMaxDays(month, year);
@@ -649,9 +654,9 @@ try {
 
             const updatePickerTime = (type, val) => {
                 if (type === 'hour') {
-                    form.value.time.hour = wrapValue(val, 0, 23);
+                    form.value.time.hour = (val + 24) % 24;
                 } else if (type === 'minute') {
-                    form.value.time.minute = wrapValue(val, 0, 59);
+                    form.value.time.minute = (val + 60) % 60;
                 }
             };
 
@@ -1031,7 +1036,8 @@ try {
                 closeManageModal: () => manageModal.value.show = false,
                 saveLists,
                 clearCacheAndUpdate,
-                isAnyModalOpen
+                isAnyModalOpen,
+                isMenuOpen
             };
         }
     }).mount('#app');
