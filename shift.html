@@ -14,25 +14,29 @@
 </head>
 <body :style="themeStyle" :class="isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode'">
     <div id="app" v-cloak>
-        <!-- Calendar View (Level 1) -->
-        <div class="calendar-container">
-            <div class="calendar-header">
-                <div class="flex items-center gap-4">
-                    <a href="index.html" class="glass-button p-2">
-                        <i data-lucide="arrow-left"></i>
-                    </a>
-                    <h1 class="text-2xl font-bold text-shadow">
-                        {{ calendarDate.getFullYear() }} / {{ (calendarDate.getMonth() + 1).toString().padStart(2, '0') }}
-                    </h1>
-                </div>
-                <div class="flex gap-2">
-                    <button @click="changeMonth(-1)" class="glass-button p-2">
-                        <i data-lucide="chevron-left"></i>
-                    </button>
-                    <button @click="changeMonth(1)" class="glass-button p-2">
-                        <i data-lucide="chevron-right"></i>
-                    </button>
-                </div>
+        <!-- Top Navigation (Level 1) -->
+        <nav v-show="!showSettings && !showTodayTasks && !showDayDetail && !confirmModal.show" class="top-nav level-1">
+            <a href="index.html" class="glass menu-btn flex items-center gap-2">
+                <span class="text-shadow">琉璃輪班</span>
+                <i data-lucide="repeat" class="w-4 h-4 opacity-50"></i>
+            </a>
+            <div class="flex gap-2">
+                <button @click="changeMonth(-1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                </button>
+                <button @click="changeMonth(1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
+                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content (Level 2) -->
+        <div class="calendar-container level-2">
+            <div class="calendar-header" @click="openJumpPicker">
+                <h1 class="text-3xl font-black tracking-tighter text-shadow flex items-center gap-2">
+                    {{ displayMonthYear.year }} <span class="opacity-40">/</span> {{ displayMonthYear.month }}
+                    <i data-lucide="chevron-down" class="w-5 h-5 opacity-30"></i>
+                </h1>
             </div>
 
             <div class="calendar-grid">
@@ -59,19 +63,49 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Tag Pills System -->
+            <div class="tag-pills-container">
+                <div class="tag-group">
+                    <div class="tag-group-label mb-2">輪班標籤</div>
+                    <div class="pills-scroll">
+                        <div v-for="tag in shiftSettings.shiftTags" 
+                             :key="tag.id"
+                             class="tag-pill glass"
+                             :class="{ 'active': activeQuickTag?.id === tag.id }"
+                             :style="{ backgroundColor: activeQuickTag?.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
+                             @click="selectQuickTag('shift', tag.id)">
+                            {{ tag.name }}
+                        </div>
+                    </div>
+                </div>
+                <div class="tag-group">
+                    <div class="tag-group-label mb-2">薪資標籤</div>
+                    <div class="pills-scroll">
+                        <div v-for="tag in shiftSettings.payTags" 
+                             :key="tag.id"
+                             class="tag-pill glass"
+                             :class="{ 'active': activeQuickTag?.id === tag.id }"
+                             :style="{ backgroundColor: activeQuickTag?.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
+                             @click="selectQuickTag('pay', tag.id)">
+                            {{ tag.name }}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Bottom Navigation (Level 1) -->
-        <nav class="bottom-nav glass level-1">
+        <!-- Bottom Navigation (Level 2) -->
+        <nav class="bottom-nav glass level-2">
             <div class="nav-item" @click="showTodayTasks = true">
                 <div class="nav-icon-wrapper"><i data-lucide="calendar-check"></i></div>
                 <span>今日事</span>
             </div>
-            <div class="nav-item" :class="{ active: activeQuickTag?.type === 'pay' }" @click="activeTab = 'payroll_tags'">
+            <div class="nav-item" :class="{ active: activeQuickTag?.type === 'pay' }" @click="activeQuickTag?.type === 'pay' ? activeQuickTag = null : selectQuickTag('pay', shiftSettings.payTags[0]?.id)">
                 <div class="nav-icon-wrapper"><i data-lucide="banknote"></i></div>
                 <span>薪資</span>
             </div>
-            <div class="nav-item" :class="{ active: activeQuickTag?.type === 'shift' }" @click="activeTab = 'shift_tags'">
+            <div class="nav-item" :class="{ active: activeQuickTag?.type === 'shift' }" @click="activeQuickTag?.type === 'shift' ? activeQuickTag = null : selectQuickTag('shift', shiftSettings.shiftTags[0]?.id)">
                 <div class="nav-icon-wrapper"><i data-lucide="clock"></i></div>
                 <span>輪班</span>
             </div>
@@ -81,164 +115,206 @@
             </div>
         </nav>
 
-        <!-- Quick Tag Menus (Level 4) -->
+        <!-- Backdrop Overlay (Level 3) -->
+        <transition name="fade">
+            <div v-if="showSettings || showTodayTasks || showDayDetail || confirmModal.show" class="modal-backdrop level-3" @click="showSettings = showTodayTasks = showDayDetail = confirmModal.show = false"></div>
+        </transition>
+
+        <!-- Unified Settings Modal (Level 4) -->
         <transition name="slide-up">
-            <div v-if="activeTab === 'payroll_tags' || activeTab === 'shift_tags'" class="modal-backdrop level-4" @click.self="activeTab = 'calendar'">
+            <div v-if="showSettings" class="modal-backdrop level-4" @click.self="showSettings = false">
                 <div class="modal-content glass">
                     <div class="modal-header">
-                        <h2 class="text-xl font-bold">{{ activeTab === 'payroll_tags' ? '薪資標籤' : '輪班標籤' }}</h2>
-                        <button @click="activeTab = 'calendar'" class="p-2"><i data-lucide="x"></i></button>
+                        <h2 class="text-2xl font-black tracking-tight">系統設定</h2>
+                        <button @click="showSettings = false" class="p-2 glass rounded-full"><i data-lucide="x"></i></button>
                     </div>
-                    <p class="text-sm opacity-70 mb-4">選擇一個標籤，然後點擊日曆上的日期來套用。</p>
-                    <div class="quick-tag-grid">
-                        <div v-for="tag in (activeTab === 'payroll_tags' ? settings.payTags : settings.shiftTags)" 
-                             :key="tag.id"
-                             class="tag-item glass-card"
-                             :class="{ 'selected': activeQuickTag?.id === tag.id }"
-                             @click="selectQuickTag(activeTab === 'payroll_tags' ? 'pay' : 'shift', tag.id)">
-                            <div class="w-4 h-4 rounded-full mx-auto mb-2" :style="{ backgroundColor: tag.color }"></div>
-                            <span class="font-bold">{{ tag.name }}</span>
+
+                    <div class="settings-tabs">
+                        <div class="tab-btn" :class="{ active: settingsTab === 'payroll' }" @click="settingsTab = 'payroll'">薪資設定</div>
+                        <div class="tab-btn" :class="{ active: settingsTab === 'shifts' }" @click="settingsTab = 'shifts'">輪班設定</div>
+                        <div class="tab-btn" :class="{ active: settingsTab === 'theme' }" @click="settingsTab = 'theme'">主題</div>
+                    </div>
+
+                    <div v-if="settingsTab === 'payroll'" class="space-y-6">
+                        <div class="space-y-4">
+                            <div class="input-group">
+                                <label class="input-label">薪資名稱</label>
+                                <input v-model="shiftSettings.payroll.name" class="glass-input" type="text">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="input-group">
+                                    <label class="input-label">計算方式</label>
+                                    <select v-model="shiftSettings.payroll.method" class="glass-input">
+                                        <option value="daily">日薪</option>
+                                        <option value="weekly">週薪</option>
+                                        <option value="monthly">月薪</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">費率 (元)</label>
+                                    <input v-model.number="shiftSettings.payroll.rate" class="glass-input" type="number">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="input-group">
+                                    <label class="input-label">發薪日 (號)</label>
+                                    <input v-model.number="shiftSettings.payroll.payDay" class="glass-input" type="number" min="1" max="31">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">假日處理</label>
+                                    <select v-model="shiftSettings.payroll.holidayLogic" class="glass-input">
+                                        <option value="early">提前發放</option>
+                                        <option value="late">延後發放</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
+                        <div class="pt-4 border-t border-white/10">
+                            <label class="input-label mb-4">薪資項目標籤</label>
+                            <div class="space-y-3">
+                                <div v-for="tag in shiftSettings.payTags" :key="tag.id" class="flex items-center gap-3">
+                                    <input type="color" v-model="tag.color" class="w-10 h-10 rounded-lg bg-transparent border-none">
+                                    <input v-model="tag.name" class="glass-input flex-1" type="text">
+                                    <button @click="removePayTag(tag.id)" class="p-2 text-red-400"><i data-lucide="trash-2"></i></button>
+                                </div>
+                                <button @click="addPayTag" class="glass-button w-full text-sm">
+                                    <i data-lucide="plus"></i> 新增標籤
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="settingsTab === 'shifts'" class="space-y-6">
+                        <div class="space-y-4">
+                            <div v-for="tag in shiftSettings.shiftTags" :key="tag.id" class="glass-card p-4 space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <input type="color" v-model="tag.color" class="w-10 h-10 rounded-lg bg-transparent border-none">
+                                    <input v-model="tag.name" class="glass-input flex-1" type="text">
+                                    <button @click="removeShiftTag(tag.id)" class="p-2 text-red-400"><i data-lucide="trash-2"></i></button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input v-model="tag.startTime" class="glass-input text-center" type="time">
+                                    <input v-model="tag.endTime" class="glass-input text-center" type="time">
+                                </div>
+                            </div>
+                            <button @click="addShiftTag" class="glass-button w-full">
+                                <i data-lucide="plus"></i> 新增輪班標籤
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="settingsTab === 'theme'" class="space-y-6">
+                        <div class="grid grid-cols-2 gap-3">
+                            <button v-for="t in ['cherry', 'forest', 'night', 'sea', 'seaside', 'sky', 'sunset', 'torii']" 
+                                    :key="t"
+                                    @click="toggleTheme(t)"
+                                    class="glass-card p-4 text-sm font-bold capitalize flex items-center justify-between"
+                                    :class="{ 'border-white': commonSettings.theme === t }">
+                                {{ t }}
+                                <i v-if="commonSettings.theme === t" data-lucide="check" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <button @click="clearCacheAndUpdate" class="glass-button w-full text-red-400 mt-4">
+                            <i data-lucide="refresh-cw"></i> 清除介面暫存並更新
+                        </button>
                     </div>
                 </div>
             </div>
         </transition>
 
-        <!-- Today's Tasks Modal (Level 3) -->
-        <transition name="fade">
-            <div v-if="showTodayTasks" class="modal-backdrop level-3" @click.self="showTodayTasks = false">
+        <!-- Today's Tasks Modal (Level 4) -->
+        <transition name="slide-up">
+            <div v-if="showTodayTasks" class="modal-backdrop level-4" @click.self="showTodayTasks = false">
                 <div class="modal-content glass">
                     <div class="modal-header">
-                        <h2 class="text-xl font-bold">今日事 ({{ new Date().toLocaleDateString() }})</h2>
-                        <button @click="showTodayTasks = false" class="p-2"><i data-lucide="x"></i></button>
+                        <h2 class="text-2xl font-black tracking-tight">今日事</h2>
+                        <button @click="showTodayTasks = false" class="p-2 glass rounded-full"><i data-lucide="x"></i></button>
                     </div>
-                    <div v-if="todayTasks.length === 0" class="text-center py-8 opacity-50">
+                    <div v-if="todayTasks.length === 0" class="text-center py-12 opacity-30 font-bold">
                         今日無待辦事項
                     </div>
                     <div v-else class="space-y-3">
-                        <div v-for="task in todayTasks" :key="task.id" class="glass-card p-4 flex items-center gap-3">
-                            <div class="w-2 h-full rounded-full" :class="{
-                                'bg-red-500': task.priority === 3,
-                                'bg-yellow-500': task.priority === 2,
-                                'bg-blue-500': task.priority === 1,
-                                'bg-gray-400': !task.priority
-                            }"></div>
-                            <span class="flex-1 font-medium">{{ task.text }}</span>
+                        <div v-for="task in todayTasks" :key="task.id" class="glass-card p-5 flex items-center gap-4">
+                            <div class="w-1.5 h-8 rounded-full" :style="{ backgroundColor: task.priority === 3 ? '#ef4444' : task.priority === 2 ? '#f59e0b' : task.priority === 1 ? '#3b82f6' : '#94a3b8' }"></div>
+                            <span class="flex-1 font-bold text-lg">{{ task.text }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </transition>
 
-        <!-- Settings Modal (Level 3) -->
-        <transition name="fade">
-            <div v-if="showSettings" class="modal-backdrop level-3" @click.self="showSettings = false">
+        <!-- Day Detail Modal (Level 4) -->
+        <transition name="slide-up">
+            <div v-if="showDayDetail" class="modal-backdrop level-4" @click.self="showDayDetail = false">
                 <div class="modal-content glass">
                     <div class="modal-header">
-                        <h2 class="text-xl font-bold">設定</h2>
-                        <button @click="showSettings = false" class="p-2"><i data-lucide="x"></i></button>
+                        <h2 class="text-2xl font-black tracking-tight">{{ selectedDay }}</h2>
+                        <button @click="showDayDetail = false" class="p-2 glass rounded-full"><i data-lucide="x"></i></button>
                     </div>
                     
                     <div class="space-y-6">
-                        <!-- Payroll Config -->
-                        <section>
-                            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-                                <i data-lucide="banknote" class="w-5 h-5"></i> 薪資設定
-                            </h3>
-                            <div class="space-y-4">
-                                <div class="input-group">
-                                    <label class="input-label">薪資名稱</label>
-                                    <input v-model="settings.payroll.name" class="glass-input" type="text">
-                                </div>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="input-group">
-                                        <label class="input-label">計算方式</label>
-                                        <select v-model="settings.payroll.method" class="glass-input">
-                                            <option value="daily">日薪</option>
-                                            <option value="weekly">週薪</option>
-                                            <option value="monthly">月薪</option>
-                                        </select>
-                                    </div>
-                                    <div class="input-group">
-                                        <label class="input-label">費率 (元)</label>
-                                        <input v-model.number="settings.payroll.rate" class="glass-input" type="number">
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="input-group">
-                                        <label class="input-label">發薪日 (號)</label>
-                                        <input v-model.number="settings.payroll.payDay" class="glass-input" type="number" min="1" max="31">
-                                    </div>
-                                    <div class="input-group">
-                                        <label class="input-label">假日處理</label>
-                                        <select v-model="settings.payroll.holidayLogic" class="glass-input">
-                                            <option value="early">提前發放</option>
-                                            <option value="late">延後發放</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Theme Selection -->
-                        <section>
-                            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-                                <i data-lucide="palette" class="w-5 h-5"></i> 主題背景
-                            </h3>
-                            <div class="grid grid-cols-4 gap-2">
-                                <button v-for="t in ['cherry', 'forest', 'night', 'sea', 'seaside', 'sky', 'sunset', 'torii']" 
-                                        :key="t"
-                                        @click="toggleTheme(t)"
-                                        class="glass-card p-2 text-[10px] capitalize"
-                                        :class="{ 'border-white': settings.theme === t }">
-                                    {{ t }}
-                                </button>
-                            </div>
-                        </section>
-
-                        <!-- Cache -->
-                        <section class="pt-4 border-t border-white/10">
-                            <button @click="location.reload()" class="glass-button w-full text-red-400">
-                                <i data-lucide="refresh-cw"></i> 重新載入應用
-                            </button>
-                        </section>
-                    </div>
-                </div>
-            </div>
-        </transition>
-
-        <!-- Day Detail Modal (Level 3) -->
-        <transition name="fade">
-            <div v-if="showDayDetail" class="modal-backdrop level-3" @click.self="showDayDetail = false">
-                <div class="modal-content glass">
-                    <div class="modal-header">
-                        <h2 class="text-xl font-bold">{{ selectedDay }}</h2>
-                        <button @click="showDayDetail = false" class="p-2"><i data-lucide="x"></i></button>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="glass-card p-4">
-                            <label class="input-label">輪班</label>
+                        <div class="input-group">
+                            <label class="input-label">輪班設定</label>
                             <select v-model="shiftData[selectedDay].shiftId" class="glass-input">
-                                <option :value="undefined">無</option>
-                                <option v-for="tag in settings.shiftTags" :key="tag.id" :value="tag.id">
+                                <option :value="null">無</option>
+                                <option v-for="tag in shiftSettings.shiftTags" :key="tag.id" :value="tag.id">
                                     {{ tag.name }} ({{ tag.startTime }} - {{ tag.endTime }})
                                 </option>
                             </select>
                         </div>
-                        <div class="glass-card p-4">
+                        <div class="input-group">
                             <label class="input-label">薪資標記</label>
                             <select v-model="shiftData[selectedDay].payId" class="glass-input">
-                                <option :value="undefined">無</option>
-                                <option v-for="tag in settings.payTags" :key="tag.id" :value="tag.id">
+                                <option :value="null">無</option>
+                                <option v-for="tag in shiftSettings.payTags" :key="tag.id" :value="tag.id">
                                     {{ tag.name }}
                                 </option>
                             </select>
                         </div>
-                        <div class="glass-card p-4">
+                        <div class="input-group">
                             <label class="input-label">備註</label>
-                            <textarea v-model="shiftData[selectedDay].note" class="glass-input" rows="3"></textarea>
+                            <textarea v-model="shiftData[selectedDay].note" class="glass-input" rows="4" placeholder="輸入當日備註..."></textarea>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Jump to Date Picker (Level 4) -->
+        <transition name="fade">
+            <div v-if="jumpPicker.show" class="modal-backdrop level-4" @click.self="jumpPicker.show = false">
+                <div class="modal-content glass text-center">
+                    <h2 class="text-2xl font-black mb-8">選擇年月</h2>
+                    <div class="flex items-center justify-center gap-8 mb-12">
+                        <div class="flex flex-col items-center gap-4">
+                            <button @click="updateJumpDate('year', jumpPicker.year + 1)" class="p-2 opacity-40"><i data-lucide="chevron-up"></i></button>
+                            <span class="text-4xl font-black">{{ jumpPicker.year }}</span>
+                            <button @click="updateJumpDate('year', jumpPicker.year - 1)" class="p-2 opacity-40"><i data-lucide="chevron-down"></i></button>
+                        </div>
+                        <span class="text-4xl opacity-20 font-black">/</span>
+                        <div class="flex flex-col items-center gap-4">
+                            <button @click="updateJumpDate('month', jumpPicker.month + 1)" class="p-2 opacity-40"><i data-lucide="chevron-up"></i></button>
+                            <span class="text-4xl font-black">{{ (jumpPicker.month + 1).toString().padStart(2, '0') }}</span>
+                            <button @click="updateJumpDate('month', jumpPicker.month - 1)" class="p-2 opacity-40"><i data-lucide="chevron-down"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button @click="jumpPicker.show = false" class="glass-button flex-1">取消</button>
+                        <button @click="confirmJump" class="glass-button flex-1 bg-blue-500/20 text-blue-400">確定</button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Confirmation Modal (Level 4) -->
+        <transition name="fade">
+            <div v-if="confirmModal.show" class="modal-backdrop level-4" @click.self="confirmModal.show = false">
+                <div class="modal-content glass text-center">
+                    <h2 class="text-xl font-black mb-4">{{ confirmModal.title }}</h2>
+                    <p class="opacity-70 mb-8 font-medium">{{ confirmModal.message }}</p>
+                    <div class="flex gap-3">
+                        <button @click="confirmModal.show = false" class="glass-button flex-1">取消</button>
+                        <button @click="confirmModal.onConfirm(); confirmModal.show = false" class="glass-button flex-1 bg-red-500/20 text-red-400">確定</button>
                     </div>
                 </div>
             </div>

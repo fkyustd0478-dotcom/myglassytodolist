@@ -245,37 +245,10 @@
 
                         <!-- Mode B: Glassy Shift (Calendar) -->
                         <div v-show="appMode === 'shift'" class="space-y-6">
-                            <!-- Calendar Header -->
-                            <div class="flex justify-between items-center glass rounded-3xl p-4" :style="glassStyle">
-                                <button @click="changeMonth(-1)" class="w-10 h-10 rounded-full glass flex items-center justify-center active:scale-90 transition-transform" :style="glassStyle">
-                                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
-                                </button>
-                                <div class="text-center">
-                                    <h2 class="text-xl font-black tracking-tighter">{{ calendarDate.getFullYear() }} / {{ (calendarDate.getMonth() + 1).toString().padStart(2, '0') }}</h2>
-                                </div>
-                                <button @click="changeMonth(1)" class="w-10 h-10 rounded-full glass flex items-center justify-center active:scale-90 transition-transform" :style="glassStyle">
-                                    <i data-lucide="chevron-right" class="w-6 h-6"></i>
-                                </button>
-                            </div>
-
-                            <!-- Calendar Grid -->
-                            <div class="glass rounded-[2.5rem] p-4 overflow-hidden" :style="glassStyle">
-                                <div class="grid grid-cols-7 gap-2 mb-4">
-                                    <div v-for="day in ['S','M','T','W','T','F','S']" :key="day" class="text-center text-[10px] font-black opacity-30">{{ day }}</div>
-                                </div>
-                                <div class="grid grid-cols-7 gap-2">
-                                    <div v-for="(d, idx) in calendarDays" :key="idx" 
-                                         class="aspect-square flex flex-col items-center justify-center rounded-xl transition-all relative"
-                                         :class="[
-                                            d.day ? 'glass' : 'opacity-0 pointer-events-none',
-                                            d.isToday ? 'border-blue-500 bg-blue-500/20' : ''
-                                         ]"
-                                         :style="d.day ? glassStyle : {}">
-                                        <span class="text-xs font-black" :class="{ 'text-blue-500': d.isToday }">{{ d.day }}</span>
-                                        <!-- Shift Indicator Placeholder -->
-                                        <div v-if="shiftData[d.date]" class="absolute bottom-1 w-1 h-1 rounded-full bg-blue-500"></div>
-                                    </div>
-                                </div>
+                            <div class="text-center py-20 glass rounded-[2.5rem] p-8" :style="glassStyle">
+                                <h2 class="text-2xl font-black mb-4">琉璃輪班已移至獨立頁面</h2>
+                                <p class="opacity-60 mb-8">請點擊上方標題切換，或直接前往輪班系統。</p>
+                                <a href="shift.html" class="glass-button px-8 py-4 inline-block bg-blue-600 text-white rounded-2xl font-black">前往輪班系統</a>
                             </div>
                         </div>
                     </div>
@@ -528,7 +501,7 @@
                                 <!-- Year -->
                                 <div class="custom-dropdown flex-1">
                                     <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('year')">
-                                        <span>{{ new Date(form.date).getFullYear() }}</span>
+                                        <span>{{ (form && form.date) ? new Date(form.date).getFullYear() : '----' }}</span>
                                         <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>
                                     <transition name="fade">
@@ -541,7 +514,7 @@
                                 <!-- Month -->
                                 <div class="custom-dropdown w-20">
                                     <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('month')">
-                                        <span>{{ (new Date(form.date).getMonth() + 1).toString().padStart(2, '0') }}</span>
+                                        <span>{{ (form && form.date) ? (new Date(form.date).getMonth() + 1).toString().padStart(2, '0') : '--' }}</span>
                                         <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>
                                     <transition name="fade">

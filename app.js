@@ -639,6 +639,7 @@ try {
                 months: Array.from({ length: 12 }, (_, i) => i + 1),
                 days: computed(() => {
                     const d = new Date(form.value.date);
+                    if (isNaN(d.getTime())) return [];
                     const year = d.getFullYear();
                     const month = d.getMonth() + 1;
                     return Array.from({ length: new Date(year, month, 0).getDate() }, (_, i) => i + 1);
@@ -674,6 +675,7 @@ try {
 
             const updatePickerDate = (type, val) => {
                 const d = new Date(form.value.date);
+                if (isNaN(d.getTime())) return;
                 let year = d.getFullYear();
                 let month = d.getMonth() + 1;
                 let day = d.getDate();
