@@ -61,7 +61,7 @@ body {
 }
 
 /* LEVEL 1: Background Particles */
-.petal, .raindrop, .cloud, .animated-asset {
+.petal, .raindrop, .animated-asset {
     z-index: 1000 !important;
 }
 
@@ -225,18 +225,6 @@ header, #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
     background: rgba(255, 255, 255, 0.4);
     animation: rain 0.8s linear infinite;
     z-index: 2;
-}
-
-/* Clouds */
-@keyframes drift {
-    from { transform: translateX(-200px); }
-    to { transform: translateX(100vw); }
-}
-.cloud {
-    position: absolute;
-    animation: drift linear infinite;
-    z-index: 2;
-    opacity: 0.5;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -546,3 +534,13 @@ input[type=range]::-webkit-slider-runnable-track {
 
 /* V-Cloak */
 [v-cloak] { display: none; }
+
+/* Calendar Grid Optimization */
+.aspect-square {
+    aspect-ratio: 1 / 1;
+}
+
+.calendar-grid .glass {
+    backdrop-filter: blur(8px) brightness(0.9);
+    -webkit-backdrop-filter: blur(8px) brightness(0.9);
+}

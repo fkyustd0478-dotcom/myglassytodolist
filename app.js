@@ -18,6 +18,13 @@ try {
         loadData() {
             const saved = localStorage.getItem('todo_data');
             return saved ? JSON.parse(saved) : null;
+        },
+        saveShiftData(data) {
+            localStorage.setItem('shift_data', JSON.stringify(data));
+        },
+        loadShiftData() {
+            const saved = localStorage.getItem('shift_data');
+            return saved ? JSON.parse(saved) : null;
         }
     };
 
@@ -88,8 +95,10 @@ try {
                 { id: 'work', name: 'Work' }
             ]);
             const currentListId = ref('default');
+            const appMode = ref('todo'); // 'todo' or 'shift'
+            const shiftData = ref({}); // { 'YYYY-MM-DD': 'shift-type' }
             
-            // Custom Modal State
+            const calendarDate = ref(new Date());
             const listModal = ref({
                 show: false,
                 mode: 'add', // 'add', 'edit', 'delete'
@@ -211,6 +220,13 @@ try {
 
             const t = computed(() => translations[settings.value.lang]);
             
+            const modeTitle = computed(() => {
+                if (settings.value.lang === 'zh') {
+                    return appMode.value === 'todo' ? '琉璃待辦' : '琉璃輪班';
+                }
+                return appMode.value === 'todo' ? 'Glassy Todo' : 'Glassy Shift';
+            });
+
             const isDarkTheme = computed(() => {
                 const darkThemes = ['forest', 'night', 'torii'];
                 if (settings.value.useCustomBg) {
@@ -560,6 +576,35 @@ try {
                        confirmModal.value.show ||
                        isMenuOpen.value;
             });
+
+            const calendarDays = computed(() => {
+                const year = calendarDate.value.getFullYear();
+                const month = calendarDate.value.getMonth();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                const days = [];
+                // Padding for start of month
+                for (let i = 0; i < firstDay; i++) {
+                    days.push({ day: null, date: null });
+                }
+                // Actual days
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`;
+                    days.push({
+                        day: i,
+                        date: dateStr,
+                        isToday: new Date().toDateString() === new Date(year, month, i).toDateString()
+                    });
+                }
+                return days;
+            });
+
+            const changeMonth = (delta) => {
+                const newDate = new Date(calendarDate.value);
+                newDate.setMonth(newDate.getMonth() + delta);
+                calendarDate.value = newDate;
+            };
 
             const dropdowns = reactive({
                 theme: false,
@@ -932,6 +977,7 @@ try {
                 
                 const savedSettings = StorageProvider.loadSettings();
                 const savedData = StorageProvider.loadData();
+                const savedShiftData = StorageProvider.loadShiftData();
 
                 if (savedSettings) {
                     settings.value = { ...settings.value, ...savedSettings };
@@ -958,6 +1004,10 @@ try {
                     ];
                     const customLists = savedLists.filter(l => !['default', 'personal', 'work'].includes(l.id));
                     lists.value = [...defaults, ...customLists];
+                }
+
+                if (savedShiftData) {
+                    shiftData.value = savedShiftData;
                 }
                 
                 nextTick(() => {
@@ -1001,6 +1051,10 @@ try {
                 nextTick(() => lucide.createIcons());
             }, { deep: true });
 
+            watch(shiftData, (newVal) => {
+                StorageProvider.saveShiftData(newVal);
+            }, { deep: true });
+
             const clearCacheAndUpdate = () => {
                 confirmModal.value = {
                     show: true,
@@ -1037,7 +1091,13 @@ try {
                 saveLists,
                 clearCacheAndUpdate,
                 isAnyModalOpen,
-                isMenuOpen
+                isMenuOpen,
+                appMode,
+                modeTitle,
+                calendarDate,
+                calendarDays,
+                changeMonth,
+                shiftData
             };
         }
     }).mount('#app');

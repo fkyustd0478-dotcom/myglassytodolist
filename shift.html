@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Glassy Shift</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="shift_style.css">
+    <script src="shift_app.js" defer></script>
+</head>
+<body :style="themeStyle" :class="isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode'">
+    <div id="app" v-cloak>
+        <!-- Calendar View (Level 1) -->
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <div class="flex items-center gap-4">
+                    <a href="index.html" class="glass-button p-2">
+                        <i data-lucide="arrow-left"></i>
+                    </a>
+                    <h1 class="text-2xl font-bold text-shadow">
+                        {{ calendarDate.getFullYear() }} / {{ (calendarDate.getMonth() + 1).toString().padStart(2, '0') }}
+                    </h1>
+                </div>
+                <div class="flex gap-2">
+                    <button @click="changeMonth(-1)" class="glass-button p-2">
+                        <i data-lucide="chevron-left"></i>
+                    </button>
+                    <button @click="changeMonth(1)" class="glass-button p-2">
+                        <i data-lucide="chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="calendar-grid">
+                <div v-for="day in ['日', '一', '二', '三', '四', '五', '六']" :key="day" class="weekday-header text-shadow">
+                    {{ day }}
+                </div>
+                <div v-for="day in calendarDays" 
+                     :key="day.dateStr" 
+                     class="calendar-day glass"
+                     :class="{ 'other-month': !day.isCurrentMonth, 'today': day.isToday }"
+                     @click="handleDayClick(day)">
+                    <span class="day-number">{{ day.date.getDate() }}</span>
+                    <div class="day-indicators">
+                        <div v-if="day.data.shiftId" 
+                             class="indicator-tag" 
+                             :style="{ backgroundColor: getTagColor('shift', day.data.shiftId) }">
+                            {{ getTagName('shift', day.data.shiftId) }}
+                        </div>
+                        <div v-if="day.data.payId" 
+                             class="indicator-tag" 
+                             :style="{ backgroundColor: getTagColor('pay', day.data.payId) }">
+                            {{ getTagName('pay', day.data.payId) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation (Level 1) -->
+        <nav class="bottom-nav glass level-1">
+            <div class="nav-item" @click="showTodayTasks = true">
+                <div class="nav-icon-wrapper"><i data-lucide="calendar-check"></i></div>
+                <span>今日事</span>
+            </div>
+            <div class="nav-item" :class="{ active: activeQuickTag?.type === 'pay' }" @click="activeTab = 'payroll_tags'">
+                <div class="nav-icon-wrapper"><i data-lucide="banknote"></i></div>
+                <span>薪資</span>
+            </div>
+            <div class="nav-item" :class="{ active: activeQuickTag?.type === 'shift' }" @click="activeTab = 'shift_tags'">
+                <div class="nav-icon-wrapper"><i data-lucide="clock"></i></div>
+                <span>輪班</span>
+            </div>
+            <div class="nav-item" @click="showSettings = true">
+                <div class="nav-icon-wrapper"><i data-lucide="settings"></i></div>
+                <span>設定</span>
+            </div>
+        </nav>
+
+        <!-- Quick Tag Menus (Level 4) -->
+        <transition name="slide-up">
+            <div v-if="activeTab === 'payroll_tags' || activeTab === 'shift_tags'" class="modal-backdrop level-4" @click.self="activeTab = 'calendar'">
+                <div class="modal-content glass">
+                    <div class="modal-header">
+                        <h2 class="text-xl font-bold">{{ activeTab === 'payroll_tags' ? '薪資標籤' : '輪班標籤' }}</h2>
+                        <button @click="activeTab = 'calendar'" class="p-2"><i data-lucide="x"></i></button>
+                    </div>
+                    <p class="text-sm opacity-70 mb-4">選擇一個標籤，然後點擊日曆上的日期來套用。</p>
+                    <div class="quick-tag-grid">
+                        <div v-for="tag in (activeTab === 'payroll_tags' ? settings.payTags : settings.shiftTags)" 
+                             :key="tag.id"
+                             class="tag-item glass-card"
+                             :class="{ 'selected': activeQuickTag?.id === tag.id }"
+                             @click="selectQuickTag(activeTab === 'payroll_tags' ? 'pay' : 'shift', tag.id)">
+                            <div class="w-4 h-4 rounded-full mx-auto mb-2" :style="{ backgroundColor: tag.color }"></div>
+                            <span class="font-bold">{{ tag.name }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Today's Tasks Modal (Level 3) -->
+        <transition name="fade">
+            <div v-if="showTodayTasks" class="modal-backdrop level-3" @click.self="showTodayTasks = false">
+                <div class="modal-content glass">
+                    <div class="modal-header">
+                        <h2 class="text-xl font-bold">今日事 ({{ new Date().toLocaleDateString() }})</h2>
+                        <button @click="showTodayTasks = false" class="p-2"><i data-lucide="x"></i></button>
+                    </div>
+                    <div v-if="todayTasks.length === 0" class="text-center py-8 opacity-50">
+                        今日無待辦事項
+                    </div>
+                    <div v-else class="space-y-3">
+                        <div v-for="task in todayTasks" :key="task.id" class="glass-card p-4 flex items-center gap-3">
+                            <div class="w-2 h-full rounded-full" :class="{
+                                'bg-red-500': task.priority === 3,
+                                'bg-yellow-500': task.priority === 2,
+                                'bg-blue-500': task.priority === 1,
+                                'bg-gray-400': !task.priority
+                            }"></div>
+                            <span class="flex-1 font-medium">{{ task.text }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Settings Modal (Level 3) -->
+        <transition name="fade">
+            <div v-if="showSettings" class="modal-backdrop level-3" @click.self="showSettings = false">
+                <div class="modal-content glass">
+                    <div class="modal-header">
+                        <h2 class="text-xl font-bold">設定</h2>
+                        <button @click="showSettings = false" class="p-2"><i data-lucide="x"></i></button>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <!-- Payroll Config -->
+                        <section>
+                            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                                <i data-lucide="banknote" class="w-5 h-5"></i> 薪資設定
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="input-group">
+                                    <label class="input-label">薪資名稱</label>
+                                    <input v-model="settings.payroll.name" class="glass-input" type="text">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="input-group">
+                                        <label class="input-label">計算方式</label>
+                                        <select v-model="settings.payroll.method" class="glass-input">
+                                            <option value="daily">日薪</option>
+                                            <option value="weekly">週薪</option>
+                                            <option value="monthly">月薪</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="input-label">費率 (元)</label>
+                                        <input v-model.number="settings.payroll.rate" class="glass-input" type="number">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="input-group">
+                                        <label class="input-label">發薪日 (號)</label>
+                                        <input v-model.number="settings.payroll.payDay" class="glass-input" type="number" min="1" max="31">
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="input-label">假日處理</label>
+                                        <select v-model="settings.payroll.holidayLogic" class="glass-input">
+                                            <option value="early">提前發放</option>
+                                            <option value="late">延後發放</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Theme Selection -->
+                        <section>
+                            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                                <i data-lucide="palette" class="w-5 h-5"></i> 主題背景
+                            </h3>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button v-for="t in ['cherry', 'forest', 'night', 'sea', 'seaside', 'sky', 'sunset', 'torii']" 
+                                        :key="t"
+                                        @click="toggleTheme(t)"
+                                        class="glass-card p-2 text-[10px] capitalize"
+                                        :class="{ 'border-white': settings.theme === t }">
+                                    {{ t }}
+                                </button>
+                            </div>
+                        </section>
+
+                        <!-- Cache -->
+                        <section class="pt-4 border-t border-white/10">
+                            <button @click="location.reload()" class="glass-button w-full text-red-400">
+                                <i data-lucide="refresh-cw"></i> 重新載入應用
+                            </button>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Day Detail Modal (Level 3) -->
+        <transition name="fade">
+            <div v-if="showDayDetail" class="modal-backdrop level-3" @click.self="showDayDetail = false">
+                <div class="modal-content glass">
+                    <div class="modal-header">
+                        <h2 class="text-xl font-bold">{{ selectedDay }}</h2>
+                        <button @click="showDayDetail = false" class="p-2"><i data-lucide="x"></i></button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="glass-card p-4">
+                            <label class="input-label">輪班</label>
+                            <select v-model="shiftData[selectedDay].shiftId" class="glass-input">
+                                <option :value="undefined">無</option>
+                                <option v-for="tag in settings.shiftTags" :key="tag.id" :value="tag.id">
+                                    {{ tag.name }} ({{ tag.startTime }} - {{ tag.endTime }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="glass-card p-4">
+                            <label class="input-label">薪資標記</label>
+                            <select v-model="shiftData[selectedDay].payId" class="glass-input">
+                                <option :value="undefined">無</option>
+                                <option v-for="tag in settings.payTags" :key="tag.id" :value="tag.id">
+                                    {{ tag.name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="glass-card p-4">
+                            <label class="input-label">備註</label>
+                            <textarea v-model="shiftData[selectedDay].note" class="glass-input" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+    </div>
+</body>
+</html>
