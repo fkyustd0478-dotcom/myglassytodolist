@@ -78,7 +78,7 @@
         <!-- Foreground Content -->
         <div class="relative z-10 h-screen flex flex-col p-6 overflow-hidden">
             <!-- Header -->
-            <header class="flex justify-between items-center mb-6 shrink-0">
+            <header class="flex justify-between items-center mb-6 shrink-0" :class="{ 'pointer-events-none': isAnyModalOpen }">
                 <h1 class="text-2xl font-extrabold tracking-tight cursor-pointer" @click="view = 'active'">Glassy Todo</h1>
                 <div class="flex items-center gap-2 shrink-0">
                     <button @click="addNewList" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
@@ -91,7 +91,7 @@
             </header>
 
             <!-- List Navigation Bar -->
-            <div class="mb-6 shrink-0 -mx-6 relative z-[7000]">
+            <div v-show="!isAnyModalOpen" class="mb-6 shrink-0 -mx-6 relative z-[7000]">
                 <div id="list-tabs" class="overflow-x-auto no-scrollbar bg-transparent py-4 flex items-center pointer-events-auto !important">
                     <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
                         <button @click="currentListId = list.id" @touchstart="currentListId = list.id"
@@ -104,7 +104,7 @@
             </div>
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto no-scrollbar pb-40">
+            <main class="flex-1 overflow-y-auto no-scrollbar pb-40" :class="{ 'pointer-events-none': isAnyModalOpen }">
                 <transition name="fade" mode="out-in">
                     <div :key="'main-container'" class="w-full">
                         <!-- Active Tasks -->
@@ -444,13 +444,13 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black opacity-40 uppercase tracking-widest">{{ t.date }}</label>
-                                <button @click="showDatePicker = true" class="w-full glass rounded-xl p-3 text-xs flex items-center gap-2 font-bold" :style="glassStyle">
+                                <button @click="showDateTimePicker = true" class="w-full glass rounded-xl p-3 text-xs flex items-center gap-2 font-bold" :style="glassStyle">
                                     <i data-lucide="calendar" class="w-4 h-4"></i> {{ form.date || 'Set Date' }}
                                 </button>
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black opacity-40 uppercase tracking-widest">{{ t.time }}</label>
-                                <button @click="showTimePicker = true" class="w-full glass rounded-xl p-3 text-xs flex items-center gap-2 font-bold" :style="glassStyle">
+                                <button @click="showDateTimePicker = true" class="w-full glass rounded-xl p-3 text-xs flex items-center gap-2 font-bold" :style="glassStyle">
                                     <i data-lucide="clock" class="w-4 h-4"></i> {{ formatTimeDisplay }}
                                 </button>
                             </div>
@@ -475,104 +475,90 @@
                 </div>
             </transition>
 
-            <!-- Custom Linear Time Picker -->
+            <!-- Unified Date-Time Picker Modal -->
             <transition name="fade">
-                <div v-show="showTimePicker" :key="'time-picker-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl modal-backdrop-level-3" @click.self="showTimePicker = false">
-                    <div class="glass rounded-[2.5rem] p-8 flex flex-col space-y-6 w-full max-w-xs modal-content-level-3" :style="glassStyle" @click.stop>
-                        <h3 class="text-xl font-black text-center">{{ t.time }}</h3>
+                <div v-show="showDateTimePicker" :key="'date-time-picker-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl modal-backdrop-level-4" @click.self="showDateTimePicker = false">
+                    <div class="glass rounded-[2.5rem] p-8 flex flex-col space-y-6 w-full max-w-sm modal-content-level-4" :style="glassStyle" @click.stop>
+                        <h3 class="text-xl font-black text-center">{{ t.date }} & {{ t.time }}</h3>
                         
-                        <div class="flex justify-center gap-4">
-                            <!-- Hour -->
-                            <div class="flex flex-col items-center gap-2">
-                                <button @click="updatePickerTime('hour', form.time.hour - 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
-                                <div class="picker-list w-16 no-scrollbar">
-                                    <div v-for="h in pickerData.hours" :key="h" 
-                                        class="picker-item" :class="{ active: form.time.hour === h }"
-                                        @click="form.time.hour = h">
-                                        {{ h }}
-                                    </div>
-                                </div>
-                                <button @click="updatePickerTime('hour', form.time.hour + 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
+                        <!-- Date Section -->
+                        <div class="space-y-2">
+                            <div class="flex gap-2 mb-2">
+                                <button @click="setToday" class="flex-1 py-2 rounded-xl glass text-[10px] font-black uppercase tracking-widest" :style="glassStyle">Today</button>
+                                <button @click="setTomorrow" class="flex-1 py-2 rounded-xl glass text-[10px] font-black uppercase tracking-widest" :style="glassStyle">Tomorrow</button>
                             </div>
-                            <!-- Minute -->
-                            <div class="flex flex-col items-center gap-2">
-                                <button @click="updatePickerTime('minute', form.time.minute - 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
-                                <div class="picker-list w-16 no-scrollbar">
-                                    <div v-for="m in pickerData.minutes" :key="m" 
-                                        class="picker-item" :class="{ active: form.time.minute === m }"
-                                        @click="form.time.minute = m">
-                                        {{ m.toString().padStart(2, '0') }}
+                            <div class="flex justify-center gap-2">
+                                <!-- Year -->
+                                <div class="custom-dropdown flex-1">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('year')">
+                                        <span>{{ new Date(form.date).getFullYear() }}年</span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>
+                                    <transition name="fade">
+                                        <div v-show="dropdowns.year" class="dropdown-menu glass picker-dropdown" :style="glassStyle">
+                                            <div v-for="y in pickerData.years" :key="y" class="dropdown-item" @click="updatePickerDate('year', y)">{{ y }}</div>
+                                        </div>
+                                    </transition>
                                 </div>
-                                <button @click="updatePickerTime('minute', form.time.minute + 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
-                            </div>
-                            <!-- Period -->
-                            <div class="flex flex-col items-center gap-2">
-                                <button @click="form.time.period = form.time.period === 'AM' ? 'PM' : 'AM'" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
-                                <div class="picker-list w-16 no-scrollbar">
-                                    <div class="picker-item" :class="{ active: form.time.period === 'AM' }" @click="form.time.period = 'AM'">AM</div>
-                                    <div class="picker-item" :class="{ active: form.time.period === 'PM' }" @click="form.time.period = 'PM'">PM</div>
+                                <!-- Month -->
+                                <div class="custom-dropdown w-20">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('month')">
+                                        <span>{{ new Date(form.date).getMonth() + 1 }}月</span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
+                                    </div>
+                                    <transition name="fade">
+                                        <div v-show="dropdowns.month" class="dropdown-menu glass picker-dropdown" :style="glassStyle">
+                                            <div v-for="m in pickerData.months" :key="m" class="dropdown-item" @click="updatePickerDate('month', m)">{{ m }}</div>
+                                        </div>
+                                    </transition>
                                 </div>
-                                <button @click="form.time.period = form.time.period === 'AM' ? 'PM' : 'AM'" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
+                                <!-- Day -->
+                                <div class="custom-dropdown w-20">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('day')">
+                                        <span>{{ new Date(form.date).getDate() }}日</span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
+                                    </div>
+                                    <transition name="fade">
+                                        <div v-show="dropdowns.day" class="dropdown-menu glass picker-dropdown" :style="glassStyle">
+                                            <div v-for="d in pickerData.days" :key="d" class="dropdown-item" @click="updatePickerDate('day', d)">{{ d }}</div>
+                                        </div>
+                                    </transition>
+                                </div>
                             </div>
                         </div>
 
-                        <button @click="showTimePicker = false" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">OK</button>
-                    </div>
-                </div>
-            </transition>
-
-            <!-- Custom Linear Date Picker -->
-            <transition name="fade">
-                <div v-show="showDatePicker" :key="'date-picker-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl modal-backdrop-level-3" @click.self="showDatePicker = false">
-                    <div class="glass rounded-[2.5rem] p-8 flex flex-col space-y-6 w-full max-w-sm modal-content-level-3" :style="glassStyle" @click.stop>
-                        <h3 class="text-xl font-black text-center">{{ t.date }}</h3>
-                        
-                        <div class="flex gap-2 mb-4">
-                            <button @click="setToday" class="flex-1 py-2 rounded-xl glass text-[10px] font-black uppercase tracking-widest" :style="glassStyle">Today</button>
-                            <button @click="setTomorrow" class="flex-1 py-2 rounded-xl glass text-[10px] font-black uppercase tracking-widest" :style="glassStyle">Tomorrow</button>
-                        </div>
-
-                        <div class="flex justify-center gap-2">
-                            <!-- Year -->
-                            <div class="flex flex-col items-center gap-2">
-                                <button @click="updatePickerDate('year', new Date(form.date).getFullYear() - 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
-                                <div class="picker-list w-20 no-scrollbar">
-                                    <div v-for="y in pickerData.years" :key="y" 
-                                        class="picker-item" :class="{ active: new Date(form.date).getFullYear() === y }"
-                                        @click="updatePickerDate('year', y)">
-                                        {{ y }}
+                        <!-- Time Section -->
+                        <div class="space-y-2">
+                            <div class="flex justify-center items-center gap-2">
+                                <!-- Hour -->
+                                <div class="custom-dropdown flex-1">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('hour')">
+                                        <span>{{ form.time.hour.toString().padStart(2, '0') }}</span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>
+                                    <transition name="fade">
+                                        <div v-show="dropdowns.hour" class="dropdown-menu glass picker-dropdown" :style="glassStyle">
+                                            <div v-for="h in pickerData.hours" :key="h" class="dropdown-item" @click="updatePickerTime('hour', h)">{{ h.toString().padStart(2, '0') }}</div>
+                                        </div>
+                                    </transition>
                                 </div>
-                                <button @click="updatePickerDate('year', new Date(form.date).getFullYear() + 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
-                            </div>
-                            <!-- Month -->
-                            <div class="flex flex-col items-center gap-2">
-                                <button @click="updatePickerDate('month', new Date(form.date).getMonth())" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
-                                <div class="picker-list w-16 no-scrollbar">
-                                    <div v-for="m in pickerData.months" :key="m" 
-                                        class="picker-item" :class="{ active: (new Date(form.date).getMonth() + 1) === m }"
-                                        @click="updatePickerDate('month', m)">
-                                        {{ m }}
+                                <span class="font-black text-xl">：</span>
+                                <!-- Minute -->
+                                <div class="custom-dropdown flex-1">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('minute')">
+                                        <span>{{ form.time.minute.toString().padStart(2, '0') }}</span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>
+                                    <transition name="fade">
+                                        <div v-show="dropdowns.minute" class="dropdown-menu glass picker-dropdown" :style="glassStyle">
+                                            <div v-for="m in pickerData.minutes" :key="m" class="dropdown-item" @click="updatePickerTime('minute', m)">{{ m.toString().padStart(2, '0') }}</div>
+                                        </div>
+                                    </transition>
                                 </div>
-                                <button @click="updatePickerDate('month', new Date(form.date).getMonth() + 2)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
-                            </div>
-                            <!-- Day -->
-                            <div class="flex flex-col items-center gap-2">
-                                <button @click="updatePickerDate('day', new Date(form.date).getDate() - 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-up"></i></button>
-                                <div class="picker-list w-16 no-scrollbar">
-                                    <div v-for="d in pickerData.days" :key="d" 
-                                        class="picker-item" :class="{ active: new Date(form.date).getDate() === d }"
-                                        @click="updatePickerDate('day', d)">
-                                        {{ d }}
-                                    </div>
-                                </div>
-                                <button @click="updatePickerDate('day', new Date(form.date).getDate() + 1)" class="p-2 opacity-40 hover:opacity-100"><i data-lucide="chevron-down"></i></button>
                             </div>
                         </div>
 
-                        <button @click="showDatePicker = false" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">OK</button>
+                        <button @click="showDateTimePicker = false" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">OK</button>
                     </div>
                 </div>
             </transition>

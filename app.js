@@ -138,8 +138,7 @@ try {
             const showPetals = ref(false);
             const showRain = ref(false);
             
-            const showTimePicker = ref(false);
-            const showDatePicker = ref(false);
+            const showDateTimePicker = ref(false);
             const clockMode = ref('hour');
             const dateMode = ref('day');
             
@@ -582,12 +581,27 @@ try {
                 listModal.value.show = false;
             };
 
-            const openDatePicker = () => showDatePicker.value = true;
+            const openDatePicker = () => showDateTimePicker.value = true;
+
+            const isAnyModalOpen = computed(() => {
+                return view.value === 'settings' || 
+                       isAdding.value || 
+                       isEditing.value || 
+                       manageModal.value.show || 
+                       listModal.value.show || 
+                       showDateTimePicker.value || 
+                       confirmModal.value.show;
+            });
 
             const dropdowns = reactive({
                 theme: false,
                 category: false,
-                recurring: false
+                recurring: false,
+                year: false,
+                month: false,
+                day: false,
+                hour: false,
+                minute: false
             });
 
             const toggleDropdown = (key) => {
@@ -608,7 +622,7 @@ try {
             };
 
             const pickerData = reactive({
-                years: Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i),
+                years: Array.from({ length: 2099 - 1970 + 1 }, (_, i) => 1970 + i),
                 months: Array.from({ length: 12 }, (_, i) => i + 1),
                 days: computed(() => {
                     const d = new Date(form.value.date);
@@ -616,7 +630,7 @@ try {
                     const month = d.getMonth() + 1;
                     return Array.from({ length: new Date(year, month, 0).getDate() }, (_, i) => i + 1);
                 }),
-                hours: Array.from({ length: 12 }, (_, i) => i + 1),
+                hours: Array.from({ length: 24 }, (_, i) => i),
                 minutes: Array.from({ length: 60 }, (_, i) => i)
             });
 
@@ -679,7 +693,7 @@ try {
 
             const updatePickerTime = (type, val) => {
                 if (type === 'hour') {
-                    form.value.time.hour = wrapValue(val, 1, 12);
+                    form.value.time.hour = wrapValue(val, 0, 23);
                 } else if (type === 'minute') {
                     form.value.time.minute = wrapValue(val, 0, 59);
                 }
@@ -1246,7 +1260,7 @@ try {
                 }
             });
 
-            watch([view, isAdding, isEditing, showTimePicker, showDatePicker, currentListId], () => {
+            watch([view, isAdding, isEditing, showDateTimePicker, currentListId], () => {
                 if (view.value === 'settings') {
                     // Forced reflow / nextTick for settings panel initial visibility
                     nextTick(() => {
@@ -1280,7 +1294,7 @@ try {
             return { 
                 themeStyle,
                 todos, lists, currentListId, settings, view, isAdding, isEditing, form, 
-                showTimePicker, showDatePicker, clockMode, dateMode, fileInput, t, 
+                showDateTimePicker, clockMode, dateMode, fileInput, t, 
                 categories, recurringTypes, otherThemes, glassStyle, themeClasses, 
                 customBgStyle, formatTimeDisplay, clockNumbers, clockRotation, 
                 dateNumbers, dateRotation, sortedTodos, completedTodos, groupedTodos, 
@@ -1302,7 +1316,8 @@ try {
                 manageModal, openManageModal: () => manageModal.value.show = true,
                 closeManageModal: () => manageModal.value.show = false,
                 saveLists,
-                clearCacheAndUpdate
+                clearCacheAndUpdate,
+                isAnyModalOpen
             };
         }
     }).mount('#app');
