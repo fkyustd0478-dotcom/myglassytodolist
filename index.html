@@ -54,7 +54,7 @@
                                     <i data-lucide="check-square" class="w-4 h-4"></i>
                                     <span>琉璃待辦</span>
                                 </a>
-                                <button @click="window.location.href='shift.html'" class="dropdown-item flex items-center gap-3 w-full text-left">
+                                <button @click="goToShift()" class="dropdown-item flex items-center gap-3 w-full text-left">
                                     <i data-lucide="calendar" class="w-4 h-4"></i>
                                     <span>琉璃輪班</span>
                                 </button>
@@ -493,7 +493,7 @@
                                 <div class="flex flex-col items-center gap-1">
                                     <button @click="updatePickerDate('year', new Date(form.date).getFullYear() + 1)" class="p-1 opacity-40 hover:opacity-100 transition-opacity"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
                                     <div class="custom-dropdown w-24">
-                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('year')">
+                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="openPickerDropdown('year')">
                                             <span>{{ (form && form.date) ? new Date(form.date).getFullYear() : '----' }}</span>
                                             <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                         </div>
@@ -510,7 +510,7 @@
                                 <div class="flex flex-col items-center gap-1">
                                     <button @click="updatePickerDate('month', new Date(form.date).getMonth() + 2)" class="p-1 opacity-40 hover:opacity-100 transition-opacity"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
                                     <div class="custom-dropdown w-16">
-                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('month')">
+                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="openPickerDropdown('month')">
                                             <span>{{ (form && form.date) ? (new Date(form.date).getMonth() + 1).toString().padStart(2, '0') : '--' }}</span>
                                             <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                         </div>
@@ -527,7 +527,7 @@
                                 <div class="flex flex-col items-center gap-1">
                                     <button @click="updatePickerDate('day', new Date(form.date).getDate() + 1)" class="p-1 opacity-40 hover:opacity-100 transition-opacity"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
                                     <div class="custom-dropdown w-16">
-                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('day')">
+                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="openPickerDropdown('day')">
                                             <span>{{ new Date(form.date).getDate().toString().padStart(2, '0') }}</span>
                                             <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                         </div>
@@ -547,7 +547,7 @@
                             <div class="flex justify-center items-center gap-4">
                                 <!-- Hour -->
                                 <div class="custom-dropdown flex-1">
-                                    <div class="dropdown-trigger glass rounded-xl p-3 text-sm font-bold" :style="glassStyle" @click="toggleDropdown('hour')">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-sm font-bold" :style="glassStyle" @click="openPickerDropdown('hour')">
                                         <span>{{ form.time.hour.toString().padStart(2, '0') }}</span>
                                         <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>
@@ -560,7 +560,7 @@
                                 <span class="font-black text-2xl opacity-40">:</span>
                                 <!-- Minute -->
                                 <div class="custom-dropdown flex-1">
-                                    <div class="dropdown-trigger glass rounded-xl p-3 text-sm font-bold" :style="glassStyle" @click="toggleDropdown('minute')">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-sm font-bold" :style="glassStyle" @click="openPickerDropdown('minute')">
                                         <span>{{ form.time.minute.toString().padStart(2, '0') }}</span>
                                         <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>

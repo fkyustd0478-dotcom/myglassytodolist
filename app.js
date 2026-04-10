@@ -450,8 +450,8 @@ try {
                     });
                 }
                 renderTrigger.value++;
-                nextTick(() => closeModal());
-                form.value.text = ''; 
+                closeModal();
+                form.value.text = '';
             };
 
             const closeModal = () => { isAdding.value = isEditing.value = false; editingId.value = null; };
@@ -1116,7 +1116,28 @@ try {
                 };
             };
 
-            return { 
+            const goToShift = () => { window.location.href = 'shift.html'; };
+
+            const openPickerDropdown = (key) => {
+                toggleDropdown(key);
+                nextTick(() => {
+                    const d = new Date(form.value.date || new Date());
+                    let idx = 0;
+                    if (key === 'year')   idx = d.getFullYear() - 1970;
+                    else if (key === 'month')  idx = d.getMonth();
+                    else if (key === 'day')    idx = d.getDate() - 1;
+                    else if (key === 'hour')   idx = form.value.time.hour;
+                    else if (key === 'minute') idx = form.value.time.minute;
+                    document.querySelectorAll('.picker-dropdown').forEach(el => {
+                        if (el.offsetParent !== null) {
+                            const first = el.querySelector('.dropdown-item');
+                            if (first) el.scrollTop = idx * first.offsetHeight;
+                        }
+                    });
+                });
+            };
+
+            return {
                 themeStyle,
                 todos, lists, currentListId, settings, view, isAdding, isEditing, form, 
                 showDateTimePicker, clockMode, dateMode, fileInput, t, 
@@ -1124,7 +1145,7 @@ try {
                 customBgStyle, formatTimeDisplay, sortedTodos, completedTodos, groupedTodos, 
                 deletedTodos, toggleLang, toggleNotifications, selectTheme, 
                 toggleCustomBg, triggerUpload, handleUpload, startAdding, editTodo, 
-                saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, 
+                saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, goToShift, openPickerDropdown, 
                 permanentDelete, addNewList, openDatePicker, closeSettings,
                 renderTrigger, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
