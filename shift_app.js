@@ -412,11 +412,52 @@ const app = createApp({
         };
 
         // --- Lifecycle ---
+        const setupEffects = () => {
+            const clearAndSchedule = (theme) => {
+                if (window.ParticleEngine) {
+                    ParticleEngine.setEffect(commonSettings.value.effect);
+                }
+                
+                const themeImages = {
+                    cherry: './theme/cherry.png',
+                    forest: './theme/forest.png',
+                    night: './theme/night.png',
+                    sea: './theme/sea.png',
+                    seaside: './theme/seaside.png',
+                    sky: './theme/sky.png',
+                    sunset: './theme/sunset.png',
+                    torii: './theme/torii.png'
+                };
+                
+                if (!commonSettings.value.useCustomBg) {
+                    if (themeImages[theme]) {
+                        const v = Date.now();
+                        document.body.style.backgroundImage = `url(${themeImages[theme]}?v=${v})`;
+                        document.body.style.backgroundSize = 'cover';
+                        document.body.style.backgroundPosition = 'center';
+                        document.body.style.backgroundAttachment = 'fixed';
+                    } else {
+                        document.body.style.backgroundImage = '';
+                    }
+                }
+            };
+
+            clearAndSchedule(commonSettings.value.theme);
+            
+            watch(() => commonSettings.value.theme, (newTheme) => {
+                clearAndSchedule(newTheme);
+            });
+
+            watch(() => commonSettings.value.effect, (newEffect) => {
+                if (window.ParticleEngine) {
+                    ParticleEngine.setEffect(newEffect);
+                }
+            });
+        };
+
         onMounted(() => {
+            setupEffects();
             if (window.lucide) lucide.createIcons();
-            if (window.ParticleEngine) {
-                ParticleEngine.setEffect(commonSettings.value.effect);
-            }
 
             // Notifications
             setInterval(() => {
@@ -438,16 +479,6 @@ const app = createApp({
                     }
                 }
             }, 60000);
-        });
-
-        watch(() => commonSettings.value.theme, (newTheme) => {
-            // Theme logic handled by CSS and shared_theme
-        });
-
-        watch(() => commonSettings.value.effect, (newEffect) => {
-            if (window.ParticleEngine) {
-                ParticleEngine.setEffect(newEffect);
-            }
         });
 
         watch(shiftSettings, (newVal) => {

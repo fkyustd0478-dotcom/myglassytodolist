@@ -567,7 +567,18 @@ try {
                 listModal.value.show = false;
             };
 
-            const openDatePicker = () => showDateTimePicker.value = true;
+            const openDatePicker = () => {
+                const now = new Date();
+                if (!form.value.date) {
+                    form.value.date = now.toISOString().split('T')[0];
+                }
+                // Only default time if it's a new task (hour/minute are 0)
+                if (!isEditing.value && form.value.time.hour === 0 && form.value.time.minute === 0) {
+                    form.value.time.hour = now.getHours();
+                    form.value.time.minute = now.getMinutes();
+                }
+                showDateTimePicker.value = true;
+            };
 
             const isAnyModalOpen = computed(() => {
                 return view.value === 'settings' || 
@@ -930,7 +941,8 @@ try {
                     
                     if (!settings.value.useCustomBg) {
                         if (themeImages[theme]) {
-                            document.body.style.backgroundImage = `url(${themeImages[theme]})`;
+                            const v = Date.now();
+                            document.body.style.backgroundImage = `url(${themeImages[theme]}?v=${v})`;
                             document.body.style.backgroundSize = 'cover';
                             document.body.style.backgroundPosition = 'center';
                             document.body.style.backgroundAttachment = 'fixed';
@@ -999,14 +1011,16 @@ try {
 
                 if (savedData) {
                     todos.value = savedData.todos || [];
-                    const savedLists = savedData.lists || [];
-                    const defaults = [
-                        { id: 'default', name: 'Default' },
-                        { id: 'personal', name: 'Personal' },
-                        { id: 'work', name: 'Work' }
-                    ];
-                    const customLists = savedLists.filter(l => !['default', 'personal', 'work'].includes(l.id));
-                    lists.value = [...defaults, ...customLists];
+                    if (savedData.lists && savedData.lists.length > 0) {
+                        lists.value = savedData.lists;
+                    } else {
+                        const defaults = [
+                            { id: 'default', name: 'Default' },
+                            { id: 'personal', name: 'Personal' },
+                            { id: 'work', name: 'Work' }
+                        ];
+                        lists.value = defaults;
+                    }
                 }
 
                 if (savedShiftData) {
@@ -1017,6 +1031,20 @@ try {
                     if (window.lucide) lucide.createIcons();
                     scrollActiveTabIntoView();
                     setupEffects();
+
+                    // Initialize Sortable for lists
+                    const listEl = document.getElementById('manage-list-items');
+                    if (listEl && window.Sortable) {
+                        new Sortable(listEl, {
+                            handle: '.list-grip',
+                            animation: 150,
+                            onEnd: (evt) => {
+                                const movedItem = lists.value.splice(evt.oldIndex, 1)[0];
+                                lists.value.splice(evt.newIndex, 0, movedItem);
+                                saveLists();
+                            }
+                        });
+                    }
                 });
 
                 window.addEventListener('storage', (e) => {

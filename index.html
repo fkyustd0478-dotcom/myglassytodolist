@@ -299,13 +299,13 @@
                                     <i data-lucide="sparkles" class="w-4 h-4"></i>
                                     <h3 class="text-[10px] font-black uppercase tracking-widest">視覺特效</h3>
                                 </div>
-                                <div class="grid grid-cols-3 gap-2">
-                                    <button v-for="eff in ['none', 'cherry', 'rain']" 
+                                <div class="grid grid-cols-4 gap-2">
+                                    <button v-for="eff in ['none', 'cherry', 'rain', 'snow']" 
                                             :key="eff"
                                             @click="settings.effect = eff"
                                             class="h-10 rounded-xl border-2 transition-all flex items-center justify-center text-[10px] font-bold"
                                             :class="settings.effect === eff ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
-                                        {{ eff === 'none' ? '無' : (eff === 'cherry' ? '櫻花' : '下雨') }}
+                                        {{ eff === 'none' ? '無' : (eff === 'cherry' ? '櫻花' : (eff === 'rain' ? '下雨' : '下雪')) }}
                                     </button>
                                 </div>
                             </section>
@@ -487,23 +487,23 @@
             <!-- Unified Date-Time Picker Modal -->
             <transition name="fade">
                 <div v-show="showDateTimePicker" :key="'date-time-picker-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl modal-backdrop-level-4" @click.self="showDateTimePicker = false">
-                    <div class="glass rounded-[2.5rem] p-8 flex flex-col space-y-8 w-full max-w-sm modal-content-level-4" :style="glassStyle" @click.stop>
+                    <div class="glass rounded-[2.5rem] p-6 flex flex-col space-y-6 w-full max-w-sm modal-content-level-4" :style="glassStyle" @click.stop>
                         <h3 class="text-xl font-black text-center">{{ t.date }} & {{ t.time }}</h3>
                         
                         <!-- Date Section (YYYY / MM / DD) -->
-                        <div class="space-y-4">
-                            <div class="flex justify-center items-center gap-3">
+                        <div class="space-y-2">
+                            <div class="flex justify-center items-center gap-2">
                                 <!-- Year -->
                                 <div class="flex flex-col items-center gap-1">
                                     <button @click="updatePickerDate('year', new Date(form.date).getFullYear() + 1)" class="p-1 opacity-40 hover:opacity-100 transition-opacity"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
-                                    <div class="custom-dropdown w-28">
-                                        <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('year')">
+                                    <div class="custom-dropdown w-24">
+                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('year')">
                                             <span>{{ (form && form.date) ? new Date(form.date).getFullYear() : '----' }}</span>
                                             <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                         </div>
                                         <transition name="fade">
                                             <div v-show="dropdowns.year" class="dropdown-menu glass picker-dropdown" :style="glassStyle">
-                                                <div v-for="y in pickerData.years" :key="y" class="dropdown-item" @click="updatePickerDate('year', y)">{{ y }}</div>
+                                                <div v-for="y in pickerData.years" :key="y" class="dropdown-item" @click="updatePickerDate('year', y); dropdowns.year = false">{{ y }}</div>
                                             </div>
                                         </transition>
                                     </div>
@@ -513,14 +513,14 @@
                                 <!-- Month -->
                                 <div class="flex flex-col items-center gap-1">
                                     <button @click="updatePickerDate('month', new Date(form.date).getMonth() + 2)" class="p-1 opacity-40 hover:opacity-100 transition-opacity"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
-                                    <div class="custom-dropdown w-20">
-                                        <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('month')">
+                                    <div class="custom-dropdown w-16">
+                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('month')">
                                             <span>{{ (form && form.date) ? (new Date(form.date).getMonth() + 1).toString().padStart(2, '0') : '--' }}</span>
                                             <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                         </div>
                                         <transition name="fade">
                                             <div v-show="dropdowns.month" class="dropdown-menu glass picker-dropdown" :style="glassStyle">
-                                                <div v-for="m in pickerData.months" :key="m" class="dropdown-item" @click="updatePickerDate('month', m)">{{ m.toString().padStart(2, '0') }}</div>
+                                                <div v-for="m in pickerData.months" :key="m" class="dropdown-item" @click="updatePickerDate('month', m); dropdowns.month = false">{{ m.toString().padStart(2, '0') }}</div>
                                             </div>
                                         </transition>
                                     </div>
@@ -530,14 +530,14 @@
                                 <!-- Day -->
                                 <div class="flex flex-col items-center gap-1">
                                     <button @click="updatePickerDate('day', new Date(form.date).getDate() + 1)" class="p-1 opacity-40 hover:opacity-100 transition-opacity"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
-                                    <div class="custom-dropdown w-20">
-                                        <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('day')">
+                                    <div class="custom-dropdown w-16">
+                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('day')">
                                             <span>{{ new Date(form.date).getDate().toString().padStart(2, '0') }}</span>
                                             <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                         </div>
                                         <transition name="fade">
                                             <div v-show="dropdowns.day" class="dropdown-menu glass picker-dropdown" :style="glassStyle">
-                                                <div v-for="d in pickerData.days" :key="d" class="dropdown-item" @click="updatePickerDate('day', d)">{{ d.toString().padStart(2, '0') }}</div>
+                                                <div v-for="d in pickerData.days" :key="d" class="dropdown-item" @click="updatePickerDate('day', d); dropdowns.day = false">{{ d.toString().padStart(2, '0') }}</div>
                                             </div>
                                         </transition>
                                     </div>
@@ -551,26 +551,26 @@
                             <div class="flex justify-center items-center gap-4">
                                 <!-- Hour -->
                                 <div class="custom-dropdown flex-1">
-                                    <div class="dropdown-trigger glass rounded-xl p-4 text-sm font-bold" :style="glassStyle" @click="toggleDropdown('hour')">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-sm font-bold" :style="glassStyle" @click="toggleDropdown('hour')">
                                         <span>{{ form.time.hour.toString().padStart(2, '0') }}</span>
                                         <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>
                                     <transition name="fade">
                                         <div v-show="dropdowns.hour" class="dropdown-menu glass picker-dropdown" :style="glassStyle">
-                                            <div v-for="h in pickerData.hours" :key="h" class="dropdown-item" @click="updatePickerTime('hour', h)">{{ h.toString().padStart(2, '0') }}</div>
+                                            <div v-for="h in pickerData.hours" :key="h" class="dropdown-item" @click="updatePickerTime('hour', h); dropdowns.hour = false">{{ h.toString().padStart(2, '0') }}</div>
                                         </div>
                                     </transition>
                                 </div>
                                 <span class="font-black text-2xl opacity-40">:</span>
                                 <!-- Minute -->
                                 <div class="custom-dropdown flex-1">
-                                    <div class="dropdown-trigger glass rounded-xl p-4 text-sm font-bold" :style="glassStyle" @click="toggleDropdown('minute')">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-sm font-bold" :style="glassStyle" @click="toggleDropdown('minute')">
                                         <span>{{ form.time.minute.toString().padStart(2, '0') }}</span>
                                         <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>
                                     <transition name="fade">
                                         <div v-show="dropdowns.minute" class="dropdown-menu glass picker-dropdown" :style="glassStyle">
-                                            <div v-for="m in pickerData.minutes" :key="m" class="dropdown-item" @click="updatePickerTime('minute', m)">{{ m.toString().padStart(2, '0') }}</div>
+                                            <div v-for="m in pickerData.minutes" :key="m" class="dropdown-item" @click="updatePickerTime('minute', m); dropdowns.minute = false">{{ m.toString().padStart(2, '0') }}</div>
                                         </div>
                                     </transition>
                                 </div>

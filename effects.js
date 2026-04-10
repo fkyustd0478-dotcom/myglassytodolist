@@ -26,12 +26,14 @@ const ParticleEngine = {
         this.activeEffect = effect;
         if (effect === 'cherry') this.startCherry();
         if (effect === 'rain') this.startRain();
+        if (effect === 'snow') this.startSnow();
     },
 
     clear() {
         if (this.container) this.container.innerHTML = '';
         this.petals = [];
         this.rain = [];
+        this.snow = [];
     },
 
     startCherry() {
@@ -82,6 +84,34 @@ const ParticleEngine = {
         drop.style.left = `${left}%`;
         drop.style.animationDuration = `${duration}s`;
         drop.style.animationDelay = `${delay}s`;
+    },
+
+    startSnow() {
+        for (let i = 0; i < 50; i++) {
+            this.createSnowflake();
+        }
+    },
+
+    createSnowflake() {
+        const flake = document.createElement('div');
+        flake.className = 'snowflake';
+        this.resetSnowflake(flake);
+        this.container.appendChild(flake);
+    },
+
+    resetSnowflake(flake) {
+        const left = Math.random() * 100;
+        const duration = 5 + Math.random() * 10;
+        const delay = Math.random() * -10;
+        const size = 2 + Math.random() * 4;
+        const drift = (Math.random() - 0.5) * 200;
+
+        flake.style.left = `${left}%`;
+        flake.style.width = `${size}px`;
+        flake.style.height = `${size}px`;
+        flake.style.animationDuration = `${duration}s`;
+        flake.style.animationDelay = `${delay}s`;
+        flake.style.setProperty('--drift', `${drift}px`);
     }
 };
 
