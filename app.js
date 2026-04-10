@@ -424,7 +424,8 @@ try {
                 };
             };
 
-            const saveTodo = () => {
+            const saveTodo = (event) => {
+                if (event) { event.preventDefault(); event.stopPropagation(); }
                 if (document.activeElement) document.activeElement.blur();
                 if (!form.value.text.trim()) return;
                 const dueStr = `${form.value.date}T${form.value.time.hour.toString().padStart(2, '0')}:${form.value.time.minute.toString().padStart(2, '0')}:00`;
@@ -990,6 +991,8 @@ try {
             };
 
             onMounted(async () => {
+                appMode.value = window.location.pathname.includes('shift') ? 'shift' : 'todo';
+
                 const storedVersion = localStorage.getItem('app_version');
                 if (storedVersion !== APP_VERSION) {
                     localStorage.clear();
