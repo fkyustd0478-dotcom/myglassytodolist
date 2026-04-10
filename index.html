@@ -54,10 +54,10 @@
                                     <i data-lucide="check-square" class="w-4 h-4"></i>
                                     <span>琉璃待辦</span>
                                 </a>
-                                <a href="shift.html" class="dropdown-item flex items-center gap-3">
+                                <button @click="window.location.href='shift.html'" class="dropdown-item flex items-center gap-3 w-full text-left">
                                     <i data-lucide="calendar" class="w-4 h-4"></i>
                                     <span>琉璃輪班</span>
-                                </a>
+                                </button>
                             </div>
                         </transition>
                     </div>
@@ -395,10 +395,6 @@
                 </div>
             </transition>
 
-            <!-- FAB -->
-            <button v-show="view === 'active' && appMode === 'todo'" @click="startAdding" class="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-all z-50 hover:bg-blue-500">
-                <i data-lucide="plus" class="w-8 h-8"></i>
-            </button>
 
             <!-- Add/Edit Modal -->
             <transition name="slide-up">
@@ -595,6 +591,10 @@
                 <button @click="view = 'bin'" class="nav-item" :class="{ active: view === 'bin' }">
                     <i data-lucide="trash-2" class="w-6 h-6"></i>
                     <span class="text-[10px] font-bold uppercase">{{ t.bin }}</span>
+                </button>
+                <button v-show="appMode === 'todo'" @click="startAdding" class="nav-item nav-add-btn">
+                    <i data-lucide="plus" class="w-6 h-6"></i>
+                    <span class="text-[10px] font-bold uppercase">{{ t.add }}</span>
                 </button>
             </nav>
 
