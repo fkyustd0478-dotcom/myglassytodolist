@@ -473,7 +473,7 @@
                             {{ t.nextGen }}: {{ calculateNextGen(form.recurring, form.date) }}
                         </p>
 
-                        <button @click="saveTodo" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform text-xl border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
+                        <button @pointerdown.prevent @click="saveTodo" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform text-xl border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
                             {{ isEditing ? t.save : t.add }}
                         </button>
                     </div>
