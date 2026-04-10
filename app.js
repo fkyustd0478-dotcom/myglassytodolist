@@ -110,6 +110,8 @@ try {
                 show: false
             });
 
+            const showSettingsModal = ref(false);
+
             const saveLists = () => {
                 StorageProvider.saveData({ todos: todos.value, lists: lists.value });
                 renderTrigger.value++;
@@ -575,6 +577,7 @@ try {
                        listModal.value.show || 
                        showDateTimePicker.value || 
                        confirmModal.value.show ||
+                       showSettingsModal.value ||
                        isMenuOpen.value;
             });
 
@@ -937,25 +940,7 @@ try {
                     }
 
                     if (!settings.value.useCustomBg) {
-                        effectTimeout = setTimeout(() => {
-                            if (theme === 'sky') spawnBatch('airplane');
-                            if (theme === 'seaside') spawnBatch('crab');
-                            if (theme === 'sea') spawnBatch('ship');
-                            if (theme === 'sunset') { spawnBatch('airplane'); spawnBatch('ship'); }
-                            if (theme === 'forest') spawnBatch('airplane');
-                        }, 15000);
-
-                        if (theme === 'cherry') {
-                            petalTimeout = setTimeout(() => {
-                                showPetals.value = true;
-                            }, 15000);
-                        }
-
-                        if (theme === 'forest') {
-                            petalTimeout = setTimeout(() => {
-                                showRain.value = true;
-                            }, 15000);
-                        }
+                        // No automatic assets like planes or crabs anymore.
                     }
                 };
 
@@ -1126,6 +1111,7 @@ try {
                 saveLists,
                 clearCacheAndUpdate,
                 isAnyModalOpen,
+                showSettingsModal,
                 isMenuOpen,
                 appMode,
                 modeTitle,

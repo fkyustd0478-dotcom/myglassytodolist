@@ -30,12 +30,6 @@
     <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
         <!-- Background Layers -->
         <div class="bg-layer" :class="themeClasses" :key="settings.theme">
-            <!-- Dynamic Assets (Plane, Crab, Ship) -->
-            <div v-for="asset in activeAssets" :key="asset.id" 
-                 class="animated-asset"
-                 :class="asset.type"
-                 :style="getAssetStyle(asset)">
-            </div>
         </div>
 
         <div v-show="settings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
@@ -74,7 +68,10 @@
                             <i data-lucide="plus" class="w-5 h-5"></i>
                         </button>
                         <button v-show="appMode === 'todo'" @click="openManageModal" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
-                            <i data-lucide="settings-2" class="w-5 h-5"></i>
+                            <i data-lucide="list-plus" class="w-5 h-5"></i>
+                        </button>
+                        <button @click="showSettingsModal = true" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
+                            <i data-lucide="settings" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </header>
@@ -245,12 +242,15 @@
 
             <!-- Settings Modal (Persistent DOM) -->
             <transition name="fade">
-                <div v-show="view === 'settings'" class="fixed inset-0 z-[8001] flex items-center justify-center p-6">
+                <div v-show="showSettingsModal" class="fixed inset-0 z-[8001] flex items-center justify-center p-6">
                     <div key="settings-root" class="w-full h-full flex items-center justify-center">
-                        <div class="setting-overlay absolute inset-0 bg-black/60 backdrop-blur-md modal-backdrop-level-3" @click="closeSettings"></div>
+                        <div class="setting-overlay absolute inset-0 bg-black/60 backdrop-blur-md modal-backdrop-level-3" @click="showSettingsModal = false"></div>
                         <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-md setting-window relative overflow-y-auto max-h-[85vh] modal-content-level-3" :style="glassStyle" @click.stop>
                             <div class="flex items-center justify-between">
                                 <h2 class="text-xl font-black tracking-tight">{{ t.settings }}</h2>
+                                <button @click="showSettingsModal = false" class="opacity-40 hover:opacity-100 transition-opacity">
+                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                </button>
                             </div>
                             <!-- Theme Section -->
                             <section class="space-y-3">
@@ -595,10 +595,6 @@
                 <button @click="view = 'bin'" class="nav-item" :class="{ active: view === 'bin' }">
                     <i data-lucide="trash-2" class="w-6 h-6"></i>
                     <span class="text-[10px] font-bold uppercase">{{ t.bin }}</span>
-                </button>
-                <button @click="view = 'settings'" class="nav-item" :class="{ active: view === 'settings' }">
-                    <i data-lucide="settings" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">{{ t.settings }}</span>
                 </button>
             </nav>
 

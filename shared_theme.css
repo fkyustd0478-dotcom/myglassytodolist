@@ -41,14 +41,14 @@ body {
 [v-cloak] { display: none; }
 
 /* Theme Backgrounds */
-.theme-cherry { background-image: url('./theme/cherry.png') !important; }
-.theme-forest { background-image: url('./theme/forest.png') !important; }
-.theme-night { background-image: url('./theme/night.png') !important; }
-.theme-sea { background-image: url('./theme/sea.png') !important; }
-.theme-seaside { background-image: url('./theme/seaside.png') !important; }
-.theme-sky { background-image: url('./theme/sky.png') !important; }
-.theme-sunset { background-image: url('./theme/sunset.png') !important; }
-.theme-torii { background-image: url('./theme/torii.png') !important; }
+.theme-cherry { background-image: url('https://picsum.photos/seed/cherryblossom/1920/1080') !important; }
+.theme-forest { background-image: url('https://picsum.photos/seed/forest/1920/1080') !important; }
+.theme-night { background-image: url('https://picsum.photos/seed/nightcity/1920/1080') !important; }
+.theme-sea { background-image: url('https://picsum.photos/seed/ocean/1920/1080') !important; }
+.theme-seaside { background-image: url('https://picsum.photos/seed/beach/1920/1080') !important; }
+.theme-sky { background-image: url('https://picsum.photos/seed/sky/1920/1080') !important; }
+.theme-sunset { background-image: url('https://picsum.photos/seed/sunset/1920/1080') !important; }
+.theme-torii { background-image: url('https://picsum.photos/seed/torii/1920/1080') !important; }
 
 /* Glassmorphism */
 .glass {

@@ -64,6 +64,70 @@ const app = createApp({
             onConfirm: null
         });
 
+        const translations = {
+            en: {
+                settings: 'Settings', theme: 'Theme', uiOpacity: 'Custom Image Opacity', lang: 'Language', notifications: 'Notifications',
+                custom: 'Custom (Upload)', upload: 'Upload Photo', light: 'Light', dark: 'Dark', otherThemes: 'Other Themes',
+                cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset', forest: 'Forest', sea: 'Sea', night: 'Night', torii: 'Torii',
+                clearCache: 'Clear System Cache', removeImg: 'Remove Image', enable: 'Enable', disable: 'Disable',
+                confirmClearCache: 'This will reset your theme and language settings. Continue?',
+                cancel: 'Cancel', confirm: 'Confirm'
+            },
+            zh: {
+                settings: '主設定', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知',
+                custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
+                cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落', forest: '森林', sea: '大海', night: '夜景', torii: '鳥居',
+                clearCache: '清除介面暫存並更新', removeImg: '移除圖片', enable: '啟用', disable: '停用',
+                confirmClearCache: '這將會重置主題與語言設置，但您的輪班資料將會保留。確定要繼續嗎？',
+                cancel: '取消', confirm: '確認'
+            }
+        };
+
+        const t = computed(() => translations[commonSettings.value.lang] || translations.zh);
+
+        const otherThemes = [
+            { id: 'cherry' }, { id: 'forest' }, { id: 'night' }, 
+            { id: 'sea' }, { id: 'seaside' }, { id: 'sky' },
+            { id: 'sunset' }, { id: 'torii' }
+        ];
+
+        const dropdowns = reactive({
+            theme: false,
+            navMenu: false
+        });
+
+        const toggleDropdown = (key) => {
+            Object.keys(dropdowns).forEach(k => {
+                if (k !== key) dropdowns[k] = false;
+            });
+            dropdowns[key] = !dropdowns[key];
+        };
+
+        const selectDropdownOption = (key, val) => {
+            if (key === 'theme') {
+                commonSettings.value.theme = val;
+                commonSettings.value.useCustomBg = false;
+            }
+            dropdowns[key] = false;
+        };
+
+        const toggleLang = () => {
+            commonSettings.value.lang = commonSettings.value.lang === 'en' ? 'zh' : 'en';
+        };
+
+        const toggleNotifications = () => {
+            commonSettings.value.notificationsEnabled = !commonSettings.value.notificationsEnabled;
+        };
+
+        const toggleCustomBg = () => {
+            commonSettings.value.useCustomBg = !commonSettings.value.useCustomBg;
+        };
+
+        const selectTheme = (theme) => {
+            commonSettings.value.theme = theme;
+            commonSettings.value.useCustomBg = false;
+        };
+
         // --- Computed ---
         const isDarkTheme = computed(() => {
             const darkThemes = ['forest', 'night', 'torii'];
@@ -405,7 +469,8 @@ const app = createApp({
             addShiftTag, removeShiftTag, addPayTag, removePayTag, applyQuickTagToDay,
             activeQuickTagCategory, toggleQuickTagCategory, dropdowns, toggleDropdown,
             triggerUpload, handleUpload, clearCustomBg, fileInput, glassStyle, isAnyModalOpen,
-            themeClasses, customBgStyle
+            themeClasses, customBgStyle, t, otherThemes, selectDropdownOption, toggleLang,
+            toggleNotifications, toggleCustomBg, selectTheme
         };
     }
 });
