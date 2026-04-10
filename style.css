@@ -1,69 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-
-:root {
-    --glass-bg: rgba(255, 255, 255, 0.2);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --primary: #3b82f6;
-    --sand: #fde68a;
-    --ocean: #1d4ed8;
-    --forest-deep: #022c22;
-    --text-primary: #000000;
-    --text-secondary: rgba(0, 0, 0, 0.6);
-}
-
-.theme-dark-mode {
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.theme-light-mode {
-    --text-primary: #000000;
-    --text-secondary: rgba(0, 0, 0, 0.6);
-    --text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
-}
-
-/* LEVEL 0: Base Layer */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Inter', sans-serif;
-    overflow: hidden;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    height: 100vh;
-    width: 100vw;
-    background: #000;
-    background-size: cover !important;
-    background-position: center !important;
-    background-attachment: fixed !important;
-    color: #000000;
-    transition: color 0.3s ease;
-    z-index: 0;
-}
-
-/* Mandatory Theme Backgrounds - Static Images Only */
-.theme-cherry { background-image: url('./theme/cherry.png') !important; }
-.theme-forest { background-image: url('./theme/forest.png') !important; }
-.theme-night { background-image: url('./theme/night.png') !important; }
-.theme-sea { background-image: url('./theme/sea.png') !important; }
-.theme-seaside { background-image: url('./theme/seaside.png') !important; }
-.theme-sky { background-image: url('./theme/sky.png') !important; }
-.theme-sunset { background-image: url('./theme/sunset.png') !important; }
-.theme-torii { background-image: url('./theme/torii.png') !important; }
-
-.theme-dark-mode {
-    color: #FFFFFF !important;
-}
-
-.theme-light-mode {
-    color: #000000 !important;
-}
-
-/* LEVEL 1: Background Particles */
-.petal, .raindrop, .animated-asset {
-    z-index: 1000 !important;
-}
+/* style.css - App Specific Styles */
 
 /* LEVEL 2: Fixed Navigation & Controls */
 header, #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
@@ -84,14 +19,6 @@ header, #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
 }
 .modal-content-level-4 {
     z-index: 9001 !important;
-}
-
-/* Navigation Hiding Logic */
-.modal-active header, 
-.modal-active #list-tabs, 
-.modal-active .bottom-nav, 
-.modal-active .fixed.bottom-24 {
-    display: none !important;
 }
 
 /* Task Items & List Readability */
@@ -140,35 +67,6 @@ header, #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
-/* Glassmorphism */
-.glass {
-    backdrop-filter: blur(12px) brightness(0.85);
-    -webkit-backdrop-filter: blur(12px) brightness(0.85);
-    background: var(--glass-bg);
-    border: 2.5px solid rgba(0, 0, 0, 0.9);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
-}
-
-.theme-dark-mode .glass {
-    border: 2.5px solid rgba(255, 255, 255, 0.9);
-}
-
-/* Background Layers */
-.bg-layer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    overflow: hidden;
-    pointer-events: none;
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    background-size: cover;
-    background-position: center;
-    contain: strict;
-}
-
 /* Animated Assets */
 .animated-asset {
     position: absolute;
@@ -183,57 +81,12 @@ header, #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
 .crab { width: 60px; height: 50px; }
 .ship { width: 100px; height: 80px; opacity: 0.9; }
 
-.custom-bg-layer {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    transition: opacity 0.5s ease;
-    pointer-events: none;
-    background-size: cover;
-    background-position: center;
-    contain: strict;
-}
-
 /* Themes - Migrated to Static Images */
 .theme-light { background: #f8f9fa; }
 .theme-dark { background: #0f172a; }
 .theme-sky { background: #0ea5e9; overflow: visible !important; }
 .theme-sunset { background: #312e81; overflow: visible !important; }
 .theme-sea { background: #00d2ff; overflow: visible !important; }
-
-/* Animations */
-
-/* Cherry Blossom Petals */
-@keyframes fall {
-    0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { transform: translateY(120vh) translateX(var(--drift)) rotate(var(--rotation)); opacity: 0; }
-}
-.petal {
-    position: absolute;
-    background: #fecaca;
-    width: 15px;
-    height: 10px;
-    border-radius: 150% 0 150% 0;
-    animation: fall linear infinite;
-    z-index: 2;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
-}
-
-/* Raindrops */
-@keyframes rain {
-    from { transform: translateY(-100px); }
-    to { transform: translateY(100vh); }
-}
-.raindrop {
-    position: absolute;
-    width: 2px;
-    height: 15px;
-    background: rgba(255, 255, 255, 0.4);
-    animation: rain 0.8s linear infinite;
-    z-index: 2;
-}
 
 .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -465,13 +318,6 @@ header, #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
     border-color: rgba(59, 130, 246, 0.6) !important;
 }
 
-/* Transitions */
-.slide-up-enter-active, .slide-up-leave-active { transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s; }
-.slide-up-enter-from, .slide-up-leave-to { transform: translateY(100%); opacity: 0; }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.4s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-
 /* Category Divider */
 .category-divider {
     display: flex;
@@ -536,12 +382,20 @@ input[type=range]::-webkit-slider-runnable-track {
 .setting-window {
     position: relative;
     z-index: 8001;
-    max-height: 85vh;
-    overflow-y: auto;
+    max-height: 70vh !important; /* Reduced height */
+    overflow-y: auto !important; /* Vertical scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
-/* V-Cloak */
-[v-cloak] { display: none; }
+.setting-window::-webkit-scrollbar {
+    width: 6px;
+}
+
+.setting-window::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
 
 /* Calendar Grid Optimization */
 .aspect-square {

@@ -1,4 +1,4 @@
-const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+const { createApp, ref, computed, onMounted, watch, nextTick, reactive } = Vue;
 
 const StorageProvider = {
     saveShiftData: (data) => localStorage.setItem('glassy_shift_data', JSON.stringify(data)),
@@ -156,7 +156,7 @@ const app = createApp({
 
         const updateJumpDate = (type, val) => {
             if (type === 'year') {
-                // Circular 1970-2099
+                // Circular 1970-2099 (130 years)
                 jumpPicker.value.year = ((val - 1970 + 130) % 130) + 1970;
             } else if (type === 'month') {
                 // Circular 0-11
@@ -168,6 +168,7 @@ const app = createApp({
             const d = new Date(calendarDate.value);
             d.setFullYear(jumpPicker.value.year);
             d.setMonth(jumpPicker.value.month);
+            d.setDate(1); // Reset to 1st to avoid overflow
             calendarDate.value = d;
             jumpPicker.value.show = false;
         };

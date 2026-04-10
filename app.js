@@ -682,7 +682,7 @@ try {
                 let day = d.getDate();
 
                 if (type === 'year') {
-                    // Circular Loop 1970-2099
+                    // Circular Loop 1970-2099 (130 years)
                     year = ((val - 1970 + 130) % 130) + 1970;
                 } else if (type === 'month') {
                     // Circular Loop 1-12
@@ -693,7 +693,7 @@ try {
                     day = ((val - 1 + max) % max) + 1;
                 }
 
-                // Adjust day if month changed
+                // Adjust day if month/year changed and caused overflow
                 const newMax = getMaxDays(month, year);
                 if (day > newMax) day = newMax;
 

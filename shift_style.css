@@ -1,33 +1,10 @@
-/* Glassy Shift Standalone Styles - Optimized */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-:root {
-    --glass-bg: rgba(255, 255, 255, 0.15);
-    --glass-border: rgba(255, 255, 255, 0.3);
-    --glass-blur: blur(16px);
-    --border-width: 2.5px;
-    --safe-area-bottom: env(safe-area-inset-bottom);
-    --primary: #3b82f6;
-}
+/* shift_style.css - App Specific Styles */
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-}
-
-body {
-    font-family: 'Inter', -apple-system, sans-serif;
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
-    background-color: #000;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    transition: background-image 0.5s ease-in-out;
 }
 
 #app {
@@ -38,54 +15,9 @@ body {
     position: relative;
 }
 
-[v-cloak] { display: none; }
-
-/* Glassmorphism Base */
-.glass {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 2.5px solid rgba(0, 0, 0, 0.9);
-    border-radius: 24px;
-}
-
-.theme-dark-mode .glass {
-    border: 2.5px solid rgba(255, 255, 255, 0.9);
-}
-
-.glass-card {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-}
-
 /* Typography */
 .text-shadow {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.theme-light-mode {
-    color: #000;
-}
-.theme-light-mode .text-shadow {
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
-}
-
-.theme-dark-mode {
-    color: #fff;
-}
-
-/* Layout Levels */
-.level-1 { z-index: 1000; } /* Background Particles */
-.level-2 { z-index: 7000; } /* Calendar & Navigation (Level 2) */
-.level-3 { z-index: 8000; } /* Modals Level 3 */
-.level-4 { z-index: 9000; } /* Modals Level 4 */
-
-/* Navigation Hiding Logic */
-.modal-active .top-nav, 
-.modal-active .bottom-nav {
-    display: none !important;
 }
 
 /* Top Navigation */
@@ -394,13 +326,6 @@ body {
     border-color: white;
     transform: scale(1.1);
 }
-
-/* Animations */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-
-.slide-up-enter-active, .slide-up-leave-active { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; }
-.slide-up-enter-from, .slide-up-leave-to { transform: translateY(30px); opacity: 0; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }

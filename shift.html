@@ -9,6 +9,7 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <link rel="stylesheet" href="shared_theme.css">
     <link rel="stylesheet" href="shift_style.css">
     <script src="shift_app.js" defer></script>
 </head>
@@ -202,17 +203,13 @@
 
                     <div v-if="settingsTab === 'shifts'" class="space-y-6">
                         <div class="space-y-4">
-                            <div v-for="tag in shiftSettings.shiftTags" :key="tag.id" class="glass-card p-4 space-y-3">
-                                <div class="flex items-center gap-3">
-                                    <input type="color" v-model="tag.color" class="w-8 h-8 rounded-lg bg-transparent border-none shrink-0">
-                                    <input v-model="tag.name" class="glass-input flex-1 py-2 text-sm" type="text">
-                                    <button @click="removeShiftTag(tag.id)" class="p-2 text-red-400 shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <input v-model="tag.startTime" class="glass-input text-center py-2 text-sm flex-1" type="time">
-                                    <span class="opacity-40">~</span>
-                                    <input v-model="tag.endTime" class="glass-input text-center py-2 text-sm flex-1" type="time">
-                                </div>
+                            <div v-for="tag in shiftSettings.shiftTags" :key="tag.id" class="glass-card p-3 flex items-center gap-2">
+                                <input type="color" v-model="tag.color" class="w-6 h-6 rounded bg-transparent border-none shrink-0">
+                                <input v-model="tag.name" class="glass-input flex-1 py-1 text-xs" type="text" placeholder="名稱">
+                                <input v-model="tag.startTime" class="glass-input w-20 py-1 text-xs" type="time">
+                                <span class="opacity-40">~</span>
+                                <input v-model="tag.endTime" class="glass-input w-20 py-1 text-xs" type="time">
+                                <button @click="removeShiftTag(tag.id)" class="p-1 text-red-400 shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                             <button @click="addShiftTag" class="glass-button w-full py-2">
                                 <i data-lucide="plus" class="w-4 h-4"></i> 新增輪班標籤
