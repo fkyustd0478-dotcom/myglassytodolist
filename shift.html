@@ -10,23 +10,15 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link rel="stylesheet" href="shared_theme.css">
+    <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="shift_style.css">
+    <script src="effects.js" defer></script>
     <script src="shift_app.js" defer></script>
 </head>
 <body :style="themeStyle" :class="isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode'">
     <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
         <!-- Background Layers -->
         <div class="bg-layer" :class="themeClasses" :key="commonSettings.theme">
-            <div v-show="!commonSettings.useCustomBg">
-                <!-- Cherry Blossom -->
-                <div v-show="commonSettings.theme === 'cherry'">
-                    <div v-for="n in 20" :key="'p'+n" class="petal" :style="{ left: Math.random()*100+'%', animationDelay: Math.random()*10+'s', animationDuration: (Math.random()*5+5)+'s' }"></div>
-                </div>
-                <!-- Forest -->
-                <div v-show="commonSettings.theme === 'forest'">
-                    <div v-for="n in 15" :key="'rd'+n" class="raindrop" :style="{ left: Math.random()*100+'%', animationDelay: Math.random()*2+'s', animationDuration: (Math.random()*0.5+0.5)+'s' }"></div>
-                </div>
-            </div>
         </div>
         <div v-show="commonSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
@@ -82,34 +74,32 @@
                      @click="handleDayClick(day)">
                     <span class="day-number">{{ day.date.getDate() }}</span>
                     <div class="day-indicators">
-                        <div v-if="day.data.shiftId" 
+                        <div v-for="sid in (day.data.shiftIds || [])" 
+                             :key="sid"
                              class="indicator-tag" 
-                             :style="{ backgroundColor: getTagColor('shift', day.data.shiftId) }">
-                            {{ getTagName('shift', day.data.shiftId) }}
+                             :style="{ backgroundColor: getTagColor('shift', sid) }">
+                            {{ getTagName('shift', sid) }}
                         </div>
-                        <div v-if="day.data.payId" 
+                        <div v-for="pid in (day.data.payIds || [])" 
+                             :key="pid"
                              class="indicator-tag" 
-                             :style="{ backgroundColor: getTagColor('pay', day.data.payId) }">
-                            {{ getTagName('pay', day.data.payId) }}
+                             :style="{ backgroundColor: getTagColor('pay', pid) }">
+                            {{ getTagName('pay', pid) }}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tag Pills System -->
             <transition name="slide-up">
-                <div v-if="activeQuickTagCategory" class="tag-pills-container glass mb-4 p-4" :style="glassStyle">
-                    <div class="tag-group">
-                        <div class="tag-group-label mb-2">{{ activeQuickTagCategory === 'shift' ? '輪班標籤' : '薪資標籤' }}</div>
-                        <div class="pills-scroll">
-                            <div v-for="tag in (activeQuickTagCategory === 'shift' ? shiftSettings.shiftTags : shiftSettings.payTags)" 
-                                 :key="tag.id"
-                                 class="tag-pill glass"
-                                 :class="{ 'active': activeQuickTag?.id === tag.id }"
-                                 :style="{ backgroundColor: activeQuickTag?.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
-                                 @click="selectQuickTag(activeQuickTagCategory, tag.id)">
-                                {{ tag.name }}
-                            </div>
+                <div v-if="activeQuickTagCategory" class="tag-pills-container glass" :style="glassStyle">
+                    <div class="pills-scroll">
+                        <div v-for="tag in (activeQuickTagCategory === 'shift' ? shiftSettings.shiftTags : shiftSettings.payTags)" 
+                                :key="tag.id"
+                                class="tag-pill glass"
+                                :class="{ 'active': activeQuickTag?.id === tag.id }"
+                                :style="{ backgroundColor: activeQuickTag?.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
+                                @click="selectQuickTag(activeQuickTagCategory, tag.id)">
+                            {{ tag.name }}
                         </div>
                     </div>
                 </div>
@@ -151,9 +141,9 @@
                     </div>
 
                     <div class="settings-tabs">
-                        <div class="tab-btn" :class="{ active: settingsTab === 'payroll' }" @click="settingsTab = 'payroll'">薪資設定</div>
-                        <div class="tab-btn" :class="{ active: settingsTab === 'shifts' }" @click="settingsTab = 'shifts'">輪班設定</div>
-                        <div class="tab-btn" :class="{ active: settingsTab === 'theme' }" @click="settingsTab = 'theme'">主題</div>
+                        <div class="tab-btn" :class="{ active: settingsTab === 'payroll' }" @click="settingsTab = 'payroll'">薪資</div>
+                        <div class="tab-btn" :class="{ active: settingsTab === 'shifts' }" @click="settingsTab = 'shifts'">輪班</div>
+                        <div class="tab-btn" :class="{ active: settingsTab === 'system' }" @click="settingsTab = 'system'">系統</div>
                     </div>
 
                     <div v-if="settingsTab === 'payroll'" class="space-y-6">
@@ -217,34 +207,72 @@
                         </div>
                     </div>
 
-                    <div v-if="settingsTab === 'theme'" class="space-y-6">
-                        <div class="grid grid-cols-2 gap-3">
-                            <button v-for="t in ['cherry', 'forest', 'night', 'sea', 'seaside', 'sky', 'sunset', 'torii']" 
-                                    :key="t"
-                                    @click="toggleTheme(t)"
-                                    class="glass-card p-4 text-sm font-bold capitalize flex items-center justify-between"
-                                    :class="{ 'border-white': commonSettings.theme === t }">
-                                {{ t }}
-                                <i v-if="commonSettings.theme === t" data-lucide="check" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                        
-                        <div class="pt-4 border-t border-white/10 space-y-4">
-                            <label class="input-label">自定義背景</label>
-                            <div class="flex gap-3">
-                                <button @click="triggerUpload" class="glass-button flex-1 text-sm py-2">
-                                    <i data-lucide="image" class="w-4 h-4"></i> 上傳圖片
-                                </button>
-                                <button v-if="commonSettings.useCustomBg" @click="clearCustomBg" class="glass-button flex-1 text-sm py-2 text-red-400">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i> 移除
+                    <div v-if="settingsTab === 'system'" class="space-y-6">
+                        <!-- Theme Section -->
+                        <section class="space-y-3">
+                            <div class="flex items-center gap-2 opacity-40">
+                                <i data-lucide="palette" class="w-4 h-4"></i>
+                                <h3 class="text-[10px] font-black uppercase tracking-widest">主題配色</h3>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button v-for="t in ['cherry', 'forest', 'night', 'sea', 'seaside', 'sky', 'sunset', 'torii']" 
+                                        :key="t"
+                                        @click="commonSettings.theme = t"
+                                        class="h-10 rounded-xl border-2 transition-all flex items-center justify-center text-[10px] font-bold capitalize"
+                                        :class="commonSettings.theme === t ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                                    {{ t }}
                                 </button>
                             </div>
-                            <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleUpload">
-                        </div>
+                        </section>
 
-                        <button @click="clearCacheAndUpdate" class="glass-button w-full text-red-400 mt-4 py-2">
-                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> 清除介面暫存並更新
-                        </button>
+                        <!-- Effects Section -->
+                        <section class="space-y-3">
+                            <div class="flex items-center gap-2 opacity-40">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                <h3 class="text-[10px] font-black uppercase tracking-widest">視覺特效</h3>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button v-for="eff in ['none', 'cherry', 'rain']" 
+                                        :key="eff"
+                                        @click="commonSettings.effect = eff"
+                                        class="h-10 rounded-xl border-2 transition-all flex items-center justify-center text-[10px] font-bold"
+                                        :class="commonSettings.effect === eff ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                                    {{ eff === 'none' ? '無' : (eff === 'cherry' ? '櫻花' : '下雨') }}
+                                </button>
+                            </div>
+                        </section>
+
+                        <!-- Custom Background Section -->
+                        <section class="space-y-3">
+                            <div class="flex justify-between items-center px-1">
+                                <div class="flex items-center gap-2 opacity-40">
+                                    <i data-lucide="image" class="w-4 h-4"></i>
+                                    <h3 class="text-[10px] font-black uppercase tracking-widest">自定義背景</h3>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button v-show="commonSettings.customBg" @click="clearCustomBg" class="text-[10px] font-black text-red-500 uppercase tracking-widest">
+                                        移除圖片
+                                    </button>
+                                </div>
+                            </div>
+                            <button @click="triggerUpload" class="w-full h-12 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 transition-all"
+                                :class="commonSettings.useCustomBg ? 'border-blue-500 bg-blue-500/10' : 'border-white/10 bg-white/5'">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                                <span class="text-[10px] font-bold">上傳圖片</span>
+                            </button>
+                            <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleUpload">
+                        </section>
+
+                        <!-- Cache Management -->
+                        <section class="space-y-3">
+                            <div class="flex items-center gap-2 opacity-40">
+                                <i data-lucide="database" class="w-4 h-4"></i>
+                                <h3 class="text-[10px] font-black uppercase tracking-widest">快取管理</h3>
+                            </div>
+                            <button @click="clearCacheAndUpdate" class="w-full h-12 rounded-xl border-2 border-red-500/30 text-red-500 text-[10px] font-black uppercase tracking-widest">
+                                清除系統快取
+                            </button>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -283,21 +311,27 @@
                     <div class="space-y-6">
                         <div class="input-group">
                             <label class="input-label">輪班設定</label>
-                            <select v-model="shiftData[selectedDay].shiftId" class="glass-input">
-                                <option :value="null">無</option>
-                                <option v-for="tag in shiftSettings.shiftTags" :key="tag.id" :value="tag.id">
-                                    {{ tag.name }} ({{ tag.startTime }} - {{ tag.endTime }})
-                                </option>
-                            </select>
+                            <div class="flex flex-wrap gap-2">
+                                <button v-for="tag in shiftSettings.shiftTags" 
+                                        :key="tag.id"
+                                        @click="applyQuickTagToDay(selectedDay, 'shift', tag.id)"
+                                        class="px-3 py-2 rounded-xl border-2 transition-all text-xs font-bold"
+                                        :class="(shiftData[selectedDay].shiftIds || []).includes(tag.id) ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                                    {{ tag.name }}
+                                </button>
+                            </div>
                         </div>
                         <div class="input-group">
                             <label class="input-label">薪資標記</label>
-                            <select v-model="shiftData[selectedDay].payId" class="glass-input">
-                                <option :value="null">無</option>
-                                <option v-for="tag in shiftSettings.payTags" :key="tag.id" :value="tag.id">
+                            <div class="flex flex-wrap gap-2">
+                                <button v-for="tag in shiftSettings.payTags" 
+                                        :key="tag.id"
+                                        @click="applyQuickTagToDay(selectedDay, 'pay', tag.id)"
+                                        class="px-3 py-2 rounded-xl border-2 transition-all text-xs font-bold"
+                                        :class="(shiftData[selectedDay].payIds || []).includes(tag.id) ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
                                     {{ tag.name }}
-                                </option>
-                            </select>
+                                </button>
+                            </div>
                         </div>
                         <div class="input-group">
                             <label class="input-label">備註</label>

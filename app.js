@@ -132,7 +132,8 @@ try {
                 notificationsEnabled: false, 
                 lang: 'zh',
                 customBg: '', 
-                useCustomBg: false 
+                useCustomBg: false,
+                effect: 'none'
             });
 
             const isMenuOpen = ref(false);
@@ -902,8 +903,16 @@ try {
                     if (effectTimeout) clearTimeout(effectTimeout);
                     if (petalTimeout) clearTimeout(petalTimeout);
                     activeAssets.value = []; 
-                    showPetals.value = false;
-                    showRain.value = false;
+                    
+                    // Modular Effects Logic
+                    if (window.ParticleEngine) {
+                        if (settings.value.effect === 'none') {
+                            // Auto-set effect based on theme if not manually set?
+                            // No, user wants independent control.
+                            // But let's initialize it if it's the first time or if they haven't touched it.
+                        }
+                        ParticleEngine.setEffect(settings.value.effect);
+                    }
                     
                     const themeImages = {
                         cherry: './theme/cherry.png',
@@ -954,6 +963,12 @@ try {
                 
                 watch(() => settings.value.theme, (newTheme) => {
                     clearAndSchedule(newTheme);
+                });
+
+                watch(() => settings.value.effect, (newEffect) => {
+                    if (window.ParticleEngine) {
+                        ParticleEngine.setEffect(newEffect);
+                    }
                 });
 
                 watch(() => settings.value.useCustomBg, (isCustom) => {
@@ -1035,10 +1050,18 @@ try {
                     const now = Date.now();
                     todos.value.forEach(t => {
                         if (t.completed || t.isDeleted || !t.dueDate || t.notified) return;
-                        const due = new Date(t.dueDate).getTime();
+                        const due = new Date(`${t.date}T${t.time.hour.toString().padStart(2, '0')}:${t.time.minute.toString().padStart(2, '0')}`).getTime();
                         const alertMs = (t.alertMinutes || 15) * 60000;
                         if (due - now <= alertMs && due > now) { 
-                            new Notification('Glassy Todo', { body: t.text }); 
+                            if (Notification.permission === 'granted') {
+                                new Notification('Glassy Todo', { body: t.text }); 
+                            } else if (Notification.permission !== 'denied') {
+                                Notification.requestPermission().then(permission => {
+                                    if (permission === 'granted') {
+                                        new Notification('Glassy Todo', { body: t.text });
+                                    }
+                                });
+                            }
                             t.notified = true; 
                         }
                     });
@@ -1070,7 +1093,8 @@ try {
                             useCustomBg: false,
                             customBg: '',
                             lang: currentSettings.lang || 'zh',
-                            notificationsEnabled: currentSettings.notificationsEnabled ?? true,
+                            effect: 'none',
+                            notificationsEnabled: true,
                             customBgOpacity: 0.5
                         };
                         localStorage.setItem('todo_settings', JSON.stringify(newSettings));

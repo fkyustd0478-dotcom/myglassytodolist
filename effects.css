@@ -1,0 +1,34 @@
+/* effects.css */
+.petal {
+    position: absolute;
+    background: #fecaca;
+    width: 15px;
+    height: 10px;
+    border-radius: 150% 0 150% 0;
+    animation: fall linear infinite;
+    z-index: 1000;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+    pointer-events: none;
+}
+
+@keyframes fall {
+    0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(110vh) translateX(var(--drift)) rotate(var(--rotation)); opacity: 0; }
+}
+
+.raindrop {
+    position: absolute;
+    width: 2px;
+    height: 15px;
+    background: rgba(255, 255, 255, 0.4);
+    animation: rain 0.8s linear infinite;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+@keyframes rain {
+    from { transform: translateY(-100px); }
+    to { transform: translateY(100vh); }
+}

@@ -23,6 +23,8 @@ const app = createApp({
             customBg: '',
             customBgOpacity: 0.5,
             lang: 'zh',
+            effect: 'none',
+            notificationsEnabled: true,
             ...StorageProvider.getCommonSettings()
         });
 
@@ -50,7 +52,7 @@ const app = createApp({
         const activeQuickTag = ref(null); 
         const activeQuickTagCategory = ref(null); // 'shift' or 'pay'
         const showSettings = ref(false);
-        const settingsTab = ref('payroll'); // payroll, shifts
+        const settingsTab = ref('payroll'); // payroll, shifts, system
         const showTodayTasks = ref(false);
         const showDayDetail = ref(false);
         const selectedDay = ref(null); 
@@ -201,14 +203,41 @@ const app = createApp({
         };
 
         const applyQuickTag = (dateStr) => {
-            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = {};
+            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [] };
             
             const { type, id } = activeQuickTag.value;
-            if (type === 'shift') {
-                // Toggle if same
-                shiftData.value[dateStr].shiftId = shiftData.value[dateStr].shiftId === id ? null : id;
+            const field = type === 'shift' ? 'shiftIds' : 'payIds';
+            
+            // Compatibility for old data
+            if (!shiftData.value[dateStr][field]) {
+                shiftData.value[dateStr][field] = [];
+                const oldField = type === 'shift' ? 'shiftId' : 'payId';
+                if (shiftData.value[dateStr][oldField]) {
+                    shiftData.value[dateStr][field].push(shiftData.value[dateStr][oldField]);
+                    delete shiftData.value[dateStr][oldField];
+                }
+            }
+
+            const index = shiftData.value[dateStr][field].indexOf(id);
+            if (index > -1) {
+                shiftData.value[dateStr][field].splice(index, 1);
             } else {
-                shiftData.value[dateStr].payId = shiftData.value[dateStr].payId === id ? null : id;
+                shiftData.value[dateStr][field].push(id);
+            }
+            StorageProvider.saveShiftData(shiftData.value);
+        };
+
+        const applyQuickTagToDay = (dateStr, type, id) => {
+            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [] };
+            const field = type === 'shift' ? 'shiftIds' : 'payIds';
+            
+            if (!shiftData.value[dateStr][field]) shiftData.value[dateStr][field] = [];
+            
+            const index = shiftData.value[dateStr][field].indexOf(id);
+            if (index > -1) {
+                shiftData.value[dateStr][field].splice(index, 1);
+            } else {
+                shiftData.value[dateStr][field].push(id);
             }
             StorageProvider.saveShiftData(shiftData.value);
         };
@@ -281,7 +310,9 @@ const app = createApp({
                         theme: 'cherry',
                         useCustomBg: false,
                         customBg: '',
-                        lang: settings.lang || 'zh'
+                        lang: settings.lang || 'zh',
+                        effect: 'none',
+                        notificationsEnabled: true
                     };
                     StorageProvider.saveCommonSettings(newSettings);
                     location.reload();
@@ -319,11 +350,41 @@ const app = createApp({
         // --- Lifecycle ---
         onMounted(() => {
             if (window.lucide) lucide.createIcons();
+            if (window.ParticleEngine) {
+                ParticleEngine.setEffect(commonSettings.value.effect);
+            }
+
+            // Notifications
+            setInterval(() => {
+                if (!commonSettings.value.notificationsEnabled) return;
+                const now = new Date();
+                const todayStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+                const data = shiftData.value[todayStr];
+                if (data && data.shiftIds && data.shiftIds.length > 0 && !data.notified) {
+                    const firstShift = shiftSettings.value.shiftTags.find(t => t.id === data.shiftIds[0]);
+                    if (firstShift) {
+                        if (Notification.permission === 'granted') {
+                            new Notification('今日輪班', { body: `今日班次: ${firstShift.name}` });
+                        } else if (Notification.permission !== 'denied') {
+                            Notification.requestPermission().then(p => {
+                                if (p === 'granted') new Notification('今日輪班', { body: `今日班次: ${firstShift.name}` });
+                            });
+                        }
+                        data.notified = true;
+                    }
+                }
+            }, 60000);
         });
 
-        watch(commonSettings, (newVal) => {
-            StorageProvider.saveCommonSettings(newVal);
-        }, { deep: true });
+        watch(() => commonSettings.value.theme, (newTheme) => {
+            // Theme logic handled by CSS and shared_theme
+        });
+
+        watch(() => commonSettings.value.effect, (newEffect) => {
+            if (window.ParticleEngine) {
+                ParticleEngine.setEffect(newEffect);
+            }
+        });
 
         watch(shiftSettings, (newVal) => {
             StorageProvider.saveShiftSettings(newVal);
@@ -341,7 +402,7 @@ const app = createApp({
             getTagName, getTagColor, todayTasks, showSettings, settingsTab, showTodayTasks, showDayDetail,
             selectedDay, shiftData, toggleTheme, clearCacheAndUpdate, confirmModal,
             displayMonthYear, openJumpPicker, jumpPicker, updateJumpDate, confirmJump,
-            addShiftTag, removeShiftTag, addPayTag, removePayTag,
+            addShiftTag, removeShiftTag, addPayTag, removePayTag, applyQuickTagToDay,
             activeQuickTagCategory, toggleQuickTagCategory, dropdowns, toggleDropdown,
             triggerUpload, handleUpload, clearCustomBg, fileInput, glassStyle, isAnyModalOpen,
             themeClasses, customBgStyle
