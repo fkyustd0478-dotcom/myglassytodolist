@@ -614,7 +614,8 @@ try {
                 month: false,
                 day: false,
                 hour: false,
-                minute: false
+                minute: false,
+                navMenu: false
             });
 
             const toggleDropdown = (key) => {
@@ -692,11 +693,11 @@ try {
                     day = ((val - 1 + max) % max) + 1;
                 }
 
-                const max = getMaxDays(month, year);
-                if (day > max) day = max;
+                // Adjust day if month changed
+                const newMax = getMaxDays(month, year);
+                if (day > newMax) day = newMax;
 
-                const newDate = new Date(year, month - 1, day);
-                form.value.date = newDate.toISOString().split('T')[0];
+                form.value.date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
             };
 
             const updatePickerTime = (type, val) => {
@@ -1063,9 +1064,17 @@ try {
                     title: t.value.clearCache,
                     message: t.value.confirmClearCache,
                     onConfirm: () => {
-                        localStorage.removeItem('todo_settings');
-                        localStorage.removeItem('app_version');
-                        location.reload(true);
+                        const currentSettings = JSON.parse(localStorage.getItem('todo_settings') || '{}');
+                        const newSettings = {
+                            theme: 'cherry',
+                            useCustomBg: false,
+                            customBg: '',
+                            lang: currentSettings.lang || 'zh',
+                            notificationsEnabled: currentSettings.notificationsEnabled ?? true,
+                            customBgOpacity: 0.5
+                        };
+                        localStorage.setItem('todo_settings', JSON.stringify(newSettings));
+                        location.reload();
                     }
                 };
             };

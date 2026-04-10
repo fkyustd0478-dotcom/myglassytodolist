@@ -13,13 +13,44 @@
     <script src="shift_app.js" defer></script>
 </head>
 <body :style="themeStyle" :class="isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode'">
-    <div id="app" v-cloak>
+    <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
+        <!-- Background Layers -->
+        <div class="bg-layer" :class="themeClasses" :key="commonSettings.theme">
+            <div v-show="!commonSettings.useCustomBg">
+                <!-- Cherry Blossom -->
+                <div v-show="commonSettings.theme === 'cherry'">
+                    <div v-for="n in 20" :key="'p'+n" class="petal" :style="{ left: Math.random()*100+'%', animationDelay: Math.random()*10+'s', animationDuration: (Math.random()*5+5)+'s' }"></div>
+                </div>
+                <!-- Forest -->
+                <div v-show="commonSettings.theme === 'forest'">
+                    <div v-for="n in 15" :key="'rd'+n" class="raindrop" :style="{ left: Math.random()*100+'%', animationDelay: Math.random()*2+'s', animationDuration: (Math.random()*0.5+0.5)+'s' }"></div>
+                </div>
+            </div>
+        </div>
+        <div v-show="commonSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
+
         <!-- Top Navigation (Level 1) -->
-        <nav v-show="!showSettings && !showTodayTasks && !showDayDetail && !confirmModal.show" class="top-nav level-1">
-            <a href="index.html" class="glass menu-btn flex items-center gap-2">
-                <span class="text-shadow">琉璃輪班</span>
-                <i data-lucide="repeat" class="w-4 h-4 opacity-50"></i>
-            </a>
+        <nav class="top-nav level-1">
+            <div class="relative">
+                <button @click="toggleDropdown('navMenu')" 
+                        class="glass menu-btn flex items-center gap-3 transition-all active:scale-95 group">
+                    <span class="text-shadow">琉璃輪班</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 opacity-40 group-hover:rotate-180 transition-transform"></i>
+                </button>
+                
+                <transition name="fade">
+                    <div v-show="dropdowns.navMenu" class="dropdown-menu glass w-48 mt-2 overflow-hidden" :style="glassStyle">
+                        <a href="index.html" class="dropdown-item flex items-center gap-3">
+                            <i data-lucide="check-square" class="w-4 h-4"></i>
+                            <span>琉璃待辦</span>
+                        </a>
+                        <a href="shift.html" class="dropdown-item flex items-center gap-3 active">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            <span>琉璃輪班</span>
+                        </a>
+                    </div>
+                </transition>
+            </div>
             <div class="flex gap-2">
                 <button @click="changeMonth(-1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
                     <i data-lucide="chevron-left" class="w-5 h-5"></i>
@@ -65,34 +96,23 @@
             </div>
 
             <!-- Tag Pills System -->
-            <div class="tag-pills-container">
-                <div class="tag-group">
-                    <div class="tag-group-label mb-2">輪班標籤</div>
-                    <div class="pills-scroll">
-                        <div v-for="tag in shiftSettings.shiftTags" 
-                             :key="tag.id"
-                             class="tag-pill glass"
-                             :class="{ 'active': activeQuickTag?.id === tag.id }"
-                             :style="{ backgroundColor: activeQuickTag?.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
-                             @click="selectQuickTag('shift', tag.id)">
-                            {{ tag.name }}
+            <transition name="slide-up">
+                <div v-if="activeQuickTagCategory" class="tag-pills-container glass mb-4 p-4" :style="glassStyle">
+                    <div class="tag-group">
+                        <div class="tag-group-label mb-2">{{ activeQuickTagCategory === 'shift' ? '輪班標籤' : '薪資標籤' }}</div>
+                        <div class="pills-scroll">
+                            <div v-for="tag in (activeQuickTagCategory === 'shift' ? shiftSettings.shiftTags : shiftSettings.payTags)" 
+                                 :key="tag.id"
+                                 class="tag-pill glass"
+                                 :class="{ 'active': activeQuickTag?.id === tag.id }"
+                                 :style="{ backgroundColor: activeQuickTag?.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
+                                 @click="selectQuickTag(activeQuickTagCategory, tag.id)">
+                                {{ tag.name }}
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="tag-group">
-                    <div class="tag-group-label mb-2">薪資標籤</div>
-                    <div class="pills-scroll">
-                        <div v-for="tag in shiftSettings.payTags" 
-                             :key="tag.id"
-                             class="tag-pill glass"
-                             :class="{ 'active': activeQuickTag?.id === tag.id }"
-                             :style="{ backgroundColor: activeQuickTag?.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
-                             @click="selectQuickTag('pay', tag.id)">
-                            {{ tag.name }}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </transition>
         </div>
 
         <!-- Bottom Navigation (Level 2) -->
@@ -101,11 +121,11 @@
                 <div class="nav-icon-wrapper"><i data-lucide="calendar-check"></i></div>
                 <span>今日事</span>
             </div>
-            <div class="nav-item" :class="{ active: activeQuickTag?.type === 'pay' }" @click="activeQuickTag?.type === 'pay' ? activeQuickTag = null : selectQuickTag('pay', shiftSettings.payTags[0]?.id)">
+            <div class="nav-item" :class="{ active: activeQuickTagCategory === 'pay' }" @click="toggleQuickTagCategory('pay')">
                 <div class="nav-icon-wrapper"><i data-lucide="banknote"></i></div>
                 <span>薪資</span>
             </div>
-            <div class="nav-item" :class="{ active: activeQuickTag?.type === 'shift' }" @click="activeQuickTag?.type === 'shift' ? activeQuickTag = null : selectQuickTag('shift', shiftSettings.shiftTags[0]?.id)">
+            <div class="nav-item" :class="{ active: activeQuickTagCategory === 'shift' }" @click="toggleQuickTagCategory('shift')">
                 <div class="nav-icon-wrapper"><i data-lucide="clock"></i></div>
                 <span>輪班</span>
             </div>
@@ -137,48 +157,44 @@
 
                     <div v-if="settingsTab === 'payroll'" class="space-y-6">
                         <div class="space-y-4">
-                            <div class="input-group">
-                                <label class="input-label">薪資名稱</label>
-                                <input v-model="shiftSettings.payroll.name" class="glass-input" type="text">
+                            <div class="flex items-center gap-3">
+                                <span class="input-label w-20 shrink-0 mb-0">薪資名稱</span>
+                                <input v-model="shiftSettings.payroll.name" class="glass-input flex-1" type="text">
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="input-group">
-                                    <label class="input-label">計算方式</label>
-                                    <select v-model="shiftSettings.payroll.method" class="glass-input">
-                                        <option value="daily">日薪</option>
-                                        <option value="weekly">週薪</option>
-                                        <option value="monthly">月薪</option>
-                                    </select>
-                                </div>
-                                <div class="input-group">
-                                    <label class="input-label">費率 (元)</label>
-                                    <input v-model.number="shiftSettings.payroll.rate" class="glass-input" type="number">
-                                </div>
+                            <div class="flex items-center gap-3">
+                                <span class="input-label w-20 shrink-0 mb-0">計算方式</span>
+                                <select v-model="shiftSettings.payroll.method" class="glass-input flex-1">
+                                    <option value="daily">日薪</option>
+                                    <option value="weekly">週薪</option>
+                                    <option value="monthly">月薪</option>
+                                </select>
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="input-group">
-                                    <label class="input-label">發薪日 (號)</label>
-                                    <input v-model.number="shiftSettings.payroll.payDay" class="glass-input" type="number" min="1" max="31">
-                                </div>
-                                <div class="input-group">
-                                    <label class="input-label">假日處理</label>
-                                    <select v-model="shiftSettings.payroll.holidayLogic" class="glass-input">
-                                        <option value="early">提前發放</option>
-                                        <option value="late">延後發放</option>
-                                    </select>
-                                </div>
+                            <div class="flex items-center gap-3">
+                                <span class="input-label w-20 shrink-0 mb-0">費率 (元)</span>
+                                <input v-model.number="shiftSettings.payroll.rate" class="glass-input flex-1" type="number">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="input-label w-20 shrink-0 mb-0">發薪日</span>
+                                <input v-model.number="shiftSettings.payroll.payDay" class="glass-input flex-1" type="number" min="1" max="31">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="input-label w-20 shrink-0 mb-0">假日處理</span>
+                                <select v-model="shiftSettings.payroll.holidayLogic" class="glass-input flex-1">
+                                    <option value="early">提前發放</option>
+                                    <option value="late">延後發放</option>
+                                </select>
                             </div>
                         </div>
                         <div class="pt-4 border-t border-white/10">
                             <label class="input-label mb-4">薪資項目標籤</label>
                             <div class="space-y-3">
                                 <div v-for="tag in shiftSettings.payTags" :key="tag.id" class="flex items-center gap-3">
-                                    <input type="color" v-model="tag.color" class="w-10 h-10 rounded-lg bg-transparent border-none">
-                                    <input v-model="tag.name" class="glass-input flex-1" type="text">
-                                    <button @click="removePayTag(tag.id)" class="p-2 text-red-400"><i data-lucide="trash-2"></i></button>
+                                    <input type="color" v-model="tag.color" class="w-8 h-8 rounded-lg bg-transparent border-none shrink-0">
+                                    <input v-model="tag.name" class="glass-input flex-1 py-2 text-sm" type="text">
+                                    <button @click="removePayTag(tag.id)" class="p-2 text-red-400 shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
-                                <button @click="addPayTag" class="glass-button w-full text-sm">
-                                    <i data-lucide="plus"></i> 新增標籤
+                                <button @click="addPayTag" class="glass-button w-full text-sm py-2">
+                                    <i data-lucide="plus" class="w-4 h-4"></i> 新增標籤
                                 </button>
                             </div>
                         </div>
@@ -188,17 +204,18 @@
                         <div class="space-y-4">
                             <div v-for="tag in shiftSettings.shiftTags" :key="tag.id" class="glass-card p-4 space-y-3">
                                 <div class="flex items-center gap-3">
-                                    <input type="color" v-model="tag.color" class="w-10 h-10 rounded-lg bg-transparent border-none">
-                                    <input v-model="tag.name" class="glass-input flex-1" type="text">
-                                    <button @click="removeShiftTag(tag.id)" class="p-2 text-red-400"><i data-lucide="trash-2"></i></button>
+                                    <input type="color" v-model="tag.color" class="w-8 h-8 rounded-lg bg-transparent border-none shrink-0">
+                                    <input v-model="tag.name" class="glass-input flex-1 py-2 text-sm" type="text">
+                                    <button @click="removeShiftTag(tag.id)" class="p-2 text-red-400 shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <input v-model="tag.startTime" class="glass-input text-center" type="time">
-                                    <input v-model="tag.endTime" class="glass-input text-center" type="time">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="tag.startTime" class="glass-input text-center py-2 text-sm flex-1" type="time">
+                                    <span class="opacity-40">~</span>
+                                    <input v-model="tag.endTime" class="glass-input text-center py-2 text-sm flex-1" type="time">
                                 </div>
                             </div>
-                            <button @click="addShiftTag" class="glass-button w-full">
-                                <i data-lucide="plus"></i> 新增輪班標籤
+                            <button @click="addShiftTag" class="glass-button w-full py-2">
+                                <i data-lucide="plus" class="w-4 h-4"></i> 新增輪班標籤
                             </button>
                         </div>
                     </div>
@@ -214,8 +231,22 @@
                                 <i v-if="commonSettings.theme === t" data-lucide="check" class="w-4 h-4"></i>
                             </button>
                         </div>
-                        <button @click="clearCacheAndUpdate" class="glass-button w-full text-red-400 mt-4">
-                            <i data-lucide="refresh-cw"></i> 清除介面暫存並更新
+                        
+                        <div class="pt-4 border-t border-white/10 space-y-4">
+                            <label class="input-label">自定義背景</label>
+                            <div class="flex gap-3">
+                                <button @click="triggerUpload" class="glass-button flex-1 text-sm py-2">
+                                    <i data-lucide="image" class="w-4 h-4"></i> 上傳圖片
+                                </button>
+                                <button v-if="commonSettings.useCustomBg" @click="clearCustomBg" class="glass-button flex-1 text-sm py-2 text-red-400">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i> 移除
+                                </button>
+                            </div>
+                            <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleUpload">
+                        </div>
+
+                        <button @click="clearCacheAndUpdate" class="glass-button w-full text-red-400 mt-4 py-2">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> 清除介面暫存並更新
                         </button>
                     </div>
                 </div>

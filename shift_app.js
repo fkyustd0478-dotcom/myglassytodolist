@@ -21,6 +21,7 @@ const app = createApp({
             theme: 'cherry',
             useCustomBg: false,
             customBg: '',
+            customBgOpacity: 0.5,
             lang: 'zh',
             ...StorageProvider.getCommonSettings()
         });
@@ -47,6 +48,7 @@ const app = createApp({
         });
 
         const activeQuickTag = ref(null); 
+        const activeQuickTagCategory = ref(null); // 'shift' or 'pay'
         const showSettings = ref(false);
         const settingsTab = ref('payroll'); // payroll, shifts
         const showTodayTasks = ref(false);
@@ -61,22 +63,35 @@ const app = createApp({
         });
 
         // --- Computed ---
-        const isDarkTheme = computed(() => ['night', 'forest', 'torii'].includes(commonSettings.value.theme));
-        
-        const themeStyle = computed(() => {
-            const themeImages = {
-                cherry: './theme/cherry.png',
-                forest: './theme/forest.png',
-                night: './theme/night.png',
-                sea: './theme/sea.png',
-                seaside: './theme/seaside.png',
-                sky: './theme/sky.png',
-                sunset: './theme/sunset.png',
-                torii: './theme/torii.png'
-            };
-            const bg = commonSettings.value.useCustomBg ? `url(${commonSettings.value.customBg})` : `url(${themeImages[commonSettings.value.theme]})`;
-            return { backgroundImage: bg };
+        const isDarkTheme = computed(() => {
+            const darkThemes = ['forest', 'night', 'torii'];
+            if (commonSettings.value.useCustomBg) {
+                return commonSettings.value.customBgOpacity < 0.5;
+            }
+            return darkThemes.includes(commonSettings.value.theme);
         });
+        
+        const glassStyle = computed(() => {
+            return isDarkTheme.value 
+                ? { backgroundColor: 'rgba(0,0,0,0.3)', borderColor: 'rgba(255,255,255,0.9)' }
+                : { backgroundColor: 'rgba(255,255,255,0.2)', borderColor: 'rgba(0,0,0,0.9)' };
+        });
+
+        const isAnyModalOpen = computed(() => {
+            return showSettings.value || showTodayTasks.value || showDayDetail.value || jumpPicker.value.show || confirmModal.value.show;
+        });
+        
+        const themeStyle = computed(() => ({})); // Handled by bg-layer and custom-bg-layer
+
+        const themeClasses = computed(() => {
+            return `theme-${commonSettings.value.theme}`;
+        });
+
+        const customBgStyle = computed(() => ({
+            backgroundImage: `url(${commonSettings.value.customBg})`,
+            opacity: 1 - commonSettings.value.customBgOpacity,
+            display: commonSettings.value.useCustomBg ? 'block' : 'none'
+        }));
 
         const calendarDays = computed(() => {
             if (!(calendarDate.value instanceof Date)) return [];
@@ -197,12 +212,47 @@ const app = createApp({
             StorageProvider.saveShiftData(shiftData.value);
         };
 
+        const toggleQuickTagCategory = (category) => {
+            if (activeQuickTagCategory.value === category) {
+                activeQuickTagCategory.value = null;
+                activeQuickTag.value = null;
+            } else {
+                activeQuickTagCategory.value = category;
+                activeQuickTag.value = null;
+            }
+        };
+
         const selectQuickTag = (type, id) => {
             if (activeQuickTag.value && activeQuickTag.value.type === type && activeQuickTag.value.id === id) {
                 activeQuickTag.value = null;
             } else {
                 activeQuickTag.value = { type, id };
             }
+        };
+
+        const dropdowns = reactive({
+            navMenu: false
+        });
+
+        const toggleDropdown = (key) => {
+            dropdowns[key] = !dropdowns[key];
+        };
+
+        const fileInput = ref(null);
+        const triggerUpload = () => fileInput.value?.click();
+        const handleUpload = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                commonSettings.value.customBg = event.target.result;
+                commonSettings.value.useCustomBg = true;
+            };
+            reader.readAsDataURL(file);
+        };
+        const clearCustomBg = () => {
+            commonSettings.value.customBg = '';
+            commonSettings.value.useCustomBg = false;
         };
 
         const getTagName = (type, id) => {
@@ -223,9 +273,16 @@ const app = createApp({
             confirmModal.value = {
                 show: true,
                 title: '清除暫存',
-                message: '確定要清除介面暫存並更新嗎？這將重置主題與語言設定。',
+                message: '確定要清除介面暫存並更新嗎？這將重置主題與語言設定，但不會刪除輪班紀錄。',
                 onConfirm: () => {
-                    localStorage.removeItem('todo_settings');
+                    const settings = StorageProvider.getCommonSettings();
+                    const newSettings = {
+                        theme: 'cherry',
+                        useCustomBg: false,
+                        customBg: '',
+                        lang: settings.lang || 'zh'
+                    };
+                    StorageProvider.saveCommonSettings(newSettings);
                     location.reload();
                 }
             };
@@ -283,7 +340,10 @@ const app = createApp({
             getTagName, getTagColor, todayTasks, showSettings, settingsTab, showTodayTasks, showDayDetail,
             selectedDay, shiftData, toggleTheme, clearCacheAndUpdate, confirmModal,
             displayMonthYear, openJumpPicker, jumpPicker, updateJumpDate, confirmJump,
-            addShiftTag, removeShiftTag, addPayTag, removePayTag
+            addShiftTag, removeShiftTag, addPayTag, removePayTag,
+            activeQuickTagCategory, toggleQuickTagCategory, dropdowns, toggleDropdown,
+            triggerUpload, handleUpload, clearCustomBg, fileInput, glassStyle, isAnyModalOpen,
+            themeClasses, customBgStyle
         };
     }
 });

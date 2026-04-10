@@ -86,6 +86,14 @@ header, #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
     z-index: 9001 !important;
 }
 
+/* Navigation Hiding Logic */
+.modal-active header, 
+.modal-active #list-tabs, 
+.modal-active .bottom-nav, 
+.modal-active .fixed.bottom-24 {
+    display: none !important;
+}
+
 /* Task Items & List Readability */
 .task-item p, .list-tab-item button, .category-label {
     text-shadow: var(--text-shadow);
