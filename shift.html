@@ -445,10 +445,10 @@
 
         <!-- Confirmation Modal (Level 4) -->
         <transition name="fade">
-            <div v-if="confirmModal.show" class="modal-backdrop level-4" @click.self="confirmModal.show = false">
+            <div v-if="confirmModal && confirmModal.show" class="modal-backdrop level-4" @click.self="confirmModal.show = false">
                 <div class="modal-content glass text-center">
-                    <h2 class="text-xl font-black mb-4">{{ confirmModal.title }}</h2>
-                    <p class="opacity-70 mb-8 font-medium">{{ confirmModal.message }}</p>
+                    <h2 class="text-xl font-black mb-4">{{ confirmModal.title || '' }}</h2>
+                    <p class="opacity-70 mb-8 font-medium">{{ confirmModal.message || '' }}</p>
                     <div class="flex gap-3">
                         <button @click="confirmModal.show = false" class="glass-button flex-1">取消</button>
                         <button @click="confirmModal.onConfirm(); confirmModal.show = false" class="glass-button flex-1 bg-red-500/20 text-red-400">確定</button>

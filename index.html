@@ -667,10 +667,10 @@
 
             <!-- Confirmation Modal -->
             <transition name="fade">
-                <div v-show="confirmModal.show" :key="'confirm-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-4" @click.self="confirmModal.show = false">
+                <div v-if="confirmModal && confirmModal.show" :key="'confirm-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-4" @click.self="confirmModal.show = false">
                     <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center modal-content-level-4" :style="glassStyle" @click.stop>
-                        <h3 class="text-xl font-black tracking-tight">{{ confirmModal.title }}</h3>
-                        <p class="text-sm opacity-60 leading-relaxed">{{ confirmModal.message }}</p>
+                        <h3 class="text-xl font-black tracking-tight">{{ confirmModal.title || '' }}</h3>
+                        <p class="text-sm opacity-60 leading-relaxed">{{ confirmModal.message || '' }}</p>
                         <div class="flex gap-3">
                             <button @click="confirmModal.show = false" class="flex-1 py-3 rounded-xl glass text-xs font-bold">{{ t.cancel }}</button>
                             <button @click="executeConfirm" class="flex-1 py-3 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-widest border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
