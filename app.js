@@ -425,43 +425,44 @@ try {
             };
 
             const saveTodo = () => {
+                if (document.activeElement) document.activeElement.blur();
                 if (!form.value.text.trim()) return;
                 const dueStr = `${form.value.date}T${form.value.time.hour.toString().padStart(2, '0')}:${form.value.time.minute.toString().padStart(2, '0')}:00`;
                 const dueDate = new Date(dueStr);
-                
                 const isFuture = dueDate.getTime() > Date.now();
 
                 if (isEditing.value) {
                     const t = todos.value.find(x => x.id === editingId.value);
                     if (t) {
-                        Object.assign(t, { 
-                            text: form.value.text, 
-                            category: form.value.category, 
-                            recurring: form.value.recurring, 
-                            dueDate: dueStr, 
+                        Object.assign(t, {
+                            text: form.value.text,
+                            category: form.value.category,
+                            recurring: form.value.recurring,
+                            dueDate: dueStr,
                             notified: !isFuture,
                             alertMinutes: form.value.alertMinutes,
                             updatedAt: new Date().toISOString()
                         });
                     }
                 } else {
-                    todos.value.unshift({ 
-                        id: Date.now().toString(36), 
-                        listId: currentListId.value, 
-                        text: form.value.text, 
-                        category: form.value.category, 
-                        recurring: form.value.recurring, 
-                        dueDate: dueStr, 
-                        completed: false, 
-                        isDeleted: false, 
+                    todos.value.unshift({
+                        id: Date.now().toString(36),
+                        listId: currentListId.value,
+                        text: form.value.text,
+                        category: form.value.category,
+                        recurring: form.value.recurring,
+                        dueDate: dueStr,
+                        completed: false,
+                        isDeleted: false,
                         notified: !isFuture,
                         alertMinutes: form.value.alertMinutes,
                         updatedAt: new Date().toISOString()
                     });
                 }
+                StorageProvider.saveData({ todos: todos.value, lists: lists.value });
                 renderTrigger.value++;
-                closeModal();
                 form.value.text = '';
+                closeModal();
             };
 
             const closeModal = () => { isAdding.value = isEditing.value = false; editingId.value = null; };
@@ -1126,8 +1127,6 @@ try {
                 };
             };
 
-            const goToShift = () => { window.location.href = 'shift.html'; };
-
             const openPickerDropdown = (key) => {
                 toggleDropdown(key);
                 nextTick(() => {
@@ -1155,7 +1154,7 @@ try {
                 customBgStyle, formatTimeDisplay, sortedTodos, completedTodos, groupedTodos, 
                 deletedTodos, toggleLang, toggleNotifications, selectTheme, 
                 toggleCustomBg, triggerUpload, handleUpload, startAdding, editTodo, 
-                saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, goToShift, openPickerDropdown, 
+                saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, openPickerDropdown,
                 permanentDelete, addNewList, openDatePicker, closeSettings,
                 renderTrigger, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
