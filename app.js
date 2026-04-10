@@ -185,6 +185,7 @@ try {
                     confirmClearBin: 'Are you sure you want to permanently delete all items in the recycle bin?',
                     clearCache: '清除介面暫存並更新',
                     confirmClearCache: 'This will reset your theme and language settings, but your tasks will be preserved. Continue?',
+                    goToShiftTitle: 'Switch to Shift System', goToShiftMsg: 'Navigate to Glassy Shift?',
                     menu: 'Menu', analytics: 'Analytics', taskList: 'Task List'
                 },
                 zh: {
@@ -200,6 +201,7 @@ try {
                     confirmClearBin: '確定要永久刪除回收站中的所有項目嗎？',
                     clearCache: '清除介面暫存並更新',
                     confirmClearCache: '這將會重置主題與語言設置，但您的任務資料將會保留。確定要繼續嗎？',
+                    goToShiftTitle: '切換至輪班系統', goToShiftMsg: '確定要前往琉璃輪班嗎？',
                     menu: '選單', analytics: '數據分析', taskList: '任務列表'
                 }
             };
@@ -289,11 +291,21 @@ try {
             // --- Methods ---
             const toggleLang = () => settings.value.lang = settings.value.lang === 'en' ? 'zh' : 'en';
             
-            const toggleNotifications = async () => { 
-                if (!settings.value.notificationsEnabled) { 
-                    const p = await Notification.requestPermission(); 
-                    if (p === 'granted') settings.value.notificationsEnabled = true; 
-                } else settings.value.notificationsEnabled = false; 
+            const toggleNotifications = async () => {
+                if (settings.value.notificationsEnabled) {
+                    settings.value.notificationsEnabled = false;
+                    return;
+                }
+                if (!('Notification' in window)) {
+                    settings.value.notificationsEnabled = false;
+                    return;
+                }
+                try {
+                    const permission = await Notification.requestPermission();
+                    settings.value.notificationsEnabled = permission === 'granted';
+                } catch (e) {
+                    settings.value.notificationsEnabled = false;
+                }
             };
             
             const selectTheme = (id) => {
@@ -1116,7 +1128,14 @@ try {
                 };
             };
 
-            const goToShift = () => { window.location.href = 'shift.html'; };
+            const goToShift = () => {
+                confirmModal.value = {
+                    show: true,
+                    title: t.value.goToShiftTitle,
+                    message: t.value.goToShiftMsg,
+                    onConfirm: () => { window.location.href = 'shift.html'; }
+                };
+            };
 
             const openPickerDropdown = (key) => {
                 toggleDropdown(key);
