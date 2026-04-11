@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="style.css">
     <script src="effects.js" defer></script>
-    <script src="todo.js" defer></script>
+    <script src="todo.js?v=2.0" defer></script>
 </head>
 <body>
     <div id="error-reporter"></div>
@@ -50,11 +50,11 @@
                         
                         <transition name="fade">
                             <div v-show="dropdowns.navMenu" class="dropdown-menu glass w-48 mt-2 overflow-hidden" :style="glassStyle">
-                                <a href="index.html" class="dropdown-item flex items-center gap-3 active">
+                                <a href="javascript:void(0)" onclick="window.location.href='index.html'" class="dropdown-item flex items-center gap-3 active">
                                     <i data-lucide="check-square" class="w-4 h-4"></i>
                                     <span>琉璃待辦</span>
                                 </a>
-                                <a href="shift.html" class="dropdown-item flex items-center gap-3">
+                                <a href="javascript:void(0)" onclick="window.location.href='shift.html'" class="dropdown-item flex items-center gap-3">
                                     <i data-lucide="calendar" class="w-4 h-4"></i>
                                     <span>琉璃輪班</span>
                                 </a>
@@ -233,7 +233,7 @@
                             <div class="text-center py-20 glass rounded-[2.5rem] p-8" :style="glassStyle">
                                 <h2 class="text-2xl font-black mb-4">琉璃輪班已移至獨立頁面</h2>
                                 <p class="opacity-60 mb-8">請點擊上方標題切換，或直接前往輪班系統。</p>
-                                <a href="shift.html" class="glass-button px-8 py-4 inline-block bg-blue-600 text-white rounded-2xl font-black">前往輪班系統</a>
+                                <a href="javascript:void(0)" onclick="window.location.href='shift.html'" class="glass-button px-8 py-4 inline-block bg-blue-600 text-white rounded-2xl font-black">前往輪班系統</a>
                             </div>
                         </div>
                     </div>

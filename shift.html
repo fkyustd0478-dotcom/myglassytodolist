@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="shift_style.css">
     <script src="effects.js" defer></script>
-    <script src="shift.js" defer></script>
+    <script src="shift.js?v=2.0" defer></script>
 </head>
 <body :style="themeStyle" :class="isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode'">
     <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
@@ -34,11 +34,11 @@
                 
                 <transition name="fade">
                     <div v-show="dropdowns.navMenu" class="dropdown-menu glass w-48 mt-2 overflow-hidden" :style="glassStyle">
-                        <a href="index.html" class="dropdown-item flex items-center gap-3">
+                        <a href="javascript:void(0)" onclick="window.location.href='index.html'" class="dropdown-item flex items-center gap-3">
                             <i data-lucide="check-square" class="w-4 h-4"></i>
                             <span>琉璃待辦</span>
                         </a>
-                        <a href="shift.html" class="dropdown-item flex items-center gap-3 active">
+                        <a href="javascript:void(0)" onclick="window.location.href='shift.html'" class="dropdown-item flex items-center gap-3 active">
                             <i data-lucide="calendar" class="w-4 h-4"></i>
                             <span>琉璃輪班</span>
                         </a>
