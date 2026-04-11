@@ -13,7 +13,9 @@
     <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="shift_style.css">
     <script src="effects.js" defer></script>
-    <script src="shift.js?v=2.1" defer></script>
+    <script src="storage.js" defer></script>
+    <script src="nav.js" defer></script>
+    <script src="shift.js?v=2.2" defer></script>
 </head>
 <body :style="themeStyle" :class="isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode'">
     <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
@@ -24,16 +26,16 @@
 
         <!-- Header & Navigation (Level 1) -->
         <header class="flex justify-between items-center p-6 shrink-0 relative z-[1000]">
-            <div class="relative">
-                <button @click="toggleDropdown('navMenu')" 
-                        class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group" 
+            <div class="relative nav-capsule" @click.stop>
+                <button @click="toggleNavDropdown"
+                        class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group"
                         :style="glassStyle">
-                    <span class="text-lg font-black tracking-tight group-hover:text-blue-500 transition-colors">琉璃輪班</span>
+                    <span class="text-lg font-black tracking-tight group-hover:text-blue-500 transition-colors" v-text="currentPageTitle"></span>
                     <i data-lucide="chevron-down" class="w-4 h-4 opacity-40 group-hover:rotate-180 transition-transform"></i>
                 </button>
-                
+
                 <transition name="fade">
-                    <div v-show="dropdowns.navMenu" class="dropdown-menu glass w-48 mt-2 overflow-hidden" :style="glassStyle">
+                    <div v-show="navDropdownOpen" class="dropdown-menu glass w-48 mt-2 overflow-hidden" :style="glassStyle">
                         <a href="javascript:void(0)" onclick="window.location.href='index.html'" class="dropdown-item flex items-center gap-3">
                             <i data-lucide="check-square" class="w-4 h-4"></i>
                             <span>琉璃待辦</span>
@@ -41,6 +43,10 @@
                         <a href="javascript:void(0)" onclick="window.location.href='shift.html'" class="dropdown-item flex items-center gap-3 active">
                             <i data-lucide="calendar" class="w-4 h-4"></i>
                             <span>琉璃輪班</span>
+                        </a>
+                        <a href="javascript:void(0)" onclick="window.location.href='setting.html'" class="dropdown-item flex items-center gap-3">
+                            <i data-lucide="settings" class="w-4 h-4"></i>
+                            <span>系統設定</span>
                         </a>
                     </div>
                 </transition>
@@ -114,24 +120,14 @@
             </transition>
         </div>
 
-        <!-- Bottom-Right FAB: Shift & Payroll Settings -->
-        <div class="fixed bottom-[100px] right-4 z-[7500] flex flex-col gap-3 items-end">
-            <transition name="fade">
-                <div class="flex flex-col gap-2 items-end">
-                    <button @click="showShiftModal = true"
-                            class="glass flex items-center gap-2 px-4 py-2.5 rounded-full active:scale-95 transition-transform shadow-lg"
-                            :style="glassStyle">
-                        <i data-lucide="settings-2" class="w-4 h-4"></i>
-                        <span class="text-xs font-black">班別設定</span>
-                    </button>
-                    <button @click="showPayrollModal = true"
-                            class="glass flex items-center gap-2 px-4 py-2.5 rounded-full active:scale-95 transition-transform shadow-lg"
-                            :style="glassStyle">
-                        <i data-lucide="coins" class="w-4 h-4"></i>
-                        <span class="text-xs font-black">薪資設定</span>
-                    </button>
-                </div>
-            </transition>
+        <!-- Bottom-Right FAB: Tags Settings -->
+        <div class="fixed bottom-[100px] right-4 z-[7500]">
+            <button @click="showTagsModal = true"
+                    class="glass flex items-center gap-2 px-4 py-2.5 rounded-full active:scale-95 transition-transform shadow-lg"
+                    :style="glassStyle">
+                <i data-lucide="tags" class="w-4 h-4"></i>
+                <span class="text-xs font-black">標籤設定</span>
+            </button>
         </div>
 
         <!-- Bottom Navigation (Level 2) -->
@@ -156,7 +152,7 @@
 
         <!-- Backdrop Overlay (Level 3) -->
         <transition name="fade">
-            <div v-if="showSettings || showTodayTasks || showDayDetail || confirmModal.show || showShiftModal || showPayrollModal" class="modal-backdrop level-3" @click="showSettings = showTodayTasks = showDayDetail = confirmModal.show = showShiftModal = showPayrollModal = false"></div>
+            <div v-if="showSettings || showTodayTasks || showDayDetail || confirmModal.show || showTagsModal" class="modal-backdrop level-3" @click="showSettings = showTodayTasks = showDayDetail = confirmModal.show = showTagsModal = false"></div>
         </transition>
 
         <!-- Theme Settings Modal (top-right ⚙) -->
@@ -299,79 +295,81 @@
             </div>
         </transition>
 
-        <!-- Shift Settings Modal (班別設定) -->
+        <!-- Tags Settings Modal (標籤設定 — 班別 + 薪資) -->
         <transition name="slide-up">
-            <div v-if="showShiftModal" class="fixed inset-0 z-[8001] flex items-end justify-center p-4 pb-[100px]">
-                <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-sm overflow-y-auto max-h-[70vh] modal-content-level-3" :style="glassStyle" @click.stop>
+            <div v-if="showTagsModal" class="fixed inset-0 z-[8001] flex items-end justify-center p-4 pb-[100px]">
+                <div class="glass rounded-[2.5rem] p-6 space-y-6 w-full max-w-sm overflow-y-auto max-h-[75vh] modal-content-level-3" :style="glassStyle" @click.stop>
+                    <!-- Header -->
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <i data-lucide="settings-2" class="w-5 h-5 opacity-60"></i>
-                            <h2 class="text-xl font-black tracking-tight">班別設定</h2>
+                            <i data-lucide="tags" class="w-5 h-5 opacity-60"></i>
+                            <h2 class="text-xl font-black tracking-tight">標籤設定</h2>
                         </div>
-                        <button @click="showShiftModal = false" class="opacity-40 hover:opacity-100 transition-opacity">
+                        <button @click="showTagsModal = false" class="opacity-40 hover:opacity-100 transition-opacity">
                             <i data-lucide="x" class="w-5 h-5"></i>
                         </button>
                     </div>
-                    <div class="space-y-4">
-                        <div v-for="tag in shiftSettings.shiftTags" :key="tag.id" class="glass rounded-2xl p-4 space-y-3" :style="glassStyle">
-                            <div class="flex justify-between items-center">
-                                <input v-model="tag.name" class="bg-transparent font-bold text-sm focus:outline-none w-2/3">
-                                <button @click="removeShiftTag(tag.id)" class="text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <input v-model="tag.startTime" type="time" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] font-bold">
-                                <input v-model="tag.endTime" type="time" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] font-bold">
-                            </div>
-                            <input v-model="tag.color" type="color" class="w-full h-8 rounded-lg cursor-pointer bg-transparent border-none">
-                        </div>
-                        <button @click="addShiftTag" class="w-full py-3 glass rounded-xl border-2 border-dashed border-white/10 text-[10px] font-bold opacity-60">+ 新增班別</button>
-                    </div>
-                </div>
-            </div>
-        </transition>
 
-        <!-- Payroll Settings Modal (薪資設定) -->
-        <transition name="slide-up">
-            <div v-if="showPayrollModal" class="fixed inset-0 z-[8001] flex items-end justify-center p-4 pb-[100px]">
-                <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-sm modal-content-level-3" :style="glassStyle" @click.stop>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="coins" class="w-5 h-5 opacity-60"></i>
-                            <h2 class="text-xl font-black tracking-tight">薪資設定</h2>
+                    <!-- 班別 Section -->
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 opacity-40">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
+                            <h3 class="text-[10px] font-black uppercase tracking-widest">班別</h3>
                         </div>
-                        <button @click="showPayrollModal = false" class="opacity-40 hover:opacity-100 transition-opacity">
-                            <i data-lucide="x" class="w-5 h-5"></i>
-                        </button>
+                        <div class="space-y-3">
+                            <div v-for="tag in shiftSettings.shiftTags" :key="tag.id" class="glass rounded-2xl p-4 space-y-3" :style="glassStyle">
+                                <div class="flex justify-between items-center">
+                                    <input v-model="tag.name" class="bg-transparent font-bold text-sm focus:outline-none w-2/3">
+                                    <button @click="removeShiftTag(tag.id)" class="text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input v-model="tag.startTime" type="time" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] font-bold">
+                                    <input v-model="tag.endTime" type="time" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] font-bold">
+                                </div>
+                                <input v-model="tag.color" type="color" class="w-full h-8 rounded-lg cursor-pointer bg-transparent border-none">
+                            </div>
+                            <button @click="addShiftTag" class="w-full py-3 glass rounded-xl border-2 border-dashed border-white/10 text-[10px] font-bold opacity-60">+ 新增班別</button>
+                        </div>
                     </div>
-                    <div class="space-y-4">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">工作名稱</label>
-                            <input v-model="shiftSettings.payroll.name" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+
+                    <div class="h-px bg-white/10"></div>
+
+                    <!-- 薪資 Section -->
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 opacity-40">
+                            <i data-lucide="coins" class="w-4 h-4"></i>
+                            <h3 class="text-[10px] font-black uppercase tracking-widest">薪資設定</h3>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-4">
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">薪資計算</label>
-                                <select v-model="shiftSettings.payroll.method" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
-                                    <option value="monthly">月薪</option>
-                                    <option value="hourly">時薪</option>
-                                </select>
+                                <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">工作名稱</label>
+                                <input v-model="shiftSettings.payroll.name" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">金額</label>
-                                <input v-model.number="shiftSettings.payroll.rate" type="number" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">薪資計算</label>
+                                    <select v-model="shiftSettings.payroll.method" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                                        <option value="monthly">月薪</option>
+                                        <option value="hourly">時薪</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">金額</label>
+                                    <input v-model.number="shiftSettings.payroll.rate" type="number" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                                </div>
                             </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">發薪日</label>
-                                <input v-model.number="shiftSettings.payroll.payDay" type="number" min="1" max="31" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">遇假日處理</label>
-                                <select v-model="shiftSettings.payroll.holidayLogic" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
-                                    <option value="early">提前</option>
-                                    <option value="late">延後</option>
-                                </select>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">發薪日</label>
+                                    <input v-model.number="shiftSettings.payroll.payDay" type="number" min="1" max="31" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">遇假日處理</label>
+                                    <select v-model="shiftSettings.payroll.holidayLogic" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                                        <option value="early">提前</option>
+                                        <option value="late">延後</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>

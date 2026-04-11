@@ -1,17 +1,8 @@
 const { createApp, ref, computed, onMounted, watch, nextTick, reactive } = Vue;
 
-const StorageProvider = {
-    saveShiftData: (data) => localStorage.setItem('glassy_shift_data', JSON.stringify(data)),
-    getShiftData: () => JSON.parse(localStorage.getItem('glassy_shift_data') || '{}'),
-    saveShiftSettings: (settings) => localStorage.setItem('glassy_shift_settings', JSON.stringify(settings)),
-    getShiftSettings: () => JSON.parse(localStorage.getItem('glassy_shift_settings') || '{}'),
-    saveCommonSettings: (settings) => localStorage.setItem('todo_settings', JSON.stringify(settings)),
-    getCommonSettings: () => JSON.parse(localStorage.getItem('todo_settings') || '{}'),
-    getTodoData: () => JSON.parse(localStorage.getItem('todo_data') || '{"todos":[]}'),
-};
-
 const app = createApp({
     setup() {
+        const { navDropdownOpen, currentPageTitle, toggleNavDropdown } = useNav();
         // --- State ---
         const activeTab = ref('calendar'); 
         const calendarDate = ref(new Date());
@@ -57,8 +48,7 @@ const app = createApp({
         const showDayDetail = ref(false);
         const selectedDay = ref(null); 
 
-        const showShiftModal = ref(false);
-        const showPayrollModal = ref(false);
+        const showTagsModal = ref(false);
 
         const confirmModal = reactive({
             show: false,
@@ -95,8 +85,7 @@ const app = createApp({
         ];
 
         const dropdowns = reactive({
-            theme: false,
-            navMenu: false
+            theme: false
         });
 
         const toggleDropdown = (key) => {
@@ -149,7 +138,7 @@ const app = createApp({
         const isAnyModalOpen = computed(() => {
             return showSettings.value || showTodayTasks.value || showDayDetail.value ||
                    jumpPicker.value.show || confirmModal.show ||
-                   showShiftModal.value || showPayrollModal.value;
+                   showTagsModal.value;
         });
         
         const themeStyle = computed(() => ({})); // Handled by bg-layer and custom-bg-layer
@@ -454,7 +443,6 @@ const app = createApp({
 
         onMounted(() => {
             confirmModal.show = false;
-            dropdowns.navMenu = false;
             setupEffects();
             if (window.lucide) lucide.createIcons();
 
@@ -501,7 +489,8 @@ const app = createApp({
             triggerUpload, handleUpload, clearCustomBg, fileInput, glassStyle, isAnyModalOpen,
             themeClasses, customBgStyle, t, otherThemes, selectDropdownOption, toggleLang,
             toggleNotifications, toggleCustomBg, selectTheme,
-            showShiftModal, showPayrollModal
+            showTagsModal,
+            navDropdownOpen, currentPageTitle, toggleNavDropdown
         };
     }
 });

@@ -3,90 +3,9 @@ try {
 
     const APP_VERSION = '1.2.0';
 
-    // --- Modular Storage Provider ---
-    const StorageProvider = {
-        saveSettings(settings) {
-            localStorage.setItem('todo_settings', JSON.stringify(settings));
-        },
-        loadSettings() {
-            const saved = localStorage.getItem('todo_settings');
-            return saved ? JSON.parse(saved) : null;
-        },
-        saveData(data) {
-            localStorage.setItem('todo_data', JSON.stringify(data));
-        },
-        loadData() {
-            const saved = localStorage.getItem('todo_data');
-            return saved ? JSON.parse(saved) : null;
-        },
-        saveShiftData(data) {
-            localStorage.setItem('shift_data', JSON.stringify(data));
-        },
-        loadShiftData() {
-            const saved = localStorage.getItem('shift_data');
-            return saved ? JSON.parse(saved) : null;
-        }
-    };
-
-    // --- IndexedDB Provider for Blobs ---
-    const ImageDB = {
-        dbName: 'glassy-todo-blobs',
-        storeName: 'images',
-        db: null,
-
-        async init() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(this.dbName, 1);
-                request.onupgradeneeded = (e) => {
-                    const db = e.target.result;
-                    if (!db.objectStoreNames.contains(this.storeName)) {
-                        db.createObjectStore(this.storeName);
-                    }
-                };
-                request.onsuccess = (e) => {
-                    this.db = e.target.result;
-                    resolve();
-                };
-                request.onerror = (e) => reject(e);
-            });
-        },
-
-        async saveBlob(id, blob) {
-            if (!this.db) await this.init();
-            return new Promise((resolve, reject) => {
-                const transaction = this.db.transaction([this.storeName], 'readwrite');
-                const store = transaction.objectStore(this.storeName);
-                const request = store.put(blob, id);
-                request.onsuccess = () => resolve();
-                request.onerror = (e) => reject(e);
-            });
-        },
-
-        async getBlob(id) {
-            if (!this.db) await this.init();
-            return new Promise((resolve, reject) => {
-                const transaction = this.db.transaction([this.storeName], 'readonly');
-                const store = transaction.objectStore(this.storeName);
-                const request = store.get(id);
-                request.onsuccess = (e) => resolve(e.target.result);
-                request.onerror = (e) => reject(e);
-            });
-        },
-
-        async deleteBlob(id) {
-            if (!this.db) await this.init();
-            return new Promise((resolve, reject) => {
-                const transaction = this.db.transaction([this.storeName], 'readwrite');
-                const store = transaction.objectStore(this.storeName);
-                const request = store.delete(id);
-                request.onsuccess = () => resolve();
-                request.onerror = (e) => reject(e);
-            });
-        }
-    };
-
     createApp({
         setup() {
+            const { navDropdownOpen, currentPageTitle, toggleNavDropdown } = useNav();
             // --- State ---
             const todos = ref([]);
             const lists = ref([
@@ -610,8 +529,7 @@ try {
                 month: false,
                 day: false,
                 hour: false,
-                minute: false,
-                navMenu: false
+                minute: false
             });
 
             const toggleDropdown = (key) => {
@@ -1136,7 +1054,8 @@ try {
                 showSettingsModal,
                 isMenuOpen,
                 appMode,
-                modeTitle
+                modeTitle,
+                navDropdownOpen, currentPageTitle, toggleNavDropdown
             };
         }
     }).mount('#app');
