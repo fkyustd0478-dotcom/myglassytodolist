@@ -22,7 +22,9 @@
     <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="style.css">
     <script src="effects.js" defer></script>
-    <script src="app.js" defer></script>
+    <script src="storage.js" defer></script>
+    <script src="nav.js" defer></script>
+    <script src="todo.js?v=2.1" defer></script>
 </head>
 <body>
     <div id="error-reporter"></div>
@@ -40,23 +42,27 @@
             <div class="shrink-0 space-y-4">
                 <header class="flex justify-between items-center">
                     <!-- Navigation Menu -->
-                    <div class="relative">
-                        <button @click="toggleDropdown('navMenu')" 
-                                class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group" 
+                    <div class="relative nav-capsule" @click.stop>
+                        <button @click="toggleNavDropdown"
+                                class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group"
                                 :style="glassStyle">
-                            <span class="text-lg font-black tracking-tight group-hover:text-blue-500 transition-colors">琉璃待辦</span>
+                            <span class="text-lg font-black tracking-tight group-hover:text-blue-500 transition-colors" v-text="currentPageTitle"></span>
                             <i data-lucide="chevron-down" class="w-4 h-4 opacity-40 group-hover:rotate-180 transition-transform"></i>
                         </button>
-                        
+
                         <transition name="fade">
-                            <div v-show="dropdowns.navMenu" class="dropdown-menu glass w-48 mt-2 overflow-hidden" :style="glassStyle">
-                                <a href="index.html" class="dropdown-item flex items-center gap-3 active">
+                            <div v-show="navDropdownOpen" class="dropdown-menu glass w-48 mt-2 overflow-hidden" :style="glassStyle">
+                                <a href="javascript:void(0)" onclick="window.location.href='index.html'" class="dropdown-item flex items-center gap-3 active">
                                     <i data-lucide="check-square" class="w-4 h-4"></i>
                                     <span>琉璃待辦</span>
                                 </a>
-                                <a href="shift.html" class="dropdown-item flex items-center gap-3">
+                                <a href="javascript:void(0)" onclick="window.location.href='shift.html'" class="dropdown-item flex items-center gap-3">
                                     <i data-lucide="calendar" class="w-4 h-4"></i>
                                     <span>琉璃輪班</span>
+                                </a>
+                                <a href="javascript:void(0)" onclick="window.location.href='setting.html'" class="dropdown-item flex items-center gap-3">
+                                    <i data-lucide="settings" class="w-4 h-4"></i>
+                                    <span>系統設定</span>
                                 </a>
                             </div>
                         </transition>
@@ -233,7 +239,7 @@
                             <div class="text-center py-20 glass rounded-[2.5rem] p-8" :style="glassStyle">
                                 <h2 class="text-2xl font-black mb-4">琉璃輪班已移至獨立頁面</h2>
                                 <p class="opacity-60 mb-8">請點擊上方標題切換，或直接前往輪班系統。</p>
-                                <a href="shift.html" class="glass-button px-8 py-4 inline-block bg-blue-600 text-white rounded-2xl font-black">前往輪班系統</a>
+                                <a href="javascript:void(0)" onclick="window.location.href='shift.html'" class="glass-button px-8 py-4 inline-block bg-blue-600 text-white rounded-2xl font-black">前往輪班系統</a>
                             </div>
                         </div>
                     </div>
@@ -395,10 +401,6 @@
                 </div>
             </transition>
 
-            <!-- FAB -->
-            <button v-show="view === 'active' && appMode === 'todo'" @click="startAdding" class="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-all z-50 hover:bg-blue-500">
-                <i data-lucide="plus" class="w-8 h-8"></i>
-            </button>
 
             <!-- Add/Edit Modal -->
             <transition name="slide-up">
@@ -477,7 +479,7 @@
                             {{ t.nextGen }}: {{ calculateNextGen(form.recurring, form.date) }}
                         </p>
 
-                        <button @click="saveTodo" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform text-xl border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
+                        <button @pointerdown.prevent @click="saveTodo" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform text-xl border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
                             {{ isEditing ? t.save : t.add }}
                         </button>
                     </div>
@@ -497,7 +499,7 @@
                                 <div class="flex flex-col items-center gap-1">
                                     <button @click="updatePickerDate('year', new Date(form.date).getFullYear() + 1)" class="p-1 opacity-40 hover:opacity-100 transition-opacity"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
                                     <div class="custom-dropdown w-24">
-                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('year')">
+                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="openPickerDropdown('year')">
                                             <span>{{ (form && form.date) ? new Date(form.date).getFullYear() : '----' }}</span>
                                             <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                         </div>
@@ -514,7 +516,7 @@
                                 <div class="flex flex-col items-center gap-1">
                                     <button @click="updatePickerDate('month', new Date(form.date).getMonth() + 2)" class="p-1 opacity-40 hover:opacity-100 transition-opacity"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
                                     <div class="custom-dropdown w-16">
-                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('month')">
+                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="openPickerDropdown('month')">
                                             <span>{{ (form && form.date) ? (new Date(form.date).getMonth() + 1).toString().padStart(2, '0') : '--' }}</span>
                                             <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                         </div>
@@ -531,7 +533,7 @@
                                 <div class="flex flex-col items-center gap-1">
                                     <button @click="updatePickerDate('day', new Date(form.date).getDate() + 1)" class="p-1 opacity-40 hover:opacity-100 transition-opacity"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
                                     <div class="custom-dropdown w-16">
-                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('day')">
+                                        <div class="dropdown-trigger glass rounded-xl p-2 text-xs font-bold" :style="glassStyle" @click="openPickerDropdown('day')">
                                             <span>{{ new Date(form.date).getDate().toString().padStart(2, '0') }}</span>
                                             <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                         </div>
@@ -551,7 +553,7 @@
                             <div class="flex justify-center items-center gap-4">
                                 <!-- Hour -->
                                 <div class="custom-dropdown flex-1">
-                                    <div class="dropdown-trigger glass rounded-xl p-3 text-sm font-bold" :style="glassStyle" @click="toggleDropdown('hour')">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-sm font-bold" :style="glassStyle" @click="openPickerDropdown('hour')">
                                         <span>{{ form.time.hour.toString().padStart(2, '0') }}</span>
                                         <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>
@@ -564,7 +566,7 @@
                                 <span class="font-black text-2xl opacity-40">:</span>
                                 <!-- Minute -->
                                 <div class="custom-dropdown flex-1">
-                                    <div class="dropdown-trigger glass rounded-xl p-3 text-sm font-bold" :style="glassStyle" @click="toggleDropdown('minute')">
+                                    <div class="dropdown-trigger glass rounded-xl p-3 text-sm font-bold" :style="glassStyle" @click="openPickerDropdown('minute')">
                                         <span>{{ form.time.minute.toString().padStart(2, '0') }}</span>
                                         <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
                                     </div>
@@ -595,6 +597,10 @@
                 <button @click="view = 'bin'" class="nav-item" :class="{ active: view === 'bin' }">
                     <i data-lucide="trash-2" class="w-6 h-6"></i>
                     <span class="text-[10px] font-bold uppercase">{{ t.bin }}</span>
+                </button>
+                <button v-show="appMode === 'todo'" @click="startAdding" class="nav-item nav-add-btn">
+                    <i data-lucide="plus" class="w-6 h-6"></i>
+                    <span class="text-[10px] font-bold uppercase">{{ t.add }}</span>
                 </button>
             </nav>
 
@@ -667,10 +673,10 @@
 
             <!-- Confirmation Modal -->
             <transition name="fade">
-                <div v-show="confirmModal.show" :key="'confirm-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-4" @click.self="confirmModal.show = false">
+                <div v-if="confirmModal && confirmModal.show" :key="'confirm-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-4" @click.self="confirmModal.show = false">
                     <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center modal-content-level-4" :style="glassStyle" @click.stop>
-                        <h3 class="text-xl font-black tracking-tight">{{ confirmModal.title }}</h3>
-                        <p class="text-sm opacity-60 leading-relaxed">{{ confirmModal.message }}</p>
+                        <h3 class="text-xl font-black tracking-tight" v-text="confirmModal.title || ''"></h3>
+                        <p class="text-sm opacity-60 leading-relaxed" v-text="confirmModal.message || ''"></p>
                         <div class="flex gap-3">
                             <button @click="confirmModal.show = false" class="flex-1 py-3 rounded-xl glass text-xs font-bold">{{ t.cancel }}</button>
                             <button @click="executeConfirm" class="flex-1 py-3 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-widest border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
