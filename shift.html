@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="shift_style.css">
     <script src="effects.js" defer></script>
-    <script src="shift.js?v=2.0" defer></script>
+    <script src="shift.js?v=2.1" defer></script>
 </head>
 <body :style="themeStyle" :class="isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode'">
     <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
@@ -114,6 +114,26 @@
             </transition>
         </div>
 
+        <!-- Bottom-Right FAB: Shift & Payroll Settings -->
+        <div class="fixed bottom-[100px] right-4 z-[7500] flex flex-col gap-3 items-end">
+            <transition name="fade">
+                <div class="flex flex-col gap-2 items-end">
+                    <button @click="showShiftModal = true"
+                            class="glass flex items-center gap-2 px-4 py-2.5 rounded-full active:scale-95 transition-transform shadow-lg"
+                            :style="glassStyle">
+                        <i data-lucide="settings-2" class="w-4 h-4"></i>
+                        <span class="text-xs font-black">班別設定</span>
+                    </button>
+                    <button @click="showPayrollModal = true"
+                            class="glass flex items-center gap-2 px-4 py-2.5 rounded-full active:scale-95 transition-transform shadow-lg"
+                            :style="glassStyle">
+                        <i data-lucide="coins" class="w-4 h-4"></i>
+                        <span class="text-xs font-black">薪資設定</span>
+                    </button>
+                </div>
+            </transition>
+        </div>
+
         <!-- Bottom Navigation (Level 2) -->
         <nav class="bottom-nav glass level-2">
             <div class="nav-item" @click="showTodayTasks = true">
@@ -129,223 +149,229 @@
                 <span>輪班</span>
             </div>
             <div class="nav-item" @click="showSettings = true">
-                <div class="nav-icon-wrapper"><i data-lucide="settings"></i></div>
-                <span>設定</span>
+                <div class="nav-icon-wrapper"><i data-lucide="palette"></i></div>
+                <span>主題</span>
             </div>
         </nav>
 
         <!-- Backdrop Overlay (Level 3) -->
         <transition name="fade">
-            <div v-if="showSettings || showTodayTasks || showDayDetail || confirmModal.show" class="modal-backdrop level-3" @click="showSettings = showTodayTasks = showDayDetail = confirmModal.show = false"></div>
+            <div v-if="showSettings || showTodayTasks || showDayDetail || confirmModal.show || showShiftModal || showPayrollModal" class="modal-backdrop level-3" @click="showSettings = showTodayTasks = showDayDetail = confirmModal.show = showShiftModal = showPayrollModal = false"></div>
         </transition>
 
-        <!-- Settings Modal (Persistent DOM) -->
+        <!-- Theme Settings Modal (top-right ⚙) -->
         <transition name="fade">
             <div v-show="showSettings" class="fixed inset-0 z-[8001] flex items-center justify-center p-6">
-                <div key="settings-root" class="w-full h-full flex items-center justify-center">
-                    <div class="setting-overlay absolute inset-0 bg-black/60 backdrop-blur-md modal-backdrop-level-3" @click="showSettings = false"></div>
-                    <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-md setting-window relative overflow-y-auto max-h-[85vh] modal-content-level-3" :style="glassStyle" @click.stop>
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-xl font-black tracking-tight">{{ t.settings }}</h2>
+                <div class="w-full h-full flex items-center justify-center">
+                    <div class="setting-overlay absolute inset-0 bg-black/60 backdrop-blur-md" @click="showSettings = false"></div>
+                    <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-sm setting-window relative overflow-y-auto max-h-[85vh] modal-content-level-3" :style="glassStyle" @click.stop>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="palette" class="w-5 h-5 opacity-60"></i>
+                                <h2 class="text-xl font-black tracking-tight">主題設定</h2>
+                            </div>
                             <button @click="showSettings = false" class="opacity-40 hover:opacity-100 transition-opacity">
                                 <i data-lucide="x" class="w-5 h-5"></i>
                             </button>
                         </div>
 
-                        <div class="flex gap-2 mb-2 p-1 glass rounded-2xl" :style="glassStyle">
-                            <button v-for="tab in ['payroll', 'shifts', 'system']" 
-                                    :key="tab"
-                                    @click="settingsTab = tab"
-                                    class="flex-1 py-2 rounded-xl text-[10px] font-bold transition-all"
-                                    :class="settingsTab === tab ? 'bg-blue-500 text-white shadow-lg' : 'opacity-40'">
-                                {{ tab === 'payroll' ? '發薪' : tab === 'shifts' ? '班別' : '系統' }}
-                            </button>
-                        </div>
-
-                        <div v-show="settingsTab === 'payroll'" class="space-y-4">
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">工作名稱</label>
-                                <input v-model="shiftSettings.payroll.name" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                        <!-- Theme Buttons -->
+                        <section class="space-y-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button @click="selectTheme('light')"
+                                    class="h-12 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1"
+                                    :class="(!commonSettings.useCustomBg && commonSettings.theme === 'light') ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                                    <i data-lucide="sun" class="w-4 h-4"></i>
+                                    <span class="text-[10px] font-bold">{{ t.light }}</span>
+                                </button>
+                                <button @click="selectTheme('dark')"
+                                    class="h-12 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1"
+                                    :class="(!commonSettings.useCustomBg && commonSettings.theme === 'dark') ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                                    <i data-lucide="moon" class="w-4 h-4"></i>
+                                    <span class="text-[10px] font-bold">{{ t.dark }}</span>
+                                </button>
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">薪資計算</label>
-                                    <select v-model="shiftSettings.payroll.method" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
-                                        <option value="monthly">月薪</option>
-                                        <option value="hourly">時薪</option>
-                                    </select>
+                            <div class="custom-dropdown">
+                                <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('theme')">
+                                    <span>{{ t[commonSettings.theme] || commonSettings.theme }}</span>
+                                    <i data-lucide="chevron-down" class="w-3 h-3 opacity-40" :class="{ 'rotate-180': dropdowns.theme }"></i>
                                 </div>
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">金額</label>
-                                    <input v-model.number="shiftSettings.payroll.rate" type="number" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">發薪日</label>
-                                    <input v-model.number="shiftSettings.payroll.payDay" type="number" min="1" max="31" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">遇假日處理</label>
-                                    <select v-model="shiftSettings.payroll.holidayLogic" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
-                                        <option value="early">提前</option>
-                                        <option value="late">延後</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-show="settingsTab === 'shifts'" class="space-y-4">
-                            <div v-for="(tag, index) in shiftSettings.shiftTags" :key="tag.id" class="glass rounded-2xl p-4 border border-white/5 space-y-3" :style="glassStyle">
-                                <div class="flex justify-between items-center">
-                                    <input v-model="tag.name" class="bg-transparent font-bold text-sm focus:outline-none w-2/3">
-                                    <button @click="removeShiftTag(tag.id)" class="text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </div>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <input v-model="tag.startTime" type="time" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] font-bold">
-                                    <input v-model="tag.endTime" type="time" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] font-bold">
-                                </div>
-                                <input v-model="tag.color" type="color" class="w-full h-8 rounded-lg cursor-pointer bg-transparent border-none">
-                            </div>
-                            <button @click="addShiftTag" class="w-full py-3 glass rounded-xl border-2 border-dashed border-white/10 text-[10px] font-bold opacity-60">+ 新增班別</button>
-                        </div>
-                        
-                        <div v-show="settingsTab === 'system'" class="space-y-4">
-                            <!-- Theme Section -->
-                            <section class="space-y-3">
-                                <div class="flex items-center gap-2 opacity-40">
-                                    <i data-lucide="palette" class="w-4 h-4"></i>
-                                    <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.theme }}</h3>
-                                </div>
-                                
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button @click="selectTheme('light')" 
-                                        class="h-12 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1"
-                                        :class="(!commonSettings.useCustomBg && commonSettings.theme === 'light') ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
-                                        <i data-lucide="sun" class="w-4 h-4"></i>
-                                        <span class="text-[10px] font-bold">{{ t.light }}</span>
-                                    </button>
-                                    <button @click="selectTheme('dark')" 
-                                        class="h-12 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1"
-                                        :class="(!commonSettings.useCustomBg && commonSettings.theme === 'dark') ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
-                                        <i data-lucide="moon" class="w-4 h-4"></i>
-                                        <span class="text-[10px] font-bold">{{ t.dark }}</span>
-                                    </button>
-                                </div>
-
-                                <div class="space-y-1">
-                                    <div class="custom-dropdown">
-                                        <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('theme')">
-                                            <span>{{ t[commonSettings.theme] || commonSettings.theme }}</span>
-                                            <i data-lucide="chevron-down" class="w-3 h-3 opacity-40" :class="{ 'rotate-180': dropdowns.theme }"></i>
+                                <transition name="fade">
+                                    <div v-show="dropdowns.theme" class="dropdown-menu glass" :style="glassStyle">
+                                        <div v-for="th in otherThemes" :key="th.id"
+                                            class="dropdown-item py-2 text-xs" :class="{ active: commonSettings.theme === th.id }"
+                                            @click="selectDropdownOption('theme', th.id)">
+                                            {{ t[th.id] }}
                                         </div>
-                                        <transition name="fade">
-                                            <div v-show="dropdowns.theme" class="dropdown-menu glass" :style="glassStyle">
-                                                <div v-for="th in otherThemes" :key="th.id" 
-                                                    class="dropdown-item py-2 text-xs" :class="{ active: commonSettings.theme === th.id }"
-                                                    @click="selectDropdownOption('theme', th.id)">
-                                                    {{ t[th.id] }}
-                                                </div>
-                                            </div>
-                                        </transition>
                                     </div>
-                                </div>
-                            </section>
+                                </transition>
+                            </div>
+                        </section>
 
-                            <!-- Effects Section -->
-                            <section class="space-y-3">
+                        <!-- Effects -->
+                        <section class="space-y-3">
+                            <div class="flex items-center gap-2 opacity-40">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                <h3 class="text-[10px] font-black uppercase tracking-widest">視覺特效</h3>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button v-for="eff in ['none', 'cherry', 'rain', 'snow']" :key="eff"
+                                        @click="commonSettings.effect = eff"
+                                        class="h-10 rounded-xl border-2 transition-all flex items-center justify-center text-[10px] font-bold"
+                                        :class="commonSettings.effect === eff ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                                    {{ eff === 'none' ? '無' : (eff === 'cherry' ? '櫻花' : (eff === 'rain' ? '下雨' : '下雪')) }}
+                                </button>
+                            </div>
+                        </section>
+
+                        <!-- Custom Background -->
+                        <section class="space-y-3">
+                            <div class="flex justify-between items-center px-1">
                                 <div class="flex items-center gap-2 opacity-40">
-                                    <i data-lucide="sparkles" class="w-4 h-4"></i>
-                                    <h3 class="text-[10px] font-black uppercase tracking-widest">視覺特效</h3>
+                                    <i data-lucide="image" class="w-4 h-4"></i>
+                                    <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.custom }}</h3>
                                 </div>
-                                <div class="grid grid-cols-4 gap-2">
-                                    <button v-for="eff in ['none', 'cherry', 'rain', 'snow']" 
-                                            :key="eff"
-                                            @click="commonSettings.effect = eff"
-                                            class="h-10 rounded-xl border-2 transition-all flex items-center justify-center text-[10px] font-bold"
-                                            :class="commonSettings.effect === eff ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
-                                        {{ eff === 'none' ? '無' : (eff === 'cherry' ? '櫻花' : (eff === 'rain' ? '下雨' : '下雪')) }}
+                                <div class="flex gap-3">
+                                    <button v-show="commonSettings.customBg" @click="clearCustomBg" class="text-[10px] font-black text-red-500 uppercase tracking-widest">{{ t.removeImg }}</button>
+                                    <button v-show="commonSettings.customBg" @click="toggleCustomBg" class="text-[10px] font-black text-blue-500 uppercase tracking-widest">
+                                        {{ commonSettings.useCustomBg ? t.disable : t.enable }}
                                     </button>
                                 </div>
-                            </section>
+                            </div>
+                            <button @click="triggerUpload" class="w-full h-16 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all overflow-hidden relative"
+                                :class="commonSettings.useCustomBg ? 'border-blue-500 bg-blue-500/10' : 'border-white/10 bg-white/5'">
+                                <img v-show="commonSettings.customBg" :src="commonSettings.customBg" class="absolute inset-0 w-full h-full object-cover opacity-40">
+                                <i data-lucide="upload" class="w-4 h-4 relative z-10"></i>
+                                <span class="text-[10px] font-bold relative z-10">{{ commonSettings.customBg ? 'Change Photo' : t.upload }}</span>
+                            </button>
+                            <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleUpload">
+                        </section>
 
-                            <!-- Custom Background Section -->
-                            <section class="space-y-3">
-                                <div class="flex justify-between items-center px-1">
-                                    <div class="flex items-center gap-2 opacity-40">
-                                        <i data-lucide="image" class="w-4 h-4"></i>
-                                        <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.custom }}</h3>
-                                    </div>
-                                    <div class="flex gap-3">
-                                        <button v-show="commonSettings.customBg" @click="clearCustomBg" class="text-[10px] font-black text-red-500 uppercase tracking-widest">
-                                            {{ t.removeImg }}
-                                        </button>
-                                        <button v-show="commonSettings.customBg" @click="toggleCustomBg" class="text-[10px] font-black text-blue-500 uppercase tracking-widest">
-                                            {{ commonSettings.useCustomBg ? t.disable : t.enable }}
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div class="relative group">
-                                    <button @click="triggerUpload" class="w-full h-16 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all overflow-hidden relative"
-                                        :class="(commonSettings.useCustomBg) ? 'border-blue-500 bg-blue-500/10' : 'border-white/10 bg-white/5'">
-                                        <img v-show="commonSettings.customBg" :src="commonSettings.customBg" class="absolute inset-0 w-full h-full object-cover opacity-40">
-                                        <i data-lucide="upload" class="w-4 h-4 relative z-10"></i>
-                                        <span class="text-[10px] font-bold relative z-10">{{ commonSettings.customBg ? 'Change Photo' : t.upload }}</span>
-                                    </button>
-                                </div>
-                                <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleUpload">
-                            </section>
+                        <!-- Opacity Slider -->
+                        <section v-show="commonSettings.useCustomBg" class="space-y-3">
+                            <div class="flex justify-between items-center px-1">
+                                <h3 class="text-[10px] font-black opacity-40 uppercase tracking-widest">{{ t.uiOpacity }}</h3>
+                                <span class="text-[10px] font-black text-blue-500">{{ Math.round(commonSettings.customBgOpacity * 100) }}%</span>
+                            </div>
+                            <input type="range" min="0" max="1" step="0.01" v-model="commonSettings.customBgOpacity" class="w-full px-1">
+                        </section>
 
-                            <!-- Opacity Slider -->
-                            <section v-show="commonSettings.useCustomBg" class="space-y-4 pt-2">
-                                <div class="flex justify-between items-center px-1">
-                                    <h3 class="text-[10px] font-black opacity-40 uppercase tracking-widest">{{ t.uiOpacity }}</h3>
-                                    <span class="text-[10px] font-black text-blue-500">{{ Math.round(commonSettings.customBgOpacity * 100) }}%</span>
-                                </div>
-                                <div class="px-1">
-                                    <input type="range" min="0" max="1" step="0.01" v-model="commonSettings.customBgOpacity" class="w-full">
-                                </div>
-                            </section>
+                        <div class="h-px bg-white/10 mx-2"></div>
 
-                            <div class="h-px bg-white/10 mx-2"></div>
-
-                            <!-- Cache Management -->
-                            <section class="space-y-4 pt-2">
-                                <div class="flex items-center gap-2 opacity-40 px-1">
-                                    <i data-lucide="refresh-cw" class="w-3 h-3"></i>
-                                    <h3 class="text-[9px] font-black uppercase tracking-widest">System</h3>
+                        <!-- Language & Notifications -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <section class="flex flex-col items-center gap-3 p-4 glass rounded-2xl" :style="glassStyle">
+                                <div class="flex items-center gap-2 opacity-40">
+                                    <i data-lucide="languages" class="w-3 h-3"></i>
+                                    <h3 class="text-[9px] font-black uppercase tracking-widest">{{ t.lang }}</h3>
                                 </div>
-                                <button @click="clearCacheAndUpdate" class="w-full py-3 rounded-xl bg-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
-                                    {{ t.clearCache }}
+                                <button @click="toggleLang" class="w-full py-2 rounded-xl glass text-[10px] font-bold" :style="glassStyle">
+                                    {{ commonSettings.lang === 'en' ? 'EN' : 'TW' }}
                                 </button>
                             </section>
+                            <section class="flex flex-col items-center gap-3 p-4 glass rounded-2xl" :style="glassStyle">
+                                <div class="flex items-center gap-2 opacity-40">
+                                    <i data-lucide="bell" class="w-3 h-3"></i>
+                                    <h3 class="text-[9px] font-black uppercase tracking-widest">{{ t.notifications }}</h3>
+                                </div>
+                                <button @click="toggleNotifications" class="w-12 h-6 rounded-full relative transition-all duration-300"
+                                    :class="commonSettings.notificationsEnabled ? 'bg-blue-500' : 'bg-white/10'">
+                                    <div class="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300"
+                                        :style="{ left: commonSettings.notificationsEnabled ? '26px' : '4px' }"></div>
+                                </button>
+                            </section>
+                        </div>
 
-                            <div class="h-px bg-white/10 mx-2"></div>
+                        <div class="h-px bg-white/10 mx-2"></div>
 
-                            <!-- Language & Notifications (Side-by-Side) -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <section class="flex flex-col items-center gap-3 p-4 glass rounded-2xl border border-white/5" :style="glassStyle">
-                                    <div class="flex items-center gap-2 opacity-40">
-                                        <i data-lucide="languages" class="w-3 h-3"></i>
-                                        <h3 class="text-[9px] font-black uppercase tracking-widest">{{ t.lang }}</h3>
-                                    </div>
-                                    <button @click="toggleLang" class="w-full py-2 rounded-xl glass text-[10px] font-bold border border-white/5" :style="glassStyle">
-                                        {{ commonSettings.lang === 'en' ? 'EN' : 'TW' }}
-                                    </button>
-                                </section>
+                        <!-- Cache -->
+                        <section class="space-y-3 pb-2">
+                            <div class="flex items-center gap-2 opacity-40 px-1">
+                                <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                                <h3 class="text-[9px] font-black uppercase tracking-widest">System</h3>
+                            </div>
+                            <button @click="clearCacheAndUpdate" class="w-full py-3 rounded-xl bg-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
+                                {{ t.clearCache }}
+                            </button>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </transition>
 
-                                <section class="flex flex-col items-center gap-3 p-4 glass rounded-2xl border border-white/5" :style="glassStyle">
-                                    <div class="flex items-center gap-2 opacity-40">
-                                        <i data-lucide="bell" class="w-3 h-3"></i>
-                                        <h3 class="text-[9px] font-black uppercase tracking-widest">{{ t.notifications }}</h3>
-                                    </div>
-                                    <button @click="toggleNotifications" class="w-12 h-6 rounded-full relative transition-all duration-300" 
-                                        :class="commonSettings.notificationsEnabled ? 'bg-blue-500' : 'bg-white/10'">
-                                        <div class="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300" 
-                                            :style="{ left: commonSettings.notificationsEnabled ? '26px' : '4px' }"></div>
-                                    </button>
-                                </section>
+        <!-- Shift Settings Modal (班別設定) -->
+        <transition name="slide-up">
+            <div v-if="showShiftModal" class="fixed inset-0 z-[8001] flex items-end justify-center p-4 pb-[100px]">
+                <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-sm overflow-y-auto max-h-[70vh] modal-content-level-3" :style="glassStyle" @click.stop>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="settings-2" class="w-5 h-5 opacity-60"></i>
+                            <h2 class="text-xl font-black tracking-tight">班別設定</h2>
+                        </div>
+                        <button @click="showShiftModal = false" class="opacity-40 hover:opacity-100 transition-opacity">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div v-for="tag in shiftSettings.shiftTags" :key="tag.id" class="glass rounded-2xl p-4 space-y-3" :style="glassStyle">
+                            <div class="flex justify-between items-center">
+                                <input v-model="tag.name" class="bg-transparent font-bold text-sm focus:outline-none w-2/3">
+                                <button @click="removeShiftTag(tag.id)" class="text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input v-model="tag.startTime" type="time" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] font-bold">
+                                <input v-model="tag.endTime" type="time" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] font-bold">
+                            </div>
+                            <input v-model="tag.color" type="color" class="w-full h-8 rounded-lg cursor-pointer bg-transparent border-none">
+                        </div>
+                        <button @click="addShiftTag" class="w-full py-3 glass rounded-xl border-2 border-dashed border-white/10 text-[10px] font-bold opacity-60">+ 新增班別</button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Payroll Settings Modal (薪資設定) -->
+        <transition name="slide-up">
+            <div v-if="showPayrollModal" class="fixed inset-0 z-[8001] flex items-end justify-center p-4 pb-[100px]">
+                <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-sm modal-content-level-3" :style="glassStyle" @click.stop>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="coins" class="w-5 h-5 opacity-60"></i>
+                            <h2 class="text-xl font-black tracking-tight">薪資設定</h2>
+                        </div>
+                        <button @click="showPayrollModal = false" class="opacity-40 hover:opacity-100 transition-opacity">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">工作名稱</label>
+                            <input v-model="shiftSettings.payroll.name" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">薪資計算</label>
+                                <select v-model="shiftSettings.payroll.method" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                                    <option value="monthly">月薪</option>
+                                    <option value="hourly">時薪</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">金額</label>
+                                <input v-model.number="shiftSettings.payroll.rate" type="number" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">發薪日</label>
+                                <input v-model.number="shiftSettings.payroll.payDay" type="number" min="1" max="31" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">遇假日處理</label>
+                                <select v-model="shiftSettings.payroll.holidayLogic" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                                    <option value="early">提前</option>
+                                    <option value="late">延後</option>
+                                </select>
                             </div>
                         </div>
                     </div>

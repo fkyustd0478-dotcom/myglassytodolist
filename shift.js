@@ -57,6 +57,9 @@ const app = createApp({
         const showDayDetail = ref(false);
         const selectedDay = ref(null); 
 
+        const showShiftModal = ref(false);
+        const showPayrollModal = ref(false);
+
         const confirmModal = reactive({
             show: false,
             title: '',
@@ -138,13 +141,15 @@ const app = createApp({
         });
         
         const glassStyle = computed(() => {
-            return isDarkTheme.value 
-                ? { backgroundColor: 'rgba(0,0,0,0.3)', borderColor: 'rgba(255,255,255,0.9)' }
-                : { backgroundColor: 'rgba(255,255,255,0.2)', borderColor: 'rgba(0,0,0,0.9)' };
+            return isDarkTheme.value
+                ? { backgroundColor: 'rgba(0,0,0,0.5)', border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
+                : { backgroundColor: 'rgba(255,255,255,0.65)', border: '2.5px solid rgba(0,0,0,0.9)', color: '#000000', backdropFilter: 'blur(16px)' };
         });
 
         const isAnyModalOpen = computed(() => {
-            return showSettings.value || showTodayTasks.value || showDayDetail.value || jumpPicker.value.show || confirmModal.show;
+            return showSettings.value || showTodayTasks.value || showDayDetail.value ||
+                   jumpPicker.value.show || confirmModal.show ||
+                   showShiftModal.value || showPayrollModal.value;
         });
         
         const themeStyle = computed(() => ({})); // Handled by bg-layer and custom-bg-layer
@@ -495,7 +500,8 @@ const app = createApp({
             activeQuickTagCategory, toggleQuickTagCategory, dropdowns, toggleDropdown,
             triggerUpload, handleUpload, clearCustomBg, fileInput, glassStyle, isAnyModalOpen,
             themeClasses, customBgStyle, t, otherThemes, selectDropdownOption, toggleLang,
-            toggleNotifications, toggleCustomBg, selectTheme
+            toggleNotifications, toggleCustomBg, selectTheme,
+            showShiftModal, showPayrollModal
         };
     }
 });
