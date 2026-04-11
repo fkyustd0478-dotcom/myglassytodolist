@@ -121,7 +121,7 @@ try {
                 });
             };
 
-            const confirmModal = ref({
+            const confirmModal = reactive({
                 show: false,
                 title: '',
                 message: '',
@@ -508,7 +508,7 @@ try {
             };
             
             const promptClearCompleted = () => {
-                confirmModal.value = {
+                Object.assign(confirmModal, {
                     show: true,
                     title: t.value.clearAll,
                     message: t.value.confirmClearCompleted,
@@ -516,11 +516,11 @@ try {
                         todos.value = todos.value.filter(x => !x.completed || x.isDeleted);
                         renderTrigger.value++;
                     }
-                };
+                });
             };
 
             const promptClearBin = () => {
-                confirmModal.value = {
+                Object.assign(confirmModal, {
                     show: true,
                     title: t.value.clearAll,
                     message: t.value.confirmClearBin,
@@ -528,12 +528,12 @@ try {
                         todos.value = todos.value.filter(x => !x.isDeleted);
                         renderTrigger.value++;
                     }
-                };
+                });
             };
 
             const executeConfirm = () => {
-                if (confirmModal.value.onConfirm) confirmModal.value.onConfirm();
-                confirmModal.value.show = false;
+                if (confirmModal.onConfirm) confirmModal.onConfirm();
+                confirmModal.show = false;
             };
 
             const addNewList = () => { 
@@ -599,7 +599,7 @@ try {
                        manageModal.value.show || 
                        listModal.value.show || 
                        showDateTimePicker.value || 
-                       confirmModal.value.show ||
+                       confirmModal.show ||
                        showSettingsModal.value ||
                        isMenuOpen.value;
             });
@@ -992,6 +992,7 @@ try {
 
             onMounted(async () => {
                 appMode.value = window.location.pathname.includes('shift') ? 'shift' : 'todo';
+                confirmModal.show = false;
 
                 const storedVersion = localStorage.getItem('app_version');
                 if (storedVersion !== APP_VERSION) {
@@ -1109,7 +1110,7 @@ try {
             }, { deep: true });
 
             const clearCacheAndUpdate = () => {
-                confirmModal.value = {
+                Object.assign(confirmModal, {
                     show: true,
                     title: t.value.clearCache,
                     message: t.value.confirmClearCache,
@@ -1127,7 +1128,7 @@ try {
                         localStorage.setItem('todo_settings', JSON.stringify(newSettings));
                         location.reload();
                     }
-                };
+                });
             };
 
             const openPickerDropdown = (key) => {
