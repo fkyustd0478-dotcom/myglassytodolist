@@ -324,14 +324,6 @@ const app = createApp({
             }
         };
 
-        const dropdowns = reactive({
-            navMenu: false
-        });
-
-        const toggleDropdown = (key) => {
-            dropdowns[key] = !dropdowns[key];
-        };
-
         const fileInput = ref(null);
         const triggerUpload = () => fileInput.value?.click();
         const handleUpload = (e) => {
@@ -457,6 +449,7 @@ const app = createApp({
 
         onMounted(() => {
             confirmModal.show = false;
+            dropdowns.navMenu = false;
             setupEffects();
             if (window.lucide) lucide.createIcons();
 
