@@ -65,7 +65,7 @@ const shiftTranslations = {
     }
 };
 
-const { createApp, ref, computed, onMounted, watch, nextTick, reactive } = Vue;
+const { createApp, ref, computed, onMounted, onUnmounted, watch, nextTick, reactive } = Vue;
 
 const app = createApp({
     setup() {
@@ -141,8 +141,7 @@ const app = createApp({
 
         const isAnyModalOpen = computed(() =>
             showTodayTasks.value || showDayDetail.value ||
-            jumpPicker.value.show || confirmModal.show ||
-            showTagsModal.value   || clockPicker.show
+            confirmModal.show    || showTagsModal.value || clockPicker.show
         );
 
         // ── Computed: calendar ───────────────────────────────────────────────
@@ -185,19 +184,24 @@ const app = createApp({
             if (!(calendarDate.value instanceof Date)) calendarDate.value = new Date();
             jumpPicker.value.year  = calendarDate.value.getFullYear();
             jumpPicker.value.month = calendarDate.value.getMonth();
-            jumpPicker.value.show  = true;
+            jumpPicker.value.show  = !jumpPicker.value.show;
         };
         const updateJumpDate = (type, val) => {
             if (type === 'year')  jumpPicker.value.year  = ((val - 1970 + 130) % 130) + 1970;
             if (type === 'month') jumpPicker.value.month = (val + 12) % 12;
         };
-        const confirmJump = () => {
-            const d = new Date(calendarDate.value);
-            d.setFullYear(jumpPicker.value.year);
-            d.setMonth(jumpPicker.value.month);
+        // Navigate directly to a month and close the picker
+        const jumpToMonth = (year, month) => {
+            const d = new Date(calendarDate.value instanceof Date ? calendarDate.value : new Date());
+            d.setFullYear(year);
+            d.setMonth(month);
             d.setDate(1);
-            calendarDate.value = d;
+            calendarDate.value    = d;
             jumpPicker.value.show = false;
+        };
+        // Close picker when clicking outside .jump-picker-anchor
+        const closeJumpPicker = (e) => {
+            if (!e.target.closest('.jump-picker-anchor')) jumpPicker.value.show = false;
         };
 
         // ── Today Tasks ──────────────────────────────────────────────────────
@@ -408,11 +412,29 @@ const app = createApp({
             });
         };
 
+        // ── Swipe gestures ────────────────────────────────────────────────────
+        let swipeStartX = 0, swipeStartY = 0;
+
+        const handleSwipeStart = (e) => {
+            swipeStartX = e.touches[0].clientX;
+            swipeStartY = e.touches[0].clientY;
+        };
+
+        const handleSwipeEnd = (e) => {
+            const dx = e.changedTouches[0].clientX - swipeStartX;
+            const dy = e.changedTouches[0].clientY - swipeStartY;
+            const threshold = 50;
+            if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
+                changeMonth(Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 1 : -1) : (dy < 0 ? 1 : -1));
+            }
+        };
+
         // ── Lifecycle ─────────────────────────────────────────────────────────
         onMounted(() => {
             confirmModal.show = false;
             if (window.ParticleEngine) ParticleEngine.setEffect(navSettings.effect);
             if (window.lucide) lucide.createIcons();
+            document.addEventListener('click', closeJumpPicker);
 
             setInterval(() => {
                 if (!navSettings.notificationsEnabled) return;
@@ -432,6 +454,10 @@ const app = createApp({
             }, 60000);
         });
 
+        onUnmounted(() => {
+            document.removeEventListener('click', closeJumpPicker);
+        });
+
         watch(() => navSettings.effect, (eff) => { if (window.ParticleEngine) ParticleEngine.setEffect(eff); });
         watch(shiftSettings, (val) => StorageProvider.saveShiftSettings(val), { deep: true });
         watch([showTodayTasks, showDayDetail, showTagsModal], () => {
@@ -447,7 +473,8 @@ const app = createApp({
             activeQuickTag, activeQuickTagCategory, selectQuickTag, toggleQuickTagCategory,
             shiftData, getTagName, getTagColor, applyQuickTagToDay,
             showTodayTasks, showDayDetail, selectedDay, todayTasks,
-            jumpPicker, openJumpPicker, updateJumpDate, confirmJump,
+            jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
+            handleSwipeStart, handleSwipeEnd,
             showTagsModal, tagsTab, shiftSettings,
             addShiftTag, removeShiftTag,
             addJob, removeJob, calcJobMonthly, calculateTotalMonthlySalary, getUnitsLabel,

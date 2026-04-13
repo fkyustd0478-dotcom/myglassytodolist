@@ -1,8 +1,12 @@
 /* style.css - App Specific Styles */
 
 /* LEVEL 2: Fixed Navigation & Controls */
-header, #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
+#list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
     z-index: 7000 !important;
+}
+/* Header must sit above all level-2 elements so its nav dropdown is never obscured */
+header {
+    z-index: 10001 !important;
 }
 
 /* LEVEL 3: Overlay Modals & Backdrops */

@@ -23,8 +23,8 @@
     <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
     <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
-    <!-- ── Header (z-1000) ───────────────────────────────────────────────── -->
-    <header class="flex justify-between items-center p-6 shrink-0 relative z-[1000]">
+    <!-- ── Header (z-10001) ─────────────────────────────────────────────── -->
+    <header class="flex justify-between items-center p-6 shrink-0 relative z-[10001]">
         <div class="relative nav-capsule" @click.stop>
             <button @click="toggleNavDropdown"
                     class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group"
@@ -58,21 +58,58 @@
     <!-- ── Calendar ─────────────────────────────────────────────────────── -->
     <div class="calendar-container level-2">
         <div class="calendar-header flex items-center justify-center gap-6">
-            <button @click="changeMonth(-1)" class="glass p-3 rounded-full active:scale-90 transition-transform">
-                <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            <button @click="changeMonth(-1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
             </button>
-            <div @click="openJumpPicker" class="cursor-pointer">
-                <h1 class="text-3xl font-black tracking-tighter text-shadow flex items-center gap-2">
-                    {{ displayMonthYear.year }}<span class="opacity-40">/</span>{{ displayMonthYear.month }}
-                    <i data-lucide="chevron-down" class="w-5 h-5 opacity-30"></i>
-                </h1>
+
+            <!-- Year-Month clickable dropdown anchor -->
+            <div class="jump-picker-anchor" @click.stop>
+                <div @click="openJumpPicker" class="cursor-pointer">
+                    <h1 class="text-3xl font-black tracking-tighter text-shadow flex items-center gap-2">
+                        {{ displayMonthYear.year }}<span class="opacity-40">/</span>{{ displayMonthYear.month }}
+                        <i data-lucide="chevron-down" class="w-5 h-5 opacity-30 transition-transform"
+                           :class="{ 'rotate-180': jumpPicker.show }"></i>
+                    </h1>
+                </div>
+
+                <!-- Glass dropdown picker -->
+                <transition name="fade">
+                    <div v-if="jumpPicker.show" class="jump-picker-dropdown glass" :style="glassStyle" @click.stop>
+                        <!-- Year row -->
+                        <div class="flex items-center justify-between mb-4">
+                            <button @click="updateJumpDate('year', jumpPicker.year - 1)"
+                                    class="p-1.5 glass rounded-full opacity-60 hover:opacity-100 active:scale-90 transition-all">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            <span class="text-xl font-black">{{ jumpPicker.year }}</span>
+                            <button @click="updateJumpDate('year', jumpPicker.year + 1)"
+                                    class="p-1.5 glass rounded-full opacity-60 hover:opacity-100 active:scale-90 transition-all">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <!-- Month grid 4×3 -->
+                        <div class="grid grid-cols-4 gap-2">
+                            <button v-for="m in 12" :key="m"
+                                    @click="jumpToMonth(jumpPicker.year, m - 1)"
+                                    class="py-2 rounded-xl text-xs font-black transition-all active:scale-95"
+                                    :class="(m - 1) === jumpPicker.month
+                                        ? 'bg-blue-500/80 text-white shadow-lg'
+                                        : 'glass opacity-70 hover:opacity-100'">
+                                {{ m.toString().padStart(2, '0') }}
+                            </button>
+                        </div>
+                    </div>
+                </transition>
             </div>
-            <button @click="changeMonth(1)" class="glass p-3 rounded-full active:scale-90 transition-transform">
-                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+
+            <button @click="changeMonth(1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
             </button>
         </div>
 
-        <div class="calendar-grid">
+        <div class="calendar-grid"
+             @touchstart.passive="handleSwipeStart"
+             @touchend.passive="handleSwipeEnd">
             <div v-for="day in t.weekdays" :key="day"
                  class="weekday-header text-shadow">{{ day }}</div>
             <div v-for="day in calendarDays" :key="day.dateStr"
@@ -451,40 +488,6 @@
                         <textarea v-model="shiftData[selectedDay].note" class="glass-input" rows="4"
                                   :placeholder="t.notePlaceholder"></textarea>
                     </div>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- ── Jump Picker (Level 4) ─────────────────────────────────────────── -->
-    <transition name="fade">
-        <div v-if="jumpPicker.show" class="modal-backdrop level-4" @click.self="jumpPicker.show = false">
-            <div class="modal-content glass text-center">
-                <h2 class="text-2xl font-black mb-8">{{ t.selectYearMonth }}</h2>
-                <div class="flex items-center justify-center gap-8 mb-12">
-                    <div class="flex flex-col items-center gap-4">
-                        <button @click="updateJumpDate('year', jumpPicker.year+1)" class="p-2 opacity-40">
-                            <i data-lucide="chevron-up"></i>
-                        </button>
-                        <span class="text-4xl font-black">{{ jumpPicker.year }}</span>
-                        <button @click="updateJumpDate('year', jumpPicker.year-1)" class="p-2 opacity-40">
-                            <i data-lucide="chevron-down"></i>
-                        </button>
-                    </div>
-                    <span class="text-4xl opacity-20 font-black">/</span>
-                    <div class="flex flex-col items-center gap-4">
-                        <button @click="updateJumpDate('month', jumpPicker.month+1)" class="p-2 opacity-40">
-                            <i data-lucide="chevron-up"></i>
-                        </button>
-                        <span class="text-4xl font-black">{{ (jumpPicker.month+1).toString().padStart(2,'0') }}</span>
-                        <button @click="updateJumpDate('month', jumpPicker.month-1)" class="p-2 opacity-40">
-                            <i data-lucide="chevron-down"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="flex gap-3">
-                    <button @click="jumpPicker.show = false" class="glass-button flex-1">{{ t.cancel }}</button>
-                    <button @click="confirmJump" class="glass-button flex-1 bg-blue-500/20 text-blue-400">{{ t.confirm }}</button>
                 </div>
             </div>
         </div>
