@@ -1,10 +1,69 @@
-// shift.js — Glassy Shift Vue app v4.0
+// shift.js — Glassy Shift Vue app v4.1
 // Depends on: storage.js (StorageProvider, ImageDB), nav.js (useNav)
-// Theme state is provided by useNav() via navSettings / isDarkTheme / glassStyle.
-// Salary is now modeled as a multi-job array (shiftSettings.jobs), replacing the
-// old single payroll + payTags objects. Jobs serve dual purpose:
-//   1. Calendar day-marking payTags  (id, name, color)
-//   2. Salary calculation           (method, rate, payDay, holidayLogic)
+
+// ── Translations (EN / ZH) ────────────────────────────────────────────────
+const shiftTranslations = {
+    zh: {
+        // Nav dropdown labels
+        navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定',
+        // Bottom nav
+        todayTasks: '今日事', salary: '薪資', shiftNav: '輪班', labelSettings: '標籤設定',
+        // Tags modal
+        labelSettingsTitle: '標籤設定',
+        shiftTab: '輪班設定', salaryTab: '薪資設定',
+        // Shift section
+        shiftTagLabel: '班別', shiftNamePlaceholder: '班名', addShift: '+ 新增班別',
+        // Salary section
+        jobSourceLabel: '工作 / 薪資來源',
+        jobNamePlaceholder: '工作名稱', addJob: '+ 新增工作',
+        hourly: '時薪', daily: '日薪', weekly: '週薪', monthly: '月薪',
+        amountPlaceholder: '金額',
+        unitsHour: '小時/月', unitsDay: '天/月', unitsWeek: '週/月',
+        payDayPrefix: '每月', payDaySuffix: '日發薪，遇假日',
+        advance: '提前', postpone: '延後',
+        totalMonthly: '總估算 (月)',
+        // Clock picker
+        clickHourHint: '點選時，自動跳至分', clickMinuteHint: '點選分鐘',
+        // Today tasks modal
+        noTasksToday: '今日無待辦事項',
+        // Day detail
+        shiftMarkLabel: '輪班設定', payMarkLabel: '薪資標記',
+        noteLabel: '備註', notePlaceholder: '輸入當日備註...',
+        // Jump picker
+        selectYearMonth: '選擇年月',
+        // Shared buttons
+        cancel: '取消', confirm: '確定',
+        // Confirm modal
+        clearCacheTitle: '清除暫存',
+        clearCacheMsg: '確定要清除介面暫存並更新嗎？輪班紀錄不受影響。',
+        // Weekday headers
+        weekdays: ['日', '一', '二', '三', '四', '五', '六'],
+    },
+    en: {
+        navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
+        todayTasks: "Today's Tasks", salary: 'Salary', shiftNav: 'Shifts', labelSettings: 'Labels',
+        labelSettingsTitle: 'Label Settings',
+        shiftTab: 'Shift Config', salaryTab: 'Salary Config',
+        shiftTagLabel: 'Shifts', shiftNamePlaceholder: 'Name', addShift: '+ Add Shift',
+        jobSourceLabel: 'Jobs / Income Sources',
+        jobNamePlaceholder: 'Job Name', addJob: '+ Add Job',
+        hourly: 'Hourly', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly',
+        amountPlaceholder: 'Amount',
+        unitsHour: 'hrs/mo', unitsDay: 'days/mo', unitsWeek: 'wks/mo',
+        payDayPrefix: 'Pay on', payDaySuffix: 'of month. If holiday:',
+        advance: 'Advance', postpone: 'Postpone',
+        totalMonthly: 'Monthly Total Est.',
+        clickHourHint: 'Tap hour — advances to minute', clickMinuteHint: 'Tap minute',
+        noTasksToday: 'No tasks for today',
+        shiftMarkLabel: 'Shift Tags', payMarkLabel: 'Pay Tags',
+        noteLabel: 'Notes', notePlaceholder: 'Notes for this day...',
+        selectYearMonth: 'Select Year & Month',
+        cancel: 'Cancel', confirm: 'Confirm',
+        clearCacheTitle: 'Clear Cache',
+        clearCacheMsg: 'Reset UI cache? Shift records will not be affected.',
+        weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    }
+};
 
 const { createApp, ref, computed, onMounted, watch, nextTick, reactive } = Vue;
 
@@ -15,6 +74,9 @@ const app = createApp({
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
             navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle
         } = useNav();
+
+        // ── Language / translations ──────────────────────────────────────────
+        const t = computed(() => shiftTranslations[navSettings.lang] || shiftTranslations.zh);
 
         // ── Shift settings with migration ────────────────────────────────────
         const rawSettings = StorageProvider.getShiftSettings();
@@ -32,6 +94,7 @@ const app = createApp({
                 color:        tag.color,
                 method:       i === 0 ? (payroll.method || 'monthly') : 'monthly',
                 rate:         i === 0 ? (payroll.rate   || 0)         : 0,
+                units:        null,
                 payDay:       payroll.payDay       || 5,
                 holidayLogic: payroll.holidayLogic || 'early'
             }));
@@ -39,10 +102,17 @@ const app = createApp({
             delete rawSettings.payroll;
         }
 
+        // Ensure existing jobs have `units` field
+        if (rawSettings.jobs) {
+            rawSettings.jobs = rawSettings.jobs.map(j =>
+                j.units === undefined ? { ...j, units: null } : j
+            );
+        }
+
         const shiftSettings = ref({
             jobs: [
-                { id: 'salary', name: '薪資', color: '#10b981', method: 'monthly', rate: 30000, payDay: 5, holidayLogic: 'early' },
-                { id: 'bonus',  name: '獎金', color: '#ef4444', method: 'monthly', rate: 0,     payDay: 5, holidayLogic: 'early' }
+                { id: 'salary', name: '薪資', color: '#10b981', method: 'monthly', rate: 30000, units: null, payDay: 5, holidayLogic: 'early' },
+                { id: 'bonus',  name: '獎金', color: '#ef4444', method: 'monthly', rate: 0,     units: null, payDay: 5, holidayLogic: 'early' }
             ],
             shiftTags: [
                 { id: 'early',  name: '早班', startTime: '08:00', endTime: '16:00', color: '#3b82f6' },
@@ -63,7 +133,7 @@ const app = createApp({
         const showDayDetail   = ref(false);
         const selectedDay     = ref(null);
         const showTagsModal   = ref(false);
-        const tagsTab         = ref('shift'); // 'shift' | 'salary'
+        const tagsTab         = ref('shift');
 
         const confirmModal = reactive({ show: false, title: '', message: '', onConfirm: null });
 
@@ -196,13 +266,12 @@ const app = createApp({
         };
 
         const selectQuickTag = (type, id) => {
-            if (activeQuickTag.value?.type === type && activeQuickTag.value?.id === id)
+            if (activeQuickTag.value && activeQuickTag.value.type === type && activeQuickTag.value.id === id)
                 activeQuickTag.value = null;
             else
                 activeQuickTag.value = { type, id };
         };
 
-        // Tags now use jobs for pay-type lookups
         const getTagName = (type, id) => {
             if (type === 'shift') return shiftSettings.value.shiftTags.find(t => t.id === id)?.name || '';
             return shiftSettings.value.jobs.find(j => j.id === id)?.name || '';
@@ -223,22 +292,25 @@ const app = createApp({
         // ── Multi-job salary management ──────────────────────────────────────
         const addJob = () => shiftSettings.value.jobs.push({
             id: 'job_' + Date.now(),
-            name: '新工作', color: '#6366f1',
-            method: 'monthly', rate: 0,
+            name: t.value.jobNamePlaceholder,
+            color: '#6366f1',
+            method: 'monthly', rate: 0, units: null,
             payDay: 5, holidayLogic: 'early'
         });
         const removeJob = (id) => {
             shiftSettings.value.jobs = shiftSettings.value.jobs.filter(j => j.id !== id);
         };
 
-        // Per-job monthly estimate (callable from template)
+        // Units-aware monthly salary estimate
+        // units = null → use smart default (hourly:176h, daily:22d, weekly:4w, monthly: N/A)
         const calcJobMonthly = (job) => {
             if (!job.rate) return 0;
+            const u = job.units;
             switch (job.method) {
                 case 'monthly': return job.rate;
-                case 'daily':   return Math.round(job.rate * 22);       // ~22 working days
-                case 'weekly':  return Math.round(job.rate * 4.3);      // ~4.3 weeks
-                case 'hourly':  return Math.round(job.rate * 8 * 22);   // 8 h/day × 22 days
+                case 'daily':   return Math.round(job.rate * (u != null ? u : 22));
+                case 'weekly':  return Math.round(job.rate * (u != null ? u : 4));
+                case 'hourly':  return Math.round(job.rate * (u != null ? u : 176));
                 default:        return job.rate;
             }
         };
@@ -247,13 +319,21 @@ const app = createApp({
             (shiftSettings.value.jobs || []).reduce((sum, job) => sum + calcJobMonthly(job), 0)
         );
 
+        // Units label & placeholder for a given method
+        const getUnitsLabel = (method) => {
+            if (method === 'hourly') return t.value.unitsHour;
+            if (method === 'daily')  return t.value.unitsDay;
+            if (method === 'weekly') return t.value.unitsWeek;
+            return '';
+        };
+
         // ── Circular Clock Picker ────────────────────────────────────────────
         const clockPicker = reactive({
             show: false, targetTagId: null, target: null,
             mode: 'hour', hour: 9, minute: 0,
         });
 
-        const clockIsAM       = computed(() => clockPicker.hour < 12);
+        const clockIsAM        = computed(() => clockPicker.hour < 12);
         const clockDisplayHour = computed(() => { const h = clockPicker.hour % 12; return h === 0 ? 12 : h; });
 
         const clockHourDots = computed(() =>
@@ -315,38 +395,22 @@ const app = createApp({
         // ── Confirm modal ─────────────────────────────────────────────────────
         const clearCacheAndUpdate = () => {
             Object.assign(confirmModal, {
-                show: true, title: '清除暫存',
-                message: '確定要清除介面暫存並更新嗎？輪班紀錄不受影響。',
+                show: true,
+                title:   t.value.clearCacheTitle,
+                message: t.value.clearCacheMsg,
                 onConfirm: () => {
-                    StorageProvider.saveCommonSettings({ theme: 'system', useCustomBg: false, customBg: '', lang: 'zh', effect: 'none', notificationsEnabled: true });
+                    StorageProvider.saveCommonSettings({
+                        theme: 'system', useCustomBg: false, customBg: '',
+                        lang: navSettings.lang, effect: 'none', notificationsEnabled: true
+                    });
                     location.reload();
                 }
             });
         };
 
-        // ── Background & effects ──────────────────────────────────────────────
-        const themeImages = {
-            cherry: './theme/cherry.png', forest: './theme/forest.png', night: './theme/night.png',
-            sea:    './theme/sea.png',    seaside:'./theme/seaside.png', sky:  './theme/sky.png',
-            sunset: './theme/sunset.png', torii:  './theme/torii.png'
-        };
-
-        const applyThemeBg = (theme) => {
-            if (navSettings.useCustomBg) return;
-            if (themeImages[theme]) {
-                document.body.style.backgroundImage   = `url(${themeImages[theme]}?v=${Date.now()})`;
-                document.body.style.backgroundSize    = 'cover';
-                document.body.style.backgroundPosition = 'center';
-                document.body.style.backgroundAttachment = 'fixed';
-            } else {
-                document.body.style.backgroundImage = '';
-            }
-        };
-
         // ── Lifecycle ─────────────────────────────────────────────────────────
         onMounted(() => {
             confirmModal.show = false;
-            applyThemeBg(navSettings.theme);
             if (window.ParticleEngine) ParticleEngine.setEffect(navSettings.effect);
             if (window.lucide) lucide.createIcons();
 
@@ -358,7 +422,7 @@ const app = createApp({
                 if (data?.shiftIds?.length > 0 && !data.notified) {
                     const first = shiftSettings.value.shiftTags.find(t => t.id === data.shiftIds[0]);
                     if (first) {
-                        const notify = () => new Notification('今日輪班', { body: `今日班次: ${first.name}` });
+                        const notify = () => new Notification(t.value.todayTasks, { body: first.name });
                         if (Notification.permission === 'granted') notify();
                         else if (Notification.permission !== 'denied')
                             Notification.requestPermission().then(p => { if (p === 'granted') notify(); });
@@ -368,7 +432,6 @@ const app = createApp({
             }, 60000);
         });
 
-        watch(() => navSettings.theme,  applyThemeBg);
         watch(() => navSettings.effect, (eff) => { if (window.ParticleEngine) ParticleEngine.setEffect(eff); });
         watch(shiftSettings, (val) => StorageProvider.saveShiftSettings(val), { deep: true });
         watch([showTodayTasks, showDayDetail, showTagsModal], () => {
@@ -377,6 +440,7 @@ const app = createApp({
 
         // ── Return ────────────────────────────────────────────────────────────
         return {
+            t,
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
             navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle, themeStyle,
             calendarDate, calendarDays, displayMonthYear, changeMonth, handleDayClick,
@@ -386,7 +450,7 @@ const app = createApp({
             jumpPicker, openJumpPicker, updateJumpDate, confirmJump,
             showTagsModal, tagsTab, shiftSettings,
             addShiftTag, removeShiftTag,
-            addJob, removeJob, calcJobMonthly, calculateTotalMonthlySalary,
+            addJob, removeJob, calcJobMonthly, calculateTotalMonthlySalary, getUnitsLabel,
             clockPicker, clockIsAM, clockDisplayHour,
             clockHourDots, clockMinuteDots, clockHandX, clockHandY,
             openClockPicker, selectClockHour, selectClockMinute, toggleClockAmPm, confirmClockPicker,

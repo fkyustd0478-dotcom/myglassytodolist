@@ -1,4 +1,4 @@
-// setting.js — Settings page Vue app
+// setting.js — Settings page Vue app v1.2
 // Depends on: storage.js (StorageProvider, ImageDB), nav.js (useNav)
 
 const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
@@ -7,15 +7,15 @@ createApp({
     setup() {
         const { navDropdownOpen, currentPageTitle, toggleNavDropdown } = useNav();
 
-        // --- System dark mode detection ---
+        // ── System dark mode detection ─────────────────────────────────────
         const systemDark = ref(
             typeof window !== 'undefined' && window.matchMedia
                 ? window.matchMedia('(prefers-color-scheme: dark)').matches
                 : false
         );
 
-        // --- Settings state ---
-        const settingsTab = ref('theme'); // 'theme' | 'user'
+        // ── Settings state ─────────────────────────────────────────────────
+        const settingsTab = ref('theme');
 
         const settings = ref({
             theme: 'system',
@@ -28,32 +28,54 @@ createApp({
             ...StorageProvider.getCommonSettings()
         });
 
-        const fileInput = ref(null);
+        const fileInput        = ref(null);
         const currentObjectUrl = ref(null);
 
-        // --- Translations ---
+        // ── Translations ───────────────────────────────────────────────────
         const translations = {
             en: {
-                theme: 'Theme', uiOpacity: 'Custom Image Opacity', lang: 'Language',
-                notifications: 'Notifications', custom: 'Custom (Upload)', upload: 'Upload Photo',
-                system: 'System', light: 'Light', dark: 'Dark', otherThemes: 'Other Themes',
+                // Tabs
+                tabTheme: 'Theme', tabUser: 'User',
+                // Nav items
+                navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
+                // Theme section
+                theme: 'Theme', system: 'System', light: 'Light', dark: 'Dark',
+                otherThemes: 'Other Themes',
                 cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset',
                 forest: 'Forest', sea: 'Sea', night: 'Night', torii: 'Torii',
-                clearCache: 'Clear System Cache', removeImg: 'Remove Image',
-                enable: 'Enable', disable: 'Disable',
+                // Effects
+                visualFx: 'Visual Effects',
+                effectNone: 'None', effectCherry: 'Petals', effectRain: 'Rain', effectSnow: 'Snow',
+                // Custom background
+                uiOpacity: 'Custom Image Opacity', custom: 'Custom (Upload)', upload: 'Upload Photo',
+                removeImg: 'Remove Image', enable: 'Enable', disable: 'Disable',
+                // User settings
+                lang: 'Language', notifications: 'Notifications',
+                // System
+                systemSection: 'System',
+                clearCache: 'Clear System Cache',
                 confirmClearCache: 'This will reset your theme and language settings. Continue?',
-                cancel: 'Cancel', confirm: 'Confirm'
+                cancel: 'Cancel', confirm: 'Confirm',
+                // User page
+                userComingSoon: 'User page coming soon',
             },
             zh: {
-                theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言',
-                notifications: '通知', custom: '自定義 (上傳)', upload: '上傳照片',
-                system: '系統', light: '明亮', dark: '深色', otherThemes: '其他主題',
+                tabTheme: '主題設定', tabUser: '使用者頁面',
+                navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定',
+                theme: '主題', system: '系統', light: '明亮', dark: '深色',
+                otherThemes: '其他主題',
                 cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落',
                 forest: '森林', sea: '大海', night: '夜景', torii: '鳥居',
-                clearCache: '清除介面暫存並更新', removeImg: '移除圖片',
-                enable: '啟用', disable: '停用',
+                visualFx: '視覺特效',
+                effectNone: '無', effectCherry: '櫻花', effectRain: '下雨', effectSnow: '下雪',
+                uiOpacity: '自定義圖片透明度', custom: '自定義 (上傳)', upload: '上傳照片',
+                removeImg: '移除圖片', enable: '啟用', disable: '停用',
+                lang: '語言', notifications: '通知',
+                systemSection: 'System',
+                clearCache: '清除介面暫存並更新',
                 confirmClearCache: '這將會重置主題與語言設置，但您的資料將會保留。確定要繼續嗎？',
-                cancel: '取消', confirm: '確認'
+                cancel: '取消', confirm: '確認',
+                userComingSoon: '使用者頁面即將推出',
             }
         };
 
@@ -65,7 +87,7 @@ createApp({
             { id: 'sunset' }, { id: 'torii' }
         ];
 
-        // --- Theme computed ---
+        // ── Theme computed ─────────────────────────────────────────────────
         const resolvedTheme = computed(() => {
             if (settings.value.theme === 'system') return systemDark.value ? 'dark' : 'light';
             return settings.value.theme;
@@ -78,11 +100,10 @@ createApp({
             return darkThemes.includes(settings.value.theme);
         });
 
-        const glassStyle = computed(() => {
-            return isDarkTheme.value
-                ? { backgroundColor: 'rgba(0,0,0,0.5)', border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
-                : { backgroundColor: 'rgba(255,255,255,0.65)', border: '2.5px solid rgba(0,0,0,0.9)', color: '#000000', backdropFilter: 'blur(16px)' };
-        });
+        const glassStyle = computed(() => isDarkTheme.value
+            ? { backgroundColor: 'rgba(0,0,0,0.5)', border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
+            : { backgroundColor: 'rgba(255,255,255,0.65)', border: '2.5px solid rgba(0,0,0,0.9)', color: '#000000', backdropFilter: 'blur(16px)' }
+        );
 
         const themeClasses = computed(() => `theme-${resolvedTheme.value}`);
 
@@ -92,9 +113,14 @@ createApp({
             display: settings.value.useCustomBg ? 'block' : 'none'
         }));
 
+        // Inactive button class — adapts to light/dark mode for visibility
+        const inactiveBtn = computed(() =>
+            isDarkTheme.value ? 'border-white/10 bg-white/5' : 'border-black/10 bg-black/5'
+        );
+
         const themeDropdownOpen = ref(false);
 
-        // --- Actions ---
+        // ── Actions ────────────────────────────────────────────────────────
         const selectTheme = (theme) => {
             settings.value.theme = theme;
             settings.value.useCustomBg = false;
@@ -133,9 +159,7 @@ createApp({
         };
 
         const clearCustomBg = async () => {
-            try {
-                await ImageDB.deleteBlob('custom-bg');
-            } catch (_) {}
+            try { await ImageDB.deleteBlob('custom-bg'); } catch (_) {}
             if (currentObjectUrl.value) URL.revokeObjectURL(currentObjectUrl.value);
             currentObjectUrl.value = null;
             settings.value.customBg = '';
@@ -144,16 +168,16 @@ createApp({
 
         const clearCacheAndUpdate = () => {
             if (confirm(t.value.confirmClearCache)) {
-                const kept = { lang: settings.value.lang };
-                StorageProvider.saveSettings({
-                    theme: 'cherry', useCustomBg: false, customBg: '',
-                    lang: kept.lang, effect: 'none', notificationsEnabled: true, customBgOpacity: 0.5
+                StorageProvider.saveCommonSettings({
+                    theme: 'system', useCustomBg: false, customBg: '',
+                    lang: settings.value.lang, effect: 'none',
+                    notificationsEnabled: true, customBgOpacity: 0.5
                 });
                 location.reload();
             }
         };
 
-        // --- Persist on change ---
+        // ── Persist on change ──────────────────────────────────────────────
         watch(settings, (val) => {
             StorageProvider.saveCommonSettings(val);
         }, { deep: true });
@@ -166,7 +190,7 @@ createApp({
 
         onMounted(async () => {
             if (window.lucide) lucide.createIcons();
-            // Restore custom background from IndexedDB
+
             if (settings.value.useCustomBg) {
                 try {
                     const blob = await ImageDB.getBlob('custom-bg');
@@ -179,9 +203,9 @@ createApp({
             }
             if (window.ParticleEngine) ParticleEngine.setEffect(settings.value.effect);
 
-            // React to OS color-scheme changes in real time
+            // Live OS dark/light sync
             if (window.matchMedia) {
-                const mq = window.matchMedia('(prefers-color-scheme: dark)');
+                const mq      = window.matchMedia('(prefers-color-scheme: dark)');
                 const handler = (e) => { systemDark.value = e.matches; };
                 if (mq.addEventListener) mq.addEventListener('change', handler);
                 else mq.addListener(handler);
@@ -192,14 +216,13 @@ createApp({
             }
         });
 
-        onUnmounted(() => {
-            if (_mqCleanup) _mqCleanup();
-        });
+        onUnmounted(() => { if (_mqCleanup) _mqCleanup(); });
 
         return {
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
             settingsTab, settings, fileInput, t, otherThemes,
-            systemDark, resolvedTheme, isDarkTheme, glassStyle, themeClasses, customBgStyle, themeDropdownOpen,
+            systemDark, resolvedTheme, isDarkTheme, glassStyle, themeClasses,
+            customBgStyle, inactiveBtn, themeDropdownOpen,
             selectTheme, toggleLang, toggleNotifications, toggleCustomBg,
             triggerUpload, handleUpload, clearCustomBg, clearCacheAndUpdate
         };

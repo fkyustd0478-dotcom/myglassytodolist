@@ -1,4 +1,4 @@
-// nav.js — Global navigation composable v3.0
+// nav.js — Global navigation composable v3.1
 // Loaded after storage.js, before page-specific scripts on all pages.
 // Usage inside Vue setup():
 //   const { navDropdownOpen, currentPageTitle, toggleNavDropdown,
@@ -6,13 +6,12 @@
 //           systemDark, resolvedTheme } = useNav();
 
 function useNav() {
-    const { ref, reactive, computed, onMounted, onUnmounted } = Vue;
+    const { ref, reactive, computed, watch, onMounted, onUnmounted } = Vue;
 
-    const navDropdownOpen = ref(false);
+    const navDropdownOpen  = ref(false);
     const currentPageTitle = ref('琉璃待辦');
 
     // ── System color-scheme detection ──────────────────────────────────────
-    // Tracks the OS dark/light preference. Stays reactive via a media query listener.
     const systemDark = ref(
         typeof window !== 'undefined' && window.matchMedia
             ? window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -20,10 +19,8 @@ function useNav() {
     );
 
     // ── Shared theme state ─────────────────────────────────────────────────
-    // Default theme is 'system' — automatically follows the OS preference.
-    // Saved user preferences (from todo_settings) override this default.
     const navSettings = reactive({
-        theme: 'system',          // 'system' | 'light' | 'dark' | 'cherry' | …
+        theme: 'system',
         useCustomBg: false,
         customBg: '',
         customBgOpacity: 0.5,
@@ -34,7 +31,6 @@ function useNav() {
     });
 
     // ── Theme resolution ───────────────────────────────────────────────────
-    // 'system' resolves to the OS preference; all other values are used as-is.
     const resolvedTheme = computed(() => {
         if (navSettings.theme === 'system') return systemDark.value ? 'dark' : 'light';
         return navSettings.theme;
@@ -52,12 +48,26 @@ function useNav() {
         : { backgroundColor: 'rgba(255,255,255,0.65)', border: '2.5px solid rgba(0,0,0,0.9)', color: '#000000', backdropFilter: 'blur(16px)' }
     );
 
-    const themeClasses = computed(() => `theme-${resolvedTheme.value}`);
+    const themeClasses  = computed(() => `theme-${resolvedTheme.value}`);
 
     const customBgStyle = computed(() => ({
         backgroundImage: navSettings.customBg ? `url(${navSettings.customBg})` : '',
         opacity: navSettings.useCustomBg ? (1 - navSettings.customBgOpacity) : 0,
     }));
+
+    // ── Language-aware page title ──────────────────────────────────────────
+    const _pageTitles = {
+        zh: { shift: '琉璃輪班', setting: '系統設定', index: '琉璃待辦' },
+        en: { shift: 'Glassy Shift', setting: 'Settings', index: 'Glassy Todo' }
+    };
+
+    const _updateTitle = () => {
+        const file   = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+        const titles = _pageTitles[navSettings.lang] || _pageTitles.zh;
+        if      (file.includes('shift'))   currentPageTitle.value = titles.shift;
+        else if (file.includes('setting')) currentPageTitle.value = titles.setting;
+        else                               currentPageTitle.value = titles.index;
+    };
 
     // ── Navigation close handler ───────────────────────────────────────────
     const closeNav = (e) => {
@@ -67,17 +77,12 @@ function useNav() {
     let _mqCleanup = null;
 
     onMounted(async () => {
-        // Detect current page for title
-        const file = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
-        if (file.includes('shift'))   currentPageTitle.value = '琉璃輪班';
-        else if (file.includes('setting')) currentPageTitle.value = '系統設定';
-        else                          currentPageTitle.value = '琉璃待辦';
-
+        _updateTitle();
         document.addEventListener('click', closeNav);
 
         // React to OS color-scheme changes in real time
         if (window.matchMedia) {
-            const mq = window.matchMedia('(prefers-color-scheme: dark)');
+            const mq      = window.matchMedia('(prefers-color-scheme: dark)');
             const handler = (e) => { systemDark.value = e.matches; };
             if (mq.addEventListener) mq.addEventListener('change', handler);
             else mq.addListener(handler); // Safari < 14 fallback
@@ -100,6 +105,9 @@ function useNav() {
         document.removeEventListener('click', closeNav);
         if (_mqCleanup) _mqCleanup();
     });
+
+    // Re-compute title when language is changed at runtime
+    watch(() => navSettings.lang, _updateTitle);
 
     const toggleNavDropdown = () => { navDropdownOpen.value = !navDropdownOpen.value; };
 
