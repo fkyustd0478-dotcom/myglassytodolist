@@ -1,17 +1,24 @@
 // setting.js — Settings page Vue app
 // Depends on: storage.js (StorageProvider, ImageDB), nav.js (useNav)
 
-const { createApp, ref, computed, watch, onMounted } = Vue;
+const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
 createApp({
     setup() {
         const { navDropdownOpen, currentPageTitle, toggleNavDropdown } = useNav();
 
+        // --- System dark mode detection ---
+        const systemDark = ref(
+            typeof window !== 'undefined' && window.matchMedia
+                ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                : false
+        );
+
         // --- Settings state ---
         const settingsTab = ref('theme'); // 'theme' | 'user'
 
         const settings = ref({
-            theme: 'cherry',
+            theme: 'system',
             useCustomBg: false,
             customBg: '',
             customBgOpacity: 0.5,
@@ -29,7 +36,7 @@ createApp({
             en: {
                 theme: 'Theme', uiOpacity: 'Custom Image Opacity', lang: 'Language',
                 notifications: 'Notifications', custom: 'Custom (Upload)', upload: 'Upload Photo',
-                light: 'Light', dark: 'Dark', otherThemes: 'Other Themes',
+                system: 'System', light: 'Light', dark: 'Dark', otherThemes: 'Other Themes',
                 cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset',
                 forest: 'Forest', sea: 'Sea', night: 'Night', torii: 'Torii',
                 clearCache: 'Clear System Cache', removeImg: 'Remove Image',
@@ -40,7 +47,7 @@ createApp({
             zh: {
                 theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言',
                 notifications: '通知', custom: '自定義 (上傳)', upload: '上傳照片',
-                light: '明亮', dark: '深色', otherThemes: '其他主題',
+                system: '系統', light: '明亮', dark: '深色', otherThemes: '其他主題',
                 cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落',
                 forest: '森林', sea: '大海', night: '夜景', torii: '鳥居',
                 clearCache: '清除介面暫存並更新', removeImg: '移除圖片',
@@ -59,8 +66,14 @@ createApp({
         ];
 
         // --- Theme computed ---
+        const resolvedTheme = computed(() => {
+            if (settings.value.theme === 'system') return systemDark.value ? 'dark' : 'light';
+            return settings.value.theme;
+        });
+
         const isDarkTheme = computed(() => {
-            const darkThemes = ['forest', 'night', 'torii'];
+            if (settings.value.theme === 'system') return systemDark.value;
+            const darkThemes = ['forest', 'night', 'torii', 'dark'];
             if (settings.value.useCustomBg) return settings.value.customBgOpacity < 0.5;
             return darkThemes.includes(settings.value.theme);
         });
@@ -71,7 +84,7 @@ createApp({
                 : { backgroundColor: 'rgba(255,255,255,0.65)', border: '2.5px solid rgba(0,0,0,0.9)', color: '#000000', backdropFilter: 'blur(16px)' };
         });
 
-        const themeClasses = computed(() => `theme-${settings.value.theme}`);
+        const themeClasses = computed(() => `theme-${resolvedTheme.value}`);
 
         const customBgStyle = computed(() => ({
             backgroundImage: `url(${settings.value.customBg})`,
@@ -149,6 +162,8 @@ createApp({
             if (window.ParticleEngine) ParticleEngine.setEffect(newEffect);
         });
 
+        let _mqCleanup = null;
+
         onMounted(async () => {
             if (window.lucide) lucide.createIcons();
             // Restore custom background from IndexedDB
@@ -163,12 +178,28 @@ createApp({
                 } catch (_) {}
             }
             if (window.ParticleEngine) ParticleEngine.setEffect(settings.value.effect);
+
+            // React to OS color-scheme changes in real time
+            if (window.matchMedia) {
+                const mq = window.matchMedia('(prefers-color-scheme: dark)');
+                const handler = (e) => { systemDark.value = e.matches; };
+                if (mq.addEventListener) mq.addEventListener('change', handler);
+                else mq.addListener(handler);
+                _mqCleanup = () => {
+                    if (mq.removeEventListener) mq.removeEventListener('change', handler);
+                    else mq.removeListener(handler);
+                };
+            }
+        });
+
+        onUnmounted(() => {
+            if (_mqCleanup) _mqCleanup();
         });
 
         return {
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
             settingsTab, settings, fileInput, t, otherThemes,
-            isDarkTheme, glassStyle, themeClasses, customBgStyle, themeDropdownOpen,
+            systemDark, resolvedTheme, isDarkTheme, glassStyle, themeClasses, customBgStyle, themeDropdownOpen,
             selectTheme, toggleLang, toggleNotifications, toggleCustomBg,
             triggerUpload, handleUpload, clearCustomBg, clearCacheAndUpdate
         };

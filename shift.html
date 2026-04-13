@@ -15,7 +15,7 @@
     <script src="effects.js" defer></script>
     <script src="storage.js" defer></script>
     <script src="nav.js" defer></script>
-    <script src="shift.js?v=3.0" defer></script>
+    <script src="shift.js?v=4.0" defer></script>
 </head>
 <body :style="themeStyle" :class="isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode'">
 <div id="app" v-cloak :style="themeStyle"
@@ -92,10 +92,11 @@
             </div>
         </div>
 
+        <!-- Quick tag pills (slide up from bottom) -->
         <transition name="slide-up">
             <div v-if="activeQuickTagCategory" class="tag-pills-container glass" :style="glassStyle">
                 <div class="pills-scroll">
-                    <div v-for="tag in (activeQuickTagCategory === 'shift' ? shiftSettings.shiftTags : shiftSettings.payTags)"
+                    <div v-for="tag in (activeQuickTagCategory === 'shift' ? shiftSettings.shiftTags : shiftSettings.jobs)"
                          :key="tag.id"
                          class="tag-pill glass"
                          :class="{ 'active': activeQuickTag && activeQuickTag.id === tag.id }"
@@ -108,17 +109,7 @@
         </transition>
     </div>
 
-    <!-- ── Bottom-Right FAB: 標籤設定 (z-7500) ───────────────────────────── -->
-    <div class="fixed bottom-[100px] right-4 z-[7500]">
-        <button @click="showTagsModal = true"
-                class="glass flex items-center gap-2 px-4 py-2.5 rounded-full active:scale-95 transition-transform shadow-lg"
-                :style="glassStyle">
-            <i data-lucide="tags" class="w-4 h-4"></i>
-            <span class="text-xs font-black">標籤設定</span>
-        </button>
-    </div>
-
-    <!-- ── Bottom Navigation (Level 2) ──────────────────────────────────── -->
+    <!-- ── Bottom Navigation — 4 items (Level 2) ─────────────────────────── -->
     <nav class="bottom-nav glass level-2">
         <div class="nav-item" @click="showTodayTasks = true">
             <div class="nav-icon-wrapper"><i data-lucide="calendar-check"></i></div>
@@ -133,6 +124,10 @@
              @click="toggleQuickTagCategory('shift')">
             <div class="nav-icon-wrapper"><i data-lucide="clock"></i></div>
             <span>輪班</span>
+        </div>
+        <div class="nav-item" :class="{ active: showTagsModal }" @click="showTagsModal = true">
+            <div class="nav-icon-wrapper"><i data-lucide="tags"></i></div>
+            <span>標籤設定</span>
         </div>
     </nav>
 
@@ -149,8 +144,8 @@
          ══════════════════════════════════════════════════════════════════════ -->
     <transition name="slide-up">
         <div v-if="showTagsModal"
-             class="fixed inset-0 z-[8001] flex items-end justify-center p-4 pb-[100px]">
-            <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-sm overflow-y-auto max-h-[78vh] modal-content-level-3"
+             class="fixed inset-0 z-[8001] flex items-end justify-center p-4 pb-[90px]">
+            <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-sm overflow-y-auto max-h-[80vh] modal-content-level-3"
                  :style="glassStyle" @click.stop>
 
                 <!-- Header -->
@@ -187,31 +182,26 @@
                         <h3 class="text-[10px] font-black uppercase tracking-widest">班別</h3>
                     </div>
 
-                    <!-- Single-row per shift entry -->
+                    <!-- Single-row per shift entry: name | start – end | color | delete -->
                     <div v-for="tag in shiftSettings.shiftTags" :key="tag.id"
                          class="flex items-center gap-2 glass rounded-2xl px-3 py-2.5" :style="glassStyle">
-                        <!-- Name -->
                         <input v-model="tag.name"
                                class="bg-transparent font-bold text-sm focus:outline-none w-14 min-w-0 shrink-0"
                                placeholder="班名">
-                        <!-- Start time button (opens circular clock picker) -->
                         <button @click="openClockPicker(tag.id, 'startTime')"
                                 class="flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1 text-[11px] font-bold whitespace-nowrap shrink-0 hover:bg-white/20 transition-colors">
                             <i data-lucide="clock" class="w-3 h-3 opacity-50"></i>
                             {{ tag.startTime }}
                         </button>
                         <span class="opacity-30 text-xs shrink-0">–</span>
-                        <!-- End time button -->
                         <button @click="openClockPicker(tag.id, 'endTime')"
                                 class="bg-white/10 rounded-lg px-2 py-1 text-[11px] font-bold whitespace-nowrap shrink-0 hover:bg-white/20 transition-colors">
                             {{ tag.endTime }}
                         </button>
                         <div class="flex-1"></div>
-                        <!-- Color swatch -->
                         <input v-model="tag.color" type="color"
                                class="w-7 h-7 rounded-lg cursor-pointer shrink-0 border-none bg-transparent"
                                style="padding:1px">
-                        <!-- Delete -->
                         <button @click="removeShiftTag(tag.id)" class="text-red-400 shrink-0">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
@@ -223,89 +213,76 @@
                     </button>
                 </div>
 
-                <!-- ── 薪資設定 Tab ──────────────────────────────────────── -->
-                <div v-show="tagsTab === 'salary'" class="space-y-4">
+                <!-- ── 薪資設定 Tab (Multi-Job) ─────────────────────────── -->
+                <div v-show="tagsTab === 'salary'" class="space-y-3">
                     <div class="flex items-center gap-2 opacity-40 px-1">
-                        <i data-lucide="coins" class="w-4 h-4"></i>
-                        <h3 class="text-[10px] font-black uppercase tracking-widest">薪資設定</h3>
+                        <i data-lucide="briefcase" class="w-4 h-4"></i>
+                        <h3 class="text-[10px] font-black uppercase tracking-widest">工作 / 薪資來源</h3>
                     </div>
 
-                    <!-- Job name -->
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">工作名稱</label>
-                        <input v-model="shiftSettings.payroll.name" type="text"
-                               class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold focus:outline-none focus:border-blue-500">
-                    </div>
+                    <!-- Per-job block -->
+                    <div v-for="job in shiftSettings.jobs" :key="job.id"
+                         class="glass rounded-2xl p-3 space-y-2.5" :style="glassStyle">
 
-                    <!-- 4-mode selector -->
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">薪資計算方式</label>
-                        <div class="grid grid-cols-4 gap-1.5">
-                            <button v-for="m in [{v:'monthly',l:'月薪'},{v:'daily',l:'日薪'},{v:'weekly',l:'週薪'},{v:'hourly',l:'時薪'}]"
-                                    :key="m.v"
-                                    @click="shiftSettings.payroll.method = m.v"
-                                    class="py-2 rounded-xl text-[10px] font-black border-2 transition-all"
-                                    :class="shiftSettings.payroll.method === m.v
-                                        ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                                        : 'border-white/10 bg-white/5'">
-                                {{ m.l }}
+                        <!-- Row 1: Name + Color + Delete -->
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full shrink-0 flex-none" :style="{ backgroundColor: job.color }"></div>
+                            <input v-model="job.name"
+                                   class="bg-transparent font-black text-sm focus:outline-none flex-1 min-w-0"
+                                   placeholder="工作名稱">
+                            <input v-model="job.color" type="color"
+                                   class="w-7 h-7 rounded-lg cursor-pointer shrink-0 border-none bg-transparent"
+                                   style="padding:1px">
+                            <button @click="removeJob(job.id)" class="text-red-400 shrink-0">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
-                    </div>
 
-                    <!-- Rate + PayDay -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">金額</label>
-                            <input v-model.number="shiftSettings.payroll.rate" type="number"
-                                   class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold focus:outline-none focus:border-blue-500">
+                        <!-- Row 2: Mode dropdown + Amount -->
+                        <div class="flex items-center gap-2">
+                            <select v-model="job.method"
+                                    class="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold shrink-0 focus:outline-none focus:border-blue-500">
+                                <option value="hourly">時薪</option>
+                                <option value="daily">日薪</option>
+                                <option value="weekly">週薪</option>
+                                <option value="monthly">月薪</option>
+                            </select>
+                            <input v-model.number="job.rate" type="number" placeholder="金額"
+                                   class="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold focus:outline-none focus:border-blue-500">
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">發薪日</label>
-                            <input v-model.number="shiftSettings.payroll.payDay" type="number" min="1" max="31"
-                                   class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold focus:outline-none focus:border-blue-500">
-                        </div>
-                    </div>
 
-                    <!-- Holiday logic + Monthly estimate -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">遇假日</label>
-                            <select v-model="shiftSettings.payroll.holidayLogic"
-                                    class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-bold">
+                        <!-- Row 3: PayDay + Holiday logic -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black opacity-40 shrink-0">每月</span>
+                            <input v-model.number="job.payDay" type="number" min="1" max="31"
+                                   class="w-14 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold text-center focus:outline-none focus:border-blue-500">
+                            <span class="text-[10px] font-black opacity-40 shrink-0">日發薪，遇假日</span>
+                            <select v-model="job.holidayLogic"
+                                    class="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold focus:outline-none focus:border-blue-500">
                                 <option value="early">提前</option>
                                 <option value="late">延後</option>
                             </select>
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-black opacity-40 uppercase tracking-widest">月估算</label>
-                            <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-black text-blue-400">
-                                ≈ NT$&nbsp;{{ calculateMonthlySalary.toLocaleString() }}
-                            </div>
+
+                        <!-- Per-job estimate -->
+                        <div class="flex justify-end">
+                            <span class="text-[10px] font-black text-blue-400">
+                                ≈ NT${{ calcJobMonthly(job).toLocaleString() }}/月
+                            </span>
                         </div>
                     </div>
 
-                    <!-- Pay Tags -->
-                    <div class="space-y-2 pt-1">
-                        <div class="flex items-center gap-2 opacity-40 px-1">
-                            <i data-lucide="tag" class="w-3 h-3"></i>
-                            <h3 class="text-[10px] font-black uppercase tracking-widest">薪資標籤</h3>
-                        </div>
-                        <div v-for="tag in shiftSettings.payTags" :key="tag.id"
-                             class="flex items-center gap-2 glass rounded-2xl px-3 py-2.5" :style="glassStyle">
-                            <input v-model="tag.name"
-                                   class="bg-transparent font-bold text-sm focus:outline-none flex-1 min-w-0">
-                            <input v-model="tag.color" type="color"
-                                   class="w-7 h-7 rounded-lg cursor-pointer shrink-0 border-none bg-transparent"
-                                   style="padding:1px">
-                            <button @click="removePayTag(tag.id)" class="text-red-400 shrink-0">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                        <button @click="addPayTag"
-                                class="w-full py-2.5 glass rounded-xl border-2 border-dashed border-white/10 text-[10px] font-bold opacity-60">
-                            + 新增薪資標籤
-                        </button>
+                    <button @click="addJob"
+                            class="w-full py-2.5 glass rounded-xl border-2 border-dashed border-white/10 text-[10px] font-bold opacity-60">
+                        + 新增工作
+                    </button>
+
+                    <!-- Total Estimated Salary -->
+                    <div class="flex justify-between items-center glass rounded-2xl px-4 py-3 mt-1" :style="glassStyle">
+                        <span class="text-xs font-black opacity-50">總估算 (月)</span>
+                        <span class="text-xl font-black text-blue-400">
+                            NT${{ calculateTotalMonthlySalary.toLocaleString() }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -348,16 +325,13 @@
                 <!-- SVG Clock Face -->
                 <div class="mx-auto w-60 h-60">
                     <svg viewBox="0 0 200 200" class="w-full h-full select-none">
-                        <!-- Face -->
                         <circle cx="100" cy="100" r="96"
                                 fill="rgba(255,255,255,0.04)"
                                 stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-                        <!-- Hand -->
                         <line x1="100" y1="100" :x2="clockHandX" :y2="clockHandY"
                               stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
                         <circle cx="100" cy="100" r="4" fill="#3b82f6"/>
 
-                        <!-- Hour markers -->
                         <template v-if="clockPicker.mode === 'hour'">
                             <g v-for="dot in clockHourDots" :key="dot.h"
                                class="cursor-pointer" @click="selectClockHour(dot.h)">
@@ -370,7 +344,6 @@
                             </g>
                         </template>
 
-                        <!-- Minute markers -->
                         <template v-else>
                             <g v-for="dot in clockMinuteDots" :key="dot.m"
                                class="cursor-pointer" @click="selectClockMinute(dot.m)">
@@ -385,44 +358,34 @@
                     </svg>
                 </div>
 
-                <!-- Mode hint -->
                 <p class="text-center text-[10px] font-black opacity-30 uppercase tracking-widest -mt-2">
                     {{ clockPicker.mode === 'hour' ? '點選時，自動跳至分' : '點選分鐘' }}
                 </p>
 
-                <!-- Actions -->
                 <div class="flex gap-3 pt-1">
                     <button @click="clockPicker.show = false"
-                            class="flex-1 py-3 rounded-2xl glass text-sm font-black" :style="glassStyle">
-                        取消
-                    </button>
+                            class="flex-1 py-3 rounded-2xl glass text-sm font-black" :style="glassStyle">取消</button>
                     <button @click="confirmClockPicker"
                             class="flex-1 py-3 rounded-2xl bg-blue-500 text-white text-sm font-black border-[2px]"
-                            :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }">
-                        確定
-                    </button>
+                            :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }">確定</button>
                 </div>
             </div>
         </div>
     </transition>
 
-    <!-- ── Today's Tasks Modal (Level 4) ─────────────────────────────────── -->
+    <!-- ── Today's Tasks (Level 4) ───────────────────────────────────────── -->
     <transition name="slide-up">
         <div v-if="showTodayTasks" class="modal-backdrop level-4" @click.self="showTodayTasks = false">
             <div class="modal-content glass">
                 <div class="modal-header">
                     <h2 class="text-2xl font-black tracking-tight">今日事</h2>
-                    <button @click="showTodayTasks = false" class="p-2 glass rounded-full">
-                        <i data-lucide="x"></i>
-                    </button>
+                    <button @click="showTodayTasks = false" class="p-2 glass rounded-full"><i data-lucide="x"></i></button>
                 </div>
-                <div v-if="todayTasks.length === 0" class="text-center py-12 opacity-30 font-bold">
-                    今日無待辦事項
-                </div>
+                <div v-if="todayTasks.length === 0" class="text-center py-12 opacity-30 font-bold">今日無待辦事項</div>
                 <div v-else class="space-y-3">
                     <div v-for="task in todayTasks" :key="task.id" class="glass-card p-5 flex items-center gap-4">
                         <div class="w-1.5 h-8 rounded-full"
-                             :style="{ backgroundColor: task.priority === 3 ? '#ef4444' : task.priority === 2 ? '#f59e0b' : task.priority === 1 ? '#3b82f6' : '#94a3b8' }">
+                             :style="{ backgroundColor: task.priority===3?'#ef4444':task.priority===2?'#f59e0b':task.priority===1?'#3b82f6':'#94a3b8' }">
                         </div>
                         <span class="flex-1 font-bold text-lg">{{ task.text }}</span>
                     </div>
@@ -431,15 +394,13 @@
         </div>
     </transition>
 
-    <!-- ── Day Detail Modal (Level 4) ────────────────────────────────────── -->
+    <!-- ── Day Detail (Level 4) ──────────────────────────────────────────── -->
     <transition name="slide-up">
         <div v-if="showDayDetail" class="modal-backdrop level-4" @click.self="showDayDetail = false">
             <div class="modal-content glass">
                 <div class="modal-header">
                     <h2 class="text-2xl font-black tracking-tight">{{ selectedDay }}</h2>
-                    <button @click="showDayDetail = false" class="p-2 glass rounded-full">
-                        <i data-lucide="x"></i>
-                    </button>
+                    <button @click="showDayDetail = false" class="p-2 glass rounded-full"><i data-lucide="x"></i></button>
                 </div>
                 <div class="space-y-6">
                     <div class="input-group">
@@ -457,12 +418,12 @@
                     <div class="input-group">
                         <label class="input-label">薪資標記</label>
                         <div class="flex flex-wrap gap-2">
-                            <button v-for="tag in shiftSettings.payTags" :key="tag.id"
-                                    @click="applyQuickTagToDay(selectedDay, 'pay', tag.id)"
+                            <button v-for="job in shiftSettings.jobs" :key="job.id"
+                                    @click="applyQuickTagToDay(selectedDay, 'pay', job.id)"
                                     class="px-3 py-2 rounded-xl border-2 transition-all text-xs font-bold"
-                                    :class="(shiftData[selectedDay] && shiftData[selectedDay].payIds || []).includes(tag.id)
+                                    :class="(shiftData[selectedDay] && shiftData[selectedDay].payIds || []).includes(job.id)
                                         ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
-                                {{ tag.name }}
+                                {{ job.name }}
                             </button>
                         </div>
                     </div>
@@ -476,30 +437,22 @@
         </div>
     </transition>
 
-    <!-- ── Jump to Date Picker (Level 4) ─────────────────────────────────── -->
+    <!-- ── Jump Picker (Level 4) ─────────────────────────────────────────── -->
     <transition name="fade">
         <div v-if="jumpPicker.show" class="modal-backdrop level-4" @click.self="jumpPicker.show = false">
             <div class="modal-content glass text-center">
                 <h2 class="text-2xl font-black mb-8">選擇年月</h2>
                 <div class="flex items-center justify-center gap-8 mb-12">
                     <div class="flex flex-col items-center gap-4">
-                        <button @click="updateJumpDate('year', jumpPicker.year + 1)" class="p-2 opacity-40">
-                            <i data-lucide="chevron-up"></i>
-                        </button>
+                        <button @click="updateJumpDate('year', jumpPicker.year+1)" class="p-2 opacity-40"><i data-lucide="chevron-up"></i></button>
                         <span class="text-4xl font-black">{{ jumpPicker.year }}</span>
-                        <button @click="updateJumpDate('year', jumpPicker.year - 1)" class="p-2 opacity-40">
-                            <i data-lucide="chevron-down"></i>
-                        </button>
+                        <button @click="updateJumpDate('year', jumpPicker.year-1)" class="p-2 opacity-40"><i data-lucide="chevron-down"></i></button>
                     </div>
                     <span class="text-4xl opacity-20 font-black">/</span>
                     <div class="flex flex-col items-center gap-4">
-                        <button @click="updateJumpDate('month', jumpPicker.month + 1)" class="p-2 opacity-40">
-                            <i data-lucide="chevron-up"></i>
-                        </button>
-                        <span class="text-4xl font-black">{{ (jumpPicker.month + 1).toString().padStart(2, '0') }}</span>
-                        <button @click="updateJumpDate('month', jumpPicker.month - 1)" class="p-2 opacity-40">
-                            <i data-lucide="chevron-down"></i>
-                        </button>
+                        <button @click="updateJumpDate('month', jumpPicker.month+1)" class="p-2 opacity-40"><i data-lucide="chevron-up"></i></button>
+                        <span class="text-4xl font-black">{{ (jumpPicker.month+1).toString().padStart(2,'0') }}</span>
+                        <button @click="updateJumpDate('month', jumpPicker.month-1)" class="p-2 opacity-40"><i data-lucide="chevron-down"></i></button>
                     </div>
                 </div>
                 <div class="flex gap-3">
@@ -510,7 +463,7 @@
         </div>
     </transition>
 
-    <!-- ── Confirmation Modal (Level 4) ──────────────────────────────────── -->
+    <!-- ── Confirmation (Level 4) ────────────────────────────────────────── -->
     <transition name="fade">
         <div v-if="confirmModal && confirmModal.show" class="modal-backdrop level-4"
              @click.self="confirmModal.show = false">

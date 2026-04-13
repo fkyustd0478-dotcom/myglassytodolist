@@ -83,7 +83,13 @@
                         <i data-lucide="palette" class="w-4 h-4"></i>
                         <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.theme }}</h3>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-3 gap-2">
+                        <button @click="selectTheme('system')"
+                            class="h-12 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1"
+                            :class="(!settings.useCustomBg && settings.theme === 'system') ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                            <i data-lucide="monitor" class="w-4 h-4"></i>
+                            <span class="text-[10px] font-bold">{{ t.system }}</span>
+                        </button>
                         <button @click="selectTheme('light')"
                             class="h-12 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1"
                             :class="(!settings.useCustomBg && settings.theme === 'light') ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">

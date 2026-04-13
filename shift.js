@@ -1,6 +1,10 @@
-// shift.js — Glassy Shift Vue app v3.0
+// shift.js — Glassy Shift Vue app v4.0
 // Depends on: storage.js (StorageProvider, ImageDB), nav.js (useNav)
 // Theme state is provided by useNav() via navSettings / isDarkTheme / glassStyle.
+// Salary is now modeled as a multi-job array (shiftSettings.jobs), replacing the
+// old single payroll + payTags objects. Jobs serve dual purpose:
+//   1. Calendar day-marking payTags  (id, name, color)
+//   2. Salary calculation           (method, rate, payDay, holidayLogic)
 
 const { createApp, ref, computed, onMounted, watch, nextTick, reactive } = Vue;
 
@@ -12,48 +16,63 @@ const app = createApp({
             navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle
         } = useNav();
 
-        // ── Calendar state ───────────────────────────────────────────────────
-        const calendarDate = ref(new Date());
-        const shiftData = ref(StorageProvider.getShiftData());
+        // ── Shift settings with migration ────────────────────────────────────
+        const rawSettings = StorageProvider.getShiftSettings();
+
+        // Migrate old payTags + payroll → jobs array (backwards compat)
+        if ((rawSettings.payTags || rawSettings.payroll) && !rawSettings.jobs) {
+            const payroll = rawSettings.payroll || {};
+            const tags    = rawSettings.payTags  || [
+                { id: 'salary', name: '薪資', color: '#10b981' },
+                { id: 'bonus',  name: '獎金', color: '#ef4444' }
+            ];
+            rawSettings.jobs = tags.map((tag, i) => ({
+                id:           tag.id,
+                name:         tag.name,
+                color:        tag.color,
+                method:       i === 0 ? (payroll.method || 'monthly') : 'monthly',
+                rate:         i === 0 ? (payroll.rate   || 0)         : 0,
+                payDay:       payroll.payDay       || 5,
+                holidayLogic: payroll.holidayLogic || 'early'
+            }));
+            delete rawSettings.payTags;
+            delete rawSettings.payroll;
+        }
 
         const shiftSettings = ref({
-            payroll: {
-                name: 'Main Job',
-                method: 'monthly',   // 'monthly' | 'daily' | 'weekly' | 'hourly'
-                rate: 30000,
-                payDay: 5,
-                holidayLogic: 'early',
-            },
+            jobs: [
+                { id: 'salary', name: '薪資', color: '#10b981', method: 'monthly', rate: 30000, payDay: 5, holidayLogic: 'early' },
+                { id: 'bonus',  name: '獎金', color: '#ef4444', method: 'monthly', rate: 0,     payDay: 5, holidayLogic: 'early' }
+            ],
             shiftTags: [
                 { id: 'early',  name: '早班', startTime: '08:00', endTime: '16:00', color: '#3b82f6' },
                 { id: 'middle', name: '中班', startTime: '12:00', endTime: '20:00', color: '#f59e0b' },
                 { id: 'late',   name: '晚班', startTime: '16:00', endTime: '00:00', color: '#8b5cf6' }
             ],
-            payTags: [
-                { id: 'salary', name: '薪資', color: '#10b981' },
-                { id: 'bonus',  name: '獎金', color: '#ef4444' }
-            ],
-            ...StorageProvider.getShiftSettings()
+            ...rawSettings
         });
 
+        // ── Calendar state ───────────────────────────────────────────────────
+        const calendarDate = ref(new Date());
+        const shiftData    = ref(StorageProvider.getShiftData());
+
         // ── UI state ─────────────────────────────────────────────────────────
-        const activeQuickTag = ref(null);
+        const activeQuickTag         = ref(null);
         const activeQuickTagCategory = ref(null); // 'shift' | 'pay'
-        const showTodayTasks = ref(false);
-        const showDayDetail = ref(false);
-        const selectedDay = ref(null);
-        const showTagsModal = ref(false);
-        const tagsTab = ref('shift'); // 'shift' | 'salary'
+        const showTodayTasks  = ref(false);
+        const showDayDetail   = ref(false);
+        const selectedDay     = ref(null);
+        const showTagsModal   = ref(false);
+        const tagsTab         = ref('shift'); // 'shift' | 'salary'
 
         const confirmModal = reactive({ show: false, title: '', message: '', onConfirm: null });
 
-        // themeStyle is handled by bg-layer; kept as empty object for compatibility
         const themeStyle = computed(() => ({}));
 
         const isAnyModalOpen = computed(() =>
             showTodayTasks.value || showDayDetail.value ||
             jumpPicker.value.show || confirmModal.show ||
-            showTagsModal.value || clockPicker.show
+            showTagsModal.value   || clockPicker.show
         );
 
         // ── Computed: calendar ───────────────────────────────────────────────
@@ -61,34 +80,30 @@ const app = createApp({
             if (!(calendarDate.value instanceof Date)) return [];
             const year  = calendarDate.value.getFullYear();
             const month = calendarDate.value.getMonth();
-            const firstDay = new Date(year, month, 1);
-            const lastDay  = new Date(year, month + 1, 0);
-            const days = [];
+            const days  = [];
 
-            const startOffset = firstDay.getDay();
-            const prevLast = new Date(year, month, 0).getDate();
+            const startOffset = new Date(year, month, 1).getDay();
+            const prevLast    = new Date(year, month, 0).getDate();
+            const lastDay     = new Date(year, month + 1, 0).getDate();
+
             for (let i = startOffset - 1; i >= 0; i--)
                 days.push({ date: new Date(year, month - 1, prevLast - i), isCurrentMonth: false });
-            for (let i = 1; i <= lastDay.getDate(); i++)
+            for (let i = 1; i <= lastDay; i++)
                 days.push({ date: new Date(year, month, i), isCurrentMonth: true });
-            const remaining = 42 - days.length;
-            for (let i = 1; i <= remaining; i++)
+            for (let i = 1; i <= 42 - days.length; i++)
                 days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
 
+            const todayStr = new Date().toISOString().split('T')[0];
             return days.map(day => {
                 const dateStr = day.date.toISOString().split('T')[0];
-                return {
-                    ...day, dateStr,
-                    data: shiftData.value[dateStr] || {},
-                    isToday: dateStr === new Date().toISOString().split('T')[0]
-                };
+                return { ...day, dateStr, data: shiftData.value[dateStr] || {}, isToday: dateStr === todayStr };
             });
         });
 
         const displayMonthYear = computed(() => {
             if (!(calendarDate.value instanceof Date)) return { year: '', month: '' };
             return {
-                year: calendarDate.value.getFullYear(),
+                year:  calendarDate.value.getFullYear(),
                 month: (calendarDate.value.getMonth() + 1).toString().padStart(2, '0')
             };
         });
@@ -102,12 +117,10 @@ const app = createApp({
             jumpPicker.value.month = calendarDate.value.getMonth();
             jumpPicker.value.show  = true;
         };
-
         const updateJumpDate = (type, val) => {
             if (type === 'year')  jumpPicker.value.year  = ((val - 1970 + 130) % 130) + 1970;
             if (type === 'month') jumpPicker.value.month = (val + 12) % 12;
         };
-
         const confirmJump = () => {
             const d = new Date(calendarDate.value);
             d.setFullYear(jumpPicker.value.year);
@@ -189,54 +202,60 @@ const app = createApp({
                 activeQuickTag.value = { type, id };
         };
 
-        const getTagName  = (type, id) =>
-            (type === 'shift' ? shiftSettings.value.shiftTags : shiftSettings.value.payTags)
-                .find(t => t.id === id)?.name  || '';
-        const getTagColor = (type, id) =>
-            (type === 'shift' ? shiftSettings.value.shiftTags : shiftSettings.value.payTags)
-                .find(t => t.id === id)?.color || 'rgba(255,255,255,0.2)';
+        // Tags now use jobs for pay-type lookups
+        const getTagName = (type, id) => {
+            if (type === 'shift') return shiftSettings.value.shiftTags.find(t => t.id === id)?.name || '';
+            return shiftSettings.value.jobs.find(j => j.id === id)?.name || '';
+        };
+        const getTagColor = (type, id) => {
+            if (type === 'shift') return shiftSettings.value.shiftTags.find(t => t.id === id)?.color || 'rgba(255,255,255,0.2)';
+            return shiftSettings.value.jobs.find(j => j.id === id)?.color || 'rgba(255,255,255,0.2)';
+        };
 
-        // ── Tag management ───────────────────────────────────────────────────
+        // ── Shift tag management ─────────────────────────────────────────────
         const addShiftTag = () => shiftSettings.value.shiftTags.push(
             { id: 'shift_' + Date.now(), name: '新輪班', startTime: '09:00', endTime: '18:00', color: '#3b82f6' }
         );
         const removeShiftTag = (id) => {
             shiftSettings.value.shiftTags = shiftSettings.value.shiftTags.filter(t => t.id !== id);
         };
-        const addPayTag = () => shiftSettings.value.payTags.push(
-            { id: 'pay_' + Date.now(), name: '新項目', color: '#10b981' }
-        );
-        const removePayTag = (id) => {
-            shiftSettings.value.payTags = shiftSettings.value.payTags.filter(t => t.id !== id);
+
+        // ── Multi-job salary management ──────────────────────────────────────
+        const addJob = () => shiftSettings.value.jobs.push({
+            id: 'job_' + Date.now(),
+            name: '新工作', color: '#6366f1',
+            method: 'monthly', rate: 0,
+            payDay: 5, holidayLogic: 'early'
+        });
+        const removeJob = (id) => {
+            shiftSettings.value.jobs = shiftSettings.value.jobs.filter(j => j.id !== id);
         };
 
-        // ── Salary calculation ───────────────────────────────────────────────
-        const calculateMonthlySalary = computed(() => {
-            const p = shiftSettings.value.payroll;
-            if (!p.rate) return 0;
-            switch (p.method) {
-                case 'monthly': return p.rate;
-                case 'daily':   return Math.round(p.rate * 22);
-                case 'weekly':  return Math.round(p.rate * 4.3);
-                case 'hourly':  return Math.round(p.rate * 8 * 22);
-                default:        return p.rate;
+        // Per-job monthly estimate (callable from template)
+        const calcJobMonthly = (job) => {
+            if (!job.rate) return 0;
+            switch (job.method) {
+                case 'monthly': return job.rate;
+                case 'daily':   return Math.round(job.rate * 22);       // ~22 working days
+                case 'weekly':  return Math.round(job.rate * 4.3);      // ~4.3 weeks
+                case 'hourly':  return Math.round(job.rate * 8 * 22);   // 8 h/day × 22 days
+                default:        return job.rate;
             }
-        });
+        };
+
+        const calculateTotalMonthlySalary = computed(() =>
+            (shiftSettings.value.jobs || []).reduce((sum, job) => sum + calcJobMonthly(job), 0)
+        );
 
         // ── Circular Clock Picker ────────────────────────────────────────────
         const clockPicker = reactive({
-            show:        false,
-            targetTagId: null,
-            target:      null,   // 'startTime' | 'endTime'
-            mode:        'hour', // 'hour' | 'minute'
-            hour:        9,      // 24-hour (0–23)
-            minute:      0,
+            show: false, targetTagId: null, target: null,
+            mode: 'hour', hour: 9, minute: 0,
         });
 
-        const clockIsAM = computed(() => clockPicker.hour < 12);
+        const clockIsAM       = computed(() => clockPicker.hour < 12);
         const clockDisplayHour = computed(() => { const h = clockPicker.hour % 12; return h === 0 ? 12 : h; });
 
-        // 12 hour-marker positions on clock face
         const clockHourDots = computed(() =>
             [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((h, i) => {
                 const a = (i * 30 - 90) * (Math.PI / 180);
@@ -244,7 +263,6 @@ const app = createApp({
             })
         );
 
-        // 12 minute-marker positions (steps of 5)
         const clockMinuteDots = computed(() =>
             [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m, i) => {
                 const a = (i * 30 - 90) * (Math.PI / 180);
@@ -252,7 +270,6 @@ const app = createApp({
             })
         );
 
-        // SVG clock hand tip
         const _clockAngle = computed(() => {
             if (clockPicker.mode === 'hour') {
                 const idx = clockDisplayHour.value === 12 ? 0 : clockDisplayHour.value;
@@ -270,13 +287,12 @@ const app = createApp({
             Object.assign(clockPicker, { show: true, targetTagId: tagId, target: field, hour: h, minute: m, mode: 'hour' });
         };
 
-        // h = 1–12 from clock face
         const selectClockHour = (h) => {
             let h24;
-            if (clockIsAM.value)  h24 = (h === 12) ? 0  : h;
-            else                  h24 = (h === 12) ? 12 : h + 12;
+            if (clockIsAM.value) h24 = (h === 12) ? 0  : h;
+            else                 h24 = (h === 12) ? 12 : h + 12;
             clockPicker.hour = h24;
-            clockPicker.mode = 'minute'; // auto-advance to minute
+            clockPicker.mode = 'minute';
         };
 
         const toggleClockAmPm = (toAM) => {
@@ -299,28 +315,27 @@ const app = createApp({
         // ── Confirm modal ─────────────────────────────────────────────────────
         const clearCacheAndUpdate = () => {
             Object.assign(confirmModal, {
-                show: true,
-                title: '清除暫存',
+                show: true, title: '清除暫存',
                 message: '確定要清除介面暫存並更新嗎？輪班紀錄不受影響。',
                 onConfirm: () => {
-                    StorageProvider.saveCommonSettings({ theme: 'cherry', useCustomBg: false, customBg: '', lang: 'zh', effect: 'none', notificationsEnabled: true });
+                    StorageProvider.saveCommonSettings({ theme: 'system', useCustomBg: false, customBg: '', lang: 'zh', effect: 'none', notificationsEnabled: true });
                     location.reload();
                 }
             });
         };
 
-        // ── Effects & background ──────────────────────────────────────────────
+        // ── Background & effects ──────────────────────────────────────────────
         const themeImages = {
             cherry: './theme/cherry.png', forest: './theme/forest.png', night: './theme/night.png',
-            sea: './theme/sea.png', seaside: './theme/seaside.png', sky: './theme/sky.png',
-            sunset: './theme/sunset.png', torii: './theme/torii.png'
+            sea:    './theme/sea.png',    seaside:'./theme/seaside.png', sky:  './theme/sky.png',
+            sunset: './theme/sunset.png', torii:  './theme/torii.png'
         };
 
         const applyThemeBg = (theme) => {
             if (navSettings.useCustomBg) return;
             if (themeImages[theme]) {
-                document.body.style.backgroundImage = `url(${themeImages[theme]}?v=${Date.now()})`;
-                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundImage   = `url(${themeImages[theme]}?v=${Date.now()})`;
+                document.body.style.backgroundSize    = 'cover';
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundAttachment = 'fixed';
             } else {
@@ -362,35 +377,20 @@ const app = createApp({
 
         // ── Return ────────────────────────────────────────────────────────────
         return {
-            // nav
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
-            // theme (from nav.js)
             navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle, themeStyle,
-            // calendar
-            calendarDate, calendarDays, displayMonthYear,
-            changeMonth, handleDayClick,
-            // quick tags
-            activeQuickTag, activeQuickTagCategory,
-            selectQuickTag, toggleQuickTagCategory,
-            // shift data
+            calendarDate, calendarDays, displayMonthYear, changeMonth, handleDayClick,
+            activeQuickTag, activeQuickTagCategory, selectQuickTag, toggleQuickTagCategory,
             shiftData, getTagName, getTagColor, applyQuickTagToDay,
-            // modals
             showTodayTasks, showDayDetail, selectedDay, todayTasks,
-            // jump picker
             jumpPicker, openJumpPicker, updateJumpDate, confirmJump,
-            // tags modal
-            showTagsModal, tagsTab,
-            shiftSettings, addShiftTag, removeShiftTag, addPayTag, removePayTag,
-            // salary
-            calculateMonthlySalary,
-            // clock picker
+            showTagsModal, tagsTab, shiftSettings,
+            addShiftTag, removeShiftTag,
+            addJob, removeJob, calcJobMonthly, calculateTotalMonthlySalary,
             clockPicker, clockIsAM, clockDisplayHour,
             clockHourDots, clockMinuteDots, clockHandX, clockHandY,
-            openClockPicker, selectClockHour, selectClockMinute,
-            toggleClockAmPm, confirmClockPicker,
-            // confirm modal
+            openClockPicker, selectClockHour, selectClockMinute, toggleClockAmPm, confirmClockPicker,
             confirmModal, clearCacheAndUpdate,
-            // misc
             isAnyModalOpen,
         };
     }
