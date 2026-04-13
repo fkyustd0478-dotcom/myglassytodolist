@@ -26,7 +26,7 @@
         <div v-show="settings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
         <!-- Header & Navigation -->
-        <header class="flex justify-between items-center p-6 shrink-0 relative z-[1000]">
+        <header class="flex justify-between items-center p-6 shrink-0 relative z-[10001]">
             <!-- Nav Capsule -->
             <div class="relative nav-capsule" @click.stop>
                 <button @click="toggleNavDropdown"
@@ -78,7 +78,9 @@
             <div v-show="settingsTab === 'theme'" class="space-y-4">
 
                 <!-- Theme Buttons -->
-                <div class="glass rounded-3xl p-5 space-y-4" :style="glassStyle">
+                <div class="glass rounded-3xl p-5 space-y-4 relative"
+                     :class="themeDropdownOpen ? 'z-[10]' : ''"
+                     :style="glassStyle">
                     <div class="flex items-center gap-2 opacity-40">
                         <i data-lucide="palette" class="w-4 h-4"></i>
                         <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.theme }}</h3>

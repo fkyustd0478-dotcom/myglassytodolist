@@ -1,7 +1,7 @@
 // shift.js — Glassy Shift v3.0
 // Depends on: storage.js, nav.js
 
-const { createApp, ref, computed, onMounted, watch, nextTick, reactive } = Vue;
+const { createApp, ref, computed, onMounted, onUnmounted, watch, nextTick, reactive } = Vue;
 
 const app = createApp({
     setup() {
@@ -187,7 +187,7 @@ const app = createApp({
 
         const isAnyModalOpen = computed(() =>
             showTodayTasks.value || showDayDetail.value ||
-            jumpPicker.value.show || showTagsModal.value || shiftTimePicker.show
+            showTagsModal.value || shiftTimePicker.show
         );
 
         const themeStyle = computed(() => ({}));
@@ -197,7 +197,7 @@ const app = createApp({
             if (!(calendarDate.value instanceof Date)) calendarDate.value = new Date();
             jumpPicker.value.year  = calendarDate.value.getFullYear();
             jumpPicker.value.month = calendarDate.value.getMonth();
-            jumpPicker.value.show  = true;
+            jumpPicker.value.show  = !jumpPicker.value.show;
         };
 
         const updateJumpDate = (type, val) => {
@@ -205,13 +205,21 @@ const app = createApp({
             if (type === 'month') jumpPicker.value.month = (val + 12) % 12;
         };
 
-        const confirmJump = () => {
-            const d = new Date(calendarDate.value);
-            d.setFullYear(jumpPicker.value.year);
-            d.setMonth(jumpPicker.value.month);
+        // Navigate directly to a month and close the picker
+        const jumpToMonth = (year, month) => {
+            const d = new Date(calendarDate.value instanceof Date ? calendarDate.value : new Date());
+            d.setFullYear(year);
+            d.setMonth(month);
             d.setDate(1);
             calendarDate.value    = d;
             jumpPicker.value.show = false;
+        };
+
+        // Close picker when clicking outside .jump-picker-anchor
+        const closeJumpPicker = (e) => {
+            if (!e.target.closest('.jump-picker-anchor')) {
+                jumpPicker.value.show = false;
+            }
         };
 
         // ── Today's tasks (from todo localStorage) ─────────────────────────
@@ -307,6 +315,28 @@ const app = createApp({
             shiftSettings.value.payTags = shiftSettings.value.payTags.filter(t => t.id !== id);
         };
 
+        // ── Swipe gestures ─────────────────────────────────────────────────
+        let swipeStartX = 0, swipeStartY = 0;
+
+        const handleSwipeStart = (e) => {
+            swipeStartX = e.touches[0].clientX;
+            swipeStartY = e.touches[0].clientY;
+        };
+
+        const handleSwipeEnd = (e) => {
+            const dx = e.changedTouches[0].clientX - swipeStartX;
+            const dy = e.changedTouches[0].clientY - swipeStartY;
+            const threshold = 50;
+            if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
+                // Prefer horizontal; fall back to vertical
+                if (Math.abs(dx) >= Math.abs(dy)) {
+                    changeMonth(dx < 0 ? 1 : -1);
+                } else {
+                    changeMonth(dy < 0 ? 1 : -1);
+                }
+            }
+        };
+
         // ── Effects ────────────────────────────────────────────────────────
         const setupEffects = () => {
             if (window.ParticleEngine) ParticleEngine.setEffect(navSettings.effect);
@@ -319,6 +349,11 @@ const app = createApp({
         onMounted(() => {
             setupEffects();
             if (window.lucide) lucide.createIcons();
+            document.addEventListener('click', closeJumpPicker);
+        });
+
+        onUnmounted(() => {
+            document.removeEventListener('click', closeJumpPicker);
         });
 
         watch(shiftSettings, (v) => StorageProvider.saveShiftSettings(v), { deep: true });
@@ -341,8 +376,10 @@ const app = createApp({
             todayTasks,
             // Modal states
             showTodayTasks, showDayDetail, selectedDay,
-            jumpPicker, openJumpPicker, updateJumpDate, confirmJump,
+            jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
             showTagsModal, isAnyModalOpen,
+            // Swipe
+            handleSwipeStart, handleSwipeEnd,
             // Shift tags
             addShiftTag, removeShiftTag, addPayTag, removePayTag,
             // Jobs / salary
