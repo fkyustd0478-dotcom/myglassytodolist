@@ -1,190 +1,84 @@
+// shift.js — Glassy Shift Vue app v3.0
+// Depends on: storage.js (StorageProvider, ImageDB), nav.js (useNav)
+// Theme state is provided by useNav() via navSettings / isDarkTheme / glassStyle.
+
 const { createApp, ref, computed, onMounted, watch, nextTick, reactive } = Vue;
 
 const app = createApp({
     setup() {
-        const { navDropdownOpen, currentPageTitle, toggleNavDropdown } = useNav();
-        // --- State ---
-        const activeTab = ref('calendar'); 
+        // ── Nav & shared theme ───────────────────────────────────────────────
+        const {
+            navDropdownOpen, currentPageTitle, toggleNavDropdown,
+            navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle
+        } = useNav();
+
+        // ── Calendar state ───────────────────────────────────────────────────
         const calendarDate = ref(new Date());
-        const shiftData = ref(StorageProvider.getShiftData()); 
-        
-        const commonSettings = ref({
-            theme: 'cherry',
-            useCustomBg: false,
-            customBg: '',
-            customBgOpacity: 0.5,
-            lang: 'zh',
-            effect: 'none',
-            notificationsEnabled: true,
-            ...StorageProvider.getCommonSettings()
-        });
+        const shiftData = ref(StorageProvider.getShiftData());
 
         const shiftSettings = ref({
             payroll: {
                 name: 'Main Job',
-                method: 'monthly',
-                rate: 150,
+                method: 'monthly',   // 'monthly' | 'daily' | 'weekly' | 'hourly'
+                rate: 30000,
                 payDay: 5,
                 holidayLogic: 'early',
-                holidayOffset: 1
             },
             shiftTags: [
-                { id: 'early', name: '早班', startTime: '08:00', endTime: '16:00', color: '#3b82f6' },
+                { id: 'early',  name: '早班', startTime: '08:00', endTime: '16:00', color: '#3b82f6' },
                 { id: 'middle', name: '中班', startTime: '12:00', endTime: '20:00', color: '#f59e0b' },
-                { id: 'late', name: '晚班', startTime: '16:00', endTime: '00:00', color: '#8b5cf6' }
+                { id: 'late',   name: '晚班', startTime: '16:00', endTime: '00:00', color: '#8b5cf6' }
             ],
             payTags: [
                 { id: 'salary', name: '薪資', color: '#10b981' },
-                { id: 'bonus', name: '獎金', color: '#ef4444' }
+                { id: 'bonus',  name: '獎金', color: '#ef4444' }
             ],
             ...StorageProvider.getShiftSettings()
         });
 
-        const activeQuickTag = ref(null); 
-        const activeQuickTagCategory = ref(null); // 'shift' or 'pay'
-        const showSettings = ref(false);
-        const settingsTab = ref('payroll'); // payroll, shifts, system
+        // ── UI state ─────────────────────────────────────────────────────────
+        const activeQuickTag = ref(null);
+        const activeQuickTagCategory = ref(null); // 'shift' | 'pay'
         const showTodayTasks = ref(false);
         const showDayDetail = ref(false);
-        const selectedDay = ref(null); 
-
+        const selectedDay = ref(null);
         const showTagsModal = ref(false);
+        const tagsTab = ref('shift'); // 'shift' | 'salary'
 
-        const confirmModal = reactive({
-            show: false,
-            title: '',
-            message: '',
-            onConfirm: null
-        });
+        const confirmModal = reactive({ show: false, title: '', message: '', onConfirm: null });
 
-        const translations = {
-            en: {
-                settings: 'Settings', theme: 'Theme', uiOpacity: 'Custom Image Opacity', lang: 'Language', notifications: 'Notifications',
-                custom: 'Custom (Upload)', upload: 'Upload Photo', light: 'Light', dark: 'Dark', otherThemes: 'Other Themes',
-                cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset', forest: 'Forest', sea: 'Sea', night: 'Night', torii: 'Torii',
-                clearCache: 'Clear System Cache', removeImg: 'Remove Image', enable: 'Enable', disable: 'Disable',
-                confirmClearCache: 'This will reset your theme and language settings. Continue?',
-                cancel: 'Cancel', confirm: 'Confirm'
-            },
-            zh: {
-                settings: '主設定', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知',
-                custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
-                cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落', forest: '森林', sea: '大海', night: '夜景', torii: '鳥居',
-                clearCache: '清除介面暫存並更新', removeImg: '移除圖片', enable: '啟用', disable: '停用',
-                confirmClearCache: '這將會重置主題與語言設置，但您的輪班資料將會保留。確定要繼續嗎？',
-                cancel: '取消', confirm: '確認'
-            }
-        };
+        // themeStyle is handled by bg-layer; kept as empty object for compatibility
+        const themeStyle = computed(() => ({}));
 
-        const t = computed(() => translations[commonSettings.value.lang] || translations.zh);
+        const isAnyModalOpen = computed(() =>
+            showTodayTasks.value || showDayDetail.value ||
+            jumpPicker.value.show || confirmModal.show ||
+            showTagsModal.value || clockPicker.show
+        );
 
-        const otherThemes = [
-            { id: 'cherry' }, { id: 'forest' }, { id: 'night' }, 
-            { id: 'sea' }, { id: 'seaside' }, { id: 'sky' },
-            { id: 'sunset' }, { id: 'torii' }
-        ];
-
-        const dropdowns = reactive({
-            theme: false
-        });
-
-        const toggleDropdown = (key) => {
-            Object.keys(dropdowns).forEach(k => {
-                if (k !== key) dropdowns[k] = false;
-            });
-            dropdowns[key] = !dropdowns[key];
-        };
-
-        const selectDropdownOption = (key, val) => {
-            if (key === 'theme') {
-                commonSettings.value.theme = val;
-                commonSettings.value.useCustomBg = false;
-            }
-            dropdowns[key] = false;
-        };
-
-        const toggleLang = () => {
-            commonSettings.value.lang = commonSettings.value.lang === 'en' ? 'zh' : 'en';
-        };
-
-        const toggleNotifications = () => {
-            commonSettings.value.notificationsEnabled = !commonSettings.value.notificationsEnabled;
-        };
-
-        const toggleCustomBg = () => {
-            commonSettings.value.useCustomBg = !commonSettings.value.useCustomBg;
-        };
-
-        const selectTheme = (theme) => {
-            commonSettings.value.theme = theme;
-            commonSettings.value.useCustomBg = false;
-        };
-
-        // --- Computed ---
-        const isDarkTheme = computed(() => {
-            const darkThemes = ['forest', 'night', 'torii'];
-            if (commonSettings.value.useCustomBg) {
-                return commonSettings.value.customBgOpacity < 0.5;
-            }
-            return darkThemes.includes(commonSettings.value.theme);
-        });
-        
-        const glassStyle = computed(() => {
-            return isDarkTheme.value
-                ? { backgroundColor: 'rgba(0,0,0,0.5)', border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
-                : { backgroundColor: 'rgba(255,255,255,0.65)', border: '2.5px solid rgba(0,0,0,0.9)', color: '#000000', backdropFilter: 'blur(16px)' };
-        });
-
-        const isAnyModalOpen = computed(() => {
-            return showSettings.value || showTodayTasks.value || showDayDetail.value ||
-                   jumpPicker.value.show || confirmModal.show ||
-                   showTagsModal.value;
-        });
-        
-        const themeStyle = computed(() => ({})); // Handled by bg-layer and custom-bg-layer
-
-        const themeClasses = computed(() => {
-            return `theme-${commonSettings.value.theme}`;
-        });
-
-        const customBgStyle = computed(() => ({
-            backgroundImage: `url(${commonSettings.value.customBg})`,
-            opacity: 1 - commonSettings.value.customBgOpacity,
-            display: commonSettings.value.useCustomBg ? 'block' : 'none'
-        }));
-
+        // ── Computed: calendar ───────────────────────────────────────────────
         const calendarDays = computed(() => {
             if (!(calendarDate.value instanceof Date)) return [];
-            const year = calendarDate.value.getFullYear();
+            const year  = calendarDate.value.getFullYear();
             const month = calendarDate.value.getMonth();
             const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            
+            const lastDay  = new Date(year, month + 1, 0);
             const days = [];
+
             const startOffset = firstDay.getDay();
-            
-            const prevMonthLastDay = new Date(year, month, 0).getDate();
-            for (let i = startOffset - 1; i >= 0; i--) {
-                const d = new Date(year, month - 1, prevMonthLastDay - i);
-                days.push({ date: d, isCurrentMonth: false });
-            }
-            
-            for (let i = 1; i <= lastDay.getDate(); i++) {
-                const d = new Date(year, month, i);
-                days.push({ date: d, isCurrentMonth: true });
-            }
-            
+            const prevLast = new Date(year, month, 0).getDate();
+            for (let i = startOffset - 1; i >= 0; i--)
+                days.push({ date: new Date(year, month - 1, prevLast - i), isCurrentMonth: false });
+            for (let i = 1; i <= lastDay.getDate(); i++)
+                days.push({ date: new Date(year, month, i), isCurrentMonth: true });
             const remaining = 42 - days.length;
-            for (let i = 1; i <= remaining; i++) {
-                const d = new Date(year, month + 1, i);
-                days.push({ date: d, isCurrentMonth: false });
-            }
-            
+            for (let i = 1; i <= remaining; i++)
+                days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
+
             return days.map(day => {
                 const dateStr = day.date.toISOString().split('T')[0];
                 return {
-                    ...day,
-                    dateStr,
+                    ...day, dateStr,
                     data: shiftData.value[dateStr] || {},
                     isToday: dateStr === new Date().toISOString().split('T')[0]
                 };
@@ -199,39 +93,31 @@ const app = createApp({
             };
         });
 
-        const jumpPicker = ref({
-            show: false,
-            year: new Date().getFullYear(),
-            month: new Date().getMonth()
-        });
+        // ── Jump Picker ──────────────────────────────────────────────────────
+        const jumpPicker = ref({ show: false, year: new Date().getFullYear(), month: new Date().getMonth() });
 
         const openJumpPicker = () => {
-            if (!(calendarDate.value instanceof Date)) {
-                calendarDate.value = new Date();
-            }
-            jumpPicker.value.year = calendarDate.value.getFullYear();
+            if (!(calendarDate.value instanceof Date)) calendarDate.value = new Date();
+            jumpPicker.value.year  = calendarDate.value.getFullYear();
             jumpPicker.value.month = calendarDate.value.getMonth();
-            jumpPicker.value.show = true;
+            jumpPicker.value.show  = true;
         };
 
         const updateJumpDate = (type, val) => {
-            if (type === 'year') {
-                // Circular 1970-2099 (130 years)
-                jumpPicker.value.year = ((val - 1970 + 130) % 130) + 1970;
-            } else if (type === 'month') {
-                // Circular 0-11
-                jumpPicker.value.month = (val + 12) % 12;
-            }
+            if (type === 'year')  jumpPicker.value.year  = ((val - 1970 + 130) % 130) + 1970;
+            if (type === 'month') jumpPicker.value.month = (val + 12) % 12;
         };
 
         const confirmJump = () => {
             const d = new Date(calendarDate.value);
             d.setFullYear(jumpPicker.value.year);
             d.setMonth(jumpPicker.value.month);
-            d.setDate(1); // Reset to 1st to avoid overflow
+            d.setDate(1);
             calendarDate.value = d;
             jumpPicker.value.show = false;
         };
+
+        // ── Today Tasks ──────────────────────────────────────────────────────
         const todayTasks = computed(() => {
             const todoData = StorageProvider.getTodoData();
             const todayStr = new Date().toISOString().split('T')[0];
@@ -241,7 +127,7 @@ const app = createApp({
                 .sort((a, b) => (b.priority || 0) - (a.priority || 0));
         });
 
-        // --- Methods ---
+        // ── Calendar actions ─────────────────────────────────────────────────
         const changeMonth = (delta) => {
             const d = new Date(calendarDate.value);
             d.setMonth(d.getMonth() + delta);
@@ -253,50 +139,36 @@ const app = createApp({
                 applyQuickTag(day.dateStr);
             } else {
                 selectedDay.value = day.dateStr;
-                if (!shiftData.value[selectedDay.value]) {
-                    shiftData.value[selectedDay.value] = {};
-                }
+                if (!shiftData.value[selectedDay.value]) shiftData.value[selectedDay.value] = {};
                 showDayDetail.value = true;
             }
         };
 
         const applyQuickTag = (dateStr) => {
             if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [] };
-            
             const { type, id } = activeQuickTag.value;
             const field = type === 'shift' ? 'shiftIds' : 'payIds';
-            
-            // Compatibility for old data
             if (!shiftData.value[dateStr][field]) {
                 shiftData.value[dateStr][field] = [];
-                const oldField = type === 'shift' ? 'shiftId' : 'payId';
-                if (shiftData.value[dateStr][oldField]) {
-                    shiftData.value[dateStr][field].push(shiftData.value[dateStr][oldField]);
-                    delete shiftData.value[dateStr][oldField];
+                const old = type === 'shift' ? 'shiftId' : 'payId';
+                if (shiftData.value[dateStr][old]) {
+                    shiftData.value[dateStr][field].push(shiftData.value[dateStr][old]);
+                    delete shiftData.value[dateStr][old];
                 }
             }
-
-            const index = shiftData.value[dateStr][field].indexOf(id);
-            if (index > -1) {
-                shiftData.value[dateStr][field].splice(index, 1);
-            } else {
-                shiftData.value[dateStr][field].push(id);
-            }
+            const idx = shiftData.value[dateStr][field].indexOf(id);
+            if (idx > -1) shiftData.value[dateStr][field].splice(idx, 1);
+            else shiftData.value[dateStr][field].push(id);
             StorageProvider.saveShiftData(shiftData.value);
         };
 
         const applyQuickTagToDay = (dateStr, type, id) => {
             if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [] };
             const field = type === 'shift' ? 'shiftIds' : 'payIds';
-            
             if (!shiftData.value[dateStr][field]) shiftData.value[dateStr][field] = [];
-            
-            const index = shiftData.value[dateStr][field].indexOf(id);
-            if (index > -1) {
-                shiftData.value[dateStr][field].splice(index, 1);
-            } else {
-                shiftData.value[dateStr][field].push(id);
-            }
+            const idx = shiftData.value[dateStr][field].indexOf(id);
+            if (idx > -1) shiftData.value[dateStr][field].splice(idx, 1);
+            else shiftData.value[dateStr][field].push(id);
             StorageProvider.saveShiftData(shiftData.value);
         };
 
@@ -311,186 +183,215 @@ const app = createApp({
         };
 
         const selectQuickTag = (type, id) => {
-            if (activeQuickTag.value && activeQuickTag.value.type === type && activeQuickTag.value.id === id) {
+            if (activeQuickTag.value?.type === type && activeQuickTag.value?.id === id)
                 activeQuickTag.value = null;
-            } else {
+            else
                 activeQuickTag.value = { type, id };
+        };
+
+        const getTagName  = (type, id) =>
+            (type === 'shift' ? shiftSettings.value.shiftTags : shiftSettings.value.payTags)
+                .find(t => t.id === id)?.name  || '';
+        const getTagColor = (type, id) =>
+            (type === 'shift' ? shiftSettings.value.shiftTags : shiftSettings.value.payTags)
+                .find(t => t.id === id)?.color || 'rgba(255,255,255,0.2)';
+
+        // ── Tag management ───────────────────────────────────────────────────
+        const addShiftTag = () => shiftSettings.value.shiftTags.push(
+            { id: 'shift_' + Date.now(), name: '新輪班', startTime: '09:00', endTime: '18:00', color: '#3b82f6' }
+        );
+        const removeShiftTag = (id) => {
+            shiftSettings.value.shiftTags = shiftSettings.value.shiftTags.filter(t => t.id !== id);
+        };
+        const addPayTag = () => shiftSettings.value.payTags.push(
+            { id: 'pay_' + Date.now(), name: '新項目', color: '#10b981' }
+        );
+        const removePayTag = (id) => {
+            shiftSettings.value.payTags = shiftSettings.value.payTags.filter(t => t.id !== id);
+        };
+
+        // ── Salary calculation ───────────────────────────────────────────────
+        const calculateMonthlySalary = computed(() => {
+            const p = shiftSettings.value.payroll;
+            if (!p.rate) return 0;
+            switch (p.method) {
+                case 'monthly': return p.rate;
+                case 'daily':   return Math.round(p.rate * 22);
+                case 'weekly':  return Math.round(p.rate * 4.3);
+                case 'hourly':  return Math.round(p.rate * 8 * 22);
+                default:        return p.rate;
             }
+        });
+
+        // ── Circular Clock Picker ────────────────────────────────────────────
+        const clockPicker = reactive({
+            show:        false,
+            targetTagId: null,
+            target:      null,   // 'startTime' | 'endTime'
+            mode:        'hour', // 'hour' | 'minute'
+            hour:        9,      // 24-hour (0–23)
+            minute:      0,
+        });
+
+        const clockIsAM = computed(() => clockPicker.hour < 12);
+        const clockDisplayHour = computed(() => { const h = clockPicker.hour % 12; return h === 0 ? 12 : h; });
+
+        // 12 hour-marker positions on clock face
+        const clockHourDots = computed(() =>
+            [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((h, i) => {
+                const a = (i * 30 - 90) * (Math.PI / 180);
+                return { h, x: 100 + 72 * Math.cos(a), y: 100 + 72 * Math.sin(a) };
+            })
+        );
+
+        // 12 minute-marker positions (steps of 5)
+        const clockMinuteDots = computed(() =>
+            [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m, i) => {
+                const a = (i * 30 - 90) * (Math.PI / 180);
+                return { m, x: 100 + 72 * Math.cos(a), y: 100 + 72 * Math.sin(a) };
+            })
+        );
+
+        // SVG clock hand tip
+        const _clockAngle = computed(() => {
+            if (clockPicker.mode === 'hour') {
+                const idx = clockDisplayHour.value === 12 ? 0 : clockDisplayHour.value;
+                return (idx * 30 - 90) * (Math.PI / 180);
+            }
+            return (clockPicker.minute / 5 * 30 - 90) * (Math.PI / 180);
+        });
+        const clockHandX = computed(() => 100 + 65 * Math.cos(_clockAngle.value));
+        const clockHandY = computed(() => 100 + 65 * Math.sin(_clockAngle.value));
+
+        const openClockPicker = (tagId, field) => {
+            const tag = shiftSettings.value.shiftTags.find(t => t.id === tagId);
+            if (!tag) return;
+            const [h, m] = (field === 'startTime' ? tag.startTime : tag.endTime).split(':').map(Number);
+            Object.assign(clockPicker, { show: true, targetTagId: tagId, target: field, hour: h, minute: m, mode: 'hour' });
         };
 
-        const fileInput = ref(null);
-        const triggerUpload = () => fileInput.value?.click();
-        const handleUpload = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                commonSettings.value.customBg = event.target.result;
-                commonSettings.value.useCustomBg = true;
-            };
-            reader.readAsDataURL(file);
-        };
-        const clearCustomBg = () => {
-            commonSettings.value.customBg = '';
-            commonSettings.value.useCustomBg = false;
+        // h = 1–12 from clock face
+        const selectClockHour = (h) => {
+            let h24;
+            if (clockIsAM.value)  h24 = (h === 12) ? 0  : h;
+            else                  h24 = (h === 12) ? 12 : h + 12;
+            clockPicker.hour = h24;
+            clockPicker.mode = 'minute'; // auto-advance to minute
         };
 
-        const getTagName = (type, id) => {
-            const list = type === 'shift' ? shiftSettings.value.shiftTags : shiftSettings.value.payTags;
-            return list.find(t => t.id === id)?.name || '';
+        const toggleClockAmPm = (toAM) => {
+            if (toAM  && clockPicker.hour >= 12) clockPicker.hour -= 12;
+            if (!toAM && clockPicker.hour < 12)  clockPicker.hour += 12;
         };
 
-        const getTagColor = (type, id) => {
-            const list = type === 'shift' ? shiftSettings.value.shiftTags : shiftSettings.value.payTags;
-            return list.find(t => t.id === id)?.color || 'rgba(255,255,255,0.2)';
+        const selectClockMinute = (m) => { clockPicker.minute = m; };
+
+        const confirmClockPicker = () => {
+            const tag = shiftSettings.value.shiftTags.find(t => t.id === clockPicker.targetTagId);
+            if (tag) {
+                const ts = `${clockPicker.hour.toString().padStart(2,'0')}:${clockPicker.minute.toString().padStart(2,'0')}`;
+                if (clockPicker.target === 'startTime') tag.startTime = ts;
+                else tag.endTime = ts;
+            }
+            clockPicker.show = false;
         };
 
-        const toggleTheme = (theme) => {
-            commonSettings.value.theme = theme;
-        };
-
+        // ── Confirm modal ─────────────────────────────────────────────────────
         const clearCacheAndUpdate = () => {
             Object.assign(confirmModal, {
                 show: true,
                 title: '清除暫存',
-                message: '確定要清除介面暫存並更新嗎？這將重置主題與語言設定，但不會刪除輪班紀錄。',
+                message: '確定要清除介面暫存並更新嗎？輪班紀錄不受影響。',
                 onConfirm: () => {
-                    const settings = StorageProvider.getCommonSettings();
-                    const newSettings = {
-                        theme: 'cherry',
-                        useCustomBg: false,
-                        customBg: '',
-                        lang: settings.lang || 'zh',
-                        effect: 'none',
-                        notificationsEnabled: true
-                    };
-                    StorageProvider.saveCommonSettings(newSettings);
+                    StorageProvider.saveCommonSettings({ theme: 'cherry', useCustomBg: false, customBg: '', lang: 'zh', effect: 'none', notificationsEnabled: true });
                     location.reload();
                 }
             });
         };
 
-        // --- Tag Management ---
-        const addShiftTag = () => {
-            shiftSettings.value.shiftTags.push({
-                id: 'shift_' + Date.now(),
-                name: '新輪班',
-                startTime: '09:00',
-                endTime: '18:00',
-                color: '#3b82f6'
-            });
+        // ── Effects & background ──────────────────────────────────────────────
+        const themeImages = {
+            cherry: './theme/cherry.png', forest: './theme/forest.png', night: './theme/night.png',
+            sea: './theme/sea.png', seaside: './theme/seaside.png', sky: './theme/sky.png',
+            sunset: './theme/sunset.png', torii: './theme/torii.png'
         };
 
-        const removeShiftTag = (id) => {
-            shiftSettings.value.shiftTags = shiftSettings.value.shiftTags.filter(t => t.id !== id);
+        const applyThemeBg = (theme) => {
+            if (navSettings.useCustomBg) return;
+            if (themeImages[theme]) {
+                document.body.style.backgroundImage = `url(${themeImages[theme]}?v=${Date.now()})`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundAttachment = 'fixed';
+            } else {
+                document.body.style.backgroundImage = '';
+            }
         };
 
-        const addPayTag = () => {
-            shiftSettings.value.payTags.push({
-                id: 'pay_' + Date.now(),
-                name: '新項目',
-                color: '#10b981'
-            });
-        };
-
-        const removePayTag = (id) => {
-            shiftSettings.value.payTags = shiftSettings.value.payTags.filter(t => t.id !== id);
-        };
-
-        // --- Lifecycle ---
-        const setupEffects = () => {
-            const clearAndSchedule = (theme) => {
-                if (window.ParticleEngine) {
-                    ParticleEngine.setEffect(commonSettings.value.effect);
-                }
-                
-                const themeImages = {
-                    cherry: './theme/cherry.png',
-                    forest: './theme/forest.png',
-                    night: './theme/night.png',
-                    sea: './theme/sea.png',
-                    seaside: './theme/seaside.png',
-                    sky: './theme/sky.png',
-                    sunset: './theme/sunset.png',
-                    torii: './theme/torii.png'
-                };
-                
-                if (!commonSettings.value.useCustomBg) {
-                    if (themeImages[theme]) {
-                        const v = Date.now();
-                        document.body.style.backgroundImage = `url(${themeImages[theme]}?v=${v})`;
-                        document.body.style.backgroundSize = 'cover';
-                        document.body.style.backgroundPosition = 'center';
-                        document.body.style.backgroundAttachment = 'fixed';
-                    } else {
-                        document.body.style.backgroundImage = '';
-                    }
-                }
-            };
-
-            clearAndSchedule(commonSettings.value.theme);
-            
-            watch(() => commonSettings.value.theme, (newTheme) => {
-                clearAndSchedule(newTheme);
-            });
-
-            watch(() => commonSettings.value.effect, (newEffect) => {
-                if (window.ParticleEngine) {
-                    ParticleEngine.setEffect(newEffect);
-                }
-            });
-        };
-
+        // ── Lifecycle ─────────────────────────────────────────────────────────
         onMounted(() => {
             confirmModal.show = false;
-            setupEffects();
+            applyThemeBg(navSettings.theme);
+            if (window.ParticleEngine) ParticleEngine.setEffect(navSettings.effect);
             if (window.lucide) lucide.createIcons();
 
-            // Notifications
             setInterval(() => {
-                if (!commonSettings.value.notificationsEnabled) return;
+                if (!navSettings.notificationsEnabled) return;
                 const now = new Date();
-                const todayStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+                const todayStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
                 const data = shiftData.value[todayStr];
-                if (data && data.shiftIds && data.shiftIds.length > 0 && !data.notified) {
-                    const firstShift = shiftSettings.value.shiftTags.find(t => t.id === data.shiftIds[0]);
-                    if (firstShift) {
-                        if (Notification.permission === 'granted') {
-                            new Notification('今日輪班', { body: `今日班次: ${firstShift.name}` });
-                        } else if (Notification.permission !== 'denied') {
-                            Notification.requestPermission().then(p => {
-                                if (p === 'granted') new Notification('今日輪班', { body: `今日班次: ${firstShift.name}` });
-                            });
-                        }
+                if (data?.shiftIds?.length > 0 && !data.notified) {
+                    const first = shiftSettings.value.shiftTags.find(t => t.id === data.shiftIds[0]);
+                    if (first) {
+                        const notify = () => new Notification('今日輪班', { body: `今日班次: ${first.name}` });
+                        if (Notification.permission === 'granted') notify();
+                        else if (Notification.permission !== 'denied')
+                            Notification.requestPermission().then(p => { if (p === 'granted') notify(); });
                         data.notified = true;
                     }
                 }
             }, 60000);
         });
 
-        watch(shiftSettings, (newVal) => {
-            StorageProvider.saveShiftSettings(newVal);
-        }, { deep: true });
+        watch(() => navSettings.theme,  applyThemeBg);
+        watch(() => navSettings.effect, (eff) => { if (window.ParticleEngine) ParticleEngine.setEffect(eff); });
+        watch(shiftSettings, (val) => StorageProvider.saveShiftSettings(val), { deep: true });
+        watch([showTodayTasks, showDayDetail, showTagsModal], () => {
+            nextTick(() => { if (window.lucide) lucide.createIcons(); });
+        });
 
-        watch([showSettings, showTodayTasks, showDayDetail], () => {
-            nextTick(() => {
-                if (window.lucide) lucide.createIcons();
-            });
-        }, { deep: true });
-
+        // ── Return ────────────────────────────────────────────────────────────
         return {
-            activeTab, calendarDate, calendarDays, commonSettings, shiftSettings, isDarkTheme, themeStyle,
-            changeMonth, handleDayClick, activeQuickTag, selectQuickTag,
-            getTagName, getTagColor, todayTasks, showSettings, settingsTab, showTodayTasks, showDayDetail,
-            selectedDay, shiftData, toggleTheme, clearCacheAndUpdate, confirmModal,
-            displayMonthYear, openJumpPicker, jumpPicker, updateJumpDate, confirmJump,
-            addShiftTag, removeShiftTag, addPayTag, removePayTag, applyQuickTagToDay,
-            activeQuickTagCategory, toggleQuickTagCategory, dropdowns, toggleDropdown,
-            triggerUpload, handleUpload, clearCustomBg, fileInput, glassStyle, isAnyModalOpen,
-            themeClasses, customBgStyle, t, otherThemes, selectDropdownOption, toggleLang,
-            toggleNotifications, toggleCustomBg, selectTheme,
-            showTagsModal,
-            navDropdownOpen, currentPageTitle, toggleNavDropdown
+            // nav
+            navDropdownOpen, currentPageTitle, toggleNavDropdown,
+            // theme (from nav.js)
+            navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle, themeStyle,
+            // calendar
+            calendarDate, calendarDays, displayMonthYear,
+            changeMonth, handleDayClick,
+            // quick tags
+            activeQuickTag, activeQuickTagCategory,
+            selectQuickTag, toggleQuickTagCategory,
+            // shift data
+            shiftData, getTagName, getTagColor, applyQuickTagToDay,
+            // modals
+            showTodayTasks, showDayDetail, selectedDay, todayTasks,
+            // jump picker
+            jumpPicker, openJumpPicker, updateJumpDate, confirmJump,
+            // tags modal
+            showTagsModal, tagsTab,
+            shiftSettings, addShiftTag, removeShiftTag, addPayTag, removePayTag,
+            // salary
+            calculateMonthlySalary,
+            // clock picker
+            clockPicker, clockIsAM, clockDisplayHour,
+            clockHourDots, clockMinuteDots, clockHandX, clockHandY,
+            openClockPicker, selectClockHour, selectClockMinute,
+            toggleClockAmPm, confirmClockPicker,
+            // confirm modal
+            confirmModal, clearCacheAndUpdate,
+            // misc
+            isAnyModalOpen,
         };
     }
 });
