@@ -5,7 +5,8 @@ try {
 
     createApp({
         setup() {
-            const { navDropdownOpen, currentPageTitle, toggleNavDropdown } = useNav();
+            const { navDropdownOpen, currentPageTitle, toggleNavDropdown,
+                    navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle } = useNav();
             // --- State ---
             const todos = ref([]);
             const lists = ref([
@@ -44,14 +45,15 @@ try {
                 onConfirm: null
             });
 
-            const settings = ref({ 
-                theme: 'cherry', 
-                customBgOpacity: 0.5, 
-                notificationsEnabled: false, 
+            const settings = ref({
+                theme: 'system',
+                customBgOpacity: 0.5,
+                notificationsEnabled: true,
                 lang: 'zh',
-                customBg: '', 
+                customBg: '',
                 useCustomBg: false,
-                effect: 'none'
+                effect: 'none',
+                ...StorageProvider.getCommonSettings()
             });
 
             const isMenuOpen = ref(false);
@@ -89,6 +91,7 @@ try {
             // --- Constants & Translations ---
             const translations = {
                 en: {
+                    navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
                     noTasks: 'No active tasks', completed: 'Completed Records', settings: 'Settings', theme: 'Theme', uiOpacity: 'Custom Image Opacity', lang: 'Language', notifications: 'Notifications', back: 'Back', emptyBin: 'Empty Bin', newTask: 'New Task', editTask: 'Edit Task', placeholder: 'Task title...', category: 'Category', recurring: 'Recurring', date: 'Date', time: 'Time', add: 'Add', save: 'Save', nextGen: 'Next generation', custom: 'Custom (Upload)', upload: 'Upload Photo', light: 'Light', dark: 'Dark', otherThemes: 'Other Themes',
                     daily: 'Daily', normal: 'Normal', important: 'Important', urgent: 'Urgent', memo: 'Memo', none: 'None', weekly: 'Weekly', monthly: 'Monthly', cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset', forest: 'Forest', sea: 'Sea', night: 'Night', torii: 'Torii',
                     active: 'Active', bin: 'Recycle Bin', noCompleted: 'No completed records', tasks: 'Tasks', day: 'Day', month: 'Month',
@@ -104,6 +107,7 @@ try {
                     menu: 'Menu', analytics: 'Analytics', taskList: 'Task List'
                 },
                 zh: {
+                    navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定',
                     noTasks: '暫無任務', completed: '已完成紀錄', settings: '設置', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知', back: '返回', emptyBin: '清空回收站', newTask: '新任務', editTask: '編輯任務', placeholder: '任務內容...', category: '分類', recurring: '重複', date: '日期', time: '時間', add: '添加', save: '保存', nextGen: '下次生成', custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
                     daily: '日常', normal: '一般', important: '重要', urgent: '緊急', memo: '備忘錄', none: '無', weekly: '每週', monthly: '每月', cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落', forest: '森林', sea: '大海', night: '夜景', torii: '鳥居',
                     active: '進行中', bin: '回收站', noCompleted: '暫無完成紀錄', tasks: '項任務', day: '日', month: '月',
@@ -137,42 +141,16 @@ try {
                 transition: 'background-image 0.5s ease'
             });
 
-            const t = computed(() => translations[settings.value.lang]);
-            
+            const t = computed(() => translations[navSettings.lang] || translations.zh);
+
             const modeTitle = computed(() => {
-                if (settings.value.lang === 'zh') {
+                if (navSettings.lang === 'zh') {
                     return appMode.value === 'todo' ? '琉璃待辦' : '琉璃輪班';
                 }
                 return appMode.value === 'todo' ? 'Glassy Todo' : 'Glassy Shift';
             });
 
-            const isDarkTheme = computed(() => {
-                const darkThemes = ['forest', 'night', 'torii'];
-                if (settings.value.useCustomBg) {
-                    return settings.value.customBgOpacity < 0.5;
-                }
-                return darkThemes.includes(settings.value.theme);
-            });
-
             const isDefaultList = (id) => ['default', 'personal', 'work'].includes(id);
-
-            const glassStyle = computed(() => ({ 
-                backgroundColor: isDarkTheme.value ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)', 
-                backdropFilter: 'blur(12px)',
-                border: isDarkTheme.value ? '2.5px solid rgba(255, 255, 255, 0.9)' : '2.5px solid rgba(0, 0, 0, 0.9)',
-                color: isDarkTheme.value ? '#FFFFFF' : '#000000'
-            }));
-            
-            const themeClasses = computed(() => {
-                let classes = isDarkTheme.value ? 'theme-dark-mode ' : '';
-                if (settings.value.useCustomBg) return classes + 'theme-light';
-                return classes + `theme-${settings.value.theme}`;
-            });
-
-            const customBgStyle = computed(() => ({
-                backgroundImage: `url(${settings.value.customBg})`,
-                opacity: 1 - settings.value.customBgOpacity // 100% opacity slider = 0% image opacity (Invisible)
-            }));
 
             const formatTimeDisplay = computed(() => `${form.value.time.hour.toString().padStart(2, '0')}:${form.value.time.minute.toString().padStart(2, '0')}`);
             
@@ -203,46 +181,42 @@ try {
             const deletedTodos = computed(() => todos.value.filter(t => t.isDeleted));
 
             // --- Methods ---
-            const toggleLang = () => settings.value.lang = settings.value.lang === 'en' ? 'zh' : 'en';
+            const toggleLang = () => {
+                navSettings.lang = navSettings.lang === 'en' ? 'zh' : 'en';
+                StorageProvider.saveCommonSettings(navSettings);
+            };
             
             const toggleNotifications = async () => {
-                if (settings.value.notificationsEnabled) {
-                    settings.value.notificationsEnabled = false;
+                if (navSettings.notificationsEnabled) {
+                    navSettings.notificationsEnabled = false;
+                    StorageProvider.saveCommonSettings(navSettings);
                     return;
                 }
                 if (!('Notification' in window)) {
-                    settings.value.notificationsEnabled = false;
+                    navSettings.notificationsEnabled = false;
+                    StorageProvider.saveCommonSettings(navSettings);
                     return;
                 }
                 try {
                     const permission = await Notification.requestPermission();
-                    settings.value.notificationsEnabled = permission === 'granted';
+                    navSettings.notificationsEnabled = permission === 'granted';
                 } catch (e) {
-                    settings.value.notificationsEnabled = false;
+                    navSettings.notificationsEnabled = false;
                 }
+                StorageProvider.saveCommonSettings(navSettings);
             };
-            
+
             const selectTheme = (id) => {
-                activeAssets.value = []; // Clear assets immediately
-                settings.value.theme = id;
-                settings.value.useCustomBg = false;
-                document.body.classList.remove('custom-theme');
-                document.body.style.backgroundImage = '';
+                activeAssets.value = [];
+                navSettings.theme = id;
+                navSettings.useCustomBg = false;
+                StorageProvider.saveCommonSettings(navSettings);
             };
 
             const toggleCustomBg = () => {
-                if (settings.value.customBg) {
-                    settings.value.useCustomBg = !settings.value.useCustomBg;
-                    if (settings.value.useCustomBg) {
-                        activeAssets.value = [];
-                        document.body.classList.add('custom-theme');
-                        const url = `url(${settings.value.customBg})`;
-                        document.body.style.backgroundImage = url;
-                        themeStyle.backgroundImage = url;
-                    } else {
-                        document.body.classList.remove('custom-theme');
-                        document.body.style.backgroundImage = '';
-                    }
+                if (navSettings.customBg) {
+                    navSettings.useCustomBg = !navSettings.useCustomBg;
+                    StorageProvider.saveCommonSettings(navSettings);
                 } else {
                     triggerUpload();
                 }
@@ -271,12 +245,12 @@ try {
                 // Create new URL
                 const url = URL.createObjectURL(file);
                 currentObjectUrl.value = url;
-                settings.value.customBg = url;
-                settings.value.useCustomBg = true;
-                
+                navSettings.customBg = url;
+                navSettings.useCustomBg = true;
+
                 uploadProgress.value = 100;
                 setTimeout(() => uploadProgress.value = 0, 500);
-                StorageProvider.saveSettings(settings.value);
+                StorageProvider.saveCommonSettings(navSettings);
                 e.target.value = '';
             };
 
@@ -294,16 +268,11 @@ try {
                     URL.revokeObjectURL(currentObjectUrl.value);
                     currentObjectUrl.value = null;
                 }
-                settings.value.customBg = '';
-                settings.value.useCustomBg = false;
-                
-                // Instant UI reset
-                document.body.style.backgroundImage = '';
-                themeStyle.backgroundImage = '';
-                document.body.classList.remove('custom-theme');
-                
+                navSettings.customBg = '';
+                navSettings.useCustomBg = false;
+
                 await ImageDB.deleteBlob('custom-bg');
-                StorageProvider.saveSettings(settings.value);
+                StorageProvider.saveCommonSettings(navSettings);
                 renderTrigger.value++;
             };
 
@@ -541,8 +510,9 @@ try {
 
             const selectDropdownOption = (key, val) => {
                 if (key === 'theme') {
-                    settings.value.theme = val;
-                    settings.value.useCustomBg = false;
+                    navSettings.theme = val;
+                    navSettings.useCustomBg = false;
+                    StorageProvider.saveCommonSettings(navSettings);
                 } else {
                     form.value[key] = val;
                 }
@@ -789,7 +759,7 @@ try {
                 const count = Math.floor(Math.random() * 3) + 1;
                 for (let i = 0; i < count; i++) {
                     setTimeout(() => {
-                        const currentTheme = settings.value.theme;
+                        const currentTheme = navSettings.theme;
                         if ((type === 'airplane' && currentTheme === 'sky') ||
                             (type === 'crab' && currentTheme === 'seaside') ||
                             (type === 'ship' && currentTheme === 'sea')) {
@@ -819,60 +789,32 @@ try {
                     
                     // Modular Effects Logic
                     if (window.ParticleEngine) {
-                        if (settings.value.effect === 'none') {
-                            // Auto-set effect based on theme if not manually set?
-                            // No, user wants independent control.
-                            // But let's initialize it if it's the first time or if they haven't touched it.
-                        }
-                        ParticleEngine.setEffect(settings.value.effect);
-                    }
-                    
-                    const themeImages = {
-                        cherry: './theme/cherry.png',
-                        forest: './theme/forest.png',
-                        night: './theme/night.png',
-                        sea: './theme/sea.png',
-                        seaside: './theme/seaside.png',
-                        sky: './theme/sky.png',
-                        sunset: './theme/sunset.png',
-                        torii: './theme/torii.png'
-                    };
-                    
-                    if (!settings.value.useCustomBg) {
-                        if (themeImages[theme]) {
-                            const v = Date.now();
-                            document.body.style.backgroundImage = `url(${themeImages[theme]}?v=${v})`;
-                            document.body.style.backgroundSize = 'cover';
-                            document.body.style.backgroundPosition = 'center';
-                            document.body.style.backgroundAttachment = 'fixed';
-                        } else {
-                            document.body.style.backgroundImage = '';
-                        }
+                        ParticleEngine.setEffect(navSettings.effect);
                     }
 
-                    if (!settings.value.useCustomBg) {
-                        // No automatic assets like planes or crabs anymore.
+                    if (!navSettings.useCustomBg) {
+                        document.body.style.backgroundImage = '';
                     }
                 };
 
-                clearAndSchedule(settings.value.theme);
-                
-                watch(() => settings.value.theme, (newTheme) => {
+                clearAndSchedule(navSettings.theme);
+
+                watch(() => navSettings.theme, (newTheme) => {
                     clearAndSchedule(newTheme);
                 });
 
-                watch(() => settings.value.effect, (newEffect) => {
+                watch(() => navSettings.effect, (newEffect) => {
                     if (window.ParticleEngine) {
                         ParticleEngine.setEffect(newEffect);
                     }
                 });
 
-                watch(() => settings.value.useCustomBg, (isCustom) => {
+                watch(() => navSettings.useCustomBg, (isCustom) => {
                     if (isCustom) {
                         if (effectTimeout) clearTimeout(effectTimeout);
                         activeAssets.value = [];
                     } else {
-                        clearAndSchedule(settings.value.theme);
+                        clearAndSchedule(navSettings.theme);
                     }
                 });
             };
@@ -891,24 +833,9 @@ try {
                 }
 
                 await ImageDB.init();
-                
-                const savedSettings = StorageProvider.loadSettings();
-                const savedData = StorageProvider.loadData();
 
-                if (savedSettings) {
-                    settings.value = { ...settings.value, ...savedSettings };
-                    const blob = await ImageDB.getBlob('custom-bg');
-                    if (blob) {
-                        const url = URL.createObjectURL(blob);
-                        currentObjectUrl.value = url;
-                        settings.value.customBg = url;
-                        if (settings.value.useCustomBg) {
-                            document.body.classList.add('custom-theme');
-                            document.body.style.backgroundImage = `url(${url})`;
-                            themeStyle.backgroundImage = `url(${url})`;
-                        }
-                    }
-                }
+                // nav.js (useNav) handles loading navSettings and custom background image.
+                const savedData = StorageProvider.loadData();
 
                 if (savedData) {
                     todos.value = savedData.todos || [];
@@ -946,7 +873,8 @@ try {
 
                 window.addEventListener('storage', (e) => {
                     if (e.key === 'todo_settings' && e.newValue) {
-                        settings.value = { ...settings.value, ...JSON.parse(e.newValue) };
+                        const parsed = JSON.parse(e.newValue);
+                        Object.assign(navSettings, parsed);
                     }
                     if (e.key === 'todo_data' && e.newValue) {
                         const data = JSON.parse(e.newValue);
@@ -956,7 +884,7 @@ try {
                 });
                 
                 setInterval(() => {
-                    if (!settings.value.notificationsEnabled) return;
+                    if (!navSettings.notificationsEnabled) return;
                     const now = Date.now();
                     todos.value.forEach(t => {
                         if (t.completed || t.isDeleted || !t.dueDate || t.notified) return;
@@ -978,9 +906,7 @@ try {
                 }, 30000);
             });
 
-            watch(settings, (newVal) => {
-                StorageProvider.saveSettings(newVal);
-            }, { deep: true });
+            // navSettings persistence is handled per-mutation via StorageProvider.saveCommonSettings.
 
             watch([todos, lists], () => {
                 StorageProvider.saveData({ todos: todos.value, lists: lists.value });
@@ -995,7 +921,7 @@ try {
                     onConfirm: () => {
                         const currentSettings = JSON.parse(localStorage.getItem('todo_settings') || '{}');
                         const newSettings = {
-                            theme: 'cherry',
+                            theme: 'system',
                             useCustomBg: false,
                             customBg: '',
                             lang: currentSettings.lang || 'zh',
@@ -1055,7 +981,8 @@ try {
                 isMenuOpen,
                 appMode,
                 modeTitle,
-                navDropdownOpen, currentPageTitle, toggleNavDropdown
+                navDropdownOpen, currentPageTitle, toggleNavDropdown,
+                navSettings
             };
         }
     }).mount('#app');
