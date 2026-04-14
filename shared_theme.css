@@ -149,7 +149,8 @@ body {
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
-    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), filter 0.8s ease;
+    filter: blur(0);
     background-size: cover;
     background-position: center;
 }

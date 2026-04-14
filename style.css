@@ -42,10 +42,10 @@ header {
     -webkit-backdrop-filter: blur(12px) brightness(0.95);
 }
 
-/* Modal Size Optimization */
+/* Modal Size Optimization — universal 420px / 80vh spec */
 .setting-window, .glass.rounded-t-\[2\.5rem\], .glass.rounded-\[2\.5rem\] {
-    width: 85% !important;
-    max-width: 400px !important;
+    width: 100% !important;
+    max-width: 420px !important;
     margin: auto;
 }
 
@@ -397,8 +397,8 @@ input[type=range]::-webkit-slider-runnable-track {
 .setting-window {
     position: relative;
     z-index: 8001;
-    max-height: 70vh !important; /* Reduced height */
-    overflow-y: auto !important; /* Vertical scrollbar */
+    max-height: 80vh !important;
+    overflow-y: auto !important;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }

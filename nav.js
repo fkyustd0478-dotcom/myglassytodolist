@@ -101,11 +101,68 @@ function useNav() {
 
     let _mqCleanup = null;
 
-    // ── Body class injection — immediate so CSS vars apply before first paint ──
-    // Watches both resolvedTheme and useCustomBg so the white-base class is
-    // applied synchronously; { immediate: true } runs before onMounted.
+    // ── Background transition system ──────────────────────────────────────────
+    // Image themes are preloaded before the class switch so the bg-layer
+    // never flickers during the opacity/blur entrance animation.
+    const _imgThemes = new Set([
+        'cherry','sky','sunset','sea','seaside','forest','night','torii',
+        'mapleavenue','waterfall','starrysky','ferriswheel'
+    ]);
+    let _firstApply = true;
+
+    function _preload(src) {
+        return new Promise(r => {
+            const img = new Image();
+            img.onload = img.onerror = r;
+            img.src = src;
+            setTimeout(r, 3000); // safety timeout
+        });
+    }
+
+    async function _applyTheme(theme, useCustomBg) {
+        const cls = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
+
+        // First load: apply synchronously — anti-flash script already set
+        // the html background; just update body class with no animation.
+        if (_firstApply) {
+            _firstApply = false;
+            document.body.className = cls;
+            return;
+        }
+
+        // Animate out the bg-layer before switching
+        const bgLayer = document.querySelector('.bg-layer');
+        if (bgLayer) {
+            bgLayer.style.transition = 'none';
+            bgLayer.style.opacity   = '0';
+            bgLayer.style.filter    = 'blur(10px)';
+            bgLayer.offsetHeight;   // force reflow so the state registers
+        }
+
+        // For image themes: wait until the asset is in browser cache
+        // For solid/gradient themes: proceed immediately
+        if (_imgThemes.has(theme)) {
+            await _preload('./theme/' + theme + '.png');
+        }
+
+        document.body.className = cls;
+
+        // Double-RAF ensures the new background-image is painted before we
+        // remove the override, triggering the CSS opacity+blur transition.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            if (bgLayer) {
+                bgLayer.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
+                bgLayer.style.opacity    = '';
+                bgLayer.style.filter     = '';
+            }
+        }));
+    }
+
+    // ── Body class injection ──────────────────────────────────────────────────
+    // { immediate: true } fires synchronously before onMounted (first load).
+    // Subsequent reactive changes go through the preload + transition path.
     watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
-        document.body.className = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
+        _applyTheme(theme, useCustomBg);
     }, { immediate: true });
 
     onMounted(async () => {

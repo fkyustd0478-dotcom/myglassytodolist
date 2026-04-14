@@ -17,7 +17,7 @@
 
 /* Typography */
 .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: var(--text-shadow);
 }
 
 /* Top Navigation */
@@ -99,6 +99,7 @@
 .day-number {
     font-size: 13px;
     font-weight: 800;
+    text-shadow: var(--text-shadow);
 }
 
 .day-indicators {
@@ -216,9 +217,9 @@
 }
 
 .modal-content {
-    width: 90%;
-    max-width: 450px;
-    max-height: 85vh;
+    width: 100%;
+    max-width: 420px;
+    max-height: 80vh;
     overflow-y: auto;
     position: relative;
     padding: 28px;
