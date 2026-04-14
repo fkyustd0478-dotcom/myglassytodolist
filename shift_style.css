@@ -176,7 +176,7 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
-    border-radius: 28px 28px 0 0;
+    border-radius: 0;
     border-bottom: none;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(24px);

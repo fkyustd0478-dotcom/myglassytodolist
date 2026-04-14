@@ -182,8 +182,8 @@
          ══════════════════════════════════════════════════════════════════════ -->
     <transition name="slide-up">
         <div v-if="showTagsModal"
-             class="fixed inset-0 z-[8001] flex items-end justify-center p-4 pb-[90px]">
-            <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-sm overflow-y-auto max-h-[80vh]"
+             class="fixed inset-x-0 bottom-0 top-[88px] z-[8001] flex items-end justify-center p-4 pb-[90px]">
+            <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-sm overflow-y-auto max-h-[calc(100vh-180px)]"
                  :style="glassStyle" @click.stop>
 
                 <!-- Header -->
@@ -252,7 +252,7 @@
                 </div>
 
                 <!-- ── 薪資設定 Tab ─────────────────────────────────────── -->
-                <div v-show="tagsTab === 'salary'" class="space-y-3">
+                <div v-show="tagsTab === 'salary'" class="space-y-3 overflow-y-auto">
                     <div class="flex items-center gap-2 opacity-40 px-1">
                         <i data-lucide="briefcase" class="w-4 h-4"></i>
                         <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.jobSourceLabel }}</h3>
@@ -459,30 +459,32 @@
                     </button>
                 </div>
                 <div class="space-y-6">
-                    <div class="input-group">
-                        <label class="input-label">{{ t.shiftMarkLabel }}</label>
-                        <div class="flex flex-wrap gap-2">
-                            <button v-for="tag in shiftSettings.shiftTags" :key="tag.id"
-                                    @click="applyQuickTagToDay(selectedDay, 'shift', tag.id)"
-                                    class="px-3 py-2 rounded-xl border-2 transition-all text-xs font-bold"
-                                    :class="(shiftData[selectedDay] && shiftData[selectedDay].shiftIds || []).includes(tag.id)
-                                        ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
-                                {{ tag.name }}
-                            </button>
+                    <template v-if="selectedDayHasShift">
+                        <div class="input-group">
+                            <label class="input-label">{{ t.shiftMarkLabel }}</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button v-for="tag in shiftSettings.shiftTags" :key="tag.id"
+                                        @click="applyQuickTagToDay(selectedDay, 'shift', tag.id)"
+                                        class="px-3 py-2 rounded-xl border-2 transition-all text-xs font-bold"
+                                        :class="(shiftData[selectedDay] && shiftData[selectedDay].shiftIds || []).includes(tag.id)
+                                            ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                                    {{ tag.name }}
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">{{ t.payMarkLabel }}</label>
-                        <div class="flex flex-wrap gap-2">
-                            <button v-for="job in shiftSettings.jobs" :key="job.id"
-                                    @click="applyQuickTagToDay(selectedDay, 'pay', job.id)"
-                                    class="px-3 py-2 rounded-xl border-2 transition-all text-xs font-bold"
-                                    :class="(shiftData[selectedDay] && shiftData[selectedDay].payIds || []).includes(job.id)
-                                        ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
-                                {{ job.name }}
-                            </button>
+                        <div class="input-group">
+                            <label class="input-label">{{ t.payMarkLabel }}</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button v-for="job in shiftSettings.jobs" :key="job.id"
+                                        @click="applyQuickTagToDay(selectedDay, 'pay', job.id)"
+                                        class="px-3 py-2 rounded-xl border-2 transition-all text-xs font-bold"
+                                        :class="(shiftData[selectedDay] && shiftData[selectedDay].payIds || []).includes(job.id)
+                                            ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
+                                    {{ job.name }}
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </template>
                     <div class="input-group">
                         <label class="input-label">{{ t.noteLabel }}</label>
                         <textarea v-model="shiftData[selectedDay].note" class="glass-input" rows="4"

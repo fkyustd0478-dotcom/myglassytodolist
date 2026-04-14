@@ -177,6 +177,13 @@ const app = createApp({
             };
         });
 
+        // ── Conditional day detail ───────────────────────────────────────────
+        const selectedDayHasShift = computed(() => {
+            if (!selectedDay.value || !shiftData.value[selectedDay.value]) return false;
+            const d = shiftData.value[selectedDay.value];
+            return Array.isArray(d.shiftIds) && d.shiftIds.length > 0;
+        });
+
         // ── Jump Picker ──────────────────────────────────────────────────────
         const jumpPicker = ref({ show: false, year: new Date().getFullYear(), month: new Date().getMonth() });
 
@@ -472,7 +479,7 @@ const app = createApp({
             calendarDate, calendarDays, displayMonthYear, changeMonth, handleDayClick,
             activeQuickTag, activeQuickTagCategory, selectQuickTag, toggleQuickTagCategory,
             shiftData, getTagName, getTagColor, applyQuickTagToDay,
-            showTodayTasks, showDayDetail, selectedDay, todayTasks,
+            showTodayTasks, showDayDetail, selectedDay, selectedDayHasShift, todayTasks,
             jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
             handleSwipeStart, handleSwipeEnd,
             showTagsModal, tagsTab, shiftSettings,
