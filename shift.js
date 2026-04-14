@@ -31,6 +31,9 @@ const shiftTranslations = {
         noteLabel: '備註', notePlaceholder: '輸入當日備註...',
         // Jump picker
         selectYearMonth: '選擇年月',
+        // Default tag names
+        defaultEarlyShift: '早班', defaultMidShift: '中班', defaultLateShift: '晚班',
+        defaultSalary: '薪資', defaultBonus: '獎金',
         // Shared buttons
         cancel: '取消', confirm: '確定',
         // Tag deletion
@@ -61,6 +64,9 @@ const shiftTranslations = {
         shiftMarkLabel: 'Shift Tags', payMarkLabel: 'Pay Tags',
         noteLabel: 'Notes', notePlaceholder: 'Notes for this day...',
         selectYearMonth: 'Select Year & Month',
+        // Default tag names
+        defaultEarlyShift: 'Morning', defaultMidShift: 'Afternoon', defaultLateShift: 'Night',
+        defaultSalary: 'Salary', defaultBonus: 'Bonus',
         cancel: 'Cancel', confirm: 'Confirm',
         deleteTagTitle: 'Delete Tag',
         deleteTagMsg: 'Permanently delete this tag? This cannot be undone.',
@@ -85,13 +91,14 @@ const app = createApp({
 
         // ── Shift settings with migration ────────────────────────────────────
         const rawSettings = StorageProvider.getShiftSettings();
+        const _td = shiftTranslations[navSettings.lang] || shiftTranslations.zh;
 
         // Migrate old payTags + payroll → jobs array (backwards compat)
         if ((rawSettings.payTags || rawSettings.payroll) && !rawSettings.jobs) {
             const payroll = rawSettings.payroll || {};
             const tags    = rawSettings.payTags  || [
-                { id: 'salary', name: '薪資', color: '#10b981' },
-                { id: 'bonus',  name: '獎金', color: '#ef4444' }
+                { id: 'salary', name: _td.defaultSalary, color: '#10b981' },
+                { id: 'bonus',  name: _td.defaultBonus,  color: '#ef4444' }
             ];
             rawSettings.jobs = tags.map((tag, i) => ({
                 id:           tag.id,
@@ -116,13 +123,13 @@ const app = createApp({
 
         const shiftSettings = ref({
             jobs: [
-                { id: 'salary', name: '薪資', color: '#10b981', method: 'monthly', rate: 30000, units: null, payDay: 5, holidayLogic: 'early' },
-                { id: 'bonus',  name: '獎金', color: '#ef4444', method: 'monthly', rate: 0,     units: null, payDay: 5, holidayLogic: 'early' }
+                { id: 'salary', name: _td.defaultSalary, color: '#10b981', method: 'monthly', rate: 30000, units: null, payDay: 5, holidayLogic: 'early' },
+                { id: 'bonus',  name: _td.defaultBonus,  color: '#ef4444', method: 'monthly', rate: 0,     units: null, payDay: 5, holidayLogic: 'early' }
             ],
             shiftTags: [
-                { id: 'early',  name: '早班', startTime: '08:00', endTime: '16:00', color: '#3b82f6' },
-                { id: 'middle', name: '中班', startTime: '12:00', endTime: '20:00', color: '#f59e0b' },
-                { id: 'late',   name: '晚班', startTime: '16:00', endTime: '00:00', color: '#8b5cf6' }
+                { id: 'early',  name: _td.defaultEarlyShift, startTime: '08:00', endTime: '16:00', color: '#3b82f6' },
+                { id: 'middle', name: _td.defaultMidShift,   startTime: '12:00', endTime: '20:00', color: '#f59e0b' },
+                { id: 'late',   name: _td.defaultLateShift,  startTime: '16:00', endTime: '00:00', color: '#8b5cf6' }
             ],
             ...rawSettings
         });

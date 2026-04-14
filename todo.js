@@ -101,7 +101,8 @@ try {
                     confirmClearBin: 'Are you sure you want to permanently delete all items in the recycle bin?',
                     clearCache: '清除介面暫存並更新',
                     confirmClearCache: 'This will reset your theme and language settings, but your tasks will be preserved. Continue?',
-                    menu: 'Menu', analytics: 'Analytics', taskList: 'Task List'
+                    menu: 'Menu', analytics: 'Analytics', taskList: 'Task List',
+                    navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings'
                 },
                 zh: {
                     noTasks: '暫無任務', completed: '已完成紀錄', settings: '設置', theme: '主題', uiOpacity: '自定義圖片透明度', lang: '語言', notifications: '通知', back: '返回', emptyBin: '清空回收站', newTask: '新任務', editTask: '編輯任務', placeholder: '任務內容...', category: '分類', recurring: '重複', date: '日期', time: '時間', add: '添加', save: '保存', nextGen: '下次生成', custom: '自定義 (上傳)', upload: '上傳照片', light: '明亮', dark: '深色', otherThemes: '其他主題',
@@ -116,7 +117,8 @@ try {
                     confirmClearBin: '確定要永久刪除回收站中的所有項目嗎？',
                     clearCache: '清除介面暫存並更新',
                     confirmClearCache: '這將會重置主題與語言設置，但您的任務資料將會保留。確定要繼續嗎？',
-                    menu: '選單', analytics: '數據分析', taskList: '任務列表'
+                    menu: '選單', analytics: '數據分析', taskList: '任務列表',
+                    navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定'
                 }
             };
 

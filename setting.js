@@ -196,6 +196,7 @@ createApp({
             navSettings.theme           = val.theme;
             navSettings.useCustomBg     = val.useCustomBg;
             navSettings.customBgOpacity = val.customBgOpacity;
+            navSettings.lang            = val.lang;
             if (val.customBg) navSettings.customBg = val.customBg;
         }, { deep: true });
 
