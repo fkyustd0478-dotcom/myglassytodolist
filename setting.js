@@ -94,6 +94,7 @@ createApp({
         });
 
         const isDarkTheme = computed(() => {
+            if (settings.value.theme === 'light') return false;
             if (settings.value.theme === 'system') return systemDark.value;
             const darkThemes = ['forest', 'night', 'torii', 'dark'];
             if (settings.value.useCustomBg) return settings.value.customBgOpacity < 0.5;
@@ -102,7 +103,7 @@ createApp({
 
         const glassStyle = computed(() => isDarkTheme.value
             ? { backgroundColor: 'rgba(0,0,0,0.5)', border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
-            : { backgroundColor: 'rgba(255,255,255,0.72)', border: '1.5px solid rgba(0,0,0,0.10)', color: '#1a1a1a', backdropFilter: 'blur(20px) brightness(1.03)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }
+            : { backgroundColor: 'rgba(255,255,255,0.75)', border: '1.5px solid rgba(0,0,0,0.08)', color: '#1a1a1a', backdropFilter: 'blur(20px) brightness(1.03)', boxShadow: '0 8px 32px rgba(0,0,0,0.05)' }
         );
 
         const themeClasses = computed(() => `theme-${resolvedTheme.value}`);
