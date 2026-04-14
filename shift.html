@@ -118,14 +118,12 @@
                  @click="handleDayClick(day)">
                 <span class="day-number">{{ day.date.getDate() }}</span>
                 <div class="day-indicators">
-                    <div v-for="sid in (day.data.shiftIds || [])" :key="sid"
-                         class="indicator-tag" :style="{ backgroundColor: getTagColor('shift', sid) }">
-                        {{ getTagName('shift', sid) }}
-                    </div>
-                    <div v-for="pid in (day.data.payIds || [])" :key="pid"
-                         class="indicator-tag" :style="{ backgroundColor: getTagColor('pay', pid) }">
-                        {{ getTagName('pay', pid) }}
-                    </div>
+                    <template v-if="(day.data.shiftIds || []).length > 0">
+                        <div class="indicator-tag"
+                             :style="{ backgroundColor: getTagColor('shift', day.data.shiftIds[0]) }">
+                            {{ getTagName('shift', day.data.shiftIds[0]) }}
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -133,14 +131,31 @@
         <!-- Quick tag pills -->
         <transition name="slide-up">
             <div v-if="activeQuickTagCategory" class="tag-pills-container glass" :style="glassStyle">
+                <!-- Row header: category label + delete mode toggle -->
+                <div class="flex items-center justify-between px-1 mb-2">
+                    <span class="text-[10px] font-black uppercase tracking-widest opacity-40">
+                        {{ activeQuickTagCategory === 'shift' ? t.shiftNav : t.salary }}
+                    </span>
+                    <button @click="deleteMode = !deleteMode"
+                            class="p-1.5 rounded-lg transition-all"
+                            :class="deleteMode ? 'bg-red-500/20 text-red-400' : 'opacity-30 hover:opacity-70'">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
                 <div class="pills-scroll">
                     <div v-for="tag in (activeQuickTagCategory === 'shift' ? shiftSettings.shiftTags : shiftSettings.jobs)"
                          :key="tag.id"
-                         class="tag-pill glass"
-                         :class="{ 'active': activeQuickTag && activeQuickTag.id === tag.id }"
-                         :style="{ backgroundColor: activeQuickTag && activeQuickTag.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
-                         @click="selectQuickTag(activeQuickTagCategory, tag.id)">
+                         class="tag-pill glass relative"
+                         :class="deleteMode
+                             ? 'border-red-400/40'
+                             : { 'active': activeQuickTag && activeQuickTag.id === tag.id }"
+                         :style="deleteMode
+                             ? { backgroundColor: 'rgba(239,68,68,0.08)' }
+                             : { backgroundColor: activeQuickTag && activeQuickTag.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
+                         @click="deleteMode ? confirmDeleteTag(activeQuickTagCategory, tag.id) : selectQuickTag(activeQuickTagCategory, tag.id)">
                         {{ tag.name }}
+                        <span v-if="deleteMode"
+                              class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 flex items-center justify-center text-[9px] font-black text-white pointer-events-none">×</span>
                     </div>
                 </div>
             </div>

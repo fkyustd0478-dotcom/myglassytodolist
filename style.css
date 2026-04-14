@@ -86,7 +86,7 @@ header {
 .ship { width: 100px; height: 80px; opacity: 0.9; }
 
 /* Themes - Migrated to Static Images */
-.theme-light { background: #f8f9fa; }
+.theme-light { background: linear-gradient(160deg, #f8faff 0%, #edf1f9 60%, #f2f5fc 100%); }
 .theme-dark { background: #0f172a; }
 .theme-sky { background: #0ea5e9; overflow: visible !important; }
 .theme-sunset { background: #312e81; overflow: visible !important; }

@@ -33,6 +33,9 @@ const shiftTranslations = {
         selectYearMonth: '選擇年月',
         // Shared buttons
         cancel: '取消', confirm: '確定',
+        // Tag deletion
+        deleteTagTitle: '刪除標籤',
+        deleteTagMsg: '確定要永久刪除此標籤嗎？此操作無法復原。',
         // Confirm modal
         clearCacheTitle: '清除暫存',
         clearCacheMsg: '確定要清除介面暫存並更新嗎？輪班紀錄不受影響。',
@@ -59,6 +62,8 @@ const shiftTranslations = {
         noteLabel: 'Notes', notePlaceholder: 'Notes for this day...',
         selectYearMonth: 'Select Year & Month',
         cancel: 'Cancel', confirm: 'Confirm',
+        deleteTagTitle: 'Delete Tag',
+        deleteTagMsg: 'Permanently delete this tag? This cannot be undone.',
         clearCacheTitle: 'Clear Cache',
         clearCacheMsg: 'Reset UI cache? Shift records will not be affected.',
         weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
@@ -129,6 +134,7 @@ const app = createApp({
         // ── UI state ─────────────────────────────────────────────────────────
         const activeQuickTag         = ref(null);
         const activeQuickTagCategory = ref(null); // 'shift' | 'pay'
+        const deleteMode             = ref(false);
         const showTodayTasks  = ref(false);
         const showDayDetail   = ref(false);
         const selectedDay     = ref(null);
@@ -270,10 +276,29 @@ const app = createApp({
             if (activeQuickTagCategory.value === category) {
                 activeQuickTagCategory.value = null;
                 activeQuickTag.value = null;
+                deleteMode.value = false;
             } else {
                 activeQuickTagCategory.value = category;
                 activeQuickTag.value = null;
+                deleteMode.value = false;
             }
+        };
+
+        const confirmDeleteTag = (type, id) => {
+            const tag = type === 'shift'
+                ? shiftSettings.value.shiftTags.find(t => t.id === id)
+                : shiftSettings.value.jobs.find(j => j.id === id);
+            if (!tag) return;
+            Object.assign(confirmModal, {
+                show: true,
+                title:   t.value.deleteTagTitle,
+                message: `"${tag.name}" — ${t.value.deleteTagMsg}`,
+                onConfirm: () => {
+                    if (type === 'shift') removeShiftTag(id);
+                    else removeJob(id);
+                    deleteMode.value = false;
+                }
+            });
         };
 
         const selectQuickTag = (type, id) => {
@@ -477,7 +502,7 @@ const app = createApp({
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
             navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle, themeStyle,
             calendarDate, calendarDays, displayMonthYear, changeMonth, handleDayClick,
-            activeQuickTag, activeQuickTagCategory, selectQuickTag, toggleQuickTagCategory,
+            activeQuickTag, activeQuickTagCategory, deleteMode, selectQuickTag, toggleQuickTagCategory, confirmDeleteTag,
             shiftData, getTagName, getTagColor, applyQuickTagToDay,
             showTodayTasks, showDayDetail, selectedDay, selectedDayHasShift, todayTasks,
             jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
