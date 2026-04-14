@@ -9,7 +9,7 @@
     --bg-main:       #121212;
     --text-primary:  #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-shadow:   0 2px 4px rgba(0, 0, 0, 0.5);
+    --text-shadow:   0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
 /* ── Per-Theme CSS Variables on <body> ──────────────────────────────────── */
@@ -19,7 +19,7 @@ body.theme-light {
     --bg-main:        linear-gradient(145deg, #f0f4ff 0%, #e8eeff 35%, #f5f7ff 65%, #eef2ff 100%);
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.55);
-    --text-shadow:    0 1px 2px rgba(255, 255, 255, 0.3);
+    --text-shadow:    0 1px 1px rgba(0, 0, 0, 0.06);
 }
 
 /* Dark solid — deep space gradient for premium depth */
@@ -27,7 +27,7 @@ body.theme-dark {
     --bg-main:        linear-gradient(145deg, #0d1117 0%, #161b2e 40%, #0f172a 70%, #111827 100%);
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-shadow:    0 2px 4px rgba(0, 0, 0, 0.5);
+    --text-shadow:    0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* Image themes — light (dark text / frosted-white glass) */
@@ -35,25 +35,25 @@ body.theme-cherry {
     --bg-main:        url('./theme/cherry.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
-    --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.5);
+    --text-shadow:    0 1px 2px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.6);
 }
 body.theme-sky {
     --bg-main:        url('./theme/sky.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
-    --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.5);
+    --text-shadow:    0 1px 2px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.6);
 }
 body.theme-sunset {
     --bg-main:        url('./theme/sunset.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
-    --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.4);
+    --text-shadow:    0 1px 2px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.6);
 }
 body.theme-sea {
     --bg-main:        url('./theme/sea.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
-    --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.4);
+    --text-shadow:    0 1px 2px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.6);
 }
 
 /* Image themes — dark (white text / dark glass) */
@@ -61,25 +61,25 @@ body.theme-forest {
     --bg-main:        url('./theme/forest.png') center / cover no-repeat fixed;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-shadow:    0 2px 4px rgba(0, 0, 0, 0.6);
+    --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
 }
 body.theme-night {
     --bg-main:        url('./theme/night.png') center / cover no-repeat fixed;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-shadow:    0 2px 4px rgba(0, 0, 0, 0.6);
+    --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
 }
 body.theme-torii {
     --bg-main:        url('./theme/torii.png') center / cover no-repeat fixed;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-shadow:    0 2px 4px rgba(0, 0, 0, 0.6);
+    --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
 }
 body.theme-seaside {
     --bg-main:        url('./theme/seaside.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
-    --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.5);
+    --text-shadow:    0 1px 2px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.6);
 }
 
 /* Image themes — new light */
@@ -87,13 +87,13 @@ body.theme-mapleavenue {
     --bg-main:        url('./theme/mapleavenue.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
-    --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.5);
+    --text-shadow:    0 1px 2px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.6);
 }
 body.theme-waterfall {
     --bg-main:        url('./theme/waterfall.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
-    --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.5);
+    --text-shadow:    0 1px 2px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.6);
 }
 
 /* Image themes — new dark */
@@ -101,18 +101,22 @@ body.theme-starrysky {
     --bg-main:        url('./theme/starrysky.png') center / cover no-repeat fixed;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-shadow:    0 2px 4px rgba(0, 0, 0, 0.6);
+    --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
 }
 body.theme-ferriswheel {
     --bg-main:        url('./theme/ferriswheel.png') center / cover no-repeat fixed;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-shadow:    0 2px 4px rgba(0, 0, 0, 0.6);
+    --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
 }
 
-/* Custom background active — body resets to white so the image fades into clean white */
+/* Custom background active — body resets to white; theme bg-layer is hidden
+   so the custom image fades into pure white as opacity increases */
 body.using-custom-bg {
     --bg-main: #ffffff !important;
+}
+body.using-custom-bg .bg-layer {
+    display: none !important;
 }
 
 /* ── Base Layer ──────────────────────────────────────────────────────────── */

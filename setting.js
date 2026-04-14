@@ -5,7 +5,7 @@ const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
 createApp({
     setup() {
-        const { navDropdownOpen, currentPageTitle, toggleNavDropdown } = useNav();
+        const { navDropdownOpen, currentPageTitle, toggleNavDropdown, navSettings } = useNav();
 
         // ── System dark mode detection ─────────────────────────────────────
         const systemDark = ref(
@@ -188,9 +188,15 @@ createApp({
             }
         };
 
-        // ── Persist on change ──────────────────────────────────────────────
+        // ── Persist on change + sync nav immediately ───────────────────────
+        // navSettings (in nav.js) drives body class; without this sync,
+        // picking light/dark in the UI reverts visually to the previous theme.
         watch(settings, (val) => {
             StorageProvider.saveCommonSettings(val);
+            navSettings.theme           = val.theme;
+            navSettings.useCustomBg     = val.useCustomBg;
+            navSettings.customBgOpacity = val.customBgOpacity;
+            if (val.customBg) navSettings.customBg = val.customBg;
         }, { deep: true });
 
         watch(() => settings.value.effect, (newEffect) => {
