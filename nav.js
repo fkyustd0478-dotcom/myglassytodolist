@@ -23,7 +23,7 @@ function useNav() {
         theme: 'light',           // default when localStorage is empty
         useCustomBg: false,
         customBg: '',
-        customBgOpacity: 0.5,
+        customBgOpacity: 0,
         effect: 'none',
         notificationsEnabled: true,
         lang: 'zh',
@@ -37,11 +37,13 @@ function useNav() {
     });
 
     const isDarkTheme = computed(() => {
-        if (navSettings.theme === 'light')   return false;
-        if (navSettings.theme === 'cherry')  return false;
-        if (navSettings.theme === 'seaside') return false;
-        if (navSettings.theme === 'system')  return systemDark.value;
-        const dark = ['dark', 'forest', 'night', 'torii'];
+        if (navSettings.theme === 'light')        return false;
+        if (navSettings.theme === 'cherry')       return false;
+        if (navSettings.theme === 'seaside')      return false;
+        if (navSettings.theme === 'mapleavenue')  return false;
+        if (navSettings.theme === 'waterfall')    return false;
+        if (navSettings.theme === 'system')       return systemDark.value;
+        const dark = ['dark', 'forest', 'night', 'torii', 'starrysky', 'ferriswheel'];
         if (navSettings.useCustomBg) return navSettings.customBgOpacity < 0.5;
         return dark.includes(navSettings.theme);
     });
@@ -52,13 +54,17 @@ function useNav() {
             system: '系統', light: '明亮', dark: '深色',
             cherry: '櫻花', sky: '藍天', seaside: '海濱',
             sunset: '日落', forest: '森林', sea: '大海',
-            night: '夜景', torii: '鳥居'
+            night: '夜景', torii: '鳥居',
+            mapleavenue: '楓葉大道', waterfall: '瀑布',
+            starrysky: '星空', ferriswheel: '摩天輪'
         },
         en: {
             system: 'System', light: 'Light', dark: 'Dark',
             cherry: 'Cherry', sky: 'Sky', seaside: 'Seaside',
             sunset: 'Sunset', forest: 'Forest', sea: 'Sea',
-            night: 'Night', torii: 'Torii'
+            night: 'Night', torii: 'Torii',
+            mapleavenue: 'Maple Avenue', waterfall: 'Waterfall',
+            starrysky: 'Starry Sky', ferriswheel: 'Ferris Wheel'
         }
     };
 
@@ -96,10 +102,10 @@ function useNav() {
     let _mqCleanup = null;
 
     // ── Body class injection — immediate so CSS vars apply before first paint ──
-    // { immediate: true } fires synchronously when the watcher is created,
-    // before onMounted, eliminating the flash on every page including setting.html
-    watch(resolvedTheme, (theme) => {
-        document.body.className = 'theme-' + theme;
+    // Watches both resolvedTheme and useCustomBg so the white-base class is
+    // applied synchronously; { immediate: true } runs before onMounted.
+    watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
+        document.body.className = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
     }, { immediate: true });
 
     onMounted(async () => {

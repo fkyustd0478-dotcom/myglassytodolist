@@ -14,17 +14,17 @@
 
 /* ── Per-Theme CSS Variables on <body> ──────────────────────────────────── */
 
-/* Light solid */
+/* Light solid — subtle blue-white gradient for premium depth */
 body.theme-light {
-    --bg-main:        #f8faff;
+    --bg-main:        linear-gradient(145deg, #f0f4ff 0%, #e8eeff 35%, #f5f7ff 65%, #eef2ff 100%);
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.55);
     --text-shadow:    0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
-/* Dark solid */
+/* Dark solid — deep space gradient for premium depth */
 body.theme-dark {
-    --bg-main:        #121212;
+    --bg-main:        linear-gradient(145deg, #0d1117 0%, #161b2e 40%, #0f172a 70%, #111827 100%);
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-shadow:    0 2px 4px rgba(0, 0, 0, 0.5);
@@ -82,6 +82,39 @@ body.theme-seaside {
     --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.5);
 }
 
+/* Image themes — new light */
+body.theme-mapleavenue {
+    --bg-main:        url('./theme/mapleavenue.png') center / cover no-repeat fixed;
+    --text-primary:   #1a1a1a;
+    --text-secondary: rgba(0, 0, 0, 0.6);
+    --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.5);
+}
+body.theme-waterfall {
+    --bg-main:        url('./theme/waterfall.png') center / cover no-repeat fixed;
+    --text-primary:   #1a1a1a;
+    --text-secondary: rgba(0, 0, 0, 0.6);
+    --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.5);
+}
+
+/* Image themes — new dark */
+body.theme-starrysky {
+    --bg-main:        url('./theme/starrysky.png') center / cover no-repeat fixed;
+    --text-primary:   #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-shadow:    0 2px 4px rgba(0, 0, 0, 0.6);
+}
+body.theme-ferriswheel {
+    --bg-main:        url('./theme/ferriswheel.png') center / cover no-repeat fixed;
+    --text-primary:   #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-shadow:    0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* Custom background active — body resets to white so the image fades into clean white */
+body.using-custom-bg {
+    --bg-main: #ffffff !important;
+}
+
 /* ── Base Layer ──────────────────────────────────────────────────────────── */
 body {
     margin: 0;
@@ -125,7 +158,11 @@ body {
 .bg-layer.theme-seaside { background-image: url('./theme/seaside.png') !important; }
 .bg-layer.theme-sky     { background-image: url('./theme/sky.png')     !important; }
 .bg-layer.theme-sunset  { background-image: url('./theme/sunset.png')  !important; }
-.bg-layer.theme-torii   { background-image: url('./theme/torii.png')   !important; }
+.bg-layer.theme-torii        { background-image: url('./theme/torii.png')        !important; }
+.bg-layer.theme-mapleavenue  { background-image: url('./theme/mapleavenue.png')  !important; }
+.bg-layer.theme-waterfall    { background-image: url('./theme/waterfall.png')    !important; }
+.bg-layer.theme-starrysky    { background-image: url('./theme/starrysky.png')    !important; }
+.bg-layer.theme-ferriswheel  { background-image: url('./theme/ferriswheel.png')  !important; }
 
 .custom-bg-layer {
     position: fixed;
@@ -148,13 +185,14 @@ body {
 
 /* Dark-theme glass border (white) */
 :is(body.theme-dark, body.theme-forest, body.theme-night,
-    body.theme-torii) .glass {
+    body.theme-torii, body.theme-starrysky, body.theme-ferriswheel) .glass {
     border: 2.5px solid rgba(255, 255, 255, 0.9);
 }
 
 /* Light-theme glass — soft frosted white (seaside moved here) */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside) .glass {
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) .glass {
     background: rgba(255, 255, 255, 0.75) !important;
     border: 1.5px solid rgba(0, 0, 0, 0.08) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05),
@@ -227,11 +265,12 @@ body {
 /* ── Text Contrast on App Root ───────────────────────────────────────────── */
 /* Light themes (seaside moved here) */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside) #app { color: #1a1a1a; }
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) #app { color: #1a1a1a; }
 
 /* Dark themes */
 :is(body.theme-dark, body.theme-forest, body.theme-night,
-    body.theme-torii) #app { color: #ffffff; }
+    body.theme-torii, body.theme-starrysky, body.theme-ferriswheel) #app { color: #ffffff; }
 
 /* Fallback for #app class bindings still used in Vue templates */
 #app.theme-light-mode { color: #1a1a1a; }
@@ -268,7 +307,8 @@ body {
 
 /* Light-mode dropdown hover */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside) .dropdown-item:hover {
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) .dropdown-item:hover {
     background: rgba(0, 0, 0, 0.06);
 }
 
@@ -291,7 +331,8 @@ body {
 
 /* Bottom nav */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside) .bottom-nav {
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) .bottom-nav {
     background: rgba(255, 255, 255, 0.78) !important;
     border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04) !important;
@@ -299,31 +340,36 @@ body {
 
 /* Form inputs */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside) .glass-input {
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) .glass-input {
     background: rgba(0, 0, 0, 0.04);
     border-color: rgba(0, 0, 0, 0.15);
     color: #1a1a1a;
 }
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside) .glass-input:focus {
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) .glass-input:focus {
     border-color: rgba(0, 0, 0, 0.35);
 }
 
 /* Buttons & cards */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside) .glass-button {
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) .glass-button {
     background: rgba(0, 0, 0, 0.05);
     border-color: rgba(0, 0, 0, 0.12);
     color: #1a1a1a;
 }
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside) .glass-card {
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) .glass-card {
     background: rgba(0, 0, 0, 0.04);
     border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 /* Scrollbar thumb */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside) ::-webkit-scrollbar-thumb {
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.18);
 }
