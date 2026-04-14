@@ -18,7 +18,7 @@ createApp({
         const settingsTab = ref('theme');
 
         const settings = ref({
-            theme: 'system',
+            theme: 'light',       // default when localStorage is empty
             useCustomBg: false,
             customBg: '',
             customBgOpacity: 0.5,
@@ -94,9 +94,11 @@ createApp({
         });
 
         const isDarkTheme = computed(() => {
-            if (settings.value.theme === 'light') return false;
-            if (settings.value.theme === 'system') return systemDark.value;
-            const darkThemes = ['dark', 'forest', 'night', 'torii', 'seaside'];
+            if (settings.value.theme === 'light')   return false;
+            if (settings.value.theme === 'cherry')  return false;
+            if (settings.value.theme === 'seaside') return false;
+            if (settings.value.theme === 'system')  return systemDark.value;
+            const darkThemes = ['dark', 'forest', 'night', 'torii'];
             if (settings.value.useCustomBg) return settings.value.customBgOpacity < 0.5;
             return darkThemes.includes(settings.value.theme);
         });

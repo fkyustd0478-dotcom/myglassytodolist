@@ -77,9 +77,9 @@ body.theme-torii {
 }
 body.theme-seaside {
     --bg-main:        url('./theme/seaside.png') center / cover no-repeat fixed;
-    --text-primary:   #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-shadow:    0 2px 4px rgba(0, 0, 0, 0.6);
+    --text-primary:   #1a1a1a;
+    --text-secondary: rgba(0, 0, 0, 0.6);
+    --text-shadow:    0 1px 3px rgba(255, 255, 255, 0.5);
 }
 
 /* ── Base Layer ──────────────────────────────────────────────────────────── */
@@ -146,15 +146,15 @@ body {
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
 }
 
-/* Dark-theme glass border (white) — already the default above */
+/* Dark-theme glass border (white) */
 :is(body.theme-dark, body.theme-forest, body.theme-night,
-    body.theme-torii, body.theme-seaside) .glass {
+    body.theme-torii) .glass {
     border: 2.5px solid rgba(255, 255, 255, 0.9);
 }
 
-/* Light-theme glass — soft frosted white */
+/* Light-theme glass — soft frosted white (seaside moved here) */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea) .glass {
+    body.theme-sunset, body.theme-sea, body.theme-seaside) .glass {
     background: rgba(255, 255, 255, 0.75) !important;
     border: 1.5px solid rgba(0, 0, 0, 0.08) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05),
@@ -225,13 +225,13 @@ body {
 .slide-up-enter-from, .slide-up-leave-to { transform: translateY(100%); opacity: 0; }
 
 /* ── Text Contrast on App Root ───────────────────────────────────────────── */
-/* Light themes */
+/* Light themes (seaside moved here) */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea) #app { color: #1a1a1a; }
+    body.theme-sunset, body.theme-sea, body.theme-seaside) #app { color: #1a1a1a; }
 
 /* Dark themes */
 :is(body.theme-dark, body.theme-forest, body.theme-night,
-    body.theme-torii, body.theme-seaside) #app { color: #ffffff; }
+    body.theme-torii) #app { color: #ffffff; }
 
 /* Fallback for #app class bindings still used in Vue templates */
 #app.theme-light-mode { color: #1a1a1a; }
@@ -268,7 +268,7 @@ body {
 
 /* Light-mode dropdown hover */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea) .dropdown-item:hover {
+    body.theme-sunset, body.theme-sea, body.theme-seaside) .dropdown-item:hover {
     background: rgba(0, 0, 0, 0.06);
 }
 
@@ -291,7 +291,7 @@ body {
 
 /* Bottom nav */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea) .bottom-nav {
+    body.theme-sunset, body.theme-sea, body.theme-seaside) .bottom-nav {
     background: rgba(255, 255, 255, 0.78) !important;
     border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04) !important;
@@ -299,31 +299,31 @@ body {
 
 /* Form inputs */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea) .glass-input {
+    body.theme-sunset, body.theme-sea, body.theme-seaside) .glass-input {
     background: rgba(0, 0, 0, 0.04);
     border-color: rgba(0, 0, 0, 0.15);
     color: #1a1a1a;
 }
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea) .glass-input:focus {
+    body.theme-sunset, body.theme-sea, body.theme-seaside) .glass-input:focus {
     border-color: rgba(0, 0, 0, 0.35);
 }
 
 /* Buttons & cards */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea) .glass-button {
+    body.theme-sunset, body.theme-sea, body.theme-seaside) .glass-button {
     background: rgba(0, 0, 0, 0.05);
     border-color: rgba(0, 0, 0, 0.12);
     color: #1a1a1a;
 }
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea) .glass-card {
+    body.theme-sunset, body.theme-sea, body.theme-seaside) .glass-card {
     background: rgba(0, 0, 0, 0.04);
     border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 /* Scrollbar thumb */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea) ::-webkit-scrollbar-thumb {
+    body.theme-sunset, body.theme-sea, body.theme-seaside) ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.18);
 }

@@ -20,7 +20,7 @@ function useNav() {
 
     // ── Shared theme state ─────────────────────────────────────────────────
     const navSettings = reactive({
-        theme: 'system',
+        theme: 'light',           // default when localStorage is empty
         useCustomBg: false,
         customBg: '',
         customBgOpacity: 0.5,
@@ -37,9 +37,11 @@ function useNav() {
     });
 
     const isDarkTheme = computed(() => {
-        if (navSettings.theme === 'light') return false;
-        if (navSettings.theme === 'system') return systemDark.value;
-        const dark = ['dark', 'forest', 'night', 'torii', 'seaside'];
+        if (navSettings.theme === 'light')   return false;
+        if (navSettings.theme === 'cherry')  return false;
+        if (navSettings.theme === 'seaside') return false;
+        if (navSettings.theme === 'system')  return systemDark.value;
+        const dark = ['dark', 'forest', 'night', 'torii'];
         if (navSettings.useCustomBg) return navSettings.customBgOpacity < 0.5;
         return dark.includes(navSettings.theme);
     });
@@ -93,14 +95,14 @@ function useNav() {
 
     let _mqCleanup = null;
 
-    // ── Body class injection (theme-light / theme-dark / theme-cherry …) ─────
+    // ── Body class injection — immediate so CSS vars apply before first paint ──
+    // { immediate: true } fires synchronously when the watcher is created,
+    // before onMounted, eliminating the flash on every page including setting.html
     watch(resolvedTheme, (theme) => {
         document.body.className = 'theme-' + theme;
-    });
+    }, { immediate: true });
 
     onMounted(async () => {
-        // Apply body class immediately so CSS vars & selectors work from first paint
-        document.body.className = 'theme-' + resolvedTheme.value;
         _updateTitle();
         document.addEventListener('click', closeNav);
 
