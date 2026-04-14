@@ -39,10 +39,26 @@ function useNav() {
     const isDarkTheme = computed(() => {
         if (navSettings.theme === 'light') return false;
         if (navSettings.theme === 'system') return systemDark.value;
-        const dark = ['forest', 'night', 'torii', 'dark'];
+        const dark = ['dark', 'forest', 'night', 'torii', 'seaside'];
         if (navSettings.useCustomBg) return navSettings.customBgOpacity < 0.5;
         return dark.includes(navSettings.theme);
     });
+
+    // ── Theme display names (EN / ZH) ─────────────────────────────────────────
+    const themeNames = {
+        zh: {
+            system: '系統', light: '明亮', dark: '深色',
+            cherry: '櫻花', sky: '藍天', seaside: '海濱',
+            sunset: '日落', forest: '森林', sea: '大海',
+            night: '夜景', torii: '鳥居'
+        },
+        en: {
+            system: 'System', light: 'Light', dark: 'Dark',
+            cherry: 'Cherry', sky: 'Sky', seaside: 'Seaside',
+            sunset: 'Sunset', forest: 'Forest', sea: 'Sea',
+            night: 'Night', torii: 'Torii'
+        }
+    };
 
     const glassStyle = computed(() => isDarkTheme.value
         ? { backgroundColor: 'rgba(0,0,0,0.5)', border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
@@ -122,6 +138,6 @@ function useNav() {
     return {
         navDropdownOpen, currentPageTitle, toggleNavDropdown,
         navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle,
-        systemDark, resolvedTheme
+        systemDark, resolvedTheme, themeNames
     };
 }

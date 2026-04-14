@@ -96,7 +96,7 @@ createApp({
         const isDarkTheme = computed(() => {
             if (settings.value.theme === 'light') return false;
             if (settings.value.theme === 'system') return systemDark.value;
-            const darkThemes = ['forest', 'night', 'torii', 'dark'];
+            const darkThemes = ['dark', 'forest', 'night', 'torii', 'seaside'];
             if (settings.value.useCustomBg) return settings.value.customBgOpacity < 0.5;
             return darkThemes.includes(settings.value.theme);
         });
