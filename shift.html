@@ -17,7 +17,8 @@
     <script src="effects.js" defer></script>
     <script src="storage.js" defer></script>
     <script src="nav.js" defer></script>
-    <script src="shift.js?v=4.1" defer></script>
+    <script src="holidays.js" defer></script>
+    <script src="shift.js?v=4.2" defer></script>
 </head>
 <body>
 <div id="app" v-cloak
@@ -121,6 +122,7 @@
                  :class="{ 'other-month': !day.isCurrentMonth, 'today': day.isToday }"
                  @click="handleDayClick(day)">
                 <span class="day-number">{{ day.date.getDate() }}</span>
+                <span v-if="showHolidayTags && day.holiday" class="holiday-tag">{{ day.holiday }}</span>
                 <div class="day-indicators">
                     <template v-if="(day.data.shiftIds || []).length > 0">
                         <div class="indicator-tag"
@@ -129,6 +131,7 @@
                         </div>
                     </template>
                 </div>
+                <div v-if="showLunarDates && day.lunar" class="lunar-date">{{ day.lunar }}</div>
             </div>
         </div>
 
@@ -512,6 +515,16 @@
                             </div>
                         </div>
                     </template>
+                    <div v-if="showHolidayTags && selectedDayHoliday" class="input-group">
+                        <label class="input-label">{{ t.holidayLabel }}</label>
+                        <div class="px-3 py-2 rounded-xl text-sm font-bold holiday-detail-tag">
+                            {{ selectedDayHoliday }}
+                        </div>
+                    </div>
+                    <div v-if="showLunarDates && selectedDayLunar" class="input-group">
+                        <label class="input-label">{{ t.lunarLabel }}</label>
+                        <div class="text-sm font-bold opacity-60">{{ selectedDayLunar }}</div>
+                    </div>
                     <div class="input-group">
                         <label class="input-label">{{ t.noteLabel }}</label>
                         <textarea v-model="shiftData[selectedDay].note" class="glass-input" rows="4"

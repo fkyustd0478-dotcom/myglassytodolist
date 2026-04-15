@@ -25,6 +25,9 @@ createApp({
             lang: 'zh',
             effect: 'none',
             notificationsEnabled: true,
+            calendarInfoEnabled: true,
+            showHolidayTags: true,
+            showLunarDates: true,
             ...StorageProvider.getCommonSettings()
         });
 
@@ -35,7 +38,7 @@ createApp({
         const translations = {
             en: {
                 // Tabs
-                tabTheme: 'Theme', tabUser: 'User',
+                tabTheme: 'Theme', tabUser: 'User', tabCalendar: 'Calendar',
                 // Nav items
                 navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
                 // Theme section
@@ -60,9 +63,14 @@ createApp({
                 cancel: 'Cancel', confirm: 'Confirm',
                 // User page
                 userComingSoon: 'User page coming soon',
+                // Calendar settings
+                calendarSection: 'Calendar Info',
+                calendarInfoEnabled: 'Show Calendar Info',
+                showHolidayTags: 'Holiday Tags',
+                showLunarDates: 'Lunar Dates',
             },
             zh: {
-                tabTheme: '主題設定', tabUser: '使用者頁面',
+                tabTheme: '主題設定', tabUser: '使用者頁面', tabCalendar: '行事曆',
                 navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定',
                 theme: '主題', system: '系統', light: '明亮', dark: '深色',
                 otherThemes: '其他主題',
@@ -80,6 +88,11 @@ createApp({
                 confirmClearCache: '這將會重置主題與語言設置，但您的資料將會保留。確定要繼續嗎？',
                 cancel: '取消', confirm: '確認',
                 userComingSoon: '使用者頁面即將推出',
+                // Calendar settings
+                calendarSection: '行事曆資訊',
+                calendarInfoEnabled: '顯示行事曆資訊',
+                showHolidayTags: '顯示節假日標籤',
+                showLunarDates: '顯示農曆日期',
             }
         };
 
@@ -193,10 +206,13 @@ createApp({
         // picking light/dark in the UI reverts visually to the previous theme.
         watch(settings, (val) => {
             StorageProvider.saveCommonSettings(val);
-            navSettings.theme           = val.theme;
-            navSettings.useCustomBg     = val.useCustomBg;
-            navSettings.customBgOpacity = val.customBgOpacity;
-            navSettings.lang            = val.lang;
+            navSettings.theme               = val.theme;
+            navSettings.useCustomBg         = val.useCustomBg;
+            navSettings.customBgOpacity     = val.customBgOpacity;
+            navSettings.lang                = val.lang;
+            navSettings.calendarInfoEnabled = val.calendarInfoEnabled;
+            navSettings.showHolidayTags     = val.showHolidayTags;
+            navSettings.showLunarDates      = val.showLunarDates;
             if (val.customBg) navSettings.customBg = val.customBg;
         }, { deep: true });
 

@@ -44,6 +44,8 @@ const shiftTranslations = {
         clearCacheMsg: '確定要清除介面暫存並更新嗎？輪班紀錄不受影響。',
         // Weekday headers
         weekdays: ['日', '一', '二', '三', '四', '五', '六'],
+        // Calendar info
+        holidayLabel: '節假日', lunarLabel: '農曆',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
@@ -73,6 +75,8 @@ const shiftTranslations = {
         clearCacheTitle: 'Clear Cache',
         clearCacheMsg: 'Reset UI cache? Shift records will not be affected.',
         weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        // Calendar info
+        holidayLabel: 'Holiday', lunarLabel: 'Lunar',
     }
 };
 
@@ -178,7 +182,13 @@ const app = createApp({
             const todayStr = new Date().toISOString().split('T')[0];
             return days.map(day => {
                 const dateStr = day.date.toISOString().split('T')[0];
-                return { ...day, dateStr, data: shiftData.value[dateStr] || {}, isToday: dateStr === todayStr };
+                return {
+                    ...day, dateStr,
+                    data: shiftData.value[dateStr] || {},
+                    isToday: dateStr === todayStr,
+                    holiday: (typeof TAIWAN_HOLIDAYS !== 'undefined') ? (TAIWAN_HOLIDAYS[dateStr] || null) : null,
+                    lunar:   (typeof LunarCalendar   !== 'undefined') ? LunarCalendar.gridLabel(dateStr)   : '',
+                };
             });
         });
 
@@ -196,6 +206,20 @@ const app = createApp({
             const d = shiftData.value[selectedDay.value];
             return Array.isArray(d.shiftIds) && d.shiftIds.length > 0;
         });
+
+        // ── Calendar info settings (driven by navSettings) ──────────────────
+        const calendarInfoEnabled = computed(() => navSettings.calendarInfoEnabled !== false);
+        const showHolidayTags     = computed(() => calendarInfoEnabled.value && navSettings.showHolidayTags !== false);
+        const showLunarDates      = computed(() => calendarInfoEnabled.value && navSettings.showLunarDates  !== false);
+
+        const selectedDayHoliday = computed(() =>
+            selectedDay.value && typeof TAIWAN_HOLIDAYS !== 'undefined'
+                ? (TAIWAN_HOLIDAYS[selectedDay.value] || null) : null
+        );
+        const selectedDayLunar = computed(() =>
+            selectedDay.value && typeof LunarCalendar !== 'undefined'
+                ? LunarCalendar.fullLabel(selectedDay.value) : ''
+        );
 
         // ── Jump Picker ──────────────────────────────────────────────────────
         const jumpPicker = ref({ show: false, year: new Date().getFullYear(), month: new Date().getMonth() });
@@ -512,6 +536,7 @@ const app = createApp({
             activeQuickTag, activeQuickTagCategory, deleteMode, selectQuickTag, toggleQuickTagCategory, confirmDeleteTag,
             shiftData, getTagName, getTagColor, applyQuickTagToDay,
             showTodayTasks, showDayDetail, selectedDay, selectedDayHasShift, todayTasks,
+            calendarInfoEnabled, showHolidayTags, showLunarDates, selectedDayHoliday, selectedDayLunar,
             jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
             handleSwipeStart, handleSwipeEnd,
             showTagsModal, tagsTab, shiftSettings,

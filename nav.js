@@ -27,6 +27,9 @@ function useNav() {
         effect: 'none',
         notificationsEnabled: true,
         lang: 'zh',
+        calendarInfoEnabled: true,
+        showHolidayTags: true,
+        showLunarDates: true,
         ...StorageProvider.getCommonSettings()
     });
 

@@ -35,10 +35,9 @@
 
     <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
         <!-- Background Layers -->
-        <div class="bg-layer" :class="themeClasses" :key="settings.theme">
-        </div>
+        <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
 
-        <div v-show="settings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
+        <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
         <!-- Foreground Content -->
         <div class="relative z-10 h-screen flex flex-col p-6 overflow-hidden">

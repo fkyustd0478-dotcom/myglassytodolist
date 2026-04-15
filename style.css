@@ -4,7 +4,7 @@
 #list-tabs, .bottom-nav, .task-item, .btn-action, .fixed.bottom-24 {
     z-index: 7000 !important;
 }
-/* Header must sit above all level-2 elements so its nav dropdown is never obscured */
+/* Header (nav capsule) must sit above all level-2 elements so its dropdown is never obscured */
 header {
     z-index: 10001 !important;
 }
@@ -42,10 +42,10 @@ header {
     -webkit-backdrop-filter: blur(12px) brightness(0.95);
 }
 
-/* Modal Size Optimization — universal 420px / 80vh spec */
+/* Modal Size Optimization */
 .setting-window, .glass.rounded-t-\[2\.5rem\], .glass.rounded-\[2\.5rem\] {
-    width: 100% !important;
-    max-width: 420px !important;
+    width: 85% !important;
+    max-width: 400px !important;
     margin: auto;
 }
 
@@ -86,7 +86,7 @@ header {
 .ship { width: 100px; height: 80px; opacity: 0.9; }
 
 /* Themes - Migrated to Static Images */
-.theme-light { background: linear-gradient(160deg, #f8faff 0%, #edf1f9 60%, #f2f5fc 100%); }
+.theme-light { background: #f8f9fa; }
 .theme-dark { background: #0f172a; }
 .theme-sky { background: #0ea5e9; overflow: visible !important; }
 .theme-sunset { background: #312e81; overflow: visible !important; }
@@ -185,26 +185,24 @@ header {
     scroll-snap-align: center;
     display: flex;
     justify-content: center;
-    /* ↓ TUNE: change duration (300ms) or easing here */
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .list-tab-item button {
     padding: 12px 18px;
-    /* ↓ TUNE: button-level transition (matches parent) */
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: auto !important;
 }
 
 .list-tab-item:not(.active-tab) {
-    opacity: 1;
-    transform: scale(1); /* ↓ TUNE: inactive scale */
+    opacity: 0.4;
+    transform: scale(0.9);
 }
 
 .list-tab-item.active-tab {
     z-index: 10;
     opacity: 1;
-    transform: scale(1.05); /* ↓ TUNE: active scale — scales text + icons proportionally */
+    transform: scale(1.1);
 }
 
 .list-tab-item.active-tab button {
@@ -399,8 +397,8 @@ input[type=range]::-webkit-slider-runnable-track {
 .setting-window {
     position: relative;
     z-index: 8001;
-    max-height: 80vh !important;
-    overflow-y: auto !important;
+    max-height: 70vh !important; /* Reduced height */
+    overflow-y: auto !important; /* Vertical scrollbar */
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }

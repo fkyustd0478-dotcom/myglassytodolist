@@ -74,6 +74,12 @@
                         :style="settingsTab !== 'theme' ? glassStyle : {}">
                     {{ t.tabTheme }}
                 </button>
+                <button @click="settingsTab = 'calendar'"
+                        class="flex-1 py-2.5 rounded-full text-sm font-black transition-all"
+                        :class="settingsTab === 'calendar' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
+                        :style="settingsTab !== 'calendar' ? glassStyle : {}">
+                    {{ t.tabCalendar }}
+                </button>
                 <button @click="settingsTab = 'user'"
                         class="flex-1 py-2.5 rounded-full text-sm font-black transition-all"
                         :class="settingsTab === 'user' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
@@ -238,6 +244,48 @@
                             class="w-full py-3 rounded-xl bg-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
                         {{ t.clearCache }}
                     </button>
+                </div>
+            </div>
+
+            <!-- ── Calendar Tab ───────────────────────────────────────────── -->
+            <div v-show="settingsTab === 'calendar'" class="space-y-4">
+                <div class="glass rounded-3xl p-5 space-y-5" :style="glassStyle">
+                    <div class="flex items-center gap-2 opacity-40">
+                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                        <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.calendarSection }}</h3>
+                    </div>
+                    <!-- Master toggle: Show Calendar Info -->
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold">{{ t.calendarInfoEnabled }}</span>
+                        <button @click="settings.calendarInfoEnabled = !settings.calendarInfoEnabled"
+                                class="w-12 h-6 rounded-full relative transition-all duration-300"
+                                :class="settings.calendarInfoEnabled ? 'bg-blue-500' : 'bg-white/10'">
+                            <div class="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300"
+                                 :style="{ left: settings.calendarInfoEnabled ? '26px' : '4px' }"></div>
+                        </button>
+                    </div>
+                    <!-- Sub-toggle: Holiday Tags -->
+                    <div class="flex items-center justify-between transition-opacity duration-200"
+                         :class="{ 'opacity-30 pointer-events-none': !settings.calendarInfoEnabled }">
+                        <span class="text-sm font-bold pl-4">{{ t.showHolidayTags }}</span>
+                        <button @click="settings.showHolidayTags = !settings.showHolidayTags"
+                                class="w-12 h-6 rounded-full relative transition-all duration-300"
+                                :class="settings.showHolidayTags ? 'bg-blue-500' : 'bg-white/10'">
+                            <div class="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300"
+                                 :style="{ left: settings.showHolidayTags ? '26px' : '4px' }"></div>
+                        </button>
+                    </div>
+                    <!-- Sub-toggle: Lunar Dates -->
+                    <div class="flex items-center justify-between transition-opacity duration-200"
+                         :class="{ 'opacity-30 pointer-events-none': !settings.calendarInfoEnabled }">
+                        <span class="text-sm font-bold pl-4">{{ t.showLunarDates }}</span>
+                        <button @click="settings.showLunarDates = !settings.showLunarDates"
+                                class="w-12 h-6 rounded-full relative transition-all duration-300"
+                                :class="settings.showLunarDates ? 'bg-blue-500' : 'bg-white/10'">
+                            <div class="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300"
+                                 :style="{ left: settings.showLunarDates ? '26px' : '4px' }"></div>
+                        </button>
+                    </div>
                 </div>
             </div>
 
