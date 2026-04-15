@@ -89,7 +89,7 @@
                         <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
                             <button @click="currentListId = list.id" @touchstart="currentListId = list.id"
                                 class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none" 
-                                :class="currentListId === list.id ? 'bg-blue-600 text-white' : 'opacity-60'" :style="glassStyle">
+                                :class="currentListId === list.id ? 'bg-blue-600 text-white' : ''" :style="glassStyle">
                                 {{ isDefaultList(list.id) ? t[list.id] : list.name }}
                             </button>
                         </div>

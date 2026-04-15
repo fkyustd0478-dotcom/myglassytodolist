@@ -68,19 +68,26 @@
     text-align: center;
     font-size: 11px;
     font-weight: 800;
-    padding: 4px 0;
-    opacity: 0.5;
+    padding: 4px 2px;
     text-transform: uppercase;
+    color: var(--text-primary);
+    opacity: 0.8;
+    background: rgba(128, 128, 128, 0.18);
+    border-radius: 6px;
 }
 
-/* High-contrast weekday labels per theme */
-#app.theme-light-mode .weekday-header {
-    color: rgba(0, 0, 0, 0.65);
+/* Sunday (1st column) — red */
+.calendar-grid > .weekday-header:nth-child(1) {
+    color: #ef4444;
     opacity: 1;
+    background: rgba(239, 68, 68, 0.12);
 }
-#app.theme-dark-mode .weekday-header {
-    color: rgba(255, 255, 255, 0.85);
+
+/* Saturday (7th column) — teal */
+.calendar-grid > .weekday-header:nth-child(7) {
+    color: #2dd4bf;
     opacity: 1;
+    background: rgba(45, 212, 191, 0.12);
 }
 
 .calendar-day {

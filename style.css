@@ -195,14 +195,14 @@ header {
 }
 
 .list-tab-item:not(.active-tab) {
-    opacity: 0.4;
-    transform: scale(0.9);
+    opacity: 1;
+    transform: scale(1);
 }
 
 .list-tab-item.active-tab {
     z-index: 10;
     opacity: 1;
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .list-tab-item.active-tab button {
