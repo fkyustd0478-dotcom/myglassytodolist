@@ -73,6 +73,16 @@
     text-transform: uppercase;
 }
 
+/* High-contrast weekday labels per theme */
+#app.theme-light-mode .weekday-header {
+    color: rgba(0, 0, 0, 0.65);
+    opacity: 1;
+}
+#app.theme-dark-mode .weekday-header {
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 1;
+}
+
 .calendar-day {
     aspect-ratio: 1 / 1.1;
     padding: 6px;

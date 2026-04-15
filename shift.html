@@ -201,7 +201,8 @@
          ══════════════════════════════════════════════════════════════════════ -->
     <transition name="slide-up">
         <div v-if="showTagsModal"
-             class="fixed inset-0 z-[8001] flex items-center justify-center p-4">
+             class="fixed inset-0 z-[8001] flex items-center justify-center p-4"
+             @click.self="showTagsModal = false">
             <div class="w-[90%] max-w-md glass rounded-[2.5rem] h-[60vh] flex flex-col overflow-hidden"
                  :style="glassStyle" @click.stop>
 
