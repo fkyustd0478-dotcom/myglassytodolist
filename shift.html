@@ -1,466 +1,556 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Glassy Shift</title>
 
+    <!-- Anti-flash: read saved theme from localStorage and apply class to <html>
+         before any CSS renders, preventing the dark-background flash on light themes -->
+    <script>!function(){try{var d=JSON.parse(localStorage.getItem('todo_settings')||'{}'),t=d.theme||'light';if(t==='system')t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.className='theme-'+t;var dk=['dark','forest','night','torii','starrysky','ferriswheel'];document.documentElement.style.background=dk.indexOf(t)>=0?'#0d1117':'#f0f4ff';}catch(e){}}();</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>琉璃輪班</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <link rel="stylesheet" href="shared_theme.css">
     <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="shift_style.css">
     <script src="effects.js" defer></script>
     <script src="storage.js" defer></script>
     <script src="nav.js" defer></script>
-    <script src="shift.js?v=3.0" defer></script>
+    <script src="holidays.js" defer></script>
+    <script src="shift.js?v=4.2" defer></script>
 </head>
 <body>
-    <div id="app" v-cloak :style="themeStyle"
-         :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
+<div id="app" v-cloak
+     :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
 
-        <!-- Background Layers -->
-        <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
-        <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
+    <!-- Background Layers -->
+    <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
+    <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
-        <!-- ── Header & Navigation ─────────────────────────────────────────── -->
-        <header class="flex justify-between items-center p-6 shrink-0 relative z-[10001]">
-            <div class="relative nav-capsule" @click.stop>
-                <button @click="toggleNavDropdown"
-                        class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group"
-                        :style="glassStyle">
-                    <span class="text-lg font-black tracking-tight group-hover:text-blue-500 transition-colors"
-                          v-text="currentPageTitle"></span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 opacity-40 group-hover:rotate-180 transition-transform"></i>
-                </button>
-
-                <transition name="fade">
-                    <div v-show="navDropdownOpen" class="dropdown-menu glass w-48 mt-2 overflow-hidden" :style="glassStyle">
-                        <a href="javascript:void(0)" onclick="window.location.href='index.html'"
-                           class="dropdown-item flex items-center gap-3">
-                            <i data-lucide="check-square" class="w-4 h-4"></i>
-                            <span>{{ t.navIndex }}</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="window.location.href='shift.html'"
-                           class="dropdown-item flex items-center gap-3 active">
-                            <i data-lucide="calendar" class="w-4 h-4"></i>
-                            <span>{{ t.navShift }}</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="window.location.href='setting.html'"
-                           class="dropdown-item flex items-center gap-3">
-                            <i data-lucide="settings" class="w-4 h-4"></i>
-                            <span>{{ t.navSetting }}</span>
-                        </a>
-                    </div>
-                </transition>
-            </div>
-        </header>
-
-        <!-- ── Calendar (Level 2) ──────────────────────────────────────────── -->
-        <div class="calendar-container level-2">
-            <div class="calendar-header flex items-center justify-center gap-6">
-                <button @click="changeMonth(-1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
-                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                </button>
-
-                <!-- Year-Month clickable dropdown anchor -->
-                <div class="jump-picker-anchor" @click.stop>
-                    <div @click="openJumpPicker" class="cursor-pointer">
-                        <h1 class="text-3xl font-black tracking-tighter text-shadow flex items-center gap-2">
-                            {{ displayMonthYear.year }}
-                            <span class="opacity-40">/</span>
-                            {{ displayMonthYear.month }}
-                            <i data-lucide="chevron-down" class="w-5 h-5 opacity-30 transition-transform"
-                               :class="{ 'rotate-180': jumpPicker.show }"></i>
-                        </h1>
-                    </div>
-
-                    <!-- Glass dropdown picker -->
-                    <transition name="fade">
-                        <div v-if="jumpPicker.show" class="jump-picker-dropdown glass" :style="glassStyle" @click.stop>
-                            <!-- Year row -->
-                            <div class="flex items-center justify-between mb-4">
-                                <button @click="updateJumpDate('year', jumpPicker.year - 1)"
-                                        class="p-1.5 glass rounded-full opacity-60 hover:opacity-100 active:scale-90 transition-all">
-                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                                </button>
-                                <span class="text-xl font-black">{{ jumpPicker.year }}</span>
-                                <button @click="updateJumpDate('year', jumpPicker.year + 1)"
-                                        class="p-1.5 glass rounded-full opacity-60 hover:opacity-100 active:scale-90 transition-all">
-                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                            <!-- Month grid 4×3 -->
-                            <div class="grid grid-cols-4 gap-2">
-                                <button v-for="m in 12" :key="m"
-                                        @click="jumpToMonth(jumpPicker.year, m - 1)"
-                                        class="py-2 rounded-xl text-xs font-black transition-all active:scale-95"
-                                        :class="(m - 1) === jumpPicker.month
-                                            ? 'bg-blue-500/80 text-white shadow-lg'
-                                            : 'glass opacity-70 hover:opacity-100'">
-                                    {{ m.toString().padStart(2, '0') }}
-                                </button>
-                            </div>
-                        </div>
-                    </transition>
-                </div>
-
-                <button @click="changeMonth(1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
-                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <div class="calendar-grid"
-                 @touchstart.passive="handleSwipeStart"
-                 @touchend.passive="handleSwipeEnd">
-                <div v-for="day in t.weekdays" :key="day" class="weekday-header text-shadow">{{ day }}</div>
-                <div v-for="day in calendarDays" :key="day.dateStr"
-                     class="calendar-day glass"
-                     :class="{ 'other-month': !day.isCurrentMonth, 'today': day.isToday }"
-                     @click="handleDayClick(day)">
-                    <span class="day-number">{{ day.date.getDate() }}</span>
-                    <div class="day-indicators">
-                        <div v-for="sid in (day.data.shiftIds || [])" :key="sid"
-                             class="indicator-tag"
-                             :style="{ backgroundColor: getTagColor('shift', sid) }">
-                            {{ getTagName('shift', sid) }}
-                        </div>
-                        <div v-for="pid in (day.data.payIds || [])" :key="pid"
-                             class="indicator-tag"
-                             :style="{ backgroundColor: getTagColor('pay', pid) }">
-                            {{ getTagName('pay', pid) }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tag Pills (shown when a quick-tag category is active) -->
-            <transition name="slide-up">
-                <div v-if="activeQuickTagCategory" class="tag-pills-container glass" :style="glassStyle">
-                    <div class="pills-scroll">
-                        <div v-for="tag in (activeQuickTagCategory === 'shift' ? shiftSettings.shiftTags : shiftSettings.payTags)"
-                             :key="tag.id"
-                             class="tag-pill glass"
-                             :class="{ 'active': activeQuickTag?.id === tag.id }"
-                             :style="{ backgroundColor: activeQuickTag?.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
-                             @click="selectQuickTag(activeQuickTagCategory, tag.id)">
-                            {{ tag.name }}
-                        </div>
-                    </div>
+    <!-- ── Header (z-10001) ─────────────────────────────────────────────── -->
+    <header class="flex justify-between items-center p-6 shrink-0 relative z-[10001]">
+        <div class="relative nav-capsule" @click.stop>
+            <button @click="toggleNavDropdown"
+                    class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group"
+                    :style="glassStyle">
+                <span class="text-lg font-black tracking-tight group-hover:text-blue-500 transition-colors"
+                      v-text="currentPageTitle"></span>
+                <i data-lucide="chevron-down" class="w-4 h-4 opacity-40 group-hover:rotate-180 transition-transform"></i>
+            </button>
+            <transition name="fade">
+                <div v-show="navDropdownOpen" class="dropdown-menu glass w-48 mt-2" :style="glassStyle">
+                    <a href="javascript:void(0)" onclick="window.location.href='index.html'"
+                       class="dropdown-item flex items-center gap-3">
+                        <i data-lucide="check-square" class="w-4 h-4"></i>
+                        <span>{{ t.navIndex }}</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="window.location.href='shift.html'"
+                       class="dropdown-item flex items-center gap-3 active">
+                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                        <span>{{ t.navShift }}</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="window.location.href='setting.html'"
+                       class="dropdown-item flex items-center gap-3">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span>{{ t.navSetting }}</span>
+                    </a>
                 </div>
             </transition>
         </div>
+    </header>
 
-        <!-- ── Bottom Navigation (Level 2) ────────────────────────────────── -->
-        <nav class="bottom-nav glass level-2">
-            <div class="nav-item" @click="showTodayTasks = true">
-                <div class="nav-icon-wrapper"><i data-lucide="calendar-check"></i></div>
-                <span>{{ t.todayTasks }}</span>
-            </div>
-            <div class="nav-item" :class="{ active: activeQuickTagCategory === 'pay' }"
-                 @click="toggleQuickTagCategory('pay')">
-                <div class="nav-icon-wrapper"><i data-lucide="banknote"></i></div>
-                <span>{{ t.salary }}</span>
-            </div>
-            <div class="nav-item" :class="{ active: activeQuickTagCategory === 'shift' }"
-                 @click="toggleQuickTagCategory('shift')">
-                <div class="nav-icon-wrapper"><i data-lucide="clock"></i></div>
-                <span>{{ t.shiftNav }}</span>
-            </div>
-            <div class="nav-item" @click="showTagsModal = true">
-                <div class="nav-icon-wrapper"><i data-lucide="tags"></i></div>
-                <span>{{ t.labelSettings }}</span>
-            </div>
-        </nav>
+    <!-- ── Calendar ─────────────────────────────────────────────────────── -->
+    <div class="calendar-container level-2">
+        <div class="calendar-header flex items-center justify-center gap-6">
+            <button @click="changeMonth(-1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            </button>
 
-        <!-- ── Backdrop (Level 3) ──────────────────────────────────────────── -->
-        <transition name="fade">
-            <div v-if="showTodayTasks || showDayDetail || showTagsModal"
-                 class="modal-backdrop level-3"
-                 @click="showTodayTasks = showDayDetail = showTagsModal = jumpPicker.show = false">
-            </div>
-        </transition>
+            <!-- Year-Month clickable dropdown anchor -->
+            <div class="jump-picker-anchor" @click.stop>
+                <div @click="openJumpPicker" class="cursor-pointer">
+                    <h1 class="text-3xl font-black tracking-tighter text-shadow flex items-center gap-2">
+                        {{ displayMonthYear.year }}<span class="opacity-40">/</span>{{ displayMonthYear.month }}
+                        <i data-lucide="chevron-down" class="w-5 h-5 opacity-30 transition-transform"
+                           :class="{ 'rotate-180': jumpPicker.show }"></i>
+                    </h1>
+                </div>
 
-        <!-- ── Label Settings Modal ────────────────────────────────────────── -->
+                <!-- Glass dropdown picker -->
+                <transition name="fade">
+                    <div v-if="jumpPicker.show" class="jump-picker-dropdown glass" :style="glassStyle" @click.stop>
+                        <!-- Year row -->
+                        <div class="flex items-center justify-between mb-4">
+                            <button @click="updateJumpDate('year', jumpPicker.year - 1)"
+                                    class="p-1.5 glass rounded-full opacity-60 hover:opacity-100 active:scale-90 transition-all">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            <span class="text-xl font-black">{{ jumpPicker.year }}</span>
+                            <button @click="updateJumpDate('year', jumpPicker.year + 1)"
+                                    class="p-1.5 glass rounded-full opacity-60 hover:opacity-100 active:scale-90 transition-all">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <!-- Month grid 4×3 -->
+                        <div class="grid grid-cols-4 gap-2">
+                            <button v-for="m in 12" :key="m"
+                                    @click="jumpToMonth(jumpPicker.year, m - 1)"
+                                    class="py-2 rounded-xl text-xs font-black transition-all active:scale-95"
+                                    :class="(m - 1) === jumpPicker.month
+                                        ? 'bg-blue-500/80 text-white shadow-lg'
+                                        : 'glass opacity-70 hover:opacity-100'">
+                                {{ m.toString().padStart(2, '0') }}
+                            </button>
+                        </div>
+                    </div>
+                </transition>
+            </div>
+
+            <button @click="changeMonth(1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="calendar-grid"
+             @touchstart.passive="handleSwipeStart"
+             @touchend.passive="handleSwipeEnd">
+            <div v-for="day in t.weekdays" :key="day"
+                 class="weekday-header text-shadow">{{ day }}</div>
+            <div v-for="day in calendarDays" :key="day.dateStr"
+                 class="calendar-day glass"
+                 :class="{ 'other-month': !day.isCurrentMonth, 'today': day.isToday }"
+                 @click="handleDayClick(day)">
+                <span class="day-number">{{ day.date.getDate() }}</span>
+                <span v-if="showHolidayTags && day.holiday" class="holiday-tag">{{ day.holiday }}</span>
+                <div class="day-indicators">
+                    <template v-if="(day.data.shiftIds || []).length > 0">
+                        <div class="indicator-tag"
+                             :style="{ backgroundColor: getTagColor('shift', day.data.shiftIds[0]) }">
+                            {{ getTagName('shift', day.data.shiftIds[0]) }}
+                        </div>
+                    </template>
+                </div>
+                <div v-if="showLunarDates && day.lunar" class="lunar-date">{{ day.lunar }}</div>
+            </div>
+        </div>
+
+        <!-- Quick tag pills -->
         <transition name="slide-up">
-            <div v-if="showTagsModal"
-                 class="fixed inset-0 z-[8001] flex items-end justify-center p-4 pb-[80px]">
-                <div class="glass rounded-[2.5rem] p-6 space-y-5 w-full max-w-sm overflow-y-auto max-h-[80vh]"
-                     :style="glassStyle" @click.stop>
-
-                    <!-- Header -->
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="tags" class="w-5 h-5 opacity-60"></i>
-                            <h2 class="text-xl font-black tracking-tight">{{ t.labelSettings }}</h2>
-                        </div>
-                        <button @click="showTagsModal = false" class="opacity-40 hover:opacity-100 transition-opacity">
-                            <i data-lucide="x" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-
-                    <!-- ── 班別設定 ─────────────────────────────────────────── -->
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-2 opacity-40">
-                            <i data-lucide="clock" class="w-4 h-4"></i>
-                            <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.shiftTagsTitle }}</h3>
-                        </div>
-                        <div class="space-y-2">
-                            <!-- Each shift in ONE row -->
-                            <div v-for="tag in shiftSettings.shiftTags" :key="tag.id"
-                                 class="flex items-center gap-2 glass rounded-2xl px-3 py-2.5" :style="glassStyle">
-                                <!-- Name (flexible) -->
-                                <input v-model="tag.name"
-                                       class="bg-transparent font-bold text-sm focus:outline-none w-0 flex-1 min-w-0">
-                                <!-- Start time -->
-                                <button @click.stop="openShiftTimePicker(tag.id, 'startTime')"
-                                        class="shrink-0 text-[10px] font-black px-2 py-1 rounded-lg bg-blue-500/20 text-blue-400 active:scale-95 transition-transform">
-                                    {{ tag.startTime || '--:--' }}
-                                </button>
-                                <span class="opacity-30 text-[10px] font-black shrink-0">→</span>
-                                <!-- End time -->
-                                <button @click.stop="openShiftTimePicker(tag.id, 'endTime')"
-                                        class="shrink-0 text-[10px] font-black px-2 py-1 rounded-lg bg-purple-500/20 text-purple-400 active:scale-95 transition-transform">
-                                    {{ tag.endTime || '--:--' }}
-                                </button>
-                                <!-- Color dot (wraps native color input) -->
-                                <div class="w-5 h-5 rounded-full shrink-0 relative overflow-hidden cursor-pointer"
-                                     :style="{ backgroundColor: tag.color }">
-                                    <input type="color" v-model="tag.color"
-                                           class="absolute inset-0 opacity-0 w-full h-full cursor-pointer">
-                                </div>
-                                <!-- Delete -->
-                                <button @click="removeShiftTag(tag.id)"
-                                        class="shrink-0 text-red-400 opacity-50 hover:opacity-100 transition-opacity">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                            <button @click="addShiftTag"
-                                    class="w-full py-2.5 glass rounded-xl border-2 border-dashed border-white/10 text-[10px] font-bold opacity-60">
-                                {{ t.addShift }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="h-px bg-white/10"></div>
-
-                    <!-- ── 薪資設定 (Multi-Job Blocks) ────────────────────── -->
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-2 opacity-40">
-                            <i data-lucide="coins" class="w-4 h-4"></i>
-                            <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.salarySection }}</h3>
-                        </div>
-                        <div class="space-y-3">
-                            <div v-for="job in shiftSettings.jobs" :key="job.id"
-                                 class="glass rounded-2xl p-4 space-y-3" :style="glassStyle">
-
-                                <!-- Row 1: Name + Color + Delete -->
-                                <div class="flex items-center gap-2">
-                                    <input v-model="job.name"
-                                           :placeholder="t.jobName"
-                                           class="bg-transparent font-bold text-sm focus:outline-none flex-1 min-w-0">
-                                    <!-- Color dot -->
-                                    <div class="w-5 h-5 rounded-full shrink-0 relative overflow-hidden cursor-pointer"
-                                         :style="{ backgroundColor: job.color }">
-                                        <input type="color" v-model="job.color"
-                                               class="absolute inset-0 opacity-0 w-full h-full cursor-pointer">
-                                    </div>
-                                    <button @click="removeJob(job.id)"
-                                            class="shrink-0 text-red-400 opacity-50 hover:opacity-100 transition-opacity">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                </div>
-
-                                <!-- Row 2: Method + Rate + Units -->
-                                <div class="flex gap-2">
-                                    <select v-model="job.method"
-                                            class="flex-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-[10px] font-bold min-w-0">
-                                        <option value="monthly">{{ t.monthly }}</option>
-                                        <option value="daily">{{ t.daily }}</option>
-                                        <option value="weekly">{{ t.weekly }}</option>
-                                        <option value="hourly">{{ t.hourly }}</option>
-                                    </select>
-                                    <input v-model.number="job.rate" type="number"
-                                           :placeholder="t.amount"
-                                           class="flex-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-[10px] font-bold min-w-0">
-                                    <!-- Units input (hidden for monthly) -->
-                                    <input v-if="job.method !== 'monthly'"
-                                           v-model.number="job.units" type="number" min="0"
-                                           :placeholder="getUnitsPlaceholder(job.method)"
-                                           class="w-20 shrink-0 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-[10px] font-bold">
-                                    <div v-else class="w-20 shrink-0"></div>
-                                </div>
-
-                                <!-- Row 3: PayDay + Holiday Logic -->
-                                <div class="flex gap-2">
-                                    <div class="flex-1 flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 min-w-0">
-                                        <span class="text-[9px] font-black opacity-40 shrink-0">{{ t.payDay }}</span>
-                                        <input v-model.number="job.payDay" type="number" min="1" max="31"
-                                               class="bg-transparent text-[10px] font-bold w-0 flex-1 min-w-0 focus:outline-none">
-                                    </div>
-                                    <select v-model="job.holidayLogic"
-                                            class="flex-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-[10px] font-bold min-w-0">
-                                        <option value="early">{{ t.holiday }}: {{ t.advance }}</option>
-                                        <option value="late">{{ t.holiday }}: {{ t.postpone }}</option>
-                                    </select>
-                                </div>
-
-                                <!-- Per-job monthly estimate -->
-                                <div class="flex justify-end">
-                                    <span class="text-[10px] font-black opacity-40">
-                                        ≈ {{ calcJobMonthly(job).toLocaleString() }} / mo
-                                    </span>
-                                </div>
-                            </div>
-
-                            <button @click="addJob"
-                                    class="w-full py-2.5 glass rounded-xl border-2 border-dashed border-white/10 text-[10px] font-bold opacity-60">
-                                {{ t.addJob }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- ── Total Monthly Estimate ───────────────────────── -->
-                    <div class="glass rounded-2xl px-5 py-4 flex items-center justify-between" :style="glassStyle">
-                        <span class="text-[10px] font-black opacity-60 uppercase tracking-widest">
-                            {{ t.totalMonthly }}
-                        </span>
-                        <span class="text-xl font-black text-blue-400">
-                            {{ totalMonthlyEstimate.toLocaleString() }}
-                        </span>
+            <div v-if="activeQuickTagCategory" class="tag-pills-container glass" :style="glassStyle">
+                <!-- Row header: category label + delete mode toggle -->
+                <div class="flex items-center justify-between px-1 mb-2">
+                    <span class="text-[10px] font-black uppercase tracking-widest opacity-40">
+                        {{ activeQuickTagCategory === 'shift' ? t.shiftNav : t.salary }}
+                    </span>
+                    <button @click="deleteMode = !deleteMode"
+                            class="p-1.5 rounded-lg transition-all"
+                            :class="deleteMode ? 'bg-red-500/20 text-red-400' : 'opacity-30 hover:opacity-70'">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+                <div class="pills-scroll">
+                    <div v-for="tag in (activeQuickTagCategory === 'shift' ? shiftSettings.shiftTags : shiftSettings.jobs)"
+                         :key="tag.id"
+                         class="tag-pill glass relative"
+                         :class="deleteMode
+                             ? 'border-red-400/40'
+                             : { 'active': activeQuickTag && activeQuickTag.id === tag.id }"
+                         :style="deleteMode
+                             ? { backgroundColor: 'rgba(239,68,68,0.08)' }
+                             : { backgroundColor: activeQuickTag && activeQuickTag.id === tag.id ? tag.color : 'rgba(255,255,255,0.1)' }"
+                         @click="deleteMode ? confirmDeleteTag(activeQuickTagCategory, tag.id) : selectQuickTag(activeQuickTagCategory, tag.id)">
+                        {{ tag.name }}
+                        <span v-if="deleteMode"
+                              class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 flex items-center justify-center text-[9px] font-black text-white pointer-events-none">×</span>
                     </div>
                 </div>
             </div>
         </transition>
+    </div>
 
-        <!-- ── Shift Time Picker Modal (Level 9000) ────────────────────────── -->
-        <transition name="fade">
-            <div v-if="shiftTimePicker.show"
-                 class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/50 backdrop-blur-md"
-                 @click.self="shiftTimePicker.show = false">
-                <div class="glass rounded-[2rem] p-8 w-full max-w-xs space-y-6"
-                     :style="glassStyle" @click.stop>
+    <!-- ── Bottom Navigation — 4 items ──────────────────────────────────── -->
+    <nav class="bottom-nav glass level-2">
+        <div class="nav-item" @click="showTodayTasks = true">
+            <div class="nav-icon-wrapper"><i data-lucide="calendar-check"></i></div>
+            <span>{{ t.todayTasks }}</span>
+        </div>
+        <div class="nav-item" :class="{ active: activeQuickTagCategory === 'pay' }"
+             @click="toggleQuickTagCategory('pay')">
+            <div class="nav-icon-wrapper"><i data-lucide="banknote"></i></div>
+            <span>{{ t.salary }}</span>
+        </div>
+        <div class="nav-item" :class="{ active: activeQuickTagCategory === 'shift' }"
+             @click="toggleQuickTagCategory('shift')">
+            <div class="nav-icon-wrapper"><i data-lucide="clock"></i></div>
+            <span>{{ t.shiftNav }}</span>
+        </div>
+        <div class="nav-item" :class="{ active: showTagsModal }" @click="showTagsModal = true">
+            <div class="nav-icon-wrapper"><i data-lucide="tags"></i></div>
+            <span>{{ t.labelSettings }}</span>
+        </div>
+    </nav>
 
-                    <h3 class="text-base font-black text-center opacity-60 uppercase tracking-widest">
-                        {{ shiftTimePicker.field === 'startTime' ? t.startTime : t.endTime }}
-                    </h3>
+    <!-- ── Backdrop ──────────────────────────────────────────────────────── -->
+    <transition name="fade">
+        <div v-if="showTodayTasks || showDayDetail || confirmModal.show || showTagsModal"
+             class="modal-backdrop level-3"
+             @click="showTodayTasks = showDayDetail = confirmModal.show = showTagsModal = false">
+        </div>
+    </transition>
 
-                    <!-- Hour : Minute picker (chevron wheel) -->
-                    <div class="flex items-center justify-center gap-2">
-                        <!-- Hours -->
-                        <div class="flex flex-col items-center gap-4">
-                            <button @click="shiftTimePicker.hour = (shiftTimePicker.hour + 1) % 24"
-                                    class="p-2 opacity-40 hover:opacity-100 transition-opacity active:scale-90">
-                                <i data-lucide="chevron-up" class="w-5 h-5"></i>
-                            </button>
-                            <span class="text-5xl font-black w-16 text-center tabular-nums">
-                                {{ shiftTimePicker.hour.toString().padStart(2, '0') }}
-                            </span>
-                            <button @click="shiftTimePicker.hour = (shiftTimePicker.hour - 1 + 24) % 24"
-                                    class="p-2 opacity-40 hover:opacity-100 transition-opacity active:scale-90">
-                                <i data-lucide="chevron-down" class="w-5 h-5"></i>
+    <!-- ══════════════════════════════════════════════════════════════════════
+         標籤設定 Modal (z-8001)
+         ══════════════════════════════════════════════════════════════════════ -->
+    <transition name="slide-up">
+        <div v-if="showTagsModal"
+             class="fixed inset-0 z-[8001] flex items-center justify-center p-4"
+             @click.self="showTagsModal = false">
+            <div class="w-[90%] max-w-md glass rounded-[2.5rem] h-[60vh] flex flex-col overflow-hidden"
+                 :style="glassStyle" @click.stop>
+
+                <!-- ── Sticky header (non-scrolling) ──────────────────────── -->
+                <div class="px-8 pt-8 pb-4 shrink-0 space-y-4">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="tags" class="w-5 h-5 opacity-60"></i>
+                        <h2 class="text-xl font-black tracking-tight">{{ t.labelSettingsTitle }}</h2>
+                    </div>
+                    <button @click="showTagsModal = false" class="opacity-40 hover:opacity-100 transition-opacity">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Tab Switcher -->
+                <div class="flex gap-2">
+                    <button @click="tagsTab = 'shift'"
+                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
+                            :class="tagsTab === 'shift' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
+                            :style="tagsTab !== 'shift' ? glassStyle : {}">
+                        {{ t.shiftTab }}
+                    </button>
+                    <button @click="tagsTab = 'salary'"
+                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
+                            :class="tagsTab === 'salary' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
+                            :style="tagsTab !== 'salary' ? glassStyle : {}">
+                        {{ t.salaryTab }}
+                    </button>
+                </div>
+                </div><!-- /sticky header -->
+
+                <!-- ── Scrollable content ─────────────────────────────────── -->
+                <div class="flex-1 overflow-y-auto px-8 pb-8 space-y-4">
+                <!-- ── 輪班設定 Tab ─────────────────────────────────────── -->
+                <div v-show="tagsTab === 'shift'" class="space-y-2">
+                    <div class="flex items-center gap-2 opacity-40 px-1 mb-3">
+                        <i data-lucide="clock" class="w-4 h-4"></i>
+                        <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.shiftTagLabel }}</h3>
+                    </div>
+
+                    <!-- Single-row per shift: name | start – end | color | delete -->
+                    <div v-for="tag in shiftSettings.shiftTags" :key="tag.id"
+                         class="flex items-center gap-2 glass rounded-2xl px-3 py-2.5" :style="glassStyle">
+                        <input v-model="tag.name"
+                               class="bg-transparent font-bold text-sm focus:outline-none w-14 min-w-0 shrink-0"
+                               :placeholder="t.shiftNamePlaceholder">
+                        <button @click="openClockPicker(tag.id, 'startTime')"
+                                class="flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1 text-[11px] font-bold whitespace-nowrap shrink-0 hover:bg-white/20 transition-colors">
+                            <i data-lucide="clock" class="w-3 h-3 opacity-50"></i>
+                            {{ tag.startTime }}
+                        </button>
+                        <span class="opacity-30 text-xs shrink-0">–</span>
+                        <button @click="openClockPicker(tag.id, 'endTime')"
+                                class="bg-white/10 rounded-lg px-2 py-1 text-[11px] font-bold whitespace-nowrap shrink-0 hover:bg-white/20 transition-colors">
+                            {{ tag.endTime }}
+                        </button>
+                        <div class="flex-1"></div>
+                        <input v-model="tag.color" type="color"
+                               class="w-7 h-7 rounded-lg cursor-pointer shrink-0 border-none bg-transparent"
+                               style="padding:1px">
+                        <button @click="removeShiftTag(tag.id)" class="text-red-400 shrink-0">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <button @click="addShiftTag"
+                            class="w-full py-2.5 glass rounded-xl border-2 border-dashed border-white/10 text-[10px] font-bold opacity-60 mt-1">
+                        {{ t.addShift }}
+                    </button>
+                </div>
+
+                <!-- ── 薪資設定 Tab ─────────────────────────────────────── -->
+                <div v-show="tagsTab === 'salary'" class="space-y-3">
+                    <div class="flex items-center gap-2 opacity-40 px-1">
+                        <i data-lucide="briefcase" class="w-4 h-4"></i>
+                        <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.jobSourceLabel }}</h3>
+                    </div>
+
+                    <!-- Per-job block -->
+                    <div v-for="job in shiftSettings.jobs" :key="job.id"
+                         class="glass rounded-2xl p-3 space-y-2.5" :style="glassStyle">
+
+                        <!-- Row 1: color dot + name + color picker + delete -->
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full shrink-0" :style="{ backgroundColor: job.color }"></div>
+                            <input v-model="job.name"
+                                   class="bg-transparent font-black text-sm focus:outline-none flex-1 min-w-0"
+                                   :placeholder="t.jobNamePlaceholder">
+                            <input v-model="job.color" type="color"
+                                   class="w-7 h-7 rounded-lg cursor-pointer shrink-0 border-none bg-transparent"
+                                   style="padding:1px">
+                            <button @click="removeJob(job.id)" class="text-red-400 shrink-0">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
 
-                        <span class="text-4xl font-black opacity-30 mb-1">:</span>
+                        <!-- Row 2: mode dropdown + rate input + units input (non-monthly) -->
+                        <div class="flex items-center gap-2">
+                            <select v-model="job.method"
+                                    class="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold shrink-0 focus:outline-none focus:border-blue-500">
+                                <option value="hourly">{{ t.hourly }}</option>
+                                <option value="daily">{{ t.daily }}</option>
+                                <option value="weekly">{{ t.weekly }}</option>
+                                <option value="monthly">{{ t.monthly }}</option>
+                            </select>
+                            <input v-model.number="job.rate" type="number"
+                                   :placeholder="t.amountPlaceholder"
+                                   class="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold focus:outline-none focus:border-blue-500">
+                            <!-- Units input — shown for hourly / daily / weekly -->
+                            <template v-if="job.method !== 'monthly'">
+                                <input v-model.number="job.units" type="number" min="0"
+                                       :placeholder="getUnitsLabel(job.method)"
+                                       class="w-20 shrink-0 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold text-center focus:outline-none focus:border-blue-500">
+                            </template>
+                        </div>
 
-                        <!-- Minutes (step 5) -->
-                        <div class="flex flex-col items-center gap-4">
-                            <button @click="shiftTimePicker.minute = (shiftTimePicker.minute + 5) % 60"
-                                    class="p-2 opacity-40 hover:opacity-100 transition-opacity active:scale-90">
-                                <i data-lucide="chevron-up" class="w-5 h-5"></i>
-                            </button>
-                            <span class="text-5xl font-black w-16 text-center tabular-nums">
-                                {{ shiftTimePicker.minute.toString().padStart(2, '0') }}
+                        <!-- Row 3: pay day + holiday logic -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black opacity-40 shrink-0">{{ t.payDayPrefix }}</span>
+                            <input v-model.number="job.payDay" type="number" min="1" max="31"
+                                   class="w-12 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold text-center focus:outline-none focus:border-blue-500">
+                            <span class="text-[10px] font-black opacity-40 shrink-0">{{ t.payDaySuffix }}</span>
+                            <select v-model="job.holidayLogic"
+                                    class="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold focus:outline-none focus:border-blue-500">
+                                <option value="early">{{ t.advance }}</option>
+                                <option value="late">{{ t.postpone }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Per-job estimate -->
+                        <div class="flex justify-end">
+                            <span class="text-[10px] font-black text-blue-400">
+                                ≈ NT${{ calcJobMonthly(job).toLocaleString() }}/{{ navSettings.lang === 'en' ? 'mo' : '月' }}
                             </span>
-                            <button @click="shiftTimePicker.minute = (shiftTimePicker.minute - 5 + 60) % 60"
-                                    class="p-2 opacity-40 hover:opacity-100 transition-opacity active:scale-90">
-                                <i data-lucide="chevron-down" class="w-5 h-5"></i>
-                            </button>
                         </div>
                     </div>
 
-                    <button @click="confirmShiftTimePicker"
-                            class="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-black text-base">
-                        {{ t.confirmOk }}
+                    <button @click="addJob"
+                            class="w-full py-2.5 glass rounded-xl border-2 border-dashed border-white/10 text-[10px] font-bold opacity-60">
+                        {{ t.addJob }}
+                    </button>
+
+                    <!-- Total estimated salary -->
+                    <div class="flex justify-between items-center glass rounded-2xl px-4 py-3 mt-1" :style="glassStyle">
+                        <span class="text-xs font-black opacity-50">{{ t.totalMonthly }}</span>
+                        <span class="text-xl font-black text-blue-400">
+                            NT${{ calculateTotalMonthlySalary.toLocaleString() }}
+                        </span>
+                    </div>
+                </div>
+
+                </div><!-- /scrollable content -->
+
+            </div>
+        </div>
+    </transition>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Circular Clock Picker (z-9000)
+         ══════════════════════════════════════════════════════════════════════ -->
+    <transition name="fade">
+        <div v-if="clockPicker.show"
+             class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl"
+             @click.self="clockPicker.show = false">
+            <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-xs"
+                 :style="glassStyle" @click.stop>
+
+                <!-- Time display + AM/PM -->
+                <div class="flex items-center justify-center gap-3">
+                    <button @click="clockPicker.mode = 'hour'"
+                            class="text-4xl font-black transition-opacity"
+                            :class="clockPicker.mode === 'hour' ? 'opacity-100' : 'opacity-30'">
+                        {{ clockDisplayHour.toString().padStart(2,'0') }}
+                    </button>
+                    <span class="text-4xl font-black opacity-40">:</span>
+                    <button @click="clockPicker.mode = 'minute'"
+                            class="text-4xl font-black transition-opacity"
+                            :class="clockPicker.mode === 'minute' ? 'opacity-100' : 'opacity-30'">
+                        {{ clockPicker.minute.toString().padStart(2,'0') }}
+                    </button>
+                    <div class="flex flex-col gap-1 ml-1">
+                        <button @click="toggleClockAmPm(true)"
+                                class="px-2.5 py-1 rounded-lg text-[11px] font-black transition-all"
+                                :class="clockIsAM ? 'bg-blue-500 text-white' : 'glass opacity-50'">AM</button>
+                        <button @click="toggleClockAmPm(false)"
+                                class="px-2.5 py-1 rounded-lg text-[11px] font-black transition-all"
+                                :class="!clockIsAM ? 'bg-blue-500 text-white' : 'glass opacity-50'">PM</button>
+                    </div>
+                </div>
+
+                <!-- SVG Clock Face -->
+                <div class="mx-auto w-60 h-60">
+                    <svg viewBox="0 0 200 200" class="w-full h-full select-none">
+                        <circle cx="100" cy="100" r="96"
+                                fill="rgba(255,255,255,0.04)"
+                                stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                        <line x1="100" y1="100" :x2="clockHandX" :y2="clockHandY"
+                              stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+                        <circle cx="100" cy="100" r="4" fill="#3b82f6"/>
+
+                        <template v-if="clockPicker.mode === 'hour'">
+                            <g v-for="dot in clockHourDots" :key="dot.h"
+                               class="cursor-pointer" @click="selectClockHour(dot.h)">
+                                <circle :cx="dot.x" :cy="dot.y" r="17"
+                                        :fill="clockDisplayHour === dot.h ? '#3b82f6' : 'rgba(255,255,255,0.08)'"/>
+                                <text :x="dot.x" :y="dot.y" text-anchor="middle"
+                                      dominant-baseline="central" fill="white"
+                                      font-size="13" font-weight="700"
+                                      style="pointer-events:none">{{ dot.h }}</text>
+                            </g>
+                        </template>
+
+                        <template v-else>
+                            <g v-for="dot in clockMinuteDots" :key="dot.m"
+                               class="cursor-pointer" @click="selectClockMinute(dot.m)">
+                                <circle :cx="dot.x" :cy="dot.y" r="17"
+                                        :fill="clockPicker.minute === dot.m ? '#3b82f6' : 'rgba(255,255,255,0.08)'"/>
+                                <text :x="dot.x" :y="dot.y" text-anchor="middle"
+                                      dominant-baseline="central" fill="white"
+                                      font-size="11" font-weight="700"
+                                      style="pointer-events:none">{{ dot.m.toString().padStart(2,'0') }}</text>
+                            </g>
+                        </template>
+                    </svg>
+                </div>
+
+                <p class="text-center text-[10px] font-black opacity-30 uppercase tracking-widest -mt-2">
+                    {{ clockPicker.mode === 'hour' ? t.clickHourHint : t.clickMinuteHint }}
+                </p>
+
+                <div class="flex gap-3 pt-1">
+                    <button @click="clockPicker.show = false"
+                            class="flex-1 py-3 rounded-2xl glass text-sm font-black" :style="glassStyle">
+                        {{ t.cancel }}
+                    </button>
+                    <button @click="confirmClockPicker"
+                            class="flex-1 py-3 rounded-2xl bg-blue-500 text-white text-sm font-black border-[2px]"
+                            :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }">
+                        {{ t.confirm }}
                     </button>
                 </div>
             </div>
-        </transition>
+        </div>
+    </transition>
 
-        <!-- ── Today's Tasks Modal (Level 4) ──────────────────────────────── -->
-        <transition name="slide-up">
-            <div v-if="showTodayTasks" class="modal-backdrop level-4" @click.self="showTodayTasks = false">
-                <div class="modal-content glass">
-                    <div class="modal-header">
-                        <h2 class="text-2xl font-black tracking-tight">{{ t.todayTasks }}</h2>
-                        <button @click="showTodayTasks = false" class="p-2 glass rounded-full">
-                            <i data-lucide="x"></i>
-                        </button>
-                    </div>
-                    <div v-if="todayTasks.length === 0" class="text-center py-12 opacity-30 font-bold">
-                        {{ t.noTasksToday }}
-                    </div>
-                    <div v-else class="space-y-3">
-                        <div v-for="task in todayTasks" :key="task.id" class="glass-card p-5 flex items-center gap-4">
-                            <div class="w-1.5 h-8 rounded-full shrink-0"
-                                 :style="{ backgroundColor: task.category === 'urgent' ? '#ef4444' : task.category === 'important' ? '#f59e0b' : task.category === 'daily' ? '#10b981' : '#3b82f6' }">
-                            </div>
-                            <span class="flex-1 font-bold text-base">{{ task.text }}</span>
+    <!-- ── Today's Tasks (Level 4) ───────────────────────────────────────── -->
+    <transition name="slide-up">
+        <div v-if="showTodayTasks" class="modal-backdrop level-4" @click.self="showTodayTasks = false">
+            <div class="modal-content glass">
+                <div class="modal-header">
+                    <h2 class="text-2xl font-black tracking-tight">{{ t.todayTasks }}</h2>
+                    <button @click="showTodayTasks = false" class="p-2 glass rounded-full">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div v-if="todayTasks.length === 0" class="text-center py-12 opacity-30 font-bold">
+                    {{ t.noTasksToday }}
+                </div>
+                <div v-else class="space-y-3">
+                    <div v-for="task in todayTasks" :key="task.id" class="glass-card p-5 flex items-center gap-4">
+                        <div class="w-1.5 h-8 rounded-full"
+                             :style="{ backgroundColor: task.priority===3?'#ef4444':task.priority===2?'#f59e0b':task.priority===1?'#3b82f6':'#94a3b8' }">
                         </div>
+                        <span class="flex-1 font-bold text-lg">{{ task.text }}</span>
                     </div>
                 </div>
             </div>
-        </transition>
+        </div>
+    </transition>
 
-        <!-- ── Day Detail Modal (Level 4) ─────────────────────────────────── -->
-        <transition name="slide-up">
-            <div v-if="showDayDetail" class="modal-backdrop level-4" @click.self="showDayDetail = false">
-                <div class="modal-content glass">
-                    <div class="modal-header">
-                        <h2 class="text-2xl font-black tracking-tight">{{ selectedDay }}</h2>
-                        <button @click="showDayDetail = false" class="p-2 glass rounded-full">
-                            <i data-lucide="x"></i>
-                        </button>
-                    </div>
-                    <div class="space-y-6">
+    <!-- ── Day Detail (Level 4) ──────────────────────────────────────────── -->
+    <transition name="slide-up">
+        <div v-if="showDayDetail" class="modal-backdrop level-4" @click.self="showDayDetail = false">
+            <div class="modal-content glass">
+                <div class="modal-header">
+                    <h2 class="text-2xl font-black tracking-tight">{{ selectedDay }}</h2>
+                    <button @click="showDayDetail = false" class="p-2 glass rounded-full">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div class="space-y-6">
+                    <template v-if="selectedDayHasShift">
                         <div class="input-group">
-                            <label class="input-label">{{ t.shiftNav }}</label>
+                            <label class="input-label">{{ t.shiftMarkLabel }}</label>
                             <div class="flex flex-wrap gap-2">
                                 <button v-for="tag in shiftSettings.shiftTags" :key="tag.id"
                                         @click="applyQuickTagToDay(selectedDay, 'shift', tag.id)"
                                         class="px-3 py-2 rounded-xl border-2 transition-all text-xs font-bold"
-                                        :class="(shiftData[selectedDay]?.shiftIds || []).includes(tag.id)
+                                        :class="(shiftData[selectedDay] && shiftData[selectedDay].shiftIds || []).includes(tag.id)
                                             ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
                                     {{ tag.name }}
                                 </button>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label class="input-label">{{ t.salary }}</label>
+                            <label class="input-label">{{ t.payMarkLabel }}</label>
                             <div class="flex flex-wrap gap-2">
-                                <button v-for="tag in shiftSettings.payTags" :key="tag.id"
-                                        @click="applyQuickTagToDay(selectedDay, 'pay', tag.id)"
+                                <button v-for="job in shiftSettings.jobs" :key="job.id"
+                                        @click="applyQuickTagToDay(selectedDay, 'pay', job.id)"
                                         class="px-3 py-2 rounded-xl border-2 transition-all text-xs font-bold"
-                                        :class="(shiftData[selectedDay]?.payIds || []).includes(tag.id)
+                                        :class="(shiftData[selectedDay] && shiftData[selectedDay].payIds || []).includes(job.id)
                                             ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 bg-white/5'">
-                                    {{ tag.name }}
+                                    {{ job.name }}
                                 </button>
                             </div>
                         </div>
-                        <div class="input-group">
-                            <label class="input-label">備註</label>
-                            <textarea v-model="shiftData[selectedDay].note"
-                                      class="glass-input" rows="3"
-                                      placeholder="輸入當日備註..."></textarea>
+                    </template>
+                    <div v-if="showHolidayTags && selectedDayHoliday" class="input-group">
+                        <label class="input-label">{{ t.holidayLabel }}</label>
+                        <div class="px-3 py-2 rounded-xl text-sm font-bold holiday-detail-tag">
+                            {{ selectedDayHoliday }}
                         </div>
+                    </div>
+                    <div v-if="showLunarDates && selectedDayLunar" class="input-group">
+                        <label class="input-label">{{ t.lunarLabel }}</label>
+                        <div class="text-sm font-bold opacity-60">{{ selectedDayLunar }}</div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">{{ t.noteLabel }}</label>
+                        <textarea v-model="shiftData[selectedDay].note" class="glass-input" rows="4"
+                                  :placeholder="t.notePlaceholder"></textarea>
                     </div>
                 </div>
             </div>
-        </transition>
+        </div>
+    </transition>
 
-    </div>
+    <!-- ── Confirmation Modal (Level 4) ─────────────────────────────────── -->
+    <transition name="fade">
+        <div v-if="confirmModal && confirmModal.show" class="modal-backdrop level-4"
+             @click.self="confirmModal.show = false">
+            <div class="modal-content glass text-center">
+                <h2 class="text-xl font-black mb-4" v-text="confirmModal.title || ''"></h2>
+                <p class="opacity-70 mb-8 font-medium" v-text="confirmModal.message || ''"></p>
+                <div class="flex gap-3">
+                    <button @click="confirmModal.show = false" class="glass-button flex-1">{{ t.cancel }}</button>
+                    <button @click="confirmModal.onConfirm && confirmModal.onConfirm(); confirmModal.show = false"
+                            class="glass-button flex-1 bg-red-500/20 text-red-400">{{ t.confirm }}</button>
+                </div>
+            </div>
+        </div>
+    </transition>
+
+</div>
 </body>
 </html>

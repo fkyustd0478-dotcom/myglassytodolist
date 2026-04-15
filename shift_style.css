@@ -384,6 +384,42 @@
     overflow-y: auto;
 }
 
+/* ── Holiday Tag (calendar cell) ─────────────────────────────────────────── */
+.holiday-tag {
+    font-size: 7px;
+    font-weight: 800;
+    color: #fff;
+    background: rgba(239, 68, 68, 0.72);
+    border-radius: 3px;
+    padding: 0 3px;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
+    text-shadow: none;
+}
+
+/* ── Lunar Date Label (calendar cell bottom) ─────────────────────────────── */
+.lunar-date {
+    font-size: 7px;
+    font-weight: 700;
+    opacity: 0.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: right;
+    line-height: 1.3;
+}
+
+/* ── Holiday tag in day detail modal ─────────────────────────────────────── */
+.holiday-detail-tag {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
 /* ── Year-Month Jump Picker Dropdown ──────────────────────────────────── */
 .jump-picker-anchor {
     position: relative;

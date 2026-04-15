@@ -1,171 +1,180 @@
-// shift.js — Glassy Shift v3.0
-// Depends on: storage.js, nav.js
+// shift.js — Glassy Shift Vue app v4.1
+// Depends on: storage.js (StorageProvider, ImageDB), nav.js (useNav)
+
+// ── Translations (EN / ZH) ────────────────────────────────────────────────
+const shiftTranslations = {
+    zh: {
+        // Nav dropdown labels
+        navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定',
+        // Bottom nav
+        todayTasks: '今日事', salary: '薪資', shiftNav: '輪班', labelSettings: '標籤設定',
+        // Tags modal
+        labelSettingsTitle: '標籤設定',
+        shiftTab: '輪班設定', salaryTab: '薪資設定',
+        // Shift section
+        shiftTagLabel: '班別', shiftNamePlaceholder: '班名', addShift: '+ 新增班別',
+        // Salary section
+        jobSourceLabel: '工作 / 薪資來源',
+        jobNamePlaceholder: '工作名稱', addJob: '+ 新增工作',
+        hourly: '時薪', daily: '日薪', weekly: '週薪', monthly: '月薪',
+        amountPlaceholder: '金額',
+        unitsHour: '小時/月', unitsDay: '天/月', unitsWeek: '週/月',
+        payDayPrefix: '每月', payDaySuffix: '日發薪，遇假日',
+        advance: '提前', postpone: '延後',
+        totalMonthly: '總估算 (月)',
+        // Clock picker
+        clickHourHint: '點選時，自動跳至分', clickMinuteHint: '點選分鐘',
+        // Today tasks modal
+        noTasksToday: '今日無待辦事項',
+        // Day detail
+        shiftMarkLabel: '輪班設定', payMarkLabel: '薪資標記',
+        noteLabel: '備註', notePlaceholder: '輸入當日備註...',
+        // Jump picker
+        selectYearMonth: '選擇年月',
+        // Default tag names
+        defaultEarlyShift: '早班', defaultMidShift: '中班', defaultLateShift: '晚班',
+        defaultSalary: '薪資', defaultBonus: '獎金',
+        // Shared buttons
+        cancel: '取消', confirm: '確定',
+        // Tag deletion
+        deleteTagTitle: '刪除標籤',
+        deleteTagMsg: '確定要永久刪除此標籤嗎？此操作無法復原。',
+        // Confirm modal
+        clearCacheTitle: '清除暫存',
+        clearCacheMsg: '確定要清除介面暫存並更新嗎？輪班紀錄不受影響。',
+        // Weekday headers
+        weekdays: ['日', '一', '二', '三', '四', '五', '六'],
+        // Calendar info
+        holidayLabel: '節假日', lunarLabel: '農曆',
+    },
+    en: {
+        navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
+        todayTasks: "Today's Tasks", salary: 'Salary', shiftNav: 'Shifts', labelSettings: 'Labels',
+        labelSettingsTitle: 'Label Settings',
+        shiftTab: 'Shift Config', salaryTab: 'Salary Config',
+        shiftTagLabel: 'Shifts', shiftNamePlaceholder: 'Name', addShift: '+ Add Shift',
+        jobSourceLabel: 'Jobs / Income Sources',
+        jobNamePlaceholder: 'Job Name', addJob: '+ Add Job',
+        hourly: 'Hourly', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly',
+        amountPlaceholder: 'Amount',
+        unitsHour: 'hrs/mo', unitsDay: 'days/mo', unitsWeek: 'wks/mo',
+        payDayPrefix: 'Pay on', payDaySuffix: 'of month. If holiday:',
+        advance: 'Advance', postpone: 'Postpone',
+        totalMonthly: 'Monthly Total Est.',
+        clickHourHint: 'Tap hour — advances to minute', clickMinuteHint: 'Tap minute',
+        noTasksToday: 'No tasks for today',
+        shiftMarkLabel: 'Shift Tags', payMarkLabel: 'Pay Tags',
+        noteLabel: 'Notes', notePlaceholder: 'Notes for this day...',
+        selectYearMonth: 'Select Year & Month',
+        // Default tag names
+        defaultEarlyShift: 'Morning', defaultMidShift: 'Afternoon', defaultLateShift: 'Night',
+        defaultSalary: 'Salary', defaultBonus: 'Bonus',
+        cancel: 'Cancel', confirm: 'Confirm',
+        deleteTagTitle: 'Delete Tag',
+        deleteTagMsg: 'Permanently delete this tag? This cannot be undone.',
+        clearCacheTitle: 'Clear Cache',
+        clearCacheMsg: 'Reset UI cache? Shift records will not be affected.',
+        weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        // Calendar info
+        holidayLabel: 'Holiday', lunarLabel: 'Lunar',
+    }
+};
 
 const { createApp, ref, computed, onMounted, onUnmounted, watch, nextTick, reactive } = Vue;
 
 const app = createApp({
     setup() {
-        const { navDropdownOpen, currentPageTitle, toggleNavDropdown,
-                navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle } = useNav();
+        // ── Nav & shared theme ───────────────────────────────────────────────
+        const {
+            navDropdownOpen, currentPageTitle, toggleNavDropdown,
+            navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle
+        } = useNav();
 
-        // ── Calendar & shift data ──────────────────────────────────────────
+        // ── Language / translations ──────────────────────────────────────────
+        const t = computed(() => shiftTranslations[navSettings.lang] || shiftTranslations.zh);
+
+        // ── Shift settings with migration ────────────────────────────────────
+        const rawSettings = StorageProvider.getShiftSettings();
+        const _td = shiftTranslations[navSettings.lang] || shiftTranslations.zh;
+
+        // Migrate old payTags + payroll → jobs array (backwards compat)
+        if ((rawSettings.payTags || rawSettings.payroll) && !rawSettings.jobs) {
+            const payroll = rawSettings.payroll || {};
+            const tags    = rawSettings.payTags  || [
+                { id: 'salary', name: _td.defaultSalary, color: '#10b981' },
+                { id: 'bonus',  name: _td.defaultBonus,  color: '#ef4444' }
+            ];
+            rawSettings.jobs = tags.map((tag, i) => ({
+                id:           tag.id,
+                name:         tag.name,
+                color:        tag.color,
+                method:       i === 0 ? (payroll.method || 'monthly') : 'monthly',
+                rate:         i === 0 ? (payroll.rate   || 0)         : 0,
+                units:        null,
+                payDay:       payroll.payDay       || 5,
+                holidayLogic: payroll.holidayLogic || 'early'
+            }));
+            delete rawSettings.payTags;
+            delete rawSettings.payroll;
+        }
+
+        // Ensure existing jobs have `units` field
+        if (rawSettings.jobs) {
+            rawSettings.jobs = rawSettings.jobs.map(j =>
+                j.units === undefined ? { ...j, units: null } : j
+            );
+        }
+
+        const shiftSettings = ref({
+            jobs: [
+                { id: 'salary', name: _td.defaultSalary, color: '#10b981', method: 'monthly', rate: 30000, units: null, payDay: 5, holidayLogic: 'early' },
+                { id: 'bonus',  name: _td.defaultBonus,  color: '#ef4444', method: 'monthly', rate: 0,     units: null, payDay: 5, holidayLogic: 'early' }
+            ],
+            shiftTags: [
+                { id: 'early',  name: _td.defaultEarlyShift, startTime: '08:00', endTime: '16:00', color: '#3b82f6' },
+                { id: 'middle', name: _td.defaultMidShift,   startTime: '12:00', endTime: '20:00', color: '#f59e0b' },
+                { id: 'late',   name: _td.defaultLateShift,  startTime: '16:00', endTime: '00:00', color: '#8b5cf6' }
+            ],
+            ...rawSettings
+        });
+
+        // ── Calendar state ───────────────────────────────────────────────────
         const calendarDate = ref(new Date());
         const shiftData    = ref(StorageProvider.getShiftData());
 
-        // ── Shift settings (with payroll → jobs migration) ─────────────────
-        const _saved = StorageProvider.getShiftSettings();
-        const _defaultJobs = [{
-            id: 'job_1', name: 'Main Job', color: '#3b82f6',
-            method: 'monthly', rate: 30000, units: null,
-            payDay: 5, holidayLogic: 'early'
-        }];
-        const _initJobs = _saved.jobs
-            ? _saved.jobs.map(j => ({ units: null, ...j }))
-            : _saved.payroll
-                ? [{ id: 'job_1',
-                     name:         _saved.payroll.name         || 'Main Job',
-                     color:        '#3b82f6',
-                     method:       _saved.payroll.method       || 'monthly',
-                     rate:         _saved.payroll.rate         || 30000,
-                     units:        null,
-                     payDay:       _saved.payroll.payDay       || 5,
-                     holidayLogic: _saved.payroll.holidayLogic || 'early' }]
-                : _defaultJobs;
-
-        const shiftSettings = ref({
-            shiftTags: [
-                { id: 'early',  name: '早班', startTime: '08:00', endTime: '16:00', color: '#3b82f6' },
-                { id: 'middle', name: '中班', startTime: '12:00', endTime: '20:00', color: '#f59e0b' },
-                { id: 'late',   name: '晚班', startTime: '16:00', endTime: '00:00', color: '#8b5cf6' }
-            ],
-            payTags: [
-                { id: 'salary', name: '薪資', color: '#10b981' },
-                { id: 'bonus',  name: '獎金', color: '#ef4444'  }
-            ],
-            ..._saved,
-            jobs: _initJobs          // always use migrated jobs (override whatever _saved.jobs was)
-        });
-
-        // ── UI state ───────────────────────────────────────────────────────
+        // ── UI state ─────────────────────────────────────────────────────────
         const activeQuickTag         = ref(null);
-        const activeQuickTagCategory = ref(null);
-        const showTodayTasks         = ref(false);
-        const showDayDetail          = ref(false);
-        const selectedDay            = ref(null);
-        const showTagsModal          = ref(false);
+        const activeQuickTagCategory = ref(null); // 'shift' | 'pay'
+        const deleteMode             = ref(false);
+        const showTodayTasks  = ref(false);
+        const showDayDetail   = ref(false);
+        const selectedDay     = ref(null);
+        const showTagsModal   = ref(false);
+        const tagsTab         = ref('shift');
 
-        const jumpPicker = ref({
-            show: false,
-            year:  new Date().getFullYear(),
-            month: new Date().getMonth()
-        });
+        const confirmModal = reactive({ show: false, title: '', message: '', onConfirm: null });
 
-        // ── Shift time picker (chevron-up/down wheel) ──────────────────────
-        const shiftTimePicker = reactive({
-            show: false, tagId: null, field: null, hour: 9, minute: 0
-        });
+        const themeStyle = computed(() => ({}));
 
-        const openShiftTimePicker = (tagId, field) => {
-            const tag = shiftSettings.value.shiftTags.find(t => t.id === tagId);
-            if (!tag) return;
-            const [h, m] = (tag[field] || '00:00').split(':').map(Number);
-            Object.assign(shiftTimePicker, { show: true, tagId, field, hour: h, minute: m });
-            nextTick(() => { if (window.lucide) lucide.createIcons(); });
-        };
-
-        const confirmShiftTimePicker = () => {
-            const tag = shiftSettings.value.shiftTags.find(t => t.id === shiftTimePicker.tagId);
-            if (tag) {
-                const hh = shiftTimePicker.hour.toString().padStart(2, '0');
-                const mm = shiftTimePicker.minute.toString().padStart(2, '0');
-                tag[shiftTimePicker.field] = `${hh}:${mm}`;
-            }
-            shiftTimePicker.show = false;
-        };
-
-        // ── Translations ───────────────────────────────────────────────────
-        const shiftTranslations = {
-            en: {
-                navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
-                todayTasks: "Today's Tasks", salary: 'Salary', shiftNav: 'Shifts', labelSettings: 'Labels',
-                shiftTagsTitle: 'Shift Types', addShift: '+ Add Shift',
-                salarySection: 'Salary', addJob: '+ Add Job', jobName: 'Job Name',
-                monthly: 'Monthly', daily: 'Daily', weekly: 'Weekly', hourly: 'Hourly',
-                amount: 'Amount', units: 'Units', payDay: 'Pay Day',
-                holiday: 'Holiday', advance: 'Advance', postpone: 'Postpone',
-                totalMonthly: 'Total Monthly Estimate',
-                startTime: 'Clock In', endTime: 'Clock Out',
-                noTasksToday: 'No tasks today',
-                weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                confirmOk: 'OK', cancel: 'Cancel',
-                jumpTitle: 'Jump to Month',
-            },
-            zh: {
-                navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定',
-                todayTasks: '今日事', salary: '薪資', shiftNav: '輪班', labelSettings: '標籤設定',
-                shiftTagsTitle: '班別設定', addShift: '+ 新增班別',
-                salarySection: '薪資設定', addJob: '+ 新增工作', jobName: '工作名稱',
-                monthly: '月薪', daily: '日薪', weekly: '週薪', hourly: '時薪',
-                amount: '金額', units: '工作量', payDay: '發薪日',
-                holiday: '遇假日', advance: '提前', postpone: '延後',
-                totalMonthly: '月薪合計預估',
-                startTime: '上班', endTime: '下班',
-                noTasksToday: '今日無待辦事項',
-                weekdays: ['日', '一', '二', '三', '四', '五', '六'],
-                confirmOk: '確認', cancel: '取消',
-                jumpTitle: '選擇年月',
-            }
-        };
-
-        const t = computed(() => shiftTranslations[navSettings.lang] || shiftTranslations.zh);
-
-        // ── Salary logic ───────────────────────────────────────────────────
-        const calcJobMonthly = (job) => {
-            if (!job.rate) return 0;
-            const u = (job.units != null && job.units !== '') ? Number(job.units) : null;
-            switch (job.method) {
-                case 'monthly': return Math.round(job.rate);
-                case 'daily':   return Math.round(job.rate * (u ?? 22));
-                case 'weekly':  return Math.round(job.rate * (u ?? 4));
-                case 'hourly':  return Math.round(job.rate * (u ?? 176));
-                default:        return Math.round(job.rate);
-            }
-        };
-
-        const totalMonthlyEstimate = computed(() =>
-            shiftSettings.value.jobs.reduce((s, j) => s + calcJobMonthly(j), 0)
+        const isAnyModalOpen = computed(() =>
+            showTodayTasks.value || showDayDetail.value ||
+            confirmModal.show    || showTagsModal.value || clockPicker.show
         );
 
-        const getUnitsPlaceholder = (method) =>
-            ({ hourly: '176 hrs', daily: '22 days', weekly: '4 wks' })[method] || '';
-
-        // ── Job management ─────────────────────────────────────────────────
-        const addJob = () => {
-            shiftSettings.value.jobs.push({
-                id: 'job_' + Date.now(), name: '', color: '#3b82f6',
-                method: 'monthly', rate: null, units: null,
-                payDay: 5, holidayLogic: 'early'
-            });
-        };
-
-        const removeJob = (id) => {
-            shiftSettings.value.jobs = shiftSettings.value.jobs.filter(j => j.id !== id);
-        };
-
-        // ── Calendar computed ──────────────────────────────────────────────
+        // ── Computed: calendar ───────────────────────────────────────────────
         const calendarDays = computed(() => {
             if (!(calendarDate.value instanceof Date)) return [];
             const year  = calendarDate.value.getFullYear();
             const month = calendarDate.value.getMonth();
-            const firstDay  = new Date(year, month, 1);
-            const lastDay   = new Date(year, month + 1, 0);
-            const days      = [];
-            const startOff  = firstDay.getDay();
-            const prevLast  = new Date(year, month, 0).getDate();
+            const days  = [];
 
-            for (let i = startOff - 1; i >= 0; i--)
+            const startOffset = new Date(year, month, 1).getDay();
+            const prevLast    = new Date(year, month, 0).getDate();
+            const lastDay     = new Date(year, month + 1, 0).getDate();
+
+            for (let i = startOffset - 1; i >= 0; i--)
                 days.push({ date: new Date(year, month - 1, prevLast - i), isCurrentMonth: false });
-            for (let i = 1; i <= lastDay.getDate(); i++)
+            for (let i = 1; i <= lastDay; i++)
                 days.push({ date: new Date(year, month, i), isCurrentMonth: true });
             for (let i = 1; i <= 42 - days.length; i++)
                 days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
@@ -173,7 +182,13 @@ const app = createApp({
             const todayStr = new Date().toISOString().split('T')[0];
             return days.map(day => {
                 const dateStr = day.date.toISOString().split('T')[0];
-                return { ...day, dateStr, data: shiftData.value[dateStr] || {}, isToday: dateStr === todayStr };
+                return {
+                    ...day, dateStr,
+                    data: shiftData.value[dateStr] || {},
+                    isToday: dateStr === todayStr,
+                    holiday: (typeof TAIWAN_HOLIDAYS !== 'undefined') ? (TAIWAN_HOLIDAYS[dateStr] || null) : null,
+                    lunar:   (typeof LunarCalendar   !== 'undefined') ? LunarCalendar.gridLabel(dateStr)   : '',
+                };
             });
         });
 
@@ -185,26 +200,40 @@ const app = createApp({
             };
         });
 
-        const isAnyModalOpen = computed(() =>
-            showTodayTasks.value || showDayDetail.value ||
-            showTagsModal.value || shiftTimePicker.show
+        // ── Conditional day detail ───────────────────────────────────────────
+        const selectedDayHasShift = computed(() => {
+            if (!selectedDay.value || !shiftData.value[selectedDay.value]) return false;
+            const d = shiftData.value[selectedDay.value];
+            return Array.isArray(d.shiftIds) && d.shiftIds.length > 0;
+        });
+
+        // ── Calendar info settings (driven by navSettings) ──────────────────
+        const calendarInfoEnabled = computed(() => navSettings.calendarInfoEnabled !== false);
+        const showHolidayTags     = computed(() => calendarInfoEnabled.value && navSettings.showHolidayTags !== false);
+        const showLunarDates      = computed(() => calendarInfoEnabled.value && navSettings.showLunarDates  !== false);
+
+        const selectedDayHoliday = computed(() =>
+            selectedDay.value && typeof TAIWAN_HOLIDAYS !== 'undefined'
+                ? (TAIWAN_HOLIDAYS[selectedDay.value] || null) : null
+        );
+        const selectedDayLunar = computed(() =>
+            selectedDay.value && typeof LunarCalendar !== 'undefined'
+                ? LunarCalendar.fullLabel(selectedDay.value) : ''
         );
 
-        const themeStyle = computed(() => ({}));
+        // ── Jump Picker ──────────────────────────────────────────────────────
+        const jumpPicker = ref({ show: false, year: new Date().getFullYear(), month: new Date().getMonth() });
 
-        // ── Jump picker ────────────────────────────────────────────────────
         const openJumpPicker = () => {
             if (!(calendarDate.value instanceof Date)) calendarDate.value = new Date();
             jumpPicker.value.year  = calendarDate.value.getFullYear();
             jumpPicker.value.month = calendarDate.value.getMonth();
             jumpPicker.value.show  = !jumpPicker.value.show;
         };
-
         const updateJumpDate = (type, val) => {
             if (type === 'year')  jumpPicker.value.year  = ((val - 1970 + 130) % 130) + 1970;
             if (type === 'month') jumpPicker.value.month = (val + 12) % 12;
         };
-
         // Navigate directly to a month and close the picker
         const jumpToMonth = (year, month) => {
             const d = new Date(calendarDate.value instanceof Date ? calendarDate.value : new Date());
@@ -214,28 +243,22 @@ const app = createApp({
             calendarDate.value    = d;
             jumpPicker.value.show = false;
         };
-
         // Close picker when clicking outside .jump-picker-anchor
         const closeJumpPicker = (e) => {
-            if (!e.target.closest('.jump-picker-anchor')) {
-                jumpPicker.value.show = false;
-            }
+            if (!e.target.closest('.jump-picker-anchor')) jumpPicker.value.show = false;
         };
 
-        // ── Today's tasks (from todo localStorage) ─────────────────────────
+        // ── Today Tasks ──────────────────────────────────────────────────────
         const todayTasks = computed(() => {
-            const data     = StorageProvider.getTodoData();
+            const todoData = StorageProvider.getTodoData();
             const todayStr = new Date().toISOString().split('T')[0];
-            const todos    = Array.isArray(data.todos) ? data.todos : [];
+            const todos = Array.isArray(todoData.todos) ? todoData.todos : [];
             return todos
-                .filter(t => t.date === todayStr && !t.isDeleted && !t.completed)
-                .sort((a, b) => {
-                    const order = { urgent: 0, important: 1, normal: 2, daily: 3, memo: 4 };
-                    return (order[a.category] ?? 9) - (order[b.category] ?? 9);
-                });
+                .filter(t => t.dueDate === todayStr && !t.isDeleted)
+                .sort((a, b) => (b.priority || 0) - (a.priority || 0));
         });
 
-        // ── Calendar actions ───────────────────────────────────────────────
+        // ── Calendar actions ─────────────────────────────────────────────────
         const changeMonth = (delta) => {
             const d = new Date(calendarDate.value);
             d.setMonth(d.getMonth() + delta);
@@ -256,10 +279,17 @@ const app = createApp({
             if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [] };
             const { type, id } = activeQuickTag.value;
             const field = type === 'shift' ? 'shiftIds' : 'payIds';
-            if (!shiftData.value[dateStr][field]) shiftData.value[dateStr][field] = [];
+            if (!shiftData.value[dateStr][field]) {
+                shiftData.value[dateStr][field] = [];
+                const old = type === 'shift' ? 'shiftId' : 'payId';
+                if (shiftData.value[dateStr][old]) {
+                    shiftData.value[dateStr][field].push(shiftData.value[dateStr][old]);
+                    delete shiftData.value[dateStr][old];
+                }
+            }
             const idx = shiftData.value[dateStr][field].indexOf(id);
             if (idx > -1) shiftData.value[dateStr][field].splice(idx, 1);
-            else          shiftData.value[dateStr][field].push(id);
+            else shiftData.value[dateStr][field].push(id);
             StorageProvider.saveShiftData(shiftData.value);
         };
 
@@ -269,53 +299,183 @@ const app = createApp({
             if (!shiftData.value[dateStr][field]) shiftData.value[dateStr][field] = [];
             const idx = shiftData.value[dateStr][field].indexOf(id);
             if (idx > -1) shiftData.value[dateStr][field].splice(idx, 1);
-            else          shiftData.value[dateStr][field].push(id);
+            else shiftData.value[dateStr][field].push(id);
             StorageProvider.saveShiftData(shiftData.value);
         };
 
         const toggleQuickTagCategory = (category) => {
             if (activeQuickTagCategory.value === category) {
                 activeQuickTagCategory.value = null;
-                activeQuickTag.value         = null;
+                activeQuickTag.value = null;
+                deleteMode.value = false;
             } else {
                 activeQuickTagCategory.value = category;
-                activeQuickTag.value         = null;
+                activeQuickTag.value = null;
+                deleteMode.value = false;
             }
         };
 
+        const confirmDeleteTag = (type, id) => {
+            const tag = type === 'shift'
+                ? shiftSettings.value.shiftTags.find(t => t.id === id)
+                : shiftSettings.value.jobs.find(j => j.id === id);
+            if (!tag) return;
+            Object.assign(confirmModal, {
+                show: true,
+                title:   t.value.deleteTagTitle,
+                message: `"${tag.name}" — ${t.value.deleteTagMsg}`,
+                onConfirm: () => {
+                    if (type === 'shift') removeShiftTag(id);
+                    else removeJob(id);
+                    deleteMode.value = false;
+                }
+            });
+        };
+
         const selectQuickTag = (type, id) => {
-            if (activeQuickTag.value?.type === type && activeQuickTag.value?.id === id)
+            if (activeQuickTag.value && activeQuickTag.value.type === type && activeQuickTag.value.id === id)
                 activeQuickTag.value = null;
             else
                 activeQuickTag.value = { type, id };
         };
 
-        // ── Tag helpers ────────────────────────────────────────────────────
-        const getTagName = (type, id) =>
-            (type === 'shift' ? shiftSettings.value.shiftTags : shiftSettings.value.payTags)
-                .find(t => t.id === id)?.name  || '';
-
-        const getTagColor = (type, id) =>
-            (type === 'shift' ? shiftSettings.value.shiftTags : shiftSettings.value.payTags)
-                .find(t => t.id === id)?.color || 'rgba(255,255,255,0.2)';
-
-        const addShiftTag = () => {
-            shiftSettings.value.shiftTags.push({
-                id: 'shift_' + Date.now(), name: '新輪班',
-                startTime: '09:00', endTime: '18:00', color: '#3b82f6'
-            });
+        const getTagName = (type, id) => {
+            if (type === 'shift') return shiftSettings.value.shiftTags.find(t => t.id === id)?.name || '';
+            return shiftSettings.value.jobs.find(j => j.id === id)?.name || '';
         };
+        const getTagColor = (type, id) => {
+            if (type === 'shift') return shiftSettings.value.shiftTags.find(t => t.id === id)?.color || 'rgba(255,255,255,0.2)';
+            return shiftSettings.value.jobs.find(j => j.id === id)?.color || 'rgba(255,255,255,0.2)';
+        };
+
+        // ── Shift tag management ─────────────────────────────────────────────
+        const addShiftTag = () => shiftSettings.value.shiftTags.push(
+            { id: 'shift_' + Date.now(), name: '新輪班', startTime: '09:00', endTime: '18:00', color: '#3b82f6' }
+        );
         const removeShiftTag = (id) => {
             shiftSettings.value.shiftTags = shiftSettings.value.shiftTags.filter(t => t.id !== id);
         };
-        const addPayTag = () => {
-            shiftSettings.value.payTags.push({ id: 'pay_' + Date.now(), name: '新項目', color: '#10b981' });
-        };
-        const removePayTag = (id) => {
-            shiftSettings.value.payTags = shiftSettings.value.payTags.filter(t => t.id !== id);
+
+        // ── Multi-job salary management ──────────────────────────────────────
+        const addJob = () => shiftSettings.value.jobs.push({
+            id: 'job_' + Date.now(),
+            name: t.value.jobNamePlaceholder,
+            color: '#6366f1',
+            method: 'monthly', rate: 0, units: null,
+            payDay: 5, holidayLogic: 'early'
+        });
+        const removeJob = (id) => {
+            shiftSettings.value.jobs = shiftSettings.value.jobs.filter(j => j.id !== id);
         };
 
-        // ── Swipe gestures ─────────────────────────────────────────────────
+        // Units-aware monthly salary estimate
+        // units = null → use smart default (hourly:176h, daily:22d, weekly:4w, monthly: N/A)
+        const calcJobMonthly = (job) => {
+            if (!job.rate) return 0;
+            const u = job.units;
+            switch (job.method) {
+                case 'monthly': return job.rate;
+                case 'daily':   return Math.round(job.rate * (u != null ? u : 22));
+                case 'weekly':  return Math.round(job.rate * (u != null ? u : 4));
+                case 'hourly':  return Math.round(job.rate * (u != null ? u : 176));
+                default:        return job.rate;
+            }
+        };
+
+        const calculateTotalMonthlySalary = computed(() =>
+            (shiftSettings.value.jobs || []).reduce((sum, job) => sum + calcJobMonthly(job), 0)
+        );
+
+        // Units label & placeholder for a given method
+        const getUnitsLabel = (method) => {
+            if (method === 'hourly') return t.value.unitsHour;
+            if (method === 'daily')  return t.value.unitsDay;
+            if (method === 'weekly') return t.value.unitsWeek;
+            return '';
+        };
+
+        // ── Circular Clock Picker ────────────────────────────────────────────
+        const clockPicker = reactive({
+            show: false, targetTagId: null, target: null,
+            mode: 'hour', hour: 9, minute: 0,
+        });
+
+        const clockIsAM        = computed(() => clockPicker.hour < 12);
+        const clockDisplayHour = computed(() => { const h = clockPicker.hour % 12; return h === 0 ? 12 : h; });
+
+        const clockHourDots = computed(() =>
+            [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((h, i) => {
+                const a = (i * 30 - 90) * (Math.PI / 180);
+                return { h, x: 100 + 72 * Math.cos(a), y: 100 + 72 * Math.sin(a) };
+            })
+        );
+
+        const clockMinuteDots = computed(() =>
+            [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m, i) => {
+                const a = (i * 30 - 90) * (Math.PI / 180);
+                return { m, x: 100 + 72 * Math.cos(a), y: 100 + 72 * Math.sin(a) };
+            })
+        );
+
+        const _clockAngle = computed(() => {
+            if (clockPicker.mode === 'hour') {
+                const idx = clockDisplayHour.value === 12 ? 0 : clockDisplayHour.value;
+                return (idx * 30 - 90) * (Math.PI / 180);
+            }
+            return (clockPicker.minute / 5 * 30 - 90) * (Math.PI / 180);
+        });
+        const clockHandX = computed(() => 100 + 65 * Math.cos(_clockAngle.value));
+        const clockHandY = computed(() => 100 + 65 * Math.sin(_clockAngle.value));
+
+        const openClockPicker = (tagId, field) => {
+            const tag = shiftSettings.value.shiftTags.find(t => t.id === tagId);
+            if (!tag) return;
+            const [h, m] = (field === 'startTime' ? tag.startTime : tag.endTime).split(':').map(Number);
+            Object.assign(clockPicker, { show: true, targetTagId: tagId, target: field, hour: h, minute: m, mode: 'hour' });
+        };
+
+        const selectClockHour = (h) => {
+            let h24;
+            if (clockIsAM.value) h24 = (h === 12) ? 0  : h;
+            else                 h24 = (h === 12) ? 12 : h + 12;
+            clockPicker.hour = h24;
+            clockPicker.mode = 'minute';
+        };
+
+        const toggleClockAmPm = (toAM) => {
+            if (toAM  && clockPicker.hour >= 12) clockPicker.hour -= 12;
+            if (!toAM && clockPicker.hour < 12)  clockPicker.hour += 12;
+        };
+
+        const selectClockMinute = (m) => { clockPicker.minute = m; };
+
+        const confirmClockPicker = () => {
+            const tag = shiftSettings.value.shiftTags.find(t => t.id === clockPicker.targetTagId);
+            if (tag) {
+                const ts = `${clockPicker.hour.toString().padStart(2,'0')}:${clockPicker.minute.toString().padStart(2,'0')}`;
+                if (clockPicker.target === 'startTime') tag.startTime = ts;
+                else tag.endTime = ts;
+            }
+            clockPicker.show = false;
+        };
+
+        // ── Confirm modal ─────────────────────────────────────────────────────
+        const clearCacheAndUpdate = () => {
+            Object.assign(confirmModal, {
+                show: true,
+                title:   t.value.clearCacheTitle,
+                message: t.value.clearCacheMsg,
+                onConfirm: () => {
+                    StorageProvider.saveCommonSettings({
+                        theme: 'system', useCustomBg: false, customBg: '',
+                        lang: navSettings.lang, effect: 'none', notificationsEnabled: true
+                    });
+                    location.reload();
+                }
+            });
+        };
+
+        // ── Swipe gestures ────────────────────────────────────────────────────
         let swipeStartX = 0, swipeStartY = 0;
 
         const handleSwipeStart = (e) => {
@@ -328,66 +488,65 @@ const app = createApp({
             const dy = e.changedTouches[0].clientY - swipeStartY;
             const threshold = 50;
             if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
-                // Prefer horizontal; fall back to vertical
-                if (Math.abs(dx) >= Math.abs(dy)) {
-                    changeMonth(dx < 0 ? 1 : -1);
-                } else {
-                    changeMonth(dy < 0 ? 1 : -1);
-                }
+                changeMonth(Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 1 : -1) : (dy < 0 ? 1 : -1));
             }
         };
 
-        // ── Effects ────────────────────────────────────────────────────────
-        const setupEffects = () => {
-            if (window.ParticleEngine) ParticleEngine.setEffect(navSettings.effect);
-            watch(() => navSettings.effect, (e) => {
-                if (window.ParticleEngine) ParticleEngine.setEffect(e);
-            });
-        };
-
-        // ── Lifecycle ──────────────────────────────────────────────────────
+        // ── Lifecycle ─────────────────────────────────────────────────────────
         onMounted(() => {
-            setupEffects();
+            confirmModal.show = false;
+            if (window.ParticleEngine) ParticleEngine.setEffect(navSettings.effect);
             if (window.lucide) lucide.createIcons();
             document.addEventListener('click', closeJumpPicker);
+
+            setInterval(() => {
+                if (!navSettings.notificationsEnabled) return;
+                const now = new Date();
+                const todayStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
+                const data = shiftData.value[todayStr];
+                if (data?.shiftIds?.length > 0 && !data.notified) {
+                    const first = shiftSettings.value.shiftTags.find(t => t.id === data.shiftIds[0]);
+                    if (first) {
+                        const notify = () => new Notification(t.value.todayTasks, { body: first.name });
+                        if (Notification.permission === 'granted') notify();
+                        else if (Notification.permission !== 'denied')
+                            Notification.requestPermission().then(p => { if (p === 'granted') notify(); });
+                        data.notified = true;
+                    }
+                }
+            }, 60000);
         });
 
         onUnmounted(() => {
             document.removeEventListener('click', closeJumpPicker);
         });
 
-        watch(shiftSettings, (v) => StorageProvider.saveShiftSettings(v), { deep: true });
-
+        watch(() => navSettings.effect, (eff) => { if (window.ParticleEngine) ParticleEngine.setEffect(eff); });
+        watch(shiftSettings, (val) => StorageProvider.saveShiftSettings(val), { deep: true });
         watch([showTodayTasks, showDayDetail, showTagsModal], () => {
             nextTick(() => { if (window.lucide) lucide.createIcons(); });
         });
 
-        // ── Return ─────────────────────────────────────────────────────────
+        // ── Return ────────────────────────────────────────────────────────────
         return {
-            // Nav
+            t,
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
             navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle, themeStyle,
-            // Calendar
-            calendarDate, calendarDays, displayMonthYear, shiftData, shiftSettings,
-            changeMonth, handleDayClick, applyQuickTagToDay,
-            activeQuickTag, activeQuickTagCategory, selectQuickTag, toggleQuickTagCategory,
-            getTagName, getTagColor,
-            // Today tasks
-            todayTasks,
-            // Modal states
-            showTodayTasks, showDayDetail, selectedDay,
+            calendarDate, calendarDays, displayMonthYear, changeMonth, handleDayClick,
+            activeQuickTag, activeQuickTagCategory, deleteMode, selectQuickTag, toggleQuickTagCategory, confirmDeleteTag,
+            shiftData, getTagName, getTagColor, applyQuickTagToDay,
+            showTodayTasks, showDayDetail, selectedDay, selectedDayHasShift, todayTasks,
+            calendarInfoEnabled, showHolidayTags, showLunarDates, selectedDayHoliday, selectedDayLunar,
             jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
-            showTagsModal, isAnyModalOpen,
-            // Swipe
             handleSwipeStart, handleSwipeEnd,
-            // Shift tags
-            addShiftTag, removeShiftTag, addPayTag, removePayTag,
-            // Jobs / salary
-            addJob, removeJob, calcJobMonthly, totalMonthlyEstimate, getUnitsPlaceholder,
-            // Shift time picker
-            shiftTimePicker, openShiftTimePicker, confirmShiftTimePicker,
-            // Translations
-            t
+            showTagsModal, tagsTab, shiftSettings,
+            addShiftTag, removeShiftTag,
+            addJob, removeJob, calcJobMonthly, calculateTotalMonthlySalary, getUnitsLabel,
+            clockPicker, clockIsAM, clockDisplayHour,
+            clockHourDots, clockMinuteDots, clockHandX, clockHandY,
+            openClockPicker, selectClockHour, selectClockMinute, toggleClockAmPm, confirmClockPicker,
+            confirmModal, clearCacheAndUpdate,
+            isAnyModalOpen,
         };
     }
 });
