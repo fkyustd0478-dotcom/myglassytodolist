@@ -185,24 +185,26 @@ header {
     scroll-snap-align: center;
     display: flex;
     justify-content: center;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* ↓ TUNE: change duration (300ms) or easing here */
+    transition: all 0.3s ease;
 }
 
 .list-tab-item button {
     padding: 12px 18px;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* ↓ TUNE: button-level transition (matches parent) */
+    transition: all 0.3s ease;
     pointer-events: auto !important;
 }
 
 .list-tab-item:not(.active-tab) {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1); /* ↓ TUNE: inactive scale */
 }
 
 .list-tab-item.active-tab {
     z-index: 10;
     opacity: 1;
-    transform: scale(1.05);
+    transform: scale(1.05); /* ↓ TUNE: active scale — scales text + icons proportionally */
 }
 
 .list-tab-item.active-tab button {
