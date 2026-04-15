@@ -44,14 +44,16 @@ try {
                 onConfirm: null
             });
 
-            const settings = ref({ 
-                theme: 'cherry', 
-                customBgOpacity: 0.5, 
-                notificationsEnabled: false, 
+            const _storedSettings = StorageProvider.getCommonSettings();
+            const settings = ref({
+                theme: 'light',
+                customBgOpacity: 0,
+                notificationsEnabled: true,
                 lang: 'zh',
-                customBg: '', 
+                customBg: '',
                 useCustomBg: false,
-                effect: 'none'
+                effect: 'none',
+                ..._storedSettings
             });
 
             const isMenuOpen = ref(false);
@@ -149,26 +151,21 @@ try {
             });
 
             const isDarkTheme = computed(() => {
-                const darkThemes = ['forest', 'night', 'torii'];
-                if (settings.value.useCustomBg) {
-                    return settings.value.customBgOpacity < 0.5;
-                }
-                return darkThemes.includes(settings.value.theme);
+                if (settings.value.useCustomBg) return settings.value.customBgOpacity < 0.5;
+                const dark = ['dark', 'forest', 'night', 'torii', 'starrysky', 'ferriswheel'];
+                return dark.includes(settings.value.theme);
             });
 
             const isDefaultList = (id) => ['default', 'personal', 'work'].includes(id);
 
-            const glassStyle = computed(() => ({ 
-                backgroundColor: isDarkTheme.value ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)', 
-                backdropFilter: 'blur(12px)',
-                border: isDarkTheme.value ? '2.5px solid rgba(255, 255, 255, 0.9)' : '2.5px solid rgba(0, 0, 0, 0.9)',
-                color: isDarkTheme.value ? '#FFFFFF' : '#000000'
-            }));
+            const glassStyle = computed(() => isDarkTheme.value
+                ? { backgroundColor: 'rgba(0,0,0,0.5)', border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
+                : { backgroundColor: 'rgba(255,255,255,0.75)', border: '1.5px solid rgba(0,0,0,0.08)', color: '#1a1a1a', backdropFilter: 'blur(20px) brightness(1.03)', boxShadow: '0 8px 32px rgba(0,0,0,0.05)' }
+            );
             
             const themeClasses = computed(() => {
-                let classes = isDarkTheme.value ? 'theme-dark-mode ' : '';
-                if (settings.value.useCustomBg) return classes + 'theme-light';
-                return classes + `theme-${settings.value.theme}`;
+                if (settings.value.useCustomBg) return 'theme-light';
+                return `theme-${settings.value.theme}`;
             });
 
             const customBgStyle = computed(() => ({
@@ -829,28 +826,7 @@ try {
                         ParticleEngine.setEffect(settings.value.effect);
                     }
                     
-                    const themeImages = {
-                        cherry: './theme/cherry.png',
-                        forest: './theme/forest.png',
-                        night: './theme/night.png',
-                        sea: './theme/sea.png',
-                        seaside: './theme/seaside.png',
-                        sky: './theme/sky.png',
-                        sunset: './theme/sunset.png',
-                        torii: './theme/torii.png'
-                    };
-                    
-                    if (!settings.value.useCustomBg) {
-                        if (themeImages[theme]) {
-                            const v = Date.now();
-                            document.body.style.backgroundImage = `url(${themeImages[theme]}?v=${v})`;
-                            document.body.style.backgroundSize = 'cover';
-                            document.body.style.backgroundPosition = 'center';
-                            document.body.style.backgroundAttachment = 'fixed';
-                        } else {
-                            document.body.style.backgroundImage = '';
-                        }
-                    }
+                    // Background is managed by body.theme-* CSS classes via nav.js — no inline manipulation needed.
 
                     if (!settings.value.useCustomBg) {
                         // No automatic assets like planes or crabs anymore.
@@ -905,8 +881,6 @@ try {
                         currentObjectUrl.value = url;
                         settings.value.customBg = url;
                         if (settings.value.useCustomBg) {
-                            document.body.classList.add('custom-theme');
-                            document.body.style.backgroundImage = `url(${url})`;
                             themeStyle.backgroundImage = `url(${url})`;
                         }
                     }
