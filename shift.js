@@ -46,6 +46,10 @@ const shiftTranslations = {
         weekdays: ['日', '一', '二', '三', '四', '五', '六'],
         // Calendar info
         holidayLabel: '節假日', lunarLabel: '農曆',
+        // Payday
+        paydaySettings: '薪資日設定',
+        paydayTag: '薪資日',
+        paydayDayPlaceholder: '日',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
@@ -77,8 +81,42 @@ const shiftTranslations = {
         weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
         // Calendar info
         holidayLabel: 'Holiday', lunarLabel: 'Lunar',
+        // Payday
+        paydaySettings: 'Payday Settings',
+        paydayTag: 'Payday',
+        paydayDayPlaceholder: 'Day',
     }
 };
+
+// ── Payday helper ─────────────────────────────────────────────────────────────
+// Returns the effective payday dateStr (YYYY-MM-DD) for the given year/month,
+// shifting backwards (advance) or forwards (postpone) when landing on a weekend
+// or Taiwan public holiday.  Returns null when payday is disabled or unset.
+function getEffectivePayday(year, month, ps) {
+    if (!ps || !ps.display || !ps.day) return null;
+    const day = parseInt(ps.day);
+    if (!day || day < 1 || day > 31) return null;
+
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    let date = new Date(year, month, Math.min(day, lastDay));
+
+    const isNonWorkday = (dt) => {
+        const str = dt.toISOString().split('T')[0];
+        const dow = dt.getDay(); // 0 = Sun, 6 = Sat
+        const isHol = typeof TAIWAN_HOLIDAYS !== 'undefined' && !!TAIWAN_HOLIDAYS[str];
+        return dow === 0 || dow === 6 || isHol;
+    };
+
+    let guard = 0;
+    if (ps.holidayLogic === 'advance') {
+        while (isNonWorkday(date) && guard++ < 10)
+            date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+    } else {
+        while (isNonWorkday(date) && guard++ < 10)
+            date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+    }
+    return date.toISOString().split('T')[0];
+}
 
 const { createApp, ref, computed, onMounted, onUnmounted, watch, nextTick, reactive } = Vue;
 
@@ -135,7 +173,9 @@ const app = createApp({
                 { id: 'middle', name: _td.defaultMidShift,   startTime: '12:00', endTime: '20:00', color: '#f59e0b' },
                 { id: 'late',   name: _td.defaultLateShift,  startTime: '16:00', endTime: '00:00', color: '#8b5cf6' }
             ],
-            ...rawSettings
+            ...rawSettings,
+            // Merge payday sub-object so new keys don't overwrite user data
+            payday: { day: null, display: true, holidayLogic: 'advance', ...(rawSettings.payday || {}) }
         });
 
         // ── Calendar state ───────────────────────────────────────────────────
@@ -180,6 +220,7 @@ const app = createApp({
                 days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
 
             const todayStr = new Date().toISOString().split('T')[0];
+            const effectivePaydayStr = getEffectivePayday(year, month, shiftSettings.value.payday);
             return days.map(day => {
                 const dateStr = day.date.toISOString().split('T')[0];
                 return {
@@ -188,6 +229,7 @@ const app = createApp({
                     isToday: dateStr === todayStr,
                     holiday: (typeof TAIWAN_HOLIDAYS !== 'undefined') ? (TAIWAN_HOLIDAYS[dateStr] || null) : null,
                     lunar:   (typeof LunarCalendar   !== 'undefined') ? LunarCalendar.gridLabel(dateStr)   : '',
+                    isPayday: day.isCurrentMonth && effectivePaydayStr === dateStr,
                 };
             });
         });
@@ -220,6 +262,13 @@ const app = createApp({
             selectedDay.value && typeof LunarCalendar !== 'undefined'
                 ? LunarCalendar.fullLabel(selectedDay.value) : ''
         );
+
+        const selectedDayIsPayday = computed(() => {
+            if (!selectedDay.value || !shiftSettings.value.payday?.display) return false;
+            const parts = selectedDay.value.split('-');
+            const epd = getEffectivePayday(parseInt(parts[0]), parseInt(parts[1]) - 1, shiftSettings.value.payday);
+            return epd === selectedDay.value;
+        });
 
         // ── Jump Picker ──────────────────────────────────────────────────────
         const jumpPicker = ref({ show: false, year: new Date().getFullYear(), month: new Date().getMonth() });
@@ -484,11 +533,15 @@ const app = createApp({
         };
 
         const handleSwipeEnd = (e) => {
+            // Suppress month-change swipes while tag pills are open
+            // (let the calendar-container scroll naturally instead)
+            if (activeQuickTagCategory.value) return;
             const dx = e.changedTouches[0].clientX - swipeStartX;
             const dy = e.changedTouches[0].clientY - swipeStartY;
             const threshold = 50;
-            if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
-                changeMonth(Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 1 : -1) : (dy < 0 ? 1 : -1));
+            // Only horizontal swipes change the month
+            if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy)) {
+                changeMonth(dx < 0 ? 1 : -1);
             }
         };
 
@@ -536,7 +589,7 @@ const app = createApp({
             activeQuickTag, activeQuickTagCategory, deleteMode, selectQuickTag, toggleQuickTagCategory, confirmDeleteTag,
             shiftData, getTagName, getTagColor, applyQuickTagToDay,
             showTodayTasks, showDayDetail, selectedDay, selectedDayHasShift, todayTasks,
-            calendarInfoEnabled, showHolidayTags, showLunarDates, selectedDayHoliday, selectedDayLunar,
+            calendarInfoEnabled, showHolidayTags, showLunarDates, selectedDayHoliday, selectedDayLunar, selectedDayIsPayday,
             jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
             handleSwipeStart, handleSwipeEnd,
             showTagsModal, tagsTab, shiftSettings,

@@ -44,11 +44,11 @@
 .calendar-container {
     flex: 1;
     padding: 0 16px;
-    padding-bottom: 100px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
+    /* padding-bottom set dynamically via Vue :style binding */
 }
 
 .calendar-header {
@@ -61,7 +61,10 @@
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
+    grid-template-rows: 24px repeat(6, 1fr);
+    gap: 4px;
+    flex: 1;
+    min-height: 0;
 }
 
 .weekday-header {
@@ -71,16 +74,30 @@
     padding: 4px 0;
     opacity: 0.5;
     text-transform: uppercase;
+    border-radius: 6px;
+}
+
+/* Sunday (col 1) red pill, Saturday (col 7) blue pill */
+.calendar-grid .weekday-header:nth-child(1) {
+    background: rgba(239, 68, 68, 0.12);
+    color: rgba(239, 68, 68, 0.95);
+    opacity: 0.85;
+}
+.calendar-grid .weekday-header:nth-child(7) {
+    background: rgba(59, 130, 246, 0.12);
+    color: rgba(59, 130, 246, 0.95);
+    opacity: 0.85;
 }
 
 .calendar-day {
-    aspect-ratio: 1 / 1.1;
     padding: 6px;
     display: flex;
     flex-direction: column;
     position: relative;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 0;
+    overflow: hidden;
 }
 
 .calendar-day:active {
@@ -88,7 +105,7 @@
 }
 
 .calendar-day.other-month {
-    opacity: 0.2;
+    opacity: 0.4;
 }
 
 .calendar-day.today {
@@ -384,7 +401,16 @@
     overflow-y: auto;
 }
 
-/* ── Holiday Tag (calendar cell) ─────────────────────────────────────────── */
+/* ── Day header row: date number + holiday tag in one flex row ───────────── */
+.day-header-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* ── Holiday Tag (inline in day-header-row) ──────────────────────────────── */
 .holiday-tag {
     font-size: 7px;
     font-weight: 800;
@@ -396,9 +422,14 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
-    display: block;
+    flex: 1;
+    min-width: 0;
     text-shadow: none;
+}
+
+/* ── Payday Tag (calendar cell indicator) ────────────────────────────────── */
+.payday-tag {
+    background: rgba(16, 185, 129, 0.75);
 }
 
 /* ── Lunar Date Label (calendar cell bottom) ─────────────────────────────── */
