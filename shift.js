@@ -50,6 +50,11 @@ const shiftTranslations = {
         paydaySettings: '薪資日設定',
         paydayTag: '薪資日',
         paydayDayPlaceholder: '日',
+        // Other tags
+        otherNav: '其他', otherTab: '其他設定',
+        otherTagLabel: '其他事項', otherTagSection: '其他標籤',
+        otherNamePlaceholder: '標籤名稱', addOther: '+ 新增標籤',
+        iconLabel: '圖示', iconNone: '無',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
@@ -85,8 +90,32 @@ const shiftTranslations = {
         paydaySettings: 'Payday Settings',
         paydayTag: 'Payday',
         paydayDayPlaceholder: 'Day',
+        // Other tags
+        otherNav: 'Other', otherTab: 'Other',
+        otherTagLabel: 'Events', otherTagSection: 'Other Tags',
+        otherNamePlaceholder: 'Tag Name', addOther: '+ Add Tag',
+        iconLabel: 'Icon', iconNone: 'None',
     }
 };
+
+// ── Other-tag icon catalogue ───────────────────────────────────────────────
+// id: Lucide icon name used in the settings picker
+// emoji: compact character used in calendar grid cells
+const OTHER_TAG_ICONS = [
+    { id: 'none',           emoji: '',    zh: '無',   en: 'None'     },
+    { id: 'star',           emoji: '★',   zh: '特別',  en: 'Special'  },
+    { id: 'cake',           emoji: '🎂',  zh: '慶祝',  en: 'Birthday' },
+    { id: 'plane',          emoji: '✈',   zh: '出行',  en: 'Travel'   },
+    { id: 'alert-triangle', emoji: '⚠',   zh: '注意',  en: 'Warning'  },
+    { id: 'shopping-bag',   emoji: '🛍',  zh: '購物',  en: 'Shopping' },
+    { id: 'utensils',       emoji: '🍴',  zh: '餐飲',  en: 'Dining'   },
+    { id: 'car',            emoji: '🚗',  zh: '交通',  en: 'Car'      },
+    { id: 'stethoscope',    emoji: '💊',  zh: '醫療',  en: 'Medical'  },
+    { id: 'dumbbell',       emoji: '💪',  zh: '健身',  en: 'Gym'      },
+    { id: 'book',           emoji: '📖',  zh: '學習',  en: 'Study'    },
+    { id: 'trophy',         emoji: '🏆',  zh: '成就',  en: 'Trophy'   },
+    { id: 'music',          emoji: '♪',   zh: '音樂',  en: 'Music'    },
+];
 
 // ── Payday helper ─────────────────────────────────────────────────────────────
 // Returns the effective payday dateStr (YYYY-MM-DD) for the given year/month,
@@ -175,7 +204,9 @@ const app = createApp({
             ],
             ...rawSettings,
             // Merge payday sub-object so new keys don't overwrite user data
-            payday: { day: null, display: true, holidayLogic: 'advance', ...(rawSettings.payday || {}) }
+            payday: { day: null, display: true, holidayLogic: 'advance', ...(rawSettings.payday || {}) },
+            // otherTags: user-defined event tags (default empty, each icon defaults to 'none')
+            otherTags: rawSettings.otherTags || [],
         });
 
         // ── Calendar state ───────────────────────────────────────────────────
@@ -325,13 +356,14 @@ const app = createApp({
         };
 
         const applyQuickTag = (dateStr) => {
-            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [] };
+            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [], otherIds: [] };
             const { type, id } = activeQuickTag.value;
-            const field = type === 'shift' ? 'shiftIds' : 'payIds';
+            const field = type === 'shift' ? 'shiftIds' : type === 'other' ? 'otherIds' : 'payIds';
             if (!shiftData.value[dateStr][field]) {
                 shiftData.value[dateStr][field] = [];
-                const old = type === 'shift' ? 'shiftId' : 'payId';
-                if (shiftData.value[dateStr][old]) {
+                // Migrate legacy single-value fields (shift/pay only)
+                const old = type === 'shift' ? 'shiftId' : type === 'pay' ? 'payId' : null;
+                if (old && shiftData.value[dateStr][old]) {
                     shiftData.value[dateStr][field].push(shiftData.value[dateStr][old]);
                     delete shiftData.value[dateStr][old];
                 }
@@ -343,8 +375,8 @@ const app = createApp({
         };
 
         const applyQuickTagToDay = (dateStr, type, id) => {
-            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [] };
-            const field = type === 'shift' ? 'shiftIds' : 'payIds';
+            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [], otherIds: [] };
+            const field = type === 'shift' ? 'shiftIds' : type === 'other' ? 'otherIds' : 'payIds';
             if (!shiftData.value[dateStr][field]) shiftData.value[dateStr][field] = [];
             const idx = shiftData.value[dateStr][field].indexOf(id);
             if (idx > -1) shiftData.value[dateStr][field].splice(idx, 1);
@@ -367,15 +399,18 @@ const app = createApp({
         const confirmDeleteTag = (type, id) => {
             const tag = type === 'shift'
                 ? shiftSettings.value.shiftTags.find(t => t.id === id)
-                : shiftSettings.value.jobs.find(j => j.id === id);
+                : type === 'other'
+                    ? shiftSettings.value.otherTags.find(t => t.id === id)
+                    : shiftSettings.value.jobs.find(j => j.id === id);
             if (!tag) return;
             Object.assign(confirmModal, {
                 show: true,
                 title:   t.value.deleteTagTitle,
                 message: `"${tag.name}" — ${t.value.deleteTagMsg}`,
                 onConfirm: () => {
-                    if (type === 'shift') removeShiftTag(id);
-                    else removeJob(id);
+                    if (type === 'shift')      removeShiftTag(id);
+                    else if (type === 'other') removeOtherTag(id);
+                    else                       removeJob(id);
                     deleteMode.value = false;
                 }
             });
@@ -390,12 +425,28 @@ const app = createApp({
 
         const getTagName = (type, id) => {
             if (type === 'shift') return shiftSettings.value.shiftTags.find(t => t.id === id)?.name || '';
+            if (type === 'other') return shiftSettings.value.otherTags.find(t => t.id === id)?.name || '';
             return shiftSettings.value.jobs.find(j => j.id === id)?.name || '';
         };
         const getTagColor = (type, id) => {
             if (type === 'shift') return shiftSettings.value.shiftTags.find(t => t.id === id)?.color || 'rgba(255,255,255,0.2)';
+            if (type === 'other') return shiftSettings.value.otherTags.find(t => t.id === id)?.color || 'rgba(255,255,255,0.2)';
             return shiftSettings.value.jobs.find(j => j.id === id)?.color || 'rgba(255,255,255,0.2)';
         };
+
+        // icon ID stored on the otherTag object (e.g. 'star', 'none')
+        const getOtherTagIcon = (id) =>
+            shiftSettings.value.otherTags.find(t => t.id === id)?.icon || 'none';
+
+        // emoji character for a given otherTag's icon, used in calendar cells
+        const getOtherTagEmoji = (id) => {
+            const icon = getOtherTagIcon(id);
+            return OTHER_TAG_ICONS.find(ic => ic.id === icon)?.emoji || '';
+        };
+
+        // emoji by raw icon ID (used in pills / detail modal)
+        const getIconEmoji = (iconId) =>
+            OTHER_TAG_ICONS.find(ic => ic.id === iconId)?.emoji || '';
 
         // ── Shift tag management ─────────────────────────────────────────────
         const addShiftTag = () => shiftSettings.value.shiftTags.push(
@@ -403,6 +454,14 @@ const app = createApp({
         );
         const removeShiftTag = (id) => {
             shiftSettings.value.shiftTags = shiftSettings.value.shiftTags.filter(t => t.id !== id);
+        };
+
+        // ── Other-tag management ─────────────────────────────────────────────
+        const addOtherTag = () => shiftSettings.value.otherTags.push({
+            id: 'other_' + Date.now(), name: t.value.otherNamePlaceholder, color: '#a855f7', icon: 'none'
+        });
+        const removeOtherTag = (id) => {
+            shiftSettings.value.otherTags = shiftSettings.value.otherTags.filter(t => t.id !== id);
         };
 
         // ── Multi-job salary management ──────────────────────────────────────
@@ -576,7 +635,11 @@ const app = createApp({
 
         watch(() => navSettings.effect, (eff) => { if (window.ParticleEngine) ParticleEngine.setEffect(eff); });
         watch(shiftSettings, (val) => StorageProvider.saveShiftSettings(val), { deep: true });
-        watch([showTodayTasks, showDayDetail, showTagsModal], () => {
+        watch([showTodayTasks, showDayDetail, showTagsModal, tagsTab], () => {
+            nextTick(() => { if (window.lucide) lucide.createIcons(); });
+        });
+        // Re-run Lucide when a new Other-tag row (with icon picker) is added to the DOM
+        watch(() => shiftSettings.value.otherTags?.length, () => {
             nextTick(() => { if (window.lucide) lucide.createIcons(); });
         });
 
@@ -588,12 +651,14 @@ const app = createApp({
             calendarDate, calendarDays, displayMonthYear, changeMonth, handleDayClick,
             activeQuickTag, activeQuickTagCategory, deleteMode, selectQuickTag, toggleQuickTagCategory, confirmDeleteTag,
             shiftData, getTagName, getTagColor, applyQuickTagToDay,
+            getOtherTagIcon, getOtherTagEmoji, getIconEmoji, OTHER_TAG_ICONS,
             showTodayTasks, showDayDetail, selectedDay, selectedDayHasShift, todayTasks,
             calendarInfoEnabled, showHolidayTags, showLunarDates, selectedDayHoliday, selectedDayLunar, selectedDayIsPayday,
             jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
             handleSwipeStart, handleSwipeEnd,
             showTagsModal, tagsTab, shiftSettings,
             addShiftTag, removeShiftTag,
+            addOtherTag, removeOtherTag,
             addJob, removeJob, calcJobMonthly, calculateTotalMonthlySalary, getUnitsLabel,
             clockPicker, clockIsAM, clockDisplayHour,
             clockHourDots, clockMinuteDots, clockHandX, clockHandY,
