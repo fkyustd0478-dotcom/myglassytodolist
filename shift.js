@@ -46,6 +46,16 @@ const shiftTranslations = {
         weekdays: ['日', '一', '二', '三', '四', '五', '六'],
         // Calendar info
         holidayLabel: '節假日', lunarLabel: '農曆',
+        // Payday
+        paydaySettings: '薪資日設定',
+        paydayTag: '薪資日',
+        paydayDayPlaceholder: '日',
+        // Other tags
+        otherNav: '其他', otherTab: '其他設定',
+        otherTagLabel: '其他事項', otherTagSection: '其他標籤',
+        otherNamePlaceholder: '標籤名稱', addOther: '+ 新增標籤',
+        iconLabel: '圖示', iconNone: '無',
+        todoItemsLabel: '待辦事項', otherDateLabel: '日期',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
@@ -77,8 +87,67 @@ const shiftTranslations = {
         weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
         // Calendar info
         holidayLabel: 'Holiday', lunarLabel: 'Lunar',
+        // Payday
+        paydaySettings: 'Payday Settings',
+        paydayTag: 'Payday',
+        paydayDayPlaceholder: 'Day',
+        // Other tags
+        otherNav: 'Other', otherTab: 'Other',
+        otherTagLabel: 'Events', otherTagSection: 'Other Tags',
+        otherNamePlaceholder: 'Tag Name', addOther: '+ Add Tag',
+        iconLabel: 'Icon', iconNone: 'None',
+        todoItemsLabel: 'Todo Tasks', otherDateLabel: 'Date',
     }
 };
+
+// ── Other-tag icon catalogue ───────────────────────────────────────────────
+// id: Lucide icon name used in the settings picker
+// emoji: compact character used in calendar grid cells
+const OTHER_TAG_ICONS = [
+    { id: 'none',           emoji: '',    zh: '無',   en: 'None'     },
+    { id: 'star',           emoji: '★',   zh: '特別',  en: 'Special'  },
+    { id: 'cake',           emoji: '🎂',  zh: '慶祝',  en: 'Birthday' },
+    { id: 'plane',          emoji: '✈',   zh: '出行',  en: 'Travel'   },
+    { id: 'alert-triangle', emoji: '⚠',   zh: '注意',  en: 'Warning'  },
+    { id: 'shopping-bag',   emoji: '🛍',  zh: '購物',  en: 'Shopping' },
+    { id: 'utensils',       emoji: '🍴',  zh: '餐飲',  en: 'Dining'   },
+    { id: 'car',            emoji: '🚗',  zh: '交通',  en: 'Car'      },
+    { id: 'stethoscope',    emoji: '💊',  zh: '醫療',  en: 'Medical'  },
+    { id: 'dumbbell',       emoji: '💪',  zh: '健身',  en: 'Gym'      },
+    { id: 'book',           emoji: '📖',  zh: '學習',  en: 'Study'    },
+    { id: 'trophy',         emoji: '🏆',  zh: '成就',  en: 'Trophy'   },
+    { id: 'music',          emoji: '♪',   zh: '音樂',  en: 'Music'    },
+];
+
+// ── Payday helper ─────────────────────────────────────────────────────────────
+// Returns the effective payday dateStr (YYYY-MM-DD) for the given year/month,
+// shifting backwards (advance) or forwards (postpone) when landing on a weekend
+// or Taiwan public holiday.  Returns null when payday is disabled or unset.
+function getEffectivePayday(year, month, ps) {
+    if (!ps || !ps.display || !ps.day) return null;
+    const day = parseInt(ps.day);
+    if (!day || day < 1 || day > 31) return null;
+
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    let date = new Date(year, month, Math.min(day, lastDay));
+
+    const isNonWorkday = (dt) => {
+        const str = dt.toISOString().split('T')[0];
+        const dow = dt.getDay(); // 0 = Sun, 6 = Sat
+        const isHol = typeof TAIWAN_HOLIDAYS !== 'undefined' && !!TAIWAN_HOLIDAYS[str];
+        return dow === 0 || dow === 6 || isHol;
+    };
+
+    let guard = 0;
+    if (ps.holidayLogic === 'advance') {
+        while (isNonWorkday(date) && guard++ < 10)
+            date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+    } else {
+        while (isNonWorkday(date) && guard++ < 10)
+            date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+    }
+    return date.toISOString().split('T')[0];
+}
 
 const { createApp, ref, computed, onMounted, onUnmounted, watch, nextTick, reactive } = Vue;
 
@@ -135,12 +204,18 @@ const app = createApp({
                 { id: 'middle', name: _td.defaultMidShift,   startTime: '12:00', endTime: '20:00', color: '#f59e0b' },
                 { id: 'late',   name: _td.defaultLateShift,  startTime: '16:00', endTime: '00:00', color: '#8b5cf6' }
             ],
-            ...rawSettings
+            ...rawSettings,
+            // Merge payday sub-object so new keys don't overwrite user data
+            payday: { day: null, display: true, holidayLogic: 'advance', ...(rawSettings.payday || {}) },
+            // otherTags: user-defined event tags (default empty, each icon defaults to 'none')
+            otherTags: rawSettings.otherTags || [],
         });
 
         // ── Calendar state ───────────────────────────────────────────────────
         const calendarDate = ref(new Date());
         const shiftData    = ref(StorageProvider.getShiftData());
+        // Todo data synced from shared localStorage key (written by todo.js)
+        const todoData     = ref(StorageProvider.getTodoData());
 
         // ── UI state ─────────────────────────────────────────────────────────
         const activeQuickTag         = ref(null);
@@ -180,14 +255,41 @@ const app = createApp({
                 days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
 
             const todayStr = new Date().toISOString().split('T')[0];
+            const effectivePaydayStr = getEffectivePayday(year, month, shiftSettings.value.payday);
+
+            // Pre-index date-specific Other tags by their assigned date
+            const otherTagsByDate = {};
+            (shiftSettings.value.otherTags || []).forEach(tag => {
+                if (tag.date) {
+                    if (!otherTagsByDate[tag.date]) otherTagsByDate[tag.date] = [];
+                    otherTagsByDate[tag.date].push(tag);
+                }
+            });
+
+            // Pre-index pending todo counts by date (from shared localStorage)
+            const todosByDate = {};
+            (todoData.value.todos || []).forEach(td => {
+                if (td.completed || td.isDeleted || !td.dueDate) return;
+                const d = td.dueDate.split('T')[0];
+                if (!todosByDate[d]) todosByDate[d] = [];
+                todosByDate[d].push(td.text);
+            });
+
             return days.map(day => {
                 const dateStr = day.date.toISOString().split('T')[0];
+                const todoTexts = todosByDate[dateStr] || [];
                 return {
                     ...day, dateStr,
                     data: shiftData.value[dateStr] || {},
                     isToday: dateStr === todayStr,
                     holiday: (typeof TAIWAN_HOLIDAYS !== 'undefined') ? (TAIWAN_HOLIDAYS[dateStr] || null) : null,
                     lunar:   (typeof LunarCalendar   !== 'undefined') ? LunarCalendar.gridLabel(dateStr)   : '',
+                    isPayday: day.isCurrentMonth && effectivePaydayStr === dateStr,
+                    // Date-based Other tags (array of tag objects)
+                    otherTagsOnDay: otherTagsByDate[dateStr] || [],
+                    // Todo glow dots (capped at 3)
+                    todoDots:  Math.min(todoTexts.length, 3),
+                    todoItems: todoTexts,
                 };
             });
         });
@@ -220,6 +322,27 @@ const app = createApp({
             selectedDay.value && typeof LunarCalendar !== 'undefined'
                 ? LunarCalendar.fullLabel(selectedDay.value) : ''
         );
+
+        const selectedDayIsPayday = computed(() => {
+            if (!selectedDay.value || !shiftSettings.value.payday?.display) return false;
+            const parts = selectedDay.value.split('-');
+            const epd = getEffectivePayday(parseInt(parts[0]), parseInt(parts[1]) - 1, shiftSettings.value.payday);
+            return epd === selectedDay.value;
+        });
+
+        // Other tags whose assigned date matches the selected day
+        const selectedDayOtherTags = computed(() => {
+            if (!selectedDay.value) return [];
+            return (shiftSettings.value.otherTags || []).filter(tag => tag.date === selectedDay.value);
+        });
+
+        // Pending todo task texts for the selected day
+        const selectedDayTodos = computed(() => {
+            if (!selectedDay.value) return [];
+            return (todoData.value.todos || [])
+                .filter(td => !td.completed && !td.isDeleted && td.dueDate?.split('T')[0] === selectedDay.value)
+                .map(td => td.text);
+        });
 
         // ── Jump Picker ──────────────────────────────────────────────────────
         const jumpPicker = ref({ show: false, year: new Date().getFullYear(), month: new Date().getMonth() });
@@ -276,13 +399,14 @@ const app = createApp({
         };
 
         const applyQuickTag = (dateStr) => {
-            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [] };
+            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [], otherIds: [] };
             const { type, id } = activeQuickTag.value;
-            const field = type === 'shift' ? 'shiftIds' : 'payIds';
+            const field = type === 'shift' ? 'shiftIds' : type === 'other' ? 'otherIds' : 'payIds';
             if (!shiftData.value[dateStr][field]) {
                 shiftData.value[dateStr][field] = [];
-                const old = type === 'shift' ? 'shiftId' : 'payId';
-                if (shiftData.value[dateStr][old]) {
+                // Migrate legacy single-value fields (shift/pay only)
+                const old = type === 'shift' ? 'shiftId' : type === 'pay' ? 'payId' : null;
+                if (old && shiftData.value[dateStr][old]) {
                     shiftData.value[dateStr][field].push(shiftData.value[dateStr][old]);
                     delete shiftData.value[dateStr][old];
                 }
@@ -294,8 +418,8 @@ const app = createApp({
         };
 
         const applyQuickTagToDay = (dateStr, type, id) => {
-            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [] };
-            const field = type === 'shift' ? 'shiftIds' : 'payIds';
+            if (!shiftData.value[dateStr]) shiftData.value[dateStr] = { shiftIds: [], payIds: [], otherIds: [] };
+            const field = type === 'shift' ? 'shiftIds' : type === 'other' ? 'otherIds' : 'payIds';
             if (!shiftData.value[dateStr][field]) shiftData.value[dateStr][field] = [];
             const idx = shiftData.value[dateStr][field].indexOf(id);
             if (idx > -1) shiftData.value[dateStr][field].splice(idx, 1);
@@ -318,15 +442,18 @@ const app = createApp({
         const confirmDeleteTag = (type, id) => {
             const tag = type === 'shift'
                 ? shiftSettings.value.shiftTags.find(t => t.id === id)
-                : shiftSettings.value.jobs.find(j => j.id === id);
+                : type === 'other'
+                    ? shiftSettings.value.otherTags.find(t => t.id === id)
+                    : shiftSettings.value.jobs.find(j => j.id === id);
             if (!tag) return;
             Object.assign(confirmModal, {
                 show: true,
                 title:   t.value.deleteTagTitle,
                 message: `"${tag.name}" — ${t.value.deleteTagMsg}`,
                 onConfirm: () => {
-                    if (type === 'shift') removeShiftTag(id);
-                    else removeJob(id);
+                    if (type === 'shift')      removeShiftTag(id);
+                    else if (type === 'other') removeOtherTag(id);
+                    else                       removeJob(id);
                     deleteMode.value = false;
                 }
             });
@@ -341,12 +468,28 @@ const app = createApp({
 
         const getTagName = (type, id) => {
             if (type === 'shift') return shiftSettings.value.shiftTags.find(t => t.id === id)?.name || '';
+            if (type === 'other') return shiftSettings.value.otherTags.find(t => t.id === id)?.name || '';
             return shiftSettings.value.jobs.find(j => j.id === id)?.name || '';
         };
         const getTagColor = (type, id) => {
             if (type === 'shift') return shiftSettings.value.shiftTags.find(t => t.id === id)?.color || 'rgba(255,255,255,0.2)';
+            if (type === 'other') return shiftSettings.value.otherTags.find(t => t.id === id)?.color || 'rgba(255,255,255,0.2)';
             return shiftSettings.value.jobs.find(j => j.id === id)?.color || 'rgba(255,255,255,0.2)';
         };
+
+        // icon ID stored on the otherTag object (e.g. 'star', 'none')
+        const getOtherTagIcon = (id) =>
+            shiftSettings.value.otherTags.find(t => t.id === id)?.icon || 'none';
+
+        // emoji character for a given otherTag's icon, used in calendar cells
+        const getOtherTagEmoji = (id) => {
+            const icon = getOtherTagIcon(id);
+            return OTHER_TAG_ICONS.find(ic => ic.id === icon)?.emoji || '';
+        };
+
+        // emoji by raw icon ID (used in pills / detail modal)
+        const getIconEmoji = (iconId) =>
+            OTHER_TAG_ICONS.find(ic => ic.id === iconId)?.emoji || '';
 
         // ── Shift tag management ─────────────────────────────────────────────
         const addShiftTag = () => shiftSettings.value.shiftTags.push(
@@ -354,6 +497,14 @@ const app = createApp({
         );
         const removeShiftTag = (id) => {
             shiftSettings.value.shiftTags = shiftSettings.value.shiftTags.filter(t => t.id !== id);
+        };
+
+        // ── Other-tag management ─────────────────────────────────────────────
+        const addOtherTag = () => shiftSettings.value.otherTags.push({
+            id: 'other_' + Date.now(), name: t.value.otherNamePlaceholder, color: '#a855f7', icon: 'none', date: ''
+        });
+        const removeOtherTag = (id) => {
+            shiftSettings.value.otherTags = shiftSettings.value.otherTags.filter(t => t.id !== id);
         };
 
         // ── Multi-job salary management ──────────────────────────────────────
@@ -484,11 +635,15 @@ const app = createApp({
         };
 
         const handleSwipeEnd = (e) => {
+            // Suppress month-change swipes while tag pills are open
+            // (let the calendar-container scroll naturally instead)
+            if (activeQuickTagCategory.value) return;
             const dx = e.changedTouches[0].clientX - swipeStartX;
             const dy = e.changedTouches[0].clientY - swipeStartY;
             const threshold = 50;
-            if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
-                changeMonth(Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 1 : -1) : (dy < 0 ? 1 : -1));
+            // Only horizontal swipes change the month
+            if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy)) {
+                changeMonth(dx < 0 ? 1 : -1);
             }
         };
 
@@ -498,6 +653,13 @@ const app = createApp({
             if (window.ParticleEngine) ParticleEngine.setEffect(navSettings.effect);
             if (window.lucide) lucide.createIcons();
             document.addEventListener('click', closeJumpPicker);
+
+            // Keep todoData fresh when index.html writes to localStorage
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'todo_data' && e.newValue) {
+                    try { todoData.value = JSON.parse(e.newValue); } catch (_) {}
+                }
+            });
 
             setInterval(() => {
                 if (!navSettings.notificationsEnabled) return;
@@ -523,7 +685,11 @@ const app = createApp({
 
         watch(() => navSettings.effect, (eff) => { if (window.ParticleEngine) ParticleEngine.setEffect(eff); });
         watch(shiftSettings, (val) => StorageProvider.saveShiftSettings(val), { deep: true });
-        watch([showTodayTasks, showDayDetail, showTagsModal], () => {
+        watch([showTodayTasks, showDayDetail, showTagsModal, tagsTab], () => {
+            nextTick(() => { if (window.lucide) lucide.createIcons(); });
+        });
+        // Re-run Lucide when a new Other-tag row (with icon picker) is added to the DOM
+        watch(() => shiftSettings.value.otherTags?.length, () => {
             nextTick(() => { if (window.lucide) lucide.createIcons(); });
         });
 
@@ -535,12 +701,15 @@ const app = createApp({
             calendarDate, calendarDays, displayMonthYear, changeMonth, handleDayClick,
             activeQuickTag, activeQuickTagCategory, deleteMode, selectQuickTag, toggleQuickTagCategory, confirmDeleteTag,
             shiftData, getTagName, getTagColor, applyQuickTagToDay,
+            getOtherTagIcon, getOtherTagEmoji, getIconEmoji, OTHER_TAG_ICONS,
             showTodayTasks, showDayDetail, selectedDay, selectedDayHasShift, todayTasks,
-            calendarInfoEnabled, showHolidayTags, showLunarDates, selectedDayHoliday, selectedDayLunar,
+            calendarInfoEnabled, showHolidayTags, showLunarDates, selectedDayHoliday, selectedDayLunar, selectedDayIsPayday,
+            selectedDayOtherTags, selectedDayTodos,
             jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
             handleSwipeStart, handleSwipeEnd,
             showTagsModal, tagsTab, shiftSettings,
             addShiftTag, removeShiftTag,
+            addOtherTag, removeOtherTag,
             addJob, removeJob, calcJobMonthly, calculateTotalMonthlySalary, getUnitsLabel,
             clockPicker, clockIsAM, clockDisplayHour,
             clockHourDots, clockMinuteDots, clockHandX, clockHandY,
