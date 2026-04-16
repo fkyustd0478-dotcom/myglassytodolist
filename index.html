@@ -113,7 +113,7 @@
                                     </div>
 
                                     <div class="space-y-4">
-                                        <div v-for="todo in group.items" :key="todo.id" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
+                                        <div v-for="todo in group.items" :key="todo.id" :data-todo-id="todo.id" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
                                             <button @click="toggleTodo(todo.id)" class="text-blue-500">
                                                 <i data-lucide="circle" class="w-6 h-6"></i>
                                             </button>

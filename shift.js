@@ -55,6 +55,7 @@ const shiftTranslations = {
         otherTagLabel: '其他事項', otherTagSection: '其他標籤',
         otherNamePlaceholder: '標籤名稱', addOther: '+ 新增標籤',
         iconLabel: '圖示', iconNone: '無',
+        todoItemsLabel: '待辦事項', otherDateLabel: '日期',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
@@ -95,6 +96,7 @@ const shiftTranslations = {
         otherTagLabel: 'Events', otherTagSection: 'Other Tags',
         otherNamePlaceholder: 'Tag Name', addOther: '+ Add Tag',
         iconLabel: 'Icon', iconNone: 'None',
+        todoItemsLabel: 'Todo Tasks', otherDateLabel: 'Date',
     }
 };
 
@@ -212,6 +214,8 @@ const app = createApp({
         // ── Calendar state ───────────────────────────────────────────────────
         const calendarDate = ref(new Date());
         const shiftData    = ref(StorageProvider.getShiftData());
+        // Todo data synced from shared localStorage key (written by todo.js)
+        const todoData     = ref(StorageProvider.getTodoData());
 
         // ── UI state ─────────────────────────────────────────────────────────
         const activeQuickTag         = ref(null);
@@ -252,8 +256,28 @@ const app = createApp({
 
             const todayStr = new Date().toISOString().split('T')[0];
             const effectivePaydayStr = getEffectivePayday(year, month, shiftSettings.value.payday);
+
+            // Pre-index date-specific Other tags by their assigned date
+            const otherTagsByDate = {};
+            (shiftSettings.value.otherTags || []).forEach(tag => {
+                if (tag.date) {
+                    if (!otherTagsByDate[tag.date]) otherTagsByDate[tag.date] = [];
+                    otherTagsByDate[tag.date].push(tag);
+                }
+            });
+
+            // Pre-index pending todo counts by date (from shared localStorage)
+            const todosByDate = {};
+            (todoData.value.todos || []).forEach(td => {
+                if (td.completed || td.isDeleted || !td.dueDate) return;
+                const d = td.dueDate.split('T')[0];
+                if (!todosByDate[d]) todosByDate[d] = [];
+                todosByDate[d].push(td.text);
+            });
+
             return days.map(day => {
                 const dateStr = day.date.toISOString().split('T')[0];
+                const todoTexts = todosByDate[dateStr] || [];
                 return {
                     ...day, dateStr,
                     data: shiftData.value[dateStr] || {},
@@ -261,6 +285,11 @@ const app = createApp({
                     holiday: (typeof TAIWAN_HOLIDAYS !== 'undefined') ? (TAIWAN_HOLIDAYS[dateStr] || null) : null,
                     lunar:   (typeof LunarCalendar   !== 'undefined') ? LunarCalendar.gridLabel(dateStr)   : '',
                     isPayday: day.isCurrentMonth && effectivePaydayStr === dateStr,
+                    // Date-based Other tags (array of tag objects)
+                    otherTagsOnDay: otherTagsByDate[dateStr] || [],
+                    // Todo glow dots (capped at 3)
+                    todoDots:  Math.min(todoTexts.length, 3),
+                    todoItems: todoTexts,
                 };
             });
         });
@@ -299,6 +328,20 @@ const app = createApp({
             const parts = selectedDay.value.split('-');
             const epd = getEffectivePayday(parseInt(parts[0]), parseInt(parts[1]) - 1, shiftSettings.value.payday);
             return epd === selectedDay.value;
+        });
+
+        // Other tags whose assigned date matches the selected day
+        const selectedDayOtherTags = computed(() => {
+            if (!selectedDay.value) return [];
+            return (shiftSettings.value.otherTags || []).filter(tag => tag.date === selectedDay.value);
+        });
+
+        // Pending todo task texts for the selected day
+        const selectedDayTodos = computed(() => {
+            if (!selectedDay.value) return [];
+            return (todoData.value.todos || [])
+                .filter(td => !td.completed && !td.isDeleted && td.dueDate?.split('T')[0] === selectedDay.value)
+                .map(td => td.text);
         });
 
         // ── Jump Picker ──────────────────────────────────────────────────────
@@ -458,7 +501,7 @@ const app = createApp({
 
         // ── Other-tag management ─────────────────────────────────────────────
         const addOtherTag = () => shiftSettings.value.otherTags.push({
-            id: 'other_' + Date.now(), name: t.value.otherNamePlaceholder, color: '#a855f7', icon: 'none'
+            id: 'other_' + Date.now(), name: t.value.otherNamePlaceholder, color: '#a855f7', icon: 'none', date: ''
         });
         const removeOtherTag = (id) => {
             shiftSettings.value.otherTags = shiftSettings.value.otherTags.filter(t => t.id !== id);
@@ -611,6 +654,13 @@ const app = createApp({
             if (window.lucide) lucide.createIcons();
             document.addEventListener('click', closeJumpPicker);
 
+            // Keep todoData fresh when index.html writes to localStorage
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'todo_data' && e.newValue) {
+                    try { todoData.value = JSON.parse(e.newValue); } catch (_) {}
+                }
+            });
+
             setInterval(() => {
                 if (!navSettings.notificationsEnabled) return;
                 const now = new Date();
@@ -654,6 +704,7 @@ const app = createApp({
             getOtherTagIcon, getOtherTagEmoji, getIconEmoji, OTHER_TAG_ICONS,
             showTodayTasks, showDayDetail, selectedDay, selectedDayHasShift, todayTasks,
             calendarInfoEnabled, showHolidayTags, showLunarDates, selectedDayHoliday, selectedDayLunar, selectedDayIsPayday,
+            selectedDayOtherTags, selectedDayTodos,
             jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
             handleSwipeStart, handleSwipeEnd,
             showTagsModal, tagsTab, shiftSettings,

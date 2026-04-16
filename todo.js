@@ -293,7 +293,9 @@ try {
             };
 
             const editTodo = (todo) => {
-                isEditing.value = true; 
+                const el = document.querySelector(`[data-todo-id="${todo.id}"]`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                isEditing.value = true;
                 editingId.value = todo.id;
                 const d = todo.dueDate ? new Date(todo.dueDate) : new Date();
                 form.value = { 
@@ -331,8 +333,9 @@ try {
                         });
                     }
                 } else {
+                    const newId = Date.now().toString(36);
                     todos.value.unshift({
-                        id: Date.now().toString(36),
+                        id: newId,
                         listId: currentListId.value,
                         text: form.value.text,
                         category: form.value.category,
@@ -343,6 +346,10 @@ try {
                         notified: !isFuture,
                         alertMinutes: form.value.alertMinutes,
                         updatedAt: new Date().toISOString()
+                    });
+                    nextTick(() => {
+                        const el = document.querySelector(`[data-todo-id="${newId}"]`);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     });
                 }
                 StorageProvider.saveData({ todos: todos.value, lists: lists.value });
@@ -854,6 +861,8 @@ try {
                 nextTick(() => {
                     if (window.lucide) lucide.createIcons();
                     scrollActiveTabIntoView();
+                    const firstTask = document.querySelector('[data-todo-id]');
+                    if (firstTask) firstTask.scrollIntoView({ behavior: 'auto', block: 'center' });
                     setupEffects();
 
                     // Initialize Sortable for lists

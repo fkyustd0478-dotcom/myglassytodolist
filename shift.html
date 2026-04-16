@@ -136,19 +136,19 @@
                         {{ getTagName('shift', day.data.shiftIds[0]) }}
                     </div>
                     <!-- 2a. Other tags with icon → compact emoji badge row -->
-                    <div v-if="(day.data.otherIds||[]).some(id => getOtherTagIcon(id) !== 'none')"
+                    <div v-if="day.otherTagsOnDay.some(tag => tag.icon && tag.icon !== 'none')"
                          class="other-icon-row">
-                        <span v-for="oid in (day.data.otherIds||[]).filter(id => getOtherTagIcon(id) !== 'none')"
-                              :key="oid" class="other-icon-badge"
-                              :style="{ backgroundColor: getTagColor('other', oid) }">
-                            {{ getOtherTagEmoji(oid) }}
+                        <span v-for="tag in day.otherTagsOnDay.filter(tag => tag.icon && tag.icon !== 'none')"
+                              :key="tag.id" class="other-icon-badge"
+                              :style="{ backgroundColor: tag.color }">
+                            {{ getIconEmoji(tag.icon) }}
                         </span>
                     </div>
                     <!-- 2b. Other tags without icon → text label -->
-                    <div v-for="oid in (day.data.otherIds||[]).filter(id => getOtherTagIcon(id) === 'none')"
-                         :key="'ot'+oid" class="indicator-tag"
-                         :style="{ backgroundColor: getTagColor('other', oid) }">
-                        {{ getTagName('other', oid) }}
+                    <div v-for="tag in day.otherTagsOnDay.filter(tag => !tag.icon || tag.icon === 'none')"
+                         :key="'ot'+tag.id" class="indicator-tag"
+                         :style="{ backgroundColor: tag.color }">
+                        {{ tag.name }}
                     </div>
                     <!-- 3. Payday system tag -->
                     <div v-if="day.isPayday" class="indicator-tag payday-tag">{{ t.paydayTag }}</div>
@@ -160,6 +160,10 @@
                     </div>
                 </div>
                 <div v-if="showLunarDates && day.lunar" class="lunar-date">{{ day.lunar }}</div>
+                <!-- Todo glow dots -->
+                <div v-if="day.todoDots > 0" class="todo-dots-row">
+                    <span v-for="n in day.todoDots" :key="n" class="todo-dot"></span>
+                </div>
             </div>
         </div>
 
@@ -355,6 +359,13 @@
                                 </span>
                                 <i v-else :data-lucide="ic.id" class="w-3.5 h-3.5"></i>
                             </button>
+                        </div>
+                        <!-- Row 3: date picker -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black opacity-40 shrink-0">{{ t.otherDateLabel }}</span>
+                            <input v-model="tag.date" type="date"
+                                   class="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold focus:outline-none focus:border-purple-500"
+                                   style="color-scheme: dark;">
                         </div>
                     </div>
 
@@ -616,17 +627,17 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 2. Other / custom event tags -->
-                    <div v-if="(shiftData[selectedDay]?.otherIds||[]).length" class="input-group">
+                    <!-- 2. Other / custom event tags (date-specific) -->
+                    <div v-if="selectedDayOtherTags.length" class="input-group">
                         <label class="input-label">{{ t.otherTagLabel }}</label>
                         <div class="flex flex-wrap gap-2">
-                            <div v-for="oid in (shiftData[selectedDay]?.otherIds||[])" :key="oid"
+                            <div v-for="tag in selectedDayOtherTags" :key="tag.id"
                                  class="px-3 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5"
-                                 :style="{ backgroundColor: getTagColor('other', oid) }">
-                                <span v-if="getOtherTagIcon(oid) !== 'none'" class="text-sm leading-none">
-                                    {{ getOtherTagEmoji(oid) }}
+                                 :style="{ backgroundColor: tag.color }">
+                                <span v-if="tag.icon && tag.icon !== 'none'" class="text-sm leading-none">
+                                    {{ getIconEmoji(tag.icon) }}
                                 </span>
-                                {{ getTagName('other', oid) }}
+                                {{ tag.name }}
                             </div>
                         </div>
                     </div>
@@ -641,7 +652,19 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 4. Payday indicator -->
+                    <!-- 4. Todo items for this day -->
+                    <div v-if="selectedDayTodos.length" class="input-group">
+                        <label class="input-label">{{ t.todoItemsLabel }}</label>
+                        <div class="space-y-1.5">
+                            <div v-for="(task, i) in selectedDayTodos" :key="i"
+                                 class="flex items-center gap-2 text-sm font-bold">
+                                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                      style="background:#2dd4bf;box-shadow:0 0 4px #2dd4bf;"></span>
+                                {{ task }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 5. Payday indicator -->
                     <div v-if="selectedDayIsPayday" class="input-group">
                         <label class="input-label">{{ t.paydayTag }}</label>
                         <div class="px-3 py-2 rounded-xl text-sm font-bold"
@@ -649,19 +672,19 @@
                             {{ t.paydaySettings }}
                         </div>
                     </div>
-                    <!-- 5. Holiday -->
+                    <!-- 6. Holiday -->
                     <div v-if="showHolidayTags && selectedDayHoliday" class="input-group">
                         <label class="input-label">{{ t.holidayLabel }}</label>
                         <div class="px-3 py-2 rounded-xl text-sm font-bold holiday-detail-tag">
                             {{ selectedDayHoliday }}
                         </div>
                     </div>
-                    <!-- 6. Lunar date -->
+                    <!-- 7. Lunar date -->
                     <div v-if="showLunarDates && selectedDayLunar" class="input-group">
                         <label class="input-label">{{ t.lunarLabel }}</label>
                         <div class="text-sm font-bold opacity-60">{{ selectedDayLunar }}</div>
                     </div>
-                    <!-- 7. Note -->
+                    <!-- 8. Note -->
                     <div class="input-group">
                         <label class="input-label">{{ t.noteLabel }}</label>
                         <textarea v-model="shiftData[selectedDay].note" class="glass-input" rows="4"
