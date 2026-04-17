@@ -70,6 +70,12 @@ try {
             const showRain = ref(false);
             
             const showDateTimePicker = ref(false);
+            const pickerMode = ref('date'); // 'date' | 'time'
+            const yearCol = ref(null);
+            const monthCol = ref(null);
+            const dayCol = ref(null);
+            const hourCol = ref(null);
+            const minuteCol = ref(null);
             const clockMode = ref('hour');
             const dateMode = ref('day');
             
@@ -481,7 +487,7 @@ try {
                     form.value.time.hour = now.getHours();
                     form.value.time.minute = now.getMinutes();
                 }
-                showDateTimePicker.value = true;
+                openPicker('date');
             };
 
             const isAnyModalOpen = computed(() => {
@@ -606,6 +612,71 @@ try {
                         activeTab.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
                     }
                 });
+            };
+
+            const pickerYear = computed(() => form.value.date ? parseInt(form.value.date.slice(0,4), 10) : new Date().getFullYear());
+            const pickerMonth = computed(() => form.value.date ? parseInt(form.value.date.slice(5,7), 10) : new Date().getMonth() + 1);
+            const pickerDay = computed(() => form.value.date ? parseInt(form.value.date.slice(8,10), 10) : new Date().getDate());
+            const pickerHour = computed(() => form.value.time.hour);
+            const pickerMinute = computed(() => form.value.time.minute);
+            const pickerMaxDays = computed(() => {
+                if (!form.value.date) return 31;
+                const [y, m] = form.value.date.split('-').map(Number);
+                return new Date(y, m, 0).getDate();
+            });
+            const pickerDateStr = computed(() => form.value.date ? form.value.date.replace(/-/g, ':') : '');
+            const pickerTimeStr = computed(() =>
+                `${form.value.time.hour.toString().padStart(2,'0')}:${form.value.time.minute.toString().padStart(2,'0')}`
+            );
+
+            const PICKER_ITEM_H = 44;
+            const scrollPickerCols = () => {
+                nextTick(() => {
+                    if (pickerMode.value === 'date') {
+                        if (yearCol.value) yearCol.value.scrollTop = (pickerYear.value - 1970) * PICKER_ITEM_H;
+                        if (monthCol.value) monthCol.value.scrollTop = (pickerMonth.value - 1) * PICKER_ITEM_H;
+                        if (dayCol.value) dayCol.value.scrollTop = (pickerDay.value - 1) * PICKER_ITEM_H;
+                    } else {
+                        if (hourCol.value) hourCol.value.scrollTop = pickerHour.value * PICKER_ITEM_H;
+                        if (minuteCol.value) minuteCol.value.scrollTop = pickerMinute.value * PICKER_ITEM_H;
+                    }
+                });
+            };
+
+            const openPicker = (mode) => {
+                pickerMode.value = mode;
+                showDateTimePicker.value = true;
+                setTimeout(scrollPickerCols, 60);
+            };
+
+            const switchPickerMode = (mode) => {
+                pickerMode.value = mode;
+                setTimeout(scrollPickerCols, 20);
+            };
+
+            const selectPickerYear = (y) => { updatePickerDate('year', y); };
+            const selectPickerMonth = (m) => { updatePickerDate('month', m); };
+            const selectPickerDay = (d) => { updatePickerDate('day', d); };
+            const selectPickerHour = (h) => { form.value.time.hour = h; };
+            const selectPickerMinute = (m) => { form.value.time.minute = m; };
+
+            const onPickerDateInput = (e) => {
+                const match = e.target.value.match(/^(\d{4}):(\d{1,2}):(\d{1,2})$/);
+                if (!match) return;
+                const [, y, mo, d] = match.map(Number);
+                if (y >= 1970 && y <= 2099 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+                    form.value.date = `${y}-${mo.toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
+                    setTimeout(scrollPickerCols, 20);
+                }
+            };
+
+            const onPickerTimeInput = (e) => {
+                const match = e.target.value.match(/^(\d{1,2}):(\d{1,2})$/);
+                if (!match) return;
+                const [, h, m] = match.map(Number);
+                if (h >= 0 && h <= 23) form.value.time.hour = h;
+                if (m >= 0 && m <= 59) form.value.time.minute = m;
+                setTimeout(scrollPickerCols, 20);
             };
 
             const calculateNextGen = (r, d) => { 
@@ -917,6 +988,8 @@ try {
 
             // navSettings persistence is handled per-mutation via StorageProvider.saveCommonSettings.
 
+            watch(currentListId, () => scrollActiveTabIntoView());
+
             watch([todos, lists], () => {
                 StorageProvider.saveData({ todos: todos.value, lists: lists.value });
                 nextTick(() => lucide.createIcons());
@@ -971,7 +1044,13 @@ try {
                 customBgStyle, formatTimeDisplay, sortedTodos, completedTodos, groupedTodos, 
                 deletedTodos, toggleLang, toggleNotifications, selectTheme, 
                 toggleCustomBg, triggerUpload, handleUpload, startAdding, editTodo, 
-                saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, openPickerDropdown,
+                saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, openPickerDropdown, pickerMode, pickerYear, pickerMonth, pickerDay, pickerHour, pickerMinute,
+                pickerMaxDays, pickerDateStr, pickerTimeStr,
+                yearCol, monthCol, dayCol, hourCol, minuteCol,
+                scrollPickerCols, openPicker, switchPickerMode,
+                selectPickerYear, selectPickerMonth, selectPickerDay,
+                selectPickerHour, selectPickerMinute,
+                onPickerDateInput, onPickerTimeInput,
                 permanentDelete, addNewList, openDatePicker, closeSettings,
                 renderTrigger, calculateNextGen, 
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
