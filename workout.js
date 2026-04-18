@@ -4,25 +4,34 @@
 // ── Module-level helpers ──────────────────────────────────────────────────
 const _wUid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
+const LIBRARY_KEY = 'lapis_workout_library';
+
+const _defaultExercises = () => [
+    { id: _wUid(), name: 'Bench Press',    nameZh: '槓鈴臥推',   categories: ['Push','Chest'],         type: 'sets', preferredUnit: 'kg' },
+    { id: _wUid(), name: 'Squat',          nameZh: '深蹲',       categories: ['Legs'],                 type: 'sets', preferredUnit: 'kg' },
+    { id: _wUid(), name: 'Deadlift',       nameZh: '硬舉',       categories: ['Pull','Back','Legs'],   type: 'sets', preferredUnit: 'kg' },
+    { id: _wUid(), name: 'Pull-up',        nameZh: '引體向上',   categories: ['Pull','Back'],          type: 'sets', preferredUnit: 'kg' },
+    { id: _wUid(), name: 'Overhead Press', nameZh: '肩推',       categories: ['Push','Shoulders'],     type: 'sets', preferredUnit: 'kg' },
+    { id: _wUid(), name: 'Barbell Row',    nameZh: '槓鈴划船',   categories: ['Pull','Back'],          type: 'sets', preferredUnit: 'kg' },
+    { id: _wUid(), name: 'Bicep Curl',     nameZh: '二頭彎舉',   categories: ['Arms'],                 type: 'sets', preferredUnit: 'kg' },
+    { id: _wUid(), name: 'Tricep Dip',     nameZh: '三頭撐',     categories: ['Push','Arms'],          type: 'sets', preferredUnit: 'kg' },
+    { id: _wUid(), name: 'Lateral Raise',  nameZh: '啞鈴側平舉', categories: ['Shoulders'],            type: 'sets', preferredUnit: 'g'  },
+    { id: _wUid(), name: 'Leg Press',      nameZh: '腿推',       categories: ['Legs'],                 type: 'sets', preferredUnit: 'kg' },
+    { id: _wUid(), name: 'Plank',          nameZh: '棒式',       categories: ['Core'],                 type: 'duration' },
+    { id: _wUid(), name: 'Running',        nameZh: '跑步機',     categories: ['Cardio'],               type: 'duration' },
+    { id: _wUid(), name: 'Cycling',        nameZh: '騎單車',     categories: ['Cardio'],               type: 'duration' },
+];
+
 const _defaultWorkoutData = () => ({
     version: 1,
-    exercises: [
-        { id: _wUid(), name: 'Bench Press',    nameZh: '臥推',     categories: ['Push','Chest'],         type: 'sets_reps' },
-        { id: _wUid(), name: 'Squat',          nameZh: '深蹲',     categories: ['Legs'],                 type: 'sets_reps' },
-        { id: _wUid(), name: 'Deadlift',       nameZh: '硬舉',     categories: ['Pull','Back','Legs'],   type: 'sets_reps' },
-        { id: _wUid(), name: 'Pull-up',        nameZh: '引體向上', categories: ['Pull','Back'],          type: 'sets_reps' },
-        { id: _wUid(), name: 'Overhead Press', nameZh: '肩推',     categories: ['Push','Shoulders'],     type: 'sets_reps' },
-        { id: _wUid(), name: 'Barbell Row',    nameZh: '槓鈴划船', categories: ['Pull','Back'],          type: 'sets_reps' },
-        { id: _wUid(), name: 'Bicep Curl',     nameZh: '二頭彎舉', categories: ['Arms'],                 type: 'sets_reps' },
-        { id: _wUid(), name: 'Tricep Dip',     nameZh: '三頭撐',   categories: ['Push','Arms'],          type: 'sets_reps' },
-        { id: _wUid(), name: 'Leg Press',      nameZh: '腿推',     categories: ['Legs'],                 type: 'sets_reps' },
-        { id: _wUid(), name: 'Plank',          nameZh: '棒式',     categories: ['Core'],                 type: 'duration'  },
-        { id: _wUid(), name: 'Running',        nameZh: '跑步',     categories: ['Cardio'],               type: 'duration'  },
-        { id: _wUid(), name: 'Cycling',        nameZh: '騎單車',   categories: ['Cardio'],               type: 'duration'  },
-    ],
     categories: ['Push','Pull','Legs','Core','Cardio','Back','Chest','Shoulders','Arms'],
     logs: []
 });
+
+const _catLabels = {
+    Push: '推', Pull: '拉', Legs: '腿部', Core: '核心',
+    Cardio: '有氧', Back: '背部', Chest: '胸部', Shoulders: '肩部', Arms: '手臂'
+};
 
 // ── Translations ──────────────────────────────────────────────────────────
 const _wT = {
@@ -47,6 +56,7 @@ const _wT = {
         totalVolume: '累計訓練量', favExercise: '最常訓練', times: '次', kg_unit: 'kg',
         logSaved: '訓練紀錄已儲存！', logDeleted: '紀錄已刪除',
         exerciseCount: '動作', sets_unit: '組',
+        unit: '單位',
         about: '關於', version: '版本 1.0',
         manageCategories: '管理類別',
     },
@@ -71,6 +81,7 @@ const _wT = {
         totalVolume: 'Total Volume', favExercise: 'Favorite Exercise', times: 'times', kg_unit: 'kg',
         logSaved: 'Workout saved!', logDeleted: 'Record deleted',
         exerciseCount: 'exercises', sets_unit: 'sets',
+        unit: 'Unit',
         about: 'About', version: 'Version 1.0',
         manageCategories: 'Manage Categories',
     }
@@ -98,33 +109,53 @@ window.addEventListener('DOMContentLoaded', () => {
             // ── Storage ───────────────────────────────────────────────────
             const STORAGE_KEY = 'lapis_workout';
 
-            const wData = reactive({
-                exercises: [],
-                categories: [],
-                logs: []
-            });
+            const wData  = reactive({ categories: [], logs: [] });
+            const libData = reactive({ exercises: [] });
 
             const persist = () => {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                    version: 1,
-                    exercises: wData.exercises,
-                    categories: wData.categories,
-                    logs: wData.logs
+                    version: 1, categories: wData.categories, logs: wData.logs
                 }));
+            };
+
+            const libPersist = () => {
+                localStorage.setItem(LIBRARY_KEY, JSON.stringify(libData.exercises));
             };
 
             const hydrate = () => {
                 const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
                 if (raw) {
-                    wData.exercises  = raw.exercises  || [];
-                    wData.categories = raw.categories || [];
+                    wData.categories = raw.categories || _defaultWorkoutData().categories;
                     wData.logs       = raw.logs       || [];
                 } else {
                     const def = _defaultWorkoutData();
-                    wData.exercises  = def.exercises;
                     wData.categories = def.categories;
                     wData.logs       = def.logs;
                     persist();
+                }
+            };
+
+            const hydrateLib = () => {
+                const raw = JSON.parse(localStorage.getItem(LIBRARY_KEY) || 'null');
+                if (raw && Array.isArray(raw) && raw.length > 0) {
+                    libData.exercises = raw.map(e => ({
+                        ...e,
+                        type: e.type === 'sets_reps' ? 'sets' : (e.type || 'sets'),
+                        preferredUnit: e.preferredUnit || (e.type === 'duration' ? undefined : 'kg')
+                    }));
+                } else {
+                    // migrate from legacy lapis_workout if present
+                    const old = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+                    if (old && Array.isArray(old.exercises) && old.exercises.length > 0) {
+                        libData.exercises = old.exercises.map(e => ({
+                            ...e,
+                            type: e.type === 'sets_reps' ? 'sets' : (e.type || 'sets'),
+                            preferredUnit: e.preferredUnit || (e.type === 'duration' ? undefined : 'kg')
+                        }));
+                    } else {
+                        libData.exercises = _defaultExercises();
+                    }
+                    libPersist();
                 }
             };
 
@@ -310,7 +341,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const pickCategory   = ref('');
 
             const filteredPick = computed(() => {
-                let list = wData.exercises;
+                let list = libData.exercises;
                 const q = pickSearch.value.toLowerCase();
                 if (q) list = list.filter(e =>
                     e.name.toLowerCase().includes(q) ||
@@ -321,20 +352,20 @@ window.addEventListener('DOMContentLoaded', () => {
             });
 
             const pickExercise = (ex) => {
+                const isSets = ex.type === 'sets' || ex.type === 'sets_reps';
                 logExercises.value.push({
-                    exerciseId: ex.id,
-                    name:       ex.name,
-                    nameZh:     ex.nameZh || '',
-                    type:       ex.type,
-                    categories: [...ex.categories],
-                    sets:       ex.type === 'sets_reps'
-                                    ? [{ weight: '', reps: '', done: false }]
-                                    : [],
-                    minutes:    ex.type === 'duration' ? '' : undefined
+                    exerciseId:    ex.id,
+                    name:          ex.name,
+                    nameZh:        ex.nameZh || '',
+                    type:          isSets ? 'sets' : 'duration',
+                    preferredUnit: isSets ? (ex.preferredUnit || 'kg') : undefined,
+                    categories:    [...ex.categories],
+                    sets:          isSets ? [{ weight: '', reps: '', done: false }] : [],
+                    minutes:       isSets ? undefined : ''
                 });
-                showPickModal.value  = false;
-                pickSearch.value     = '';
-                pickCategory.value   = '';
+                showPickModal.value = false;
+                pickSearch.value    = '';
+                pickCategory.value  = '';
             };
 
             // ── EXERCISES TAB ─────────────────────────────────────────────
@@ -342,7 +373,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const libCategory = ref('');
 
             const filteredLib = computed(() => {
-                let list = wData.exercises;
+                let list = libData.exercises;
                 const q = libSearch.value.toLowerCase();
                 if (q) list = list.filter(e =>
                     e.name.toLowerCase().includes(q) ||
@@ -352,25 +383,28 @@ window.addEventListener('DOMContentLoaded', () => {
                 return list;
             });
 
-            const showExModal      = ref(false);
-            const isEditEx         = ref(false);
-            const editExId         = ref(null);
+            const showExModal = ref(false);
+            const isEditEx    = ref(false);
+            const editExId    = ref(null);
 
-            const exForm = reactive({ name: '', nameZh: '', categories: [], type: 'sets_reps' });
+            const exForm = reactive({ name: '', nameZh: '', categories: [], type: 'sets', unit: 'kg' });
 
             const openAddEx = () => {
                 isEditEx.value = false;
                 editExId.value = null;
-                Object.assign(exForm, { name: '', nameZh: '', categories: [], type: 'sets_reps' });
+                Object.assign(exForm, { name: '', nameZh: '', categories: [], type: 'sets', unit: 'kg' });
                 showExModal.value = true;
             };
 
             const openEditEx = (ex) => {
                 isEditEx.value = true;
                 editExId.value = ex.id;
+                const normType = (ex.type === 'sets_reps') ? 'sets' : (ex.type || 'sets');
                 Object.assign(exForm, {
                     name: ex.name, nameZh: ex.nameZh || '',
-                    categories: [...ex.categories], type: ex.type
+                    categories: [...ex.categories],
+                    type: normType,
+                    unit: ex.preferredUnit || 'kg'
                 });
                 showExModal.value = true;
             };
@@ -384,26 +418,27 @@ window.addEventListener('DOMContentLoaded', () => {
             const saveEx = () => {
                 if (!exForm.name.trim()) return;
                 const payload = {
-                    name:       exForm.name.trim(),
-                    nameZh:     exForm.nameZh.trim(),
-                    categories: [...exForm.categories],
-                    type:       exForm.type
+                    name:          exForm.name.trim(),
+                    nameZh:        exForm.nameZh.trim(),
+                    categories:    [...exForm.categories],
+                    type:          exForm.type,
+                    preferredUnit: exForm.type === 'sets' ? exForm.unit : undefined
                 };
                 if (isEditEx.value) {
-                    const idx = wData.exercises.findIndex(e => e.id === editExId.value);
-                    if (idx >= 0) wData.exercises.splice(idx, 1, { ...wData.exercises[idx], ...payload });
+                    const idx = libData.exercises.findIndex(e => e.id === editExId.value);
+                    if (idx >= 0) libData.exercises.splice(idx, 1, { ...libData.exercises[idx], ...payload });
                 } else {
-                    wData.exercises.push({ id: _wUid(), ...payload });
+                    libData.exercises.push({ id: _wUid(), ...payload });
                 }
-                persist();
+                libPersist();
                 showExModal.value = false;
             };
 
             const deleteEx = (id) => {
                 if (!confirm(t.value.deleteConfirm)) return;
-                const idx = wData.exercises.findIndex(e => e.id === id);
-                if (idx >= 0) wData.exercises.splice(idx, 1);
-                persist();
+                const idx = libData.exercises.findIndex(e => e.id === id);
+                if (idx >= 0) libData.exercises.splice(idx, 1);
+                libPersist();
             };
 
             // ── RECORDS TAB ───────────────────────────────────────────────
@@ -425,17 +460,19 @@ window.addEventListener('DOMContentLoaded', () => {
             };
 
             // Compute a brief summary for a log entry
+            const _isSets = (type) => type === 'sets' || type === 'sets_reps';
+
             const logSummary = (log) => {
                 const exCount = log.exercises.length;
                 let totalSets = 0;
-                log.exercises.forEach(e => { if (e.type === 'sets_reps') totalSets += (e.sets || []).length; });
+                log.exercises.forEach(e => { if (_isSets(e.type)) totalSets += (e.sets || []).length; });
                 return { exCount, totalSets };
             };
 
             const logVolume = (log) => {
                 let vol = 0;
                 log.exercises.forEach(e => {
-                    if (e.type === 'sets_reps') {
+                    if (_isSets(e.type)) {
                         (e.sets || []).forEach(s => {
                             const w = parseFloat(s.weight), r = parseInt(s.reps);
                             if (!isNaN(w) && !isNaN(r)) vol += w * r;
@@ -460,7 +497,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 logs.forEach(log => {
                     log.exercises.forEach(e => {
                         exCount[e.name] = (exCount[e.name] || 0) + 1;
-                        if (e.type === 'sets_reps') {
+                        if (_isSets(e.type)) {
                             (e.sets || []).forEach(s => {
                                 const w = parseFloat(s.weight), r = parseInt(s.reps);
                                 if (!isNaN(w) && !isNaN(r)) totalVol += w * r;
@@ -483,14 +520,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
             const clearAllData = () => {
                 localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(LIBRARY_KEY);
                 const def = _defaultWorkoutData();
-                wData.exercises  = def.exercises;
-                wData.categories = def.categories;
-                wData.logs       = def.logs;
-                logExercises.value  = [];
-                logDate.value       = _todayStr();
+                wData.categories  = def.categories;
+                wData.logs        = def.logs;
+                libData.exercises = _defaultExercises();
+                logExercises.value     = [];
+                logDate.value          = _todayStr();
                 showClearConfirm.value = false;
                 persist();
+                libPersist();
             };
 
             const toggleLang = () => {
@@ -506,9 +545,16 @@ window.addEventListener('DOMContentLoaded', () => {
                 showClearConfirm.value
             );
 
+            // ── Display helpers ───────────────────────────────────────────
+            const catLabel  = (cat) => navSettings.lang !== 'zh' ? cat : (_catLabels[cat] || cat);
+            const unitLabel = (ex)  => ex.type === 'duration'
+                ? t.value.min
+                : `${ex.preferredUnit || 'kg'}/${t.value.sets_unit}`;
+
             // ── Lifecycle ─────────────────────────────────────────────────
             onMounted(() => {
                 hydrate();
+                hydrateLib();
                 // Load today's log if exists
                 const existing = wData.logs.find(l => l.date === logDate.value);
                 if (existing) {
@@ -554,9 +600,10 @@ window.addEventListener('DOMContentLoaded', () => {
                 // pick exercise modal
                 showPickModal, pickSearch, pickCategory, filteredPick, pickExercise,
                 // exercises tab
-                libSearch, libCategory, filteredLib,
+                libData, libSearch, libCategory, filteredLib,
                 showExModal, isEditEx, exForm, openAddEx, openEditEx,
                 toggleExCat, saveEx, deleteEx,
+                catLabel, unitLabel,
                 // records tab
                 sortedLogs, expandedLogId, toggleExpand, deleteLog,
                 logSummary, logVolume, exDisplayName,
