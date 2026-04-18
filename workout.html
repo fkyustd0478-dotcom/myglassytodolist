@@ -160,11 +160,18 @@
                      :class="{ 'opacity-40 scale-95': dragSrcId === row.ex.id }"
                      @click="openExDetail(row.ex)">
                     <div class="flex-shrink-0 opacity-25 cursor-grab pl-0.5">
-                        <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+                        <!-- grip-vertical static SVG — no Lucide runtime needed -->
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="9" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
                     </div>
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                          :style="row.ci >= 0 ? catPillStyle(catTree[row.ci] && catTree[row.ci].name) : { background:'rgba(100,116,139,0.15)' }">
-                        <i :data-lucide="row.ex.type === 'duration' ? 'timer' : 'dumbbell'" class="w-4 h-4"></i>
+                        <!-- Static SVG based on exercise type -->
+                        <template v-if="row.ex.type === 'duration'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </template>
+                        <template v-else>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16"/><path d="M18 4v16"/><path d="M6 8h12"/><path d="M6 16h12"/><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h.5"/><path d="M3 17.5A1.5 1.5 0 0 0 4.5 19h.5"/><path d="M21 6.5A1.5 1.5 0 0 0 19.5 5h-.5"/><path d="M21 17.5A1.5 1.5 0 0 1 19.5 19h-.5"/></svg>
+                        </template>
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="font-bold text-sm truncate">{{ exDisplayName(row.ex) }}</p>
@@ -175,11 +182,12 @@
                         </div>
                     </div>
                     <div class="flex gap-2 flex-shrink-0">
+                        <!-- Static SVG edit/delete — bypasses Lucide rendering delay -->
                         <button @click.stop="openEditEx(row.ex)" class="btn-action btn-edit w-9 h-9 rounded-xl">
-                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                         </button>
                         <button @click.stop="deleteEx(row.ex.id)" class="btn-action btn-delete w-9 h-9 rounded-xl">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                         </button>
                     </div>
                 </div>
@@ -199,7 +207,7 @@
     <transition name="slide-up">
         <div v-show="showExModal"
              class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm"
-             @click.self="showExModal = false">
+             @click.self.stop.prevent="showExModal = false">
             <div class="lapis-modal-shell w-full" :style="shellStyle" @click.stop>
 
                 <div class="lapis-modal-header">
@@ -362,7 +370,7 @@
     <transition name="slide-up">
         <div v-show="showCatMgr"
              class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
-             @click.self="showCatMgr = false">
+             @click.self.stop.prevent="showCatMgr = false">
             <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10 modal-content-level-4"
                  :style="glassStyle" @click.stop>
 
@@ -466,7 +474,7 @@
     <transition name="slide-up">
         <div v-show="showExDetail"
              class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
-             @click.self="showExDetail = false">
+             @click.self.stop.prevent="showExDetail = false">
             <div v-if="exDetailData"
                  class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10 space-y-5 modal-content-level-4"
                  :style="glassStyle" @click.stop>
@@ -532,7 +540,7 @@
     <transition name="slide-up">
         <div v-show="showDateTimePicker"
              class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
-             @click.self="closeWorkoutPicker">
+             @click.self.stop.prevent="closeWorkoutPicker">
             <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4 modal-content-level-4"
                  :style="glassStyle" @click.stop>
 
@@ -578,7 +586,7 @@
     <transition name="slide-up">
         <div v-show="showLogModal"
              class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm"
-             @click.self="showLogModal = false">
+             @click.self.stop.prevent="showLogModal = false">
             <div class="lapis-modal-shell workout-log-shell w-full" :style="shellStyle" @click.stop>
 
                 <div class="lapis-modal-header">

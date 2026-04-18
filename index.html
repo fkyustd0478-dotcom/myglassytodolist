@@ -227,7 +227,7 @@
 
             <!-- Add/Edit Modal -->
             <transition name="slide-up">
-                <div v-show="isAdding || isEditing" :key="'add-edit-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm modal-backdrop-level-3" @click.self="closeModal">
+                <div v-show="isAdding || isEditing" :key="'add-edit-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm modal-backdrop-level-3" @click.self.stop.prevent="closeModal">
                     <div class="w-[90%] max-w-md glass rounded-[2.5rem] p-8 space-y-6 h-[60vh] overflow-y-auto modal-content-level-3" :style="glassStyle" @click.stop>
                         <div class="flex justify-between items-center">
                             <h2 class="text-2xl font-black">{{ isEditing ? t.editTask : t.newTask }}</h2>
@@ -313,7 +313,7 @@
             <transition name="slide-up">
                 <div v-show="showDateTimePicker"
                      class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
-                     @click.self="closeDateTimePicker">
+                     @click.self.stop.prevent="closeDateTimePicker">
                     <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4 modal-content-level-4"
                          :style="glassStyle" @click.stop>
 
@@ -382,7 +382,7 @@
 
             <!-- Manage Lists Modal -->
             <transition name="fade">
-                <div v-show="manageModal.show" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl modal-backdrop-level-3" @click.self="closeManageModal">
+                <div v-show="manageModal.show" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl modal-backdrop-level-3" @click.self.stop.prevent="closeManageModal">
                     <div class="glass rounded-[2.5rem] p-8 w-full max-w-md flex flex-col max-h-[85vh] modal-content-level-3" :style="glassStyle" @click.stop>
                         <div class="flex justify-between items-center mb-8">
                             <h2 class="text-2xl font-black tracking-tight">Manage Lists</h2>
@@ -423,7 +423,7 @@
 
             <!-- List Management Modal (Add/Delete) -->
             <transition name="fade">
-                <div v-show="listModal.show" :key="'list-mgmt-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-3" @click.self="closeListModal">
+                <div v-show="listModal.show" :key="'list-mgmt-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-3" @click.self.stop.prevent="closeListModal">
                     <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center modal-content-level-3" :style="glassStyle">
                         <h3 class="text-xl font-black tracking-tight">
                             {{ listModal.mode === 'add' ? t.newList : (listModal.mode === 'edit' ? t.editList : t.deleteList) }}
@@ -449,7 +449,7 @@
 
             <!-- Confirmation Modal -->
             <transition name="fade">
-                <div v-if="confirmModal && confirmModal.show" :key="'confirm-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-4" @click.self="confirmModal.show = false">
+                <div v-if="confirmModal && confirmModal.show" :key="'confirm-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-4" @click.self.stop.prevent="confirmModal.show = false">
                     <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center modal-content-level-4" :style="glassStyle" @click.stop>
                         <h3 class="text-xl font-black tracking-tight" v-text="confirmModal.title || ''"></h3>
                         <p class="text-sm opacity-60 leading-relaxed" v-text="confirmModal.message || ''"></p>

@@ -557,14 +557,17 @@ try {
             );
 
             const openPicker = (mode) => {
-                if (mode === 'date' && _datePicker) {
-                    const d = form.value.date ? new Date(form.value.date + 'T00:00:00') : new Date();
-                    _datePicker.setValue(d.getFullYear(), d.getMonth() + 1, d.getDate());
-                } else if (mode === 'time' && _timePicker) {
-                    _timePicker.setValue(form.value.time.hour, form.value.time.minute);
-                }
                 pickerMode.value = mode;
                 showDateTimePicker.value = true;
+                // Set wheel positions after Vue makes the container visible
+                nextTick(() => {
+                    if (mode === 'date' && _datePicker) {
+                        const d = form.value.date ? new Date(form.value.date + 'T00:00:00') : new Date();
+                        _datePicker.setValue(d.getFullYear(), d.getMonth() + 1, d.getDate());
+                    } else if (mode === 'time' && _timePicker) {
+                        _timePicker.setValue(form.value.time.hour, form.value.time.minute);
+                    }
+                });
             };
 
             const switchPickerMode = (mode) => { pickerMode.value = mode; };

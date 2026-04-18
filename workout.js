@@ -257,14 +257,16 @@ window.addEventListener('DOMContentLoaded', () => {
             let _wTimePicker = null;
 
             const openPicker = (mode) => {
-                if (mode === 'date' && _wDatePicker) {
-                    const [y, m, d] = logDate.value.split('-').map(Number);
-                    _wDatePicker.setValue(y, m, d);
-                } else if (mode === 'time' && _wTimePicker) {
-                    _wTimePicker.setValue(logTime.value.hour, logTime.value.minute);
-                }
                 pickerMode.value = mode;
                 showDateTimePicker.value = true;
+                nextTick(() => {
+                    if (mode === 'date' && _wDatePicker) {
+                        const [y, m, d] = logDate.value.split('-').map(Number);
+                        _wDatePicker.setValue(y, m, d);
+                    } else if (mode === 'time' && _wTimePicker) {
+                        _wTimePicker.setValue(logTime.value.hour, logTime.value.minute);
+                    }
+                });
             };
 
             const switchPickerMode = (mode) => { pickerMode.value = mode; };

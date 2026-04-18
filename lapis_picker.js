@@ -171,8 +171,9 @@
 
         this.setValue = (y, m, d) => {
             _year = y; _month = m; _day = d;
-            slots.year.scrollTo({ top: (y - minYear) * ITEM_H, behavior: 'smooth' });
-            slots.month.scrollTo({ top: (m - 1) * ITEM_H, behavior: 'smooth' });
+            // Use direct scrollTop (no smooth) so it works even when container is just becoming visible
+            slots.year.scrollTop  = (y - minYear) * ITEM_H;
+            slots.month.scrollTop = (m - 1) * ITEM_H;
             _rebuildDayWheel();
         };
 
@@ -210,8 +211,8 @@
 
         this.setValue = (h, m) => {
             _hour = h; _minute = m;
-            slots.hour.scrollTo({ top: h * ITEM_H, behavior: 'smooth' });
-            slots.minute.scrollTo({ top: m * ITEM_H, behavior: 'smooth' });
+            slots.hour.scrollTop   = h * ITEM_H;
+            slots.minute.scrollTop = m * ITEM_H;
         };
 
         this.confirm = () => {
