@@ -23,3 +23,112 @@
     <script src="nav.js" defer></script>
     <script src="workout.js" defer></script>
 </head>
+<body>
+<div id="app" v-cloak
+     :style="themeStyle"
+     :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]"
+     style="display:flex; flex-direction:column; min-height:100dvh; overflow:hidden; position:relative;">
+
+    <!-- Background Layers -->
+    <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
+    <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
+
+    <!-- ── Header ──────────────────────────────────────────────────────────── -->
+    <header class="flex justify-between items-center p-6 shrink-0 relative z-[10001]">
+        <div class="relative nav-capsule" @click.stop>
+            <button @click="toggleNavDropdown"
+                    class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group"
+                    :style="glassStyle">
+                <span class="text-lg font-black tracking-tight group-hover:text-blue-500 transition-colors"
+                      v-text="currentPageTitle"></span>
+                <i data-lucide="chevron-down" class="w-4 h-4 opacity-40 group-hover:rotate-180 transition-transform"></i>
+            </button>
+            <transition name="fade">
+                <div v-show="navDropdownOpen" class="dropdown-menu glass w-48 mt-2" :style="glassStyle">
+                    <a href="javascript:void(0)" onclick="window.location.href='index.html'"
+                       class="dropdown-item flex items-center gap-3">
+                        <i data-lucide="check-square" class="w-4 h-4"></i>
+                        <span>{{ t.navIndex }}</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="window.location.href='shift.html'"
+                       class="dropdown-item flex items-center gap-3">
+                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                        <span>{{ t.navShift }}</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="window.location.href='workout.html'"
+                       class="dropdown-item flex items-center gap-3 active">
+                        <i data-lucide="dumbbell" class="w-4 h-4"></i>
+                        <span>{{ t.navWorkout }}</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="window.location.href='setting.html'"
+                       class="dropdown-item flex items-center gap-3">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span>{{ t.navSetting }}</span>
+                    </a>
+                </div>
+            </transition>
+        </div>
+    </header>
+
+    <!-- ── Tab Content ─────────────────────────────────────────────────────── -->
+
+    <!-- Add Tab -->
+    <main v-show="activeTab === 'add'" class="workout-main">
+        <div class="empty-state">
+            <i data-lucide="plus-circle" class="w-12 h-12 empty-state-icon"></i>
+            <p class="text-sm font-bold">{{ t.tabAdd }}</p>
+        </div>
+    </main>
+
+    <!-- Exercises Tab -->
+    <main v-show="activeTab === 'exercises'" class="workout-main">
+        <div class="empty-state">
+            <i data-lucide="dumbbell" class="w-12 h-12 empty-state-icon"></i>
+            <p class="text-sm font-bold">{{ t.tabExercises }}</p>
+        </div>
+    </main>
+
+    <!-- Records Tab -->
+    <main v-show="activeTab === 'records'" class="workout-main">
+        <div class="empty-state">
+            <i data-lucide="history" class="w-12 h-12 empty-state-icon"></i>
+            <p class="text-sm font-bold">{{ t.tabRecords }}</p>
+        </div>
+    </main>
+
+    <!-- Settings Tab -->
+    <main v-show="activeTab === 'settings'" class="workout-main">
+        <div class="empty-state">
+            <i data-lucide="settings" class="w-12 h-12 empty-state-icon"></i>
+            <p class="text-sm font-bold">{{ t.tabSettings }}</p>
+        </div>
+    </main>
+
+    <!-- ── Bottom Navigation ───────────────────────────────────────────────── -->
+    <nav class="bottom-nav glass workout-bottom-nav" :style="glassStyle">
+        <button @click="activeTab = 'add'" class="nav-item" :class="{ active: activeTab === 'add' }">
+            <i data-lucide="plus-circle" class="w-6 h-6"></i>
+            <span>{{ t.tabAdd }}</span>
+        </button>
+        <button @click="activeTab = 'exercises'" class="nav-item" :class="{ active: activeTab === 'exercises' }">
+            <i data-lucide="dumbbell" class="w-6 h-6"></i>
+            <span>{{ t.tabExercises }}</span>
+        </button>
+        <button @click="activeTab = 'records'" class="nav-item" :class="{ active: activeTab === 'records' }">
+            <i data-lucide="history" class="w-6 h-6"></i>
+            <span>{{ t.tabRecords }}</span>
+        </button>
+        <button @click="activeTab = 'settings'" class="nav-item" :class="{ active: activeTab === 'settings' }">
+            <i data-lucide="settings-2" class="w-6 h-6"></i>
+            <span>{{ t.tabSettings }}</span>
+        </button>
+    </nav>
+
+    <!-- ── Toast ──────────────────────────────────────────────────────────── -->
+    <transition name="fade">
+        <div v-show="showToast" class="workout-toast">{{ toastMsg }}</div>
+    </transition>
+
+</div>
+</body>
+</html>
