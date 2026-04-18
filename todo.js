@@ -298,9 +298,18 @@ try {
                 };
             };
 
+            const scrollTaskToCenter = (el) => {
+                const container = document.querySelector('main');
+                if (!container || !el) return;
+                const containerRect = container.getBoundingClientRect();
+                const elRect = el.getBoundingClientRect();
+                const offset = elRect.top - containerRect.top - (containerRect.height / 2) + (elRect.height / 2);
+                container.scrollBy({ top: offset, behavior: 'smooth' });
+            };
+
             const editTodo = (todo) => {
                 const el = document.querySelector(`[data-todo-id="${todo.id}"]`);
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                scrollTaskToCenter(el);
                 isEditing.value = true;
                 editingId.value = todo.id;
                 const d = todo.dueDate ? new Date(todo.dueDate) : new Date();
@@ -354,8 +363,7 @@ try {
                         updatedAt: new Date().toISOString()
                     });
                     nextTick(() => {
-                        const el = document.querySelector(`[data-todo-id="${newId}"]`);
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        scrollTaskToCenter(document.querySelector(`[data-todo-id="${newId}"]`));
                     });
                 }
                 StorageProvider.saveData({ todos: todos.value, lists: lists.value });
@@ -624,7 +632,7 @@ try {
                 const [y, m] = form.value.date.split('-').map(Number);
                 return new Date(y, m, 0).getDate();
             });
-            const pickerDateStr = computed(() => form.value.date ? form.value.date.replace(/-/g, ':') : '');
+            const pickerDateStr = computed(() => form.value.date ? form.value.date.replace(/-/g, '/') : '');
             const pickerTimeStr = computed(() =>
                 `${form.value.time.hour.toString().padStart(2,'0')}:${form.value.time.minute.toString().padStart(2,'0')}`
             );
@@ -661,7 +669,7 @@ try {
             const selectPickerMinute = (m) => { form.value.time.minute = m; };
 
             const onPickerDateInput = (e) => {
-                const match = e.target.value.match(/^(\d{4}):(\d{1,2}):(\d{1,2})$/);
+                const match = e.target.value.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
                 if (!match) return;
                 const [, y, mo, d] = match.map(Number);
                 if (y >= 1970 && y <= 2099 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
@@ -932,8 +940,7 @@ try {
                 nextTick(() => {
                     if (window.lucide) lucide.createIcons();
                     scrollActiveTabIntoView();
-                    const firstTask = document.querySelector('[data-todo-id]');
-                    if (firstTask) firstTask.scrollIntoView({ behavior: 'auto', block: 'center' });
+                    scrollTaskToCenter(document.querySelector('[data-todo-id]'));
                     setupEffects();
 
                     // Initialize Sortable for lists

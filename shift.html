@@ -218,11 +218,6 @@
             <div class="nav-icon-wrapper"><i data-lucide="clock"></i></div>
             <span>{{ t.shiftNav }}</span>
         </div>
-        <div class="nav-item" :class="{ active: activeQuickTagCategory === 'other' }"
-             @click="toggleQuickTagCategory('other')">
-            <div class="nav-icon-wrapper"><i data-lucide="sparkles"></i></div>
-            <span>{{ t.otherNav }}</span>
-        </div>
         <div class="nav-item" :class="{ active: showTagsModal }" @click="showTagsModal = true">
             <div class="nav-icon-wrapper"><i data-lucide="tags"></i></div>
             <span>{{ t.labelSettings }}</span>
