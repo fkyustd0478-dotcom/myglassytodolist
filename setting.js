@@ -225,6 +225,8 @@ createApp({
         watch(navDropdownOpen, () => nextTick(() => { if (window.lucide) lucide.createIcons(); }));
 
         onMounted(async () => {
+            if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
+            if (typeof LapisModal !== 'undefined') LapisModal.init();
             if (window.lucide) lucide.createIcons();
 
             if (settings.value.useCustomBg) {

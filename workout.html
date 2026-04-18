@@ -17,10 +17,13 @@
     <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="workout_style.css">
+    <link rel="stylesheet" href="lapis_shared_style.css">
 
     <script src="effects.js" defer></script>
     <script src="storage.js" defer></script>
     <script src="nav.js" defer></script>
+    <script src="lapis_core_ui.js" defer></script>
+    <script src="lapis_picker.js" defer></script>
     <script src="workout.js" defer></script>
 </head>
 <body>
@@ -33,51 +36,114 @@
     <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
     <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
-    <!-- ── Header ──────────────────────────────────────────────────────────── -->
-    <header class="flex justify-between items-center p-6 shrink-0 relative z-[10001]">
-        <div class="relative nav-capsule" @click.stop>
-            <button @click="toggleNavDropdown"
-                    class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group"
-                    :style="glassStyle">
-                <span class="text-lg font-black tracking-tight group-hover:text-blue-500 transition-colors"
-                      v-text="currentPageTitle"></span>
-                <i data-lucide="chevron-down" class="w-4 h-4 opacity-40 group-hover:rotate-180 transition-transform"></i>
-            </button>
-            <transition name="fade">
-                <div v-show="navDropdownOpen" class="dropdown-menu glass w-48 mt-2" :style="glassStyle">
-                    <a href="javascript:void(0)" onclick="window.location.href='index.html'"
-                       class="dropdown-item flex items-center gap-3">
-                        <i data-lucide="check-square" class="w-4 h-4"></i>
-                        <span>{{ t.navIndex }}</span>
-                    </a>
-                    <a href="javascript:void(0)" onclick="window.location.href='shift.html'"
-                       class="dropdown-item flex items-center gap-3">
-                        <i data-lucide="calendar" class="w-4 h-4"></i>
-                        <span>{{ t.navShift }}</span>
-                    </a>
-                    <a href="javascript:void(0)" onclick="window.location.href='workout.html'"
-                       class="dropdown-item flex items-center gap-3 active">
-                        <i data-lucide="dumbbell" class="w-4 h-4"></i>
-                        <span>{{ t.navWorkout }}</span>
-                    </a>
-                    <a href="javascript:void(0)" onclick="window.location.href='setting.html'"
-                       class="dropdown-item flex items-center gap-3">
-                        <i data-lucide="settings" class="w-4 h-4"></i>
-                        <span>{{ t.navSetting }}</span>
-                    </a>
-                </div>
-            </transition>
-        </div>
-    </header>
+    <!-- ── Header (injected by LapisNav) ─────────────────────────────────── -->
 
     <!-- ── Tab Content ─────────────────────────────────────────────────────── -->
 
     <!-- Add Tab -->
     <main v-show="activeTab === 'add'" class="workout-main">
-        <div class="empty-state">
-            <i data-lucide="plus-circle" class="w-12 h-12 empty-state-icon"></i>
-            <p class="text-sm font-bold">{{ t.tabAdd }}</p>
+
+        <!-- Date / Time selectors -->
+        <div class="flex gap-3 mb-5">
+            <button @click="openPicker('date')"
+                    class="flex-1 glass rounded-2xl px-4 py-3 flex items-center gap-2 active:scale-95 transition-transform"
+                    :style="glassStyle">
+                <i data-lucide="calendar" class="w-4 h-4 opacity-50 flex-shrink-0"></i>
+                <span class="font-black text-sm">{{ logDate.replace(/-/g, '/') }}</span>
+                <button @click.stop="setPickerToday"
+                        class="ml-auto text-[10px] font-black opacity-40 hover:opacity-70 transition-opacity px-2 py-1 rounded-lg"
+                        style="background:rgba(255,255,255,0.08)">TODAY</button>
+            </button>
+            <button @click="openPicker('time')"
+                    class="glass rounded-2xl px-4 py-3 flex items-center gap-2 active:scale-95 transition-transform"
+                    :style="glassStyle">
+                <i data-lucide="clock" class="w-4 h-4 opacity-50 flex-shrink-0"></i>
+                <span class="font-black text-sm">{{ logTime.hour.toString().padStart(2,'0') }}:{{ logTime.minute.toString().padStart(2,'0') }}</span>
+            </button>
         </div>
+
+        <!-- Existing log notice -->
+        <div v-show="hasExistingLog" class="glass rounded-2xl px-4 py-3 mb-4 flex items-center gap-2"
+             :style="glassStyle" style="border-color:rgba(251,191,36,0.5);border-width:1px">
+            <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0" style="color:#f59e0b"></i>
+            <span class="text-xs font-bold opacity-70">{{ t.existingLog }}</span>
+        </div>
+
+        <!-- Exercise list -->
+        <div v-if="logExercises.length > 0" class="space-y-3 mb-5">
+            <div v-for="(entry, eIdx) in logExercises" :key="entry.exerciseId + eIdx"
+                 class="glass rounded-2xl p-4" :style="glassStyle">
+
+                <!-- Exercise header -->
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <p class="font-black text-sm">{{ entry.nameZh || entry.name }}</p>
+                        <p v-if="entry.nameZh" class="text-[10px] opacity-40 font-mono">{{ entry.name }}</p>
+                    </div>
+                    <button @click="removeLogExercise(eIdx)" class="opacity-30 hover:opacity-70 transition-opacity active:scale-90">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Sets (for sets/reps type) -->
+                <div v-if="entry.type === 'sets'" class="space-y-2">
+                    <div v-for="(set, sIdx) in entry.sets" :key="sIdx"
+                         class="flex items-center gap-2">
+                        <span class="text-[10px] font-black opacity-30 w-5">{{ sIdx + 1 }}</span>
+                        <input v-model="set.weight" type="number" inputmode="decimal"
+                               :placeholder="t.weight" min="0"
+                               class="flex-1 rounded-xl px-3 py-2 text-sm font-bold text-center outline-none"
+                               style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">
+                        <span class="text-xs opacity-30 font-black">×</span>
+                        <input v-model="set.reps" type="number" inputmode="numeric"
+                               :placeholder="t.reps" min="0"
+                               class="flex-1 rounded-xl px-3 py-2 text-sm font-bold text-center outline-none"
+                               style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">
+                        <button @click="toggleSetDone(eIdx, sIdx)"
+                                class="w-8 h-8 rounded-xl flex items-center justify-center transition-all flex-shrink-0"
+                                :style="set.done ? 'background:rgba(34,197,94,0.25);color:#22c55e' : 'background:rgba(255,255,255,0.06)'">
+                            <i :data-lucide="set.done ? 'check' : 'circle'" class="w-4 h-4"></i>
+                        </button>
+                        <button @click="removeSet(eIdx, sIdx)" class="opacity-25 hover:opacity-60 transition-opacity active:scale-90 flex-shrink-0">
+                            <i data-lucide="minus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <button @click="addSet(eIdx)"
+                            class="w-full mt-1 py-1.5 rounded-xl text-xs font-black opacity-40 hover:opacity-70 transition-opacity"
+                            style="border:1px dashed rgba(255,255,255,0.2)">
+                        + {{ t.addSet }}
+                    </button>
+                </div>
+
+                <!-- Duration type -->
+                <div v-else class="flex items-center gap-3">
+                    <input v-model="entry.minutes" type="number" inputmode="numeric"
+                           :placeholder="t.minutes" min="0"
+                           class="flex-1 rounded-xl px-4 py-3 text-sm font-bold text-center outline-none"
+                           style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">
+                    <span class="text-sm font-black opacity-40">{{ t.min }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add exercise button -->
+        <button @click="showPickModal = true"
+                class="w-full py-4 rounded-2xl glass font-black text-sm flex items-center justify-center gap-2 mb-5 active:scale-95 transition-transform"
+                :style="glassStyle"
+                style="border:1px dashed rgba(255,255,255,0.2)">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            {{ t.addExercise }}
+        </button>
+
+        <!-- Save button -->
+        <button @click="saveLog"
+                :disabled="logExercises.length === 0"
+                class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2px] transition-opacity"
+                :class="logExercises.length === 0 ? 'opacity-30 cursor-not-allowed' : 'active:scale-95'"
+                :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
+            {{ t.saveLog }}
+        </button>
+
     </main>
 
     <!-- Exercises Tab -->
@@ -508,6 +574,112 @@
                     </button>
                 </div>
 
+            </div>
+        </div>
+    </transition>
+
+    <!-- ── Date-Time Picker Modal ──────────────────────────────────────────── -->
+    <transition name="slide-up">
+        <div v-show="showDateTimePicker"
+             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
+             @click.self="closeWorkoutPicker">
+            <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4 modal-content-level-4"
+                 :style="glassStyle" @click.stop>
+
+                <!-- Mode Tabs -->
+                <div class="flex gap-2">
+                    <button @click="switchPickerMode('date')"
+                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
+                            :class="pickerMode === 'date' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
+                            :style="pickerMode !== 'date' ? glassStyle : {}">
+                        {{ t.date }}
+                    </button>
+                    <button @click="switchPickerMode('time')"
+                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
+                            :class="pickerMode === 'time' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
+                            :style="pickerMode !== 'time' ? glassStyle : {}">
+                        {{ t.time }}
+                    </button>
+                </div>
+
+                <!-- Date picker -->
+                <div v-show="pickerMode === 'date'" class="space-y-3">
+                    <div id="lapis-workout-date-picker"></div>
+                    <button @click="setPickerToday"
+                            class="w-full py-2 rounded-xl glass text-xs font-black opacity-70"
+                            :style="glassStyle">TODAY</button>
+                </div>
+
+                <!-- Time picker -->
+                <div v-show="pickerMode === 'time'">
+                    <div id="lapis-workout-time-picker"></div>
+                </div>
+
+                <button @click="closeWorkoutPicker"
+                        class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2px]"
+                        :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
+                    OK
+                </button>
+            </div>
+        </div>
+    </transition>
+
+    <!-- ── Pick Exercise Modal ──────────────────────────────────────────────── -->
+    <transition name="slide-up">
+        <div v-show="showPickModal"
+             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
+             @click.self="showPickModal = false">
+            <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10 space-y-4 modal-content-level-4"
+                 :style="glassStyle" @click.stop>
+
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-black">{{ t.pickExercise }}</h2>
+                    <button @click="showPickModal = false" class="opacity-40 active:opacity-70">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Search -->
+                <div class="glass rounded-2xl flex items-center gap-3 px-4 py-3" :style="glassStyle">
+                    <i data-lucide="search" class="w-4 h-4 opacity-40 flex-shrink-0"></i>
+                    <input v-model="pickSearch" :placeholder="t.search"
+                           class="flex-1 bg-transparent outline-none text-sm font-bold min-w-0">
+                </div>
+
+                <!-- Category filter -->
+                <div class="flex flex-wrap gap-2">
+                    <button @click="pickCategory = ''"
+                            class="cat-filter-pill glass" :style="glassStyle"
+                            :class="{ active: pickCategory === '' }">{{ t.all }}</button>
+                    <button v-for="l1 in catTree" :key="l1.name"
+                            @click="pickCategory = l1.name"
+                            class="cat-filter-pill glass" :style="catPillStyle(l1.name)"
+                            :class="{ active: pickCategory === l1.name }">{{ catLabel(l1.name) }}</button>
+                </div>
+
+                <!-- Exercise list -->
+                <div class="space-y-2 max-h-64 overflow-y-auto">
+                    <div v-if="filteredPick.length === 0" class="text-center py-8 opacity-30 text-sm font-bold">
+                        {{ t.noLibrary }}
+                    </div>
+                    <button v-for="ex in filteredPick" :key="ex.id"
+                            @click="pickExercise(ex)"
+                            class="w-full glass rounded-2xl px-4 py-3 flex items-center gap-3 text-left active:scale-98 transition-transform"
+                            :style="glassStyle">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                             :style="ex.categories && ex.categories[0] ? catPillStyle(ex.categories[0]) : { background:'rgba(100,116,139,0.15)' }">
+                            <i :data-lucide="ex.type === 'duration' ? 'timer' : 'dumbbell'" class="w-4 h-4"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-black text-sm truncate">{{ exDisplayName(ex) }}</p>
+                            <div class="flex gap-1 flex-wrap mt-0.5">
+                                <span v-for="cat in (ex.categories || []).slice(0,2)" :key="cat"
+                                      class="category-pill" :style="catPillStyle(cat)">{{ catLabel(cat) }}</span>
+                            </div>
+                        </div>
+                        <i data-lucide="plus-circle" class="w-5 h-5 opacity-40 flex-shrink-0"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </transition>

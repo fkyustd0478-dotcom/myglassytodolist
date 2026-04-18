@@ -16,10 +16,13 @@
     <link rel="stylesheet" href="shared_theme.css">
     <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="shift_style.css">
+    <link rel="stylesheet" href="lapis_shared_style.css">
 
     <script src="effects.js" defer></script>
     <script src="storage.js" defer></script>
     <script src="nav.js" defer></script>
+    <script src="lapis_core_ui.js" defer></script>
+    <script src="lapis_picker.js" defer></script>
     <script src="setting.js?v=1.2" defer></script>
 </head>
 <body>
@@ -30,43 +33,7 @@
         <div class="bg-layer" :class="themeClasses"></div>
         <div v-show="settings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
-        <!-- ── Header & Navigation ────────────────────────────────────────── -->
-        <header class="flex justify-between items-center p-6 shrink-0 relative z-[10001]">
-            <div class="relative nav-capsule" @click.stop>
-                <button @click="toggleNavDropdown"
-                        class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group"
-                        :style="glassStyle">
-                    <span class="text-lg font-black tracking-tight group-hover:text-blue-500 transition-colors"
-                          v-text="currentPageTitle"></span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 opacity-40 group-hover:rotate-180 transition-transform"></i>
-                </button>
-
-                <transition name="fade">
-                    <div v-show="navDropdownOpen" class="dropdown-menu glass w-48 mt-2" :style="glassStyle">
-                        <a href="javascript:void(0)" onclick="window.location.href='index.html'"
-                           class="dropdown-item flex items-center gap-3">
-                            <i data-lucide="check-square" class="w-4 h-4"></i>
-                            <span>{{ t.navIndex }}</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="window.location.href='shift.html'"
-                           class="dropdown-item flex items-center gap-3">
-                            <i data-lucide="calendar" class="w-4 h-4"></i>
-                            <span>{{ t.navShift }}</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="window.location.href='workout.html'"
-                           class="dropdown-item flex items-center gap-3">
-                            <i data-lucide="dumbbell" class="w-4 h-4"></i>
-                            <span>{{ t.navWorkout }}</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="window.location.href='setting.html'"
-                           class="dropdown-item flex items-center gap-3 active">
-                            <i data-lucide="settings" class="w-4 h-4"></i>
-                            <span>{{ t.navSetting }}</span>
-                        </a>
-                    </div>
-                </transition>
-            </div>
-        </header>
+        <!-- ── Header & Navigation (injected by LapisNav) ───────────────── -->
 
         <!-- ── Page Content ───────────────────────────────────────────────── -->
         <div class="relative z-10 flex flex-col px-6 pb-6 gap-4" style="min-height: calc(100vh - 88px);">

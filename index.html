@@ -25,9 +25,12 @@
     <link rel="stylesheet" href="shared_theme.css">
     <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="lapis_shared_style.css">
     <script src="effects.js" defer></script>
     <script src="storage.js" defer></script>
     <script src="nav.js" defer></script>
+    <script src="lapis_core_ui.js" defer></script>
+    <script src="lapis_picker.js" defer></script>
     <script src="todo.js?v=2.1" defer></script>
 </head>
 <body>
@@ -43,38 +46,7 @@
         <div class="relative z-10 h-screen flex flex-col p-6 overflow-hidden">
             <!-- Header & Navigation -->
             <div class="shrink-0 space-y-4">
-                <header class="flex justify-between items-center relative">
-                    <!-- Navigation Menu -->
-                    <div class="relative nav-capsule" @click.stop>
-                        <button @click="toggleNavDropdown"
-                                class="glass px-5 py-2 rounded-full flex items-center gap-3 transition-all active:scale-95 group"
-                                :style="glassStyle">
-                            <span class="text-lg font-black tracking-tight group-hover:text-blue-500 transition-colors" v-text="currentPageTitle"></span>
-                            <i data-lucide="chevron-down" class="w-4 h-4 opacity-40 group-hover:rotate-180 transition-transform"></i>
-                        </button>
-
-                        <transition name="fade">
-                            <div v-show="navDropdownOpen" class="dropdown-menu glass w-48 mt-2 overflow-hidden" :style="glassStyle">
-                                <a href="javascript:void(0)" onclick="window.location.href='index.html'" class="dropdown-item flex items-center gap-3 active">
-                                    <i data-lucide="check-square" class="w-4 h-4"></i>
-                                    <span>{{ t.navIndex }}</span>
-                                </a>
-                                <a href="javascript:void(0)" onclick="window.location.href='shift.html'" class="dropdown-item flex items-center gap-3">
-                                    <i data-lucide="calendar" class="w-4 h-4"></i>
-                                    <span>{{ t.navShift }}</span>
-                                </a>
-                                <a href="javascript:void(0)" onclick="window.location.href='workout.html'" class="dropdown-item flex items-center gap-3">
-                                    <i data-lucide="dumbbell" class="w-4 h-4"></i>
-                                    <span>{{ t.navWorkout }}</span>
-                                </a>
-                                <a href="javascript:void(0)" onclick="window.location.href='setting.html'" class="dropdown-item flex items-center gap-3">
-                                    <i data-lucide="settings" class="w-4 h-4"></i>
-                                    <span>{{ t.navSetting }}</span>
-                                </a>
-                            </div>
-                        </transition>
-                    </div>
-
+                <header class="flex justify-end items-center relative">
                     <!-- List Controls (Top Right) -->
                     <div class="flex items-center gap-2">
                         <button v-show="appMode === 'todo'" @click="addNewList" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
@@ -337,11 +309,11 @@
                 </div>
             </transition>
 
-            <!-- Hybrid Drum-Roll Date-Time Picker -->
+            <!-- Lapis Date-Time Picker -->
             <transition name="slide-up">
-                <div v-show="showDateTimePicker" :key="'date-time-picker-modal'"
+                <div v-show="showDateTimePicker"
                      class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
-                     @click.self="showDateTimePicker = false">
+                     @click.self="closeDateTimePicker">
                     <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4 modal-content-level-4"
                          :style="glassStyle" @click.stop>
 
@@ -363,76 +335,23 @@
 
                         <!-- Date picker -->
                         <div v-show="pickerMode === 'date'" class="space-y-3">
-                            <input :value="pickerDateStr" @change="onPickerDateInput"
-                                   placeholder="YYYY/MM/DD" maxlength="10" inputmode="numeric"
-                                   class="w-full rounded-2xl p-3 text-center text-xl font-black tracking-widest outline-none bg-white/10 border border-white/20 focus:border-blue-500">
-                            <div class="flex items-center gap-1 h-44">
-                                <div ref="yearCol" class="flex-1 picker-col h-full">
-                                    <div class="picker-spacer"></div>
-                                    <div v-for="y in pickerData.years" :key="y"
-                                         @click="selectPickerYear(y)"
-                                         class="picker-item"
-                                         :class="{ 'picker-active': pickerYear === y }">{{ y }}</div>
-                                    <div class="picker-spacer"></div>
-                                </div>
-                                <span class="text-lg font-black opacity-30 flex-shrink-0">:</span>
-                                <div ref="monthCol" class="w-14 picker-col h-full">
-                                    <div class="picker-spacer"></div>
-                                    <div v-for="m in 12" :key="m"
-                                         @click="selectPickerMonth(m)"
-                                         class="picker-item"
-                                         :class="{ 'picker-active': pickerMonth === m }">{{ m.toString().padStart(2,'0') }}</div>
-                                    <div class="picker-spacer"></div>
-                                </div>
-                                <span class="text-lg font-black opacity-30 flex-shrink-0">:</span>
-                                <div ref="dayCol" class="w-14 picker-col h-full">
-                                    <div class="picker-spacer"></div>
-                                    <div v-for="d in pickerMaxDays" :key="d"
-                                         @click="selectPickerDay(d)"
-                                         class="picker-item"
-                                         :class="{ 'picker-active': pickerDay === d }">{{ d.toString().padStart(2,'0') }}</div>
-                                    <div class="picker-spacer"></div>
-                                </div>
-                            </div>
+                            <div id="lapis-date-picker"></div>
                             <div class="flex gap-2">
-                                <button @click="setToday(); scrollPickerCols()"
-                                        class="flex-1 py-2 rounded-xl glass text-xs font-black opacity-70" :style="glassStyle">
-                                    {{ t.day }}
-                                </button>
-                                <button @click="setTomorrow(); scrollPickerCols()"
-                                        class="flex-1 py-2 rounded-xl glass text-xs font-black opacity-70" :style="glassStyle">
-                                    +1
-                                </button>
+                                <button @click="setToday"
+                                        class="flex-1 py-2 rounded-xl glass text-xs font-black opacity-70"
+                                        :style="glassStyle">{{ t.day }}</button>
+                                <button @click="setTomorrow"
+                                        class="flex-1 py-2 rounded-xl glass text-xs font-black opacity-70"
+                                        :style="glassStyle">+1</button>
                             </div>
                         </div>
 
                         <!-- Time picker -->
-                        <div v-show="pickerMode === 'time'" class="space-y-3">
-                            <input :value="pickerTimeStr" @change="onPickerTimeInput"
-                                   placeholder="HH:mm" maxlength="5" inputmode="numeric"
-                                   class="w-full rounded-2xl p-3 text-center text-xl font-black tracking-widest outline-none bg-white/10 border border-white/20 focus:border-blue-500">
-                            <div class="flex items-center justify-center gap-3 h-44">
-                                <div ref="hourCol" class="w-20 picker-col h-full">
-                                    <div class="picker-spacer"></div>
-                                    <div v-for="h in 24" :key="h"
-                                         @click="selectPickerHour(h - 1)"
-                                         class="picker-item"
-                                         :class="{ 'picker-active': pickerHour === h - 1 }">{{ (h - 1).toString().padStart(2,'0') }}</div>
-                                    <div class="picker-spacer"></div>
-                                </div>
-                                <span class="text-3xl font-black opacity-40 flex-shrink-0">:</span>
-                                <div ref="minuteCol" class="w-20 picker-col h-full">
-                                    <div class="picker-spacer"></div>
-                                    <div v-for="m in 60" :key="m"
-                                         @click="selectPickerMinute(m - 1)"
-                                         class="picker-item"
-                                         :class="{ 'picker-active': pickerMinute === m - 1 }">{{ (m - 1).toString().padStart(2,'0') }}</div>
-                                    <div class="picker-spacer"></div>
-                                </div>
-                            </div>
+                        <div v-show="pickerMode === 'time'">
+                            <div id="lapis-time-picker"></div>
                         </div>
 
-                        <button @click="showDateTimePicker = false"
+                        <button @click="closeDateTimePicker"
                                 class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2.5px]"
                                 :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
                             OK

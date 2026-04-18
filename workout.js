@@ -98,6 +98,7 @@ const _wT = {
         description: '動作描述', targetMuscles: '目標肌群',
         selectCategories: '選擇類別（可複選）', trackingType: '紀錄方式',
         addSet: '新增組數', selectExercise: '選擇動作',
+        existingLog: '此日期已有訓練紀錄，儲存將會覆蓋。', pickExercise: '選擇訓練動作',
         deleteConfirm: '確定要刪除嗎？此操作無法復原。',
         clearData: '清除所有訓練資料', clearConfirm: '確定要清除所有訓練資料嗎？此操作無法復原。',
         lang: '語言', langZh: '繁體中文', langEn: 'English',
@@ -126,6 +127,7 @@ const _wT = {
         description: 'Description', targetMuscles: 'Target Muscles',
         selectCategories: 'Select Categories (multi-select)', trackingType: 'Tracking Type',
         addSet: 'Add Set', selectExercise: 'Select Exercise',
+        existingLog: 'A log exists for this date. Saving will overwrite it.', pickExercise: 'Pick Exercise',
         deleteConfirm: 'Confirm delete? This cannot be undone.',
         clearData: 'Clear All Workout Data', clearConfirm: 'Clear all workout data? This cannot be undone.',
         lang: 'Language', langZh: '繁體中文', langEn: 'English',
@@ -246,107 +248,42 @@ window.addEventListener('DOMContentLoaded', () => {
 
             const hasExistingLog = computed(() => wData.logs.some(l => l.date === logDate.value));
 
-            // ── DRUM-ROLL PICKER ──────────────────────────────────────────
+            // ── LAPIS PICKER ──────────────────────────────────────────────
             const showDateTimePicker = ref(false);
             const pickerMode = ref('date'); // 'date' | 'time'
-
-            const yearCol   = ref(null);
-            const monthCol  = ref(null);
-            const dayCol    = ref(null);
-            const hourCol   = ref(null);
-            const minuteCol = ref(null);
-
-            const pickerData = reactive({
-                years: Array.from({ length: 2099 - 1970 + 1 }, (_, i) => 1970 + i)
-            });
-
-            const pickerYear   = computed(() => parseInt(logDate.value.slice(0, 4), 10));
-            const pickerMonth  = computed(() => parseInt(logDate.value.slice(5, 7), 10));
-            const pickerDay    = computed(() => parseInt(logDate.value.slice(8, 10), 10));
-            const pickerHour   = computed(() => logTime.value.hour);
-            const pickerMinute = computed(() => logTime.value.minute);
-            const pickerMaxDays = computed(() => {
-                const [y, m] = logDate.value.split('-').map(Number);
-                return new Date(y, m, 0).getDate();
-            });
-            const pickerDateStr = computed(() => logDate.value.replace(/-/g, '/'));
-            const pickerTimeStr = computed(() =>
-                `${logTime.value.hour.toString().padStart(2, '0')}:${logTime.value.minute.toString().padStart(2, '0')}`
-            );
-
-            const PICKER_H = 44;
-
-            const _isLeap = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
-            const _maxD   = (m, y) => {
-                if ([4,6,9,11].includes(m)) return 30;
-                if (m === 2) return _isLeap(y) ? 29 : 28;
-                return 31;
-            };
-
-            const scrollPickerCols = () => {
-                nextTick(() => {
-                    if (pickerMode.value === 'date') {
-                        if (yearCol.value)   yearCol.value.scrollTop   = (pickerYear.value - 1970) * PICKER_H;
-                        if (monthCol.value)  monthCol.value.scrollTop  = (pickerMonth.value - 1)   * PICKER_H;
-                        if (dayCol.value)    dayCol.value.scrollTop    = (pickerDay.value - 1)     * PICKER_H;
-                    } else {
-                        if (hourCol.value)   hourCol.value.scrollTop   = pickerHour.value   * PICKER_H;
-                        if (minuteCol.value) minuteCol.value.scrollTop = pickerMinute.value * PICKER_H;
-                    }
-                });
-            };
+            let _wDatePicker = null;
+            let _wTimePicker = null;
 
             const openPicker = (mode) => {
+                if (mode === 'date' && _wDatePicker) {
+                    const [y, m, d] = logDate.value.split('-').map(Number);
+                    _wDatePicker.setValue(y, m, d);
+                } else if (mode === 'time' && _wTimePicker) {
+                    _wTimePicker.setValue(logTime.value.hour, logTime.value.minute);
+                }
                 pickerMode.value = mode;
                 showDateTimePicker.value = true;
-                setTimeout(scrollPickerCols, 60);
             };
 
-            const switchPickerMode = (mode) => {
-                pickerMode.value = mode;
-                setTimeout(scrollPickerCols, 20);
-            };
+            const switchPickerMode = (mode) => { pickerMode.value = mode; };
 
-            const _setLogDate = (y, m, d) => {
-                const maxD = _maxD(m, y);
-                if (d > maxD) d = maxD;
-                logDate.value = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            };
-
-            const updatePickerDate = (type, val) => {
-                let y = pickerYear.value, m = pickerMonth.value, d = pickerDay.value;
-                if (type === 'year')  y = ((val - 1970 + 130) % 130) + 1970;
-                if (type === 'month') m = ((val - 1 + 12) % 12) + 1;
-                if (type === 'day')   d = ((val - 1 + _maxD(m, y)) % _maxD(m, y)) + 1;
-                _setLogDate(y, m, d);
-            };
-
-            const selectPickerYear   = (y) => updatePickerDate('year', y);
-            const selectPickerMonth  = (m) => updatePickerDate('month', m);
-            const selectPickerDay    = (d) => updatePickerDate('day', d);
-            const selectPickerHour   = (h) => { logTime.value.hour   = h; };
-            const selectPickerMinute = (m) => { logTime.value.minute = m; };
-
-            const onPickerDateInput = (e) => {
-                const match = e.target.value.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
-                if (!match) return;
-                const [, y, mo, d] = match.map(Number);
-                if (y >= 1970 && y <= 2099 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31)
-                    _setLogDate(y, mo, d);
-                setTimeout(scrollPickerCols, 20);
-            };
-
-            const onPickerTimeInput = (e) => {
-                const match = e.target.value.match(/^(\d{1,2}):(\d{1,2})$/);
-                if (!match) return;
-                const [, h, mi] = match.map(Number);
-                if (h >= 0 && h <= 23)  logTime.value.hour   = h;
-                if (mi >= 0 && mi <= 59) logTime.value.minute = mi;
-                setTimeout(scrollPickerCols, 20);
+            const closeWorkoutPicker = () => {
+                if (_wDatePicker) {
+                    const v = _wDatePicker.getValue();
+                    logDate.value = v.iso;
+                }
+                if (_wTimePicker) {
+                    const v = _wTimePicker.getValue();
+                    logTime.value.hour = v.hour;
+                    logTime.value.minute = v.minute;
+                }
+                showDateTimePicker.value = false;
             };
 
             const setPickerToday = () => {
+                const now = new Date();
                 logDate.value = _todayStr();
+                if (_wDatePicker) _wDatePicker.setValue(now.getFullYear(), now.getMonth() + 1, now.getDate());
             };
 
             // ── ADD TAB — exercise actions ────────────────────────────────
@@ -825,6 +762,24 @@ window.addEventListener('DOMContentLoaded', () => {
                     logExercises.value = JSON.parse(JSON.stringify(existing.exercises));
                     logTime.value = { ...existing.time };
                 }
+
+                // Inject Lapis navigation and initialize modal system
+                if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
+                if (typeof LapisModal !== 'undefined') LapisModal.init();
+
+                // Initialize Lapis date/time pickers for workout Add tab
+                const _dateEl = document.getElementById('lapis-workout-date-picker');
+                const _timeEl = document.getElementById('lapis-workout-time-picker');
+                if (_dateEl && typeof LapisDatePicker !== 'undefined') {
+                    const [y, m, d] = logDate.value.split('-').map(Number);
+                    _wDatePicker = new LapisDatePicker(_dateEl, { year: y, month: m, day: d });
+                }
+                if (_timeEl && typeof LapisTimePicker !== 'undefined') {
+                    _wTimePicker = new LapisTimePicker(_timeEl, {
+                        hour: logTime.value.hour, minute: logTime.value.minute
+                    });
+                }
+
                 nextTick(() => lucide.createIcons());
                 if (typeof ParticleEngine !== 'undefined' && navSettings.effect && navSettings.effect !== 'none') {
                     ParticleEngine.setEffect(navSettings.effect);
@@ -852,16 +807,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 logDate, logTime, logExercises, hasExistingLog,
                 addSet, removeSet, toggleSetDone, removeLogExercise, saveLog,
                 showToast, toastMsg,
-                // drum-roll picker
+                // lapis picker
                 showDateTimePicker, pickerMode,
-                yearCol, monthCol, dayCol, hourCol, minuteCol,
-                pickerData,
-                pickerYear, pickerMonth, pickerDay, pickerHour, pickerMinute,
-                pickerMaxDays, pickerDateStr, pickerTimeStr,
-                openPicker, switchPickerMode, scrollPickerCols, setPickerToday,
-                selectPickerYear, selectPickerMonth, selectPickerDay,
-                selectPickerHour, selectPickerMinute,
-                onPickerDateInput, onPickerTimeInput,
+                openPicker, switchPickerMode, closeWorkoutPicker, setPickerToday,
                 // pick exercise modal
                 showPickModal, pickSearch, pickCategory, filteredPick, pickExercise,
                 // exercises tab

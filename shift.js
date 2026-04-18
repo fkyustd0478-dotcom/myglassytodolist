@@ -650,6 +650,8 @@ const app = createApp({
         // ── Lifecycle ─────────────────────────────────────────────────────────
         onMounted(() => {
             confirmModal.show = false;
+            if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
+            if (typeof LapisModal !== 'undefined') LapisModal.init();
             if (window.ParticleEngine) ParticleEngine.setEffect(navSettings.effect);
             if (window.lucide) lucide.createIcons();
             document.addEventListener('click', closeJumpPicker);

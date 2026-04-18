@@ -71,13 +71,8 @@ try {
             
             const showDateTimePicker = ref(false);
             const pickerMode = ref('date'); // 'date' | 'time'
-            const yearCol = ref(null);
-            const monthCol = ref(null);
-            const dayCol = ref(null);
-            const hourCol = ref(null);
-            const minuteCol = ref(null);
-            const clockMode = ref('hour');
-            const dateMode = ref('day');
+            let _datePicker = null;
+            let _timePicker = null;
             
             const fileInput = ref(null);
             
@@ -512,14 +507,8 @@ try {
 
 
             const dropdowns = reactive({
-                theme: false,
                 category: false,
-                recurring: false,
-                year: false,
-                month: false,
-                day: false,
-                hour: false,
-                minute: false
+                recurring: false
             });
 
             const toggleDropdown = (key) => {
@@ -540,77 +529,17 @@ try {
                 dropdowns[key] = false;
             };
 
-            const pickerData = reactive({
-                years: Array.from({ length: 2099 - 1970 + 1 }, (_, i) => 1970 + i),
-                months: Array.from({ length: 12 }, (_, i) => i + 1),
-                days: computed(() => {
-                    const d = new Date(form.value.date);
-                    if (isNaN(d.getTime())) return [];
-                    const year = d.getFullYear();
-                    const month = d.getMonth() + 1;
-                    return Array.from({ length: new Date(year, month, 0).getDate() }, (_, i) => i + 1);
-                }),
-                hours: Array.from({ length: 24 }, (_, i) => i),
-                minutes: Array.from({ length: 60 }, (_, i) => i)
-            });
-
             const setToday = () => {
                 const now = new Date();
                 form.value.date = now.toISOString().split('T')[0];
+                if (_datePicker) _datePicker.setValue(now.getFullYear(), now.getMonth() + 1, now.getDate());
             };
 
             const setTomorrow = () => {
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                form.value.date = tomorrow.toISOString().split('T')[0];
-            };
-
-            const wrapValue = (val, min, max) => {
-                if (val < min) return max;
-                if (val > max) return min;
-                return val;
-            };
-
-            const isLeapYear = (year) => (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
-
-            const getMaxDays = (month, year) => {
-                if ([4, 6, 9, 11].includes(month)) return 30;
-                if (month === 2) return isLeapYear(year) ? 29 : 28;
-                return 31;
-            };
-
-            const updatePickerDate = (type, val) => {
-                const d = new Date(form.value.date);
-                if (isNaN(d.getTime())) return;
-                let year = d.getFullYear();
-                let month = d.getMonth() + 1;
-                let day = d.getDate();
-
-                if (type === 'year') {
-                    // Circular Loop 1970-2099 (130 years)
-                    year = ((val - 1970 + 130) % 130) + 1970;
-                } else if (type === 'month') {
-                    // Circular Loop 1-12
-                    month = ((val - 1 + 12) % 12) + 1;
-                } else if (type === 'day') {
-                    const max = getMaxDays(month, year);
-                    // Circular Loop 1-Max
-                    day = ((val - 1 + max) % max) + 1;
-                }
-
-                // Adjust day if month/year changed and caused overflow
-                const newMax = getMaxDays(month, year);
-                if (day > newMax) day = newMax;
-
-                form.value.date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-            };
-
-            const updatePickerTime = (type, val) => {
-                if (type === 'hour') {
-                    form.value.time.hour = (val + 24) % 24;
-                } else if (type === 'minute') {
-                    form.value.time.minute = (val + 60) % 60;
-                }
+                const t = new Date();
+                t.setDate(t.getDate() + 1);
+                form.value.date = t.toISOString().split('T')[0];
+                if (_datePicker) _datePicker.setValue(t.getFullYear(), t.getMonth() + 1, t.getDate());
             };
 
             const scrollActiveTabIntoView = () => {
@@ -622,69 +551,35 @@ try {
                 });
             };
 
-            const pickerYear = computed(() => form.value.date ? parseInt(form.value.date.slice(0,4), 10) : new Date().getFullYear());
-            const pickerMonth = computed(() => form.value.date ? parseInt(form.value.date.slice(5,7), 10) : new Date().getMonth() + 1);
-            const pickerDay = computed(() => form.value.date ? parseInt(form.value.date.slice(8,10), 10) : new Date().getDate());
-            const pickerHour = computed(() => form.value.time.hour);
-            const pickerMinute = computed(() => form.value.time.minute);
-            const pickerMaxDays = computed(() => {
-                if (!form.value.date) return 31;
-                const [y, m] = form.value.date.split('-').map(Number);
-                return new Date(y, m, 0).getDate();
-            });
             const pickerDateStr = computed(() => form.value.date ? form.value.date.replace(/-/g, '/') : '');
             const pickerTimeStr = computed(() =>
                 `${form.value.time.hour.toString().padStart(2,'0')}:${form.value.time.minute.toString().padStart(2,'0')}`
             );
 
-            const PICKER_ITEM_H = 44;
-            const scrollPickerCols = () => {
-                nextTick(() => {
-                    if (pickerMode.value === 'date') {
-                        if (yearCol.value) yearCol.value.scrollTop = (pickerYear.value - 1970) * PICKER_ITEM_H;
-                        if (monthCol.value) monthCol.value.scrollTop = (pickerMonth.value - 1) * PICKER_ITEM_H;
-                        if (dayCol.value) dayCol.value.scrollTop = (pickerDay.value - 1) * PICKER_ITEM_H;
-                    } else {
-                        if (hourCol.value) hourCol.value.scrollTop = pickerHour.value * PICKER_ITEM_H;
-                        if (minuteCol.value) minuteCol.value.scrollTop = pickerMinute.value * PICKER_ITEM_H;
-                    }
-                });
-            };
-
             const openPicker = (mode) => {
+                if (mode === 'date' && _datePicker) {
+                    const d = form.value.date ? new Date(form.value.date + 'T00:00:00') : new Date();
+                    _datePicker.setValue(d.getFullYear(), d.getMonth() + 1, d.getDate());
+                } else if (mode === 'time' && _timePicker) {
+                    _timePicker.setValue(form.value.time.hour, form.value.time.minute);
+                }
                 pickerMode.value = mode;
                 showDateTimePicker.value = true;
-                setTimeout(scrollPickerCols, 60);
             };
 
-            const switchPickerMode = (mode) => {
-                pickerMode.value = mode;
-                setTimeout(scrollPickerCols, 20);
-            };
+            const switchPickerMode = (mode) => { pickerMode.value = mode; };
 
-            const selectPickerYear = (y) => { updatePickerDate('year', y); };
-            const selectPickerMonth = (m) => { updatePickerDate('month', m); };
-            const selectPickerDay = (d) => { updatePickerDate('day', d); };
-            const selectPickerHour = (h) => { form.value.time.hour = h; };
-            const selectPickerMinute = (m) => { form.value.time.minute = m; };
-
-            const onPickerDateInput = (e) => {
-                const match = e.target.value.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
-                if (!match) return;
-                const [, y, mo, d] = match.map(Number);
-                if (y >= 1970 && y <= 2099 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
-                    form.value.date = `${y}-${mo.toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
-                    setTimeout(scrollPickerCols, 20);
+            const closeDateTimePicker = () => {
+                if (_datePicker) {
+                    const v = _datePicker.getValue();
+                    form.value.date = v.iso;
                 }
-            };
-
-            const onPickerTimeInput = (e) => {
-                const match = e.target.value.match(/^(\d{1,2}):(\d{1,2})$/);
-                if (!match) return;
-                const [, h, m] = match.map(Number);
-                if (h >= 0 && h <= 23) form.value.time.hour = h;
-                if (m >= 0 && m <= 59) form.value.time.minute = m;
-                setTimeout(scrollPickerCols, 20);
+                if (_timePicker) {
+                    const v = _timePicker.getValue();
+                    form.value.time.hour = v.hour;
+                    form.value.time.minute = v.minute;
+                }
+                showDateTimePicker.value = false;
             };
 
             const calculateNextGen = (r, d) => { 
@@ -937,6 +832,26 @@ try {
                     }
                 }
 
+                // Inject Lapis navigation and initialize modal system
+                if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
+                if (typeof LapisModal !== 'undefined') LapisModal.init();
+
+                // Initialize Lapis date/time pickers
+                const _dateEl = document.getElementById('lapis-date-picker');
+                const _timeEl = document.getElementById('lapis-time-picker');
+                if (_dateEl && typeof LapisDatePicker !== 'undefined') {
+                    const _now = new Date();
+                    _datePicker = new LapisDatePicker(_dateEl, {
+                        year: _now.getFullYear(), month: _now.getMonth() + 1, day: _now.getDate()
+                    });
+                }
+                if (_timeEl && typeof LapisTimePicker !== 'undefined') {
+                    const _now = new Date();
+                    _timePicker = new LapisTimePicker(_timeEl, {
+                        hour: _now.getHours(), minute: _now.getMinutes()
+                    });
+                }
+
                 nextTick(() => {
                     if (window.lucide) lucide.createIcons();
                     scrollActiveTabIntoView();
@@ -1024,47 +939,25 @@ try {
                 });
             };
 
-            const openPickerDropdown = (key) => {
-                toggleDropdown(key);
-                nextTick(() => {
-                    const d = new Date(form.value.date || new Date());
-                    let idx = 0;
-                    if (key === 'year')   idx = d.getFullYear() - 1970;
-                    else if (key === 'month')  idx = d.getMonth();
-                    else if (key === 'day')    idx = d.getDate() - 1;
-                    else if (key === 'hour')   idx = form.value.time.hour;
-                    else if (key === 'minute') idx = form.value.time.minute;
-                    document.querySelectorAll('.picker-dropdown').forEach(el => {
-                        if (el.offsetParent !== null) {
-                            const first = el.querySelector('.dropdown-item');
-                            if (first) el.scrollTop = idx * first.offsetHeight;
-                        }
-                    });
-                });
-            };
 
             return {
                 themeStyle,
-                todos, lists, currentListId, settings, view, isAdding, isEditing, form, 
-                showDateTimePicker, clockMode, dateMode, fileInput, t, 
-                categories, recurringTypes, otherThemes, glassStyle, themeClasses, 
-                customBgStyle, formatTimeDisplay, sortedTodos, completedTodos, groupedTodos, 
-                deletedTodos, toggleLang, toggleNotifications, selectTheme, 
-                toggleCustomBg, triggerUpload, handleUpload, startAdding, editTodo, 
-                saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo, openPickerDropdown, pickerMode, pickerYear, pickerMonth, pickerDay, pickerHour, pickerMinute,
-                pickerMaxDays, pickerDateStr, pickerTimeStr,
-                yearCol, monthCol, dayCol, hourCol, minuteCol,
-                scrollPickerCols, openPicker, switchPickerMode,
-                selectPickerYear, selectPickerMonth, selectPickerDay,
-                selectPickerHour, selectPickerMinute,
-                onPickerDateInput, onPickerTimeInput,
+                todos, lists, currentListId, settings, view, isAdding, isEditing, form,
+                showDateTimePicker, pickerMode, fileInput, t,
+                categories, recurringTypes, otherThemes, glassStyle, themeClasses,
+                customBgStyle, formatTimeDisplay, sortedTodos, completedTodos, groupedTodos,
+                deletedTodos, toggleLang, toggleNotifications, selectTheme,
+                toggleCustomBg, triggerUpload, handleUpload, startAdding, editTodo,
+                saveTodo, closeModal, toggleTodo, deleteTodo, restoreTodo,
+                pickerDateStr, pickerTimeStr,
+                openPicker, switchPickerMode, closeDateTimePicker,
                 permanentDelete, addNewList, openDatePicker, closeSettings,
-                renderTrigger, calculateNextGen, 
+                renderTrigger, calculateNextGen,
                 formatDateTime, petalStyle, cloudStyle, rainStyle, isDarkTheme, effects,
                 activeAssets, getAssetStyle, tempCustomBg, saveCustomBg, cancelUpload, clearCustomBg,
                 showPetals, showRain,
                 dropdowns, toggleDropdown, selectDropdownOption,
-                pickerData, setToday, setTomorrow, updatePickerDate, updatePickerTime,
+                setToday, setTomorrow,
                 listModal, addNewList, editList, deleteListPrompt, confirmListModal, closeListModal,
                 isDefaultList, uploadProgress, confirmModal, promptClearCompleted, promptClearBin, executeConfirm,
                 manageModal, openManageModal: () => manageModal.value.show = true,

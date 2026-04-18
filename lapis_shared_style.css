@@ -26,10 +26,28 @@
 .lapis-nav-capsule {
     position: relative;
     border-radius: 999px;
-    /* Glass surface for the capsule itself */
-    backdrop-filter: blur(20px) brightness(1.06);
-    -webkit-backdrop-filter: blur(20px) brightness(1.06);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+    /* Light-theme defaults */
+    background: rgba(255, 255, 255, 0.75);
+    border: 1.5px solid rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+    backdrop-filter: blur(20px) brightness(1.03);
+    -webkit-backdrop-filter: blur(20px) brightness(1.03);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark-theme capsule surface */
+body.theme-dark        .lapis-nav-capsule,
+body.theme-forest      .lapis-nav-capsule,
+body.theme-night       .lapis-nav-capsule,
+body.theme-torii       .lapis-nav-capsule,
+body.theme-starrysky   .lapis-nav-capsule,
+body.theme-ferriswheel .lapis-nav-capsule {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2.5px solid rgba(255, 255, 255, 0.9);
+    color: #ffffff;
+    backdrop-filter: blur(16px) brightness(1.2);
+    -webkit-backdrop-filter: blur(16px) brightness(1.2);
+    box-shadow: none;
 }
 
 .lapis-capsule-btn {
