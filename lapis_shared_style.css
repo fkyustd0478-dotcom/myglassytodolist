@@ -257,6 +257,22 @@ body.theme-ferriswheel .lapis-nav-capsule {
     to   { transform: scale(1);    opacity: 1; }
 }
 
+/* Shell background — dark themes default */
+.lapis-modal-shell {
+    background: rgba(15, 20, 38, 0.88);
+    color: #ffffff;
+}
+body.theme-light       .lapis-modal-shell,
+body.theme-cherry      .lapis-modal-shell,
+body.theme-sky         .lapis-modal-shell,
+body.theme-seaside     .lapis-modal-shell,
+body.theme-sunset      .lapis-modal-shell,
+body.theme-mapleavenue .lapis-modal-shell,
+body.theme-waterfall   .lapis-modal-shell {
+    background: rgba(245, 248, 255, 0.92);
+    color: #1a1a1a;
+}
+
 /* Shell handle bar (decorative) */
 .lapis-modal-shell::before {
     content: '';

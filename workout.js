@@ -89,6 +89,7 @@ const _wT = {
         date: '日期', time: '時間', today: '今天',
         setsReps: '組數 / 次數', duration: '時間',
         weight: '重量', reps: '次數', sets: '組', minutes: '分鐘', min: 'min', kg: 'kg',
+        startWorkout: '開始訓練', workoutLog: '訓練紀錄',
         addExercise: '新增訓練動作', saveLog: '儲存訓練紀錄',
         noExercises: '尚未記錄任何動作', noLogs: '尚無訓練紀錄', noLibrary: '動作庫為空',
         search: '搜尋動作…', all: '全部',
@@ -118,6 +119,7 @@ const _wT = {
         date: 'Date', time: 'Time', today: 'Today',
         setsReps: 'Sets / Reps', duration: 'Duration',
         weight: 'Weight', reps: 'Reps', sets: 'Set', minutes: 'Minutes', min: 'min', kg: 'kg',
+        startWorkout: 'Start Workout', workoutLog: 'Workout Log',
         addExercise: 'Add Exercise', saveLog: 'Save Workout Log',
         noExercises: 'No exercises logged yet', noLogs: 'No workout records yet', noLibrary: 'Library is empty',
         search: 'Search exercises…', all: 'All',
@@ -335,6 +337,19 @@ window.addEventListener('DOMContentLoaded', () => {
                 _toast(t.value.logSaved);
             };
 
+            // ── WORKOUT LOG MODAL ─────────────────────────────────────────
+            const showLogModal = ref(false);
+
+            const shellStyle = computed(() => isDarkTheme.value
+                ? { background: 'rgba(15,20,38,0.88)', color: '#ffffff', borderTop: '1px solid rgba(255,255,255,0.08)' }
+                : { background: 'rgba(245,248,255,0.92)', color: '#1a1a1a', borderTop: '1px solid rgba(0,0,0,0.05)' }
+            );
+
+            const saveLogAndClose = () => {
+                saveLog();
+                showLogModal.value = false;
+            };
+
             // ── PICK-EXERCISE MODAL (add to log) ─────────────────────────
             const showPickModal  = ref(false);
             const pickSearch     = ref('');
@@ -367,8 +382,8 @@ window.addEventListener('DOMContentLoaded', () => {
                     minutes:       isSets ? undefined : ''
                 });
                 showPickModal.value = false;
-                pickSearch.value    = '';
-                pickCategory.value  = '';
+                pickSearch.value   = '';
+                pickCategory.value = '';
             };
 
             // ── EXERCISES TAB ─────────────────────────────────────────────
@@ -688,6 +703,7 @@ window.addEventListener('DOMContentLoaded', () => {
             // ── Modal / overlay state ────────────────────────────────────
             const isAnyModalOpen = computed(() =>
                 showDateTimePicker.value ||
+                showLogModal.value       ||
                 showPickModal.value      ||
                 showExModal.value        ||
                 showCatMgr.value         ||
@@ -810,6 +826,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 // lapis picker
                 showDateTimePicker, pickerMode,
                 openPicker, switchPickerMode, closeWorkoutPicker, setPickerToday,
+                // workout log modal
+                showLogModal, shellStyle, saveLogAndClose,
                 // pick exercise modal
                 showPickModal, pickSearch, pickCategory, filteredPick, pickExercise,
                 // exercises tab
