@@ -85,8 +85,8 @@ function useNav() {
 
     // ── Language-aware page title ──────────────────────────────────────────
     const _pageTitles = {
-        zh: { shift: '琉璃輪班', setting: '系統設定', index: '琉璃待辦' },
-        en: { shift: 'Glassy Shift', setting: 'Settings', index: 'Glassy Todo' }
+        zh: { shift: '琉璃輪班', setting: '系統設定', index: '琉璃待辦', workout: '琉璃健身' },
+        en: { shift: 'Glassy Shift', setting: 'Settings', index: 'Glassy Todo', workout: 'Glassy Workout' }
     };
 
     const _updateTitle = () => {
@@ -94,6 +94,7 @@ function useNav() {
         const titles = _pageTitles[navSettings.lang] || _pageTitles.zh;
         if      (file.includes('shift'))   currentPageTitle.value = titles.shift;
         else if (file.includes('setting')) currentPageTitle.value = titles.setting;
+        else if (file.includes('workout')) currentPageTitle.value = titles.workout;
         else                               currentPageTitle.value = titles.index;
     };
 

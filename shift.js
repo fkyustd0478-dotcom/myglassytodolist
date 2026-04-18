@@ -5,7 +5,7 @@
 const shiftTranslations = {
     zh: {
         // Nav dropdown labels
-        navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定',
+        navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定', navWorkout: '琉璃健身',
         // Bottom nav
         todayTasks: '今日事', salary: '薪資', shiftNav: '輪班', labelSettings: '標籤設定',
         // Tags modal
@@ -58,7 +58,7 @@ const shiftTranslations = {
         todoItemsLabel: '待辦事項', otherDateLabel: '日期',
     },
     en: {
-        navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
+        navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
         todayTasks: "Today's Tasks", salary: 'Salary', shiftNav: 'Shifts', labelSettings: 'Labels',
         labelSettingsTitle: 'Label Settings',
         shiftTab: 'Shift Config', salaryTab: 'Salary Config',
