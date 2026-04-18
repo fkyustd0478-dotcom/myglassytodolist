@@ -129,10 +129,20 @@
                 </div>
 
                 <!-- Exercise card -->
-                <div v-else class="lib-row glass flex items-center gap-3 mb-2" :style="glassStyle">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div v-else class="lib-row glass flex items-center gap-3 mb-2 cursor-pointer transition-all"
+                     :style="glassStyle"
+                     draggable="true"
+                     @dragstart="onDragStart(row.ex, $event)"
+                     @dragover="onDragOver"
+                     @drop="onDrop(row.ex, $event)"
+                     :class="{ 'opacity-40 scale-95': dragSrcId === row.ex.id }"
+                     @click="openExDetail(row.ex)">
+                    <div class="flex-shrink-0 opacity-25 cursor-grab pl-0.5">
+                        <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                          :style="row.ci >= 0 ? catPillStyle(catTree[row.ci] && catTree[row.ci].name) : { background:'rgba(100,116,139,0.15)' }">
-                        <i :data-lucide="row.ex.type === 'duration' ? 'timer' : 'dumbbell'" class="w-5 h-5"></i>
+                        <i :data-lucide="row.ex.type === 'duration' ? 'timer' : 'dumbbell'" class="w-4 h-4"></i>
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="font-bold text-sm truncate">{{ exDisplayName(row.ex) }}</p>
@@ -143,10 +153,10 @@
                         </div>
                     </div>
                     <div class="flex gap-2 flex-shrink-0">
-                        <button @click="openEditEx(row.ex)" class="btn-action btn-edit w-9 h-9 rounded-xl">
+                        <button @click.stop="openEditEx(row.ex)" class="btn-action btn-edit w-9 h-9 rounded-xl">
                             <i data-lucide="pencil" class="w-4 h-4"></i>
                         </button>
-                        <button @click="deleteEx(row.ex.id)" class="btn-action btn-delete w-9 h-9 rounded-xl">
+                        <button @click.stop="deleteEx(row.ex.id)" class="btn-action btn-delete w-9 h-9 rounded-xl">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -190,6 +200,22 @@
                 <div class="space-y-1">
                     <p class="section-label">{{ t.exerciseNameZh }}</p>
                     <input v-model="exForm.nameZh" :placeholder="t.exerciseNameZh"
+                           class="w-full glass rounded-2xl px-4 py-3 text-sm font-bold outline-none" :style="glassStyle">
+                </div>
+
+                <!-- Description -->
+                <div class="space-y-1">
+                    <p class="section-label">{{ t.description }}</p>
+                    <textarea v-model="exForm.description" :placeholder="t.description"
+                              rows="2"
+                              class="w-full glass rounded-2xl px-4 py-3 text-sm font-bold outline-none resize-none"
+                              :style="glassStyle"></textarea>
+                </div>
+
+                <!-- Target muscles -->
+                <div class="space-y-1">
+                    <p class="section-label">{{ t.targetMuscles }}</p>
+                    <input v-model="exForm.targetMuscles" :placeholder="t.targetMuscles"
                            class="w-full glass rounded-2xl px-4 py-3 text-sm font-bold outline-none" :style="glassStyle">
                 </div>
 
@@ -416,6 +442,72 @@
                         style="border-color:rgba(255,255,255,0.25)">
                     + {{ t.addL1 }}
                 </button>
+            </div>
+        </div>
+    </transition>
+
+    <!-- ── Exercise Detail Modal ─────────────────────────────────────────── -->
+    <transition name="slide-up">
+        <div v-show="showExDetail"
+             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
+             @click.self="showExDetail = false">
+            <div v-if="exDetailData"
+                 class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10 space-y-5 modal-content-level-4"
+                 :style="glassStyle" @click.stop>
+
+                <!-- Header -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+                             :style="exDetailData.categories && exDetailData.categories[0] ? catPillStyle(exDetailData.categories[0]) : {}">
+                            <i :data-lucide="exDetailData.type === 'duration' ? 'timer' : 'dumbbell'" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-black leading-tight">{{ exDisplayName(exDetailData) }}</h2>
+                            <p v-if="navSettings.lang === 'zh' && exDetailData.name"
+                               class="text-xs opacity-40 font-mono">{{ exDetailData.name }}</p>
+                        </div>
+                    </div>
+                    <button @click="showExDetail = false" class="opacity-40 active:opacity-70 transition-opacity">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Category + unit pills -->
+                <div class="flex flex-wrap gap-2">
+                    <span v-for="cat in (exDetailData.categories || [])" :key="cat"
+                          class="category-pill" :style="catPillStyle(cat)">{{ catLabel(cat) }}</span>
+                    <span class="type-badge">{{ unitLabel(exDetailData) }}</span>
+                </div>
+
+                <!-- Description -->
+                <div class="glass rounded-2xl p-4 space-y-1" :style="glassStyle">
+                    <p class="text-xs font-black opacity-50 uppercase tracking-wider">{{ t.description }}</p>
+                    <p v-if="exDetailData.description" class="text-sm font-bold leading-relaxed">{{ exDetailData.description }}</p>
+                    <p v-else class="text-sm opacity-35 font-bold">—</p>
+                </div>
+
+                <!-- Target muscles -->
+                <div class="glass rounded-2xl p-4 space-y-1" :style="glassStyle">
+                    <p class="text-xs font-black opacity-50 uppercase tracking-wider">{{ t.targetMuscles }}</p>
+                    <p v-if="exDetailData.targetMuscles" class="text-sm font-bold leading-relaxed">{{ exDetailData.targetMuscles }}</p>
+                    <p v-else class="text-sm opacity-35 font-bold">—</p>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-3">
+                    <button @click.stop="openEditEx(exDetailData); showExDetail = false"
+                            class="flex-1 py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2"
+                            style="background:rgba(59,130,246,0.2);color:#3b82f6;border:1px solid rgba(59,130,246,0.4)">
+                        <i data-lucide="pencil" class="w-4 h-4"></i>{{ t.edit }}
+                    </button>
+                    <button @click="showExDetail = false"
+                            class="flex-1 py-3 rounded-2xl glass font-black text-sm opacity-60 active:opacity-80 transition-opacity"
+                            :style="glassStyle">
+                        {{ t.cancel }}
+                    </button>
+                </div>
+
             </div>
         </div>
     </transition>

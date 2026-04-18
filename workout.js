@@ -7,28 +7,29 @@ const _wUid = () => Date.now().toString(36) + Math.random().toString(36).slice(2
 const LIBRARY_KEY = 'lapis_workout_library';
 
 const _defaultExercises = () => [
-    { id: _wUid(), name: 'Bench Press',    nameZh: '槓鈴臥推',   categories: ['Push','Chest'],         type: 'sets', preferredUnit: 'kg' },
-    { id: _wUid(), name: 'Squat',          nameZh: '深蹲',       categories: ['Legs'],                 type: 'sets', preferredUnit: 'kg' },
-    { id: _wUid(), name: 'Deadlift',       nameZh: '硬舉',       categories: ['Pull','Back','Legs'],   type: 'sets', preferredUnit: 'kg' },
-    { id: _wUid(), name: 'Pull-up',        nameZh: '引體向上',   categories: ['Pull','Back'],          type: 'sets', preferredUnit: 'kg' },
-    { id: _wUid(), name: 'Overhead Press', nameZh: '肩推',       categories: ['Push','Shoulders'],     type: 'sets', preferredUnit: 'kg' },
-    { id: _wUid(), name: 'Barbell Row',    nameZh: '槓鈴划船',   categories: ['Pull','Back'],          type: 'sets', preferredUnit: 'kg' },
-    { id: _wUid(), name: 'Bicep Curl',     nameZh: '二頭彎舉',   categories: ['Arms'],                 type: 'sets', preferredUnit: 'kg' },
-    { id: _wUid(), name: 'Tricep Dip',     nameZh: '三頭撐',     categories: ['Push','Arms'],          type: 'sets', preferredUnit: 'kg' },
-    { id: _wUid(), name: 'Lateral Raise',  nameZh: '啞鈴側平舉', categories: ['Shoulders'],            type: 'sets', preferredUnit: 'g'  },
-    { id: _wUid(), name: 'Leg Press',      nameZh: '腿推',       categories: ['Legs'],                 type: 'sets', preferredUnit: 'kg' },
-    { id: _wUid(), name: 'Plank',          nameZh: '棒式',       categories: ['Core'],                 type: 'duration' },
-    { id: _wUid(), name: 'Running',        nameZh: '跑步機',     categories: ['Cardio'],               type: 'duration' },
-    { id: _wUid(), name: 'Cycling',        nameZh: '騎單車',     categories: ['Cardio'],               type: 'duration' },
+    { id: _wUid(), name: 'Bench Press',    nameZh: '槓鈴臥推',   categories: ['Chest'],       type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: 'Pectoralis Major, Triceps, Anterior Deltoid' },
+    { id: _wUid(), name: 'Squat',          nameZh: '深蹲',       categories: ['Quads','Legs'],type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: 'Quadriceps, Glutes, Hamstrings' },
+    { id: _wUid(), name: 'Deadlift',       nameZh: '硬舉',       categories: ['Back','Legs'], type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: 'Erector Spinae, Glutes, Hamstrings' },
+    { id: _wUid(), name: 'Pull-up',        nameZh: '引體向上',   categories: ['Back'],        type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: 'Latissimus Dorsi, Biceps' },
+    { id: _wUid(), name: 'Overhead Press', nameZh: '肩推',       categories: ['Shoulders'],   type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: 'Deltoids, Triceps' },
+    { id: _wUid(), name: 'Barbell Row',    nameZh: '槓鈴划船',   categories: ['Back'],        type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: 'Latissimus Dorsi, Rhomboids, Biceps' },
+    { id: _wUid(), name: 'Bicep Curl',     nameZh: '二頭彎舉',   categories: ['Biceps'],      type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: 'Biceps Brachii' },
+    { id: _wUid(), name: 'Tricep Dip',     nameZh: '三頭撐',     categories: ['Triceps'],     type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: 'Triceps Brachii' },
+    { id: _wUid(), name: 'Lateral Raise',  nameZh: '啞鈴側平舉', categories: ['Side Delt'],   type: 'sets', preferredUnit: 'g',  description: '', targetMuscles: 'Lateral Deltoid' },
+    { id: _wUid(), name: 'Leg Press',      nameZh: '腿推',       categories: ['Quads'],       type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: 'Quadriceps, Glutes' },
+    { id: _wUid(), name: 'Plank',          nameZh: '棒式',       categories: ['Abs'],         type: 'duration', description: '', targetMuscles: 'Core, Abdominals' },
+    { id: _wUid(), name: 'Running',        nameZh: '跑步機',     categories: ['Running'],     type: 'duration', description: '', targetMuscles: '' },
+    { id: _wUid(), name: 'Cycling',        nameZh: '騎單車',     categories: ['Cycling'],     type: 'duration', description: '', targetMuscles: '' },
 ];
 
 const _defaultWorkoutData = () => ({
     version: 1,
-    categories: ['Push','Pull','Legs','Core','Cardio','Back','Chest','Shoulders','Arms'],
+    categories: ['Bodybuilding', 'Cardio', 'Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core'],
     logs: []
 });
 
 const _catLabels = {
+    Bodybuilding: '健美',
     Push: '推', Pull: '拉', Legs: '腿部', Core: '核心',
     Cardio: '有氧', Back: '背部', Chest: '胸部', Shoulders: '肩部', Arms: '手臂'
 };
@@ -47,40 +48,36 @@ const _catColors = [
 ];
 
 const _defaultCategoryTree = () => [
-    { id: _wUid(), name: 'Push', nameZh: '推', children: [
+    { id: _wUid(), name: 'Bodybuilding', nameZh: '健美', children: [
         { id: _wUid(), name: 'Chest', nameZh: '胸部', children: [
             { id: _wUid(), name: 'Upper Chest', nameZh: '上胸', children: [] },
             { id: _wUid(), name: 'Lower Chest', nameZh: '下胸', children: [] },
+        ]},
+        { id: _wUid(), name: 'Back', nameZh: '背部', children: [
+            { id: _wUid(), name: 'Upper Back', nameZh: '上背', children: [] },
+            { id: _wUid(), name: 'Lower Back', nameZh: '下背', children: [] },
         ]},
         { id: _wUid(), name: 'Shoulders', nameZh: '肩部', children: [
             { id: _wUid(), name: 'Front Delt', nameZh: '前三角', children: [] },
             { id: _wUid(), name: 'Side Delt',  nameZh: '側三角', children: [] },
         ]},
-        { id: _wUid(), name: 'Triceps', nameZh: '三頭肌', children: [] },
-    ]},
-    { id: _wUid(), name: 'Pull', nameZh: '拉', children: [
-        { id: _wUid(), name: 'Back', nameZh: '背部', children: [
-            { id: _wUid(), name: 'Upper Back', nameZh: '上背', children: [] },
-            { id: _wUid(), name: 'Lower Back', nameZh: '下背', children: [] },
+        { id: _wUid(), name: 'Arms', nameZh: '手臂', children: [
+            { id: _wUid(), name: 'Biceps',  nameZh: '二頭肌', children: [] },
+            { id: _wUid(), name: 'Triceps', nameZh: '三頭肌', children: [] },
         ]},
-        { id: _wUid(), name: 'Biceps', nameZh: '二頭肌', children: [] },
-    ]},
-    { id: _wUid(), name: 'Legs', nameZh: '腿部', children: [
-        { id: _wUid(), name: 'Quads',      nameZh: '股四頭肌', children: [] },
-        { id: _wUid(), name: 'Hamstrings', nameZh: '大腿後側', children: [] },
-        { id: _wUid(), name: 'Glutes',     nameZh: '臀部',     children: [] },
-        { id: _wUid(), name: 'Calves',     nameZh: '小腿',     children: [] },
-    ]},
-    { id: _wUid(), name: 'Core',   nameZh: '核心', children: [
-        { id: _wUid(), name: 'Abs', nameZh: '腹部', children: [] },
+        { id: _wUid(), name: 'Legs', nameZh: '腿部', children: [
+            { id: _wUid(), name: 'Quads',      nameZh: '股四頭肌', children: [] },
+            { id: _wUid(), name: 'Hamstrings', nameZh: '大腿後側', children: [] },
+            { id: _wUid(), name: 'Glutes',     nameZh: '臀部',     children: [] },
+            { id: _wUid(), name: 'Calves',     nameZh: '小腿',     children: [] },
+        ]},
+        { id: _wUid(), name: 'Core', nameZh: '核心', children: [
+            { id: _wUid(), name: 'Abs', nameZh: '腹部', children: [] },
+        ]},
     ]},
     { id: _wUid(), name: 'Cardio', nameZh: '有氧', children: [
         { id: _wUid(), name: 'Running', nameZh: '跑步', children: [] },
         { id: _wUid(), name: 'Cycling', nameZh: '騎車', children: [] },
-    ]},
-    { id: _wUid(), name: 'Arms',   nameZh: '手臂', children: [
-        { id: _wUid(), name: 'Bicep Curls', nameZh: '二頭彎舉', children: [] },
-        { id: _wUid(), name: 'Tricep Exts', nameZh: '三頭伸展', children: [] },
     ]},
 ];
 
@@ -96,8 +93,9 @@ const _wT = {
         noExercises: '尚未記錄任何動作', noLogs: '尚無訓練紀錄', noLibrary: '動作庫為空',
         search: '搜尋動作…', all: '全部',
         edit: '編輯', delete: '刪除', save: '儲存', cancel: '取消', confirm: '確認',
-        addToLibrary: '新增至動作庫', editExercise: '編輯動作',
+        addToLibrary: '新增至動作庫', editExercise: '編輯訓練動作',
         exerciseNameEn: '動作名稱（英文）', exerciseNameZh: '動作名稱（中文，選填）',
+        description: '動作描述', targetMuscles: '目標肌群',
         selectCategories: '選擇類別（可複選）', trackingType: '紀錄方式',
         addSet: '新增組數', selectExercise: '選擇動作',
         deleteConfirm: '確定要刪除嗎？此操作無法復原。',
@@ -125,6 +123,7 @@ const _wT = {
         edit: 'Edit', delete: 'Delete', save: 'Save', cancel: 'Cancel', confirm: 'Confirm',
         addToLibrary: 'Add to Library', editExercise: 'Edit Exercise',
         exerciseNameEn: 'Exercise Name (English)', exerciseNameZh: 'Exercise Name (Chinese, optional)',
+        description: 'Description', targetMuscles: 'Target Muscles',
         selectCategories: 'Select Categories (multi-select)', trackingType: 'Tracking Type',
         addSet: 'Add Set', selectExercise: 'Select Exercise',
         deleteConfirm: 'Confirm delete? This cannot be undone.',
@@ -457,12 +456,12 @@ window.addEventListener('DOMContentLoaded', () => {
             const isEditEx    = ref(false);
             const editExId    = ref(null);
 
-            const exForm = reactive({ name: '', nameZh: '', categories: [], type: 'sets', unit: 'kg' });
+            const exForm = reactive({ name: '', nameZh: '', categories: [], type: 'sets', unit: 'kg', description: '', targetMuscles: '' });
 
             const openAddEx = () => {
                 isEditEx.value = false;
                 editExId.value = null;
-                Object.assign(exForm, { name: '', nameZh: '', categories: [], type: 'sets', unit: 'kg' });
+                Object.assign(exForm, { name: '', nameZh: '', categories: [], type: 'sets', unit: 'kg', description: '', targetMuscles: '' });
                 showExModal.value = true;
             };
 
@@ -474,7 +473,9 @@ window.addEventListener('DOMContentLoaded', () => {
                     name: ex.name, nameZh: ex.nameZh || '',
                     categories: [...ex.categories],
                     type: normType,
-                    unit: ex.preferredUnit || 'kg'
+                    unit: ex.preferredUnit || 'kg',
+                    description: ex.description || '',
+                    targetMuscles: ex.targetMuscles || ''
                 });
                 showExModal.value = true;
             };
@@ -492,7 +493,9 @@ window.addEventListener('DOMContentLoaded', () => {
                     nameZh:        exForm.nameZh.trim(),
                     categories:    [...exForm.categories],
                     type:          exForm.type,
-                    preferredUnit: exForm.type === 'sets' ? exForm.unit : undefined
+                    preferredUnit: exForm.type === 'sets' ? exForm.unit : undefined,
+                    description:   exForm.description.trim(),
+                    targetMuscles: exForm.targetMuscles.trim()
                 };
                 if (isEditEx.value) {
                     const idx = libData.exercises.findIndex(e => e.id === editExId.value);
@@ -509,6 +512,43 @@ window.addEventListener('DOMContentLoaded', () => {
                 const idx = libData.exercises.findIndex(e => e.id === id);
                 if (idx >= 0) libData.exercises.splice(idx, 1);
                 libPersist();
+            };
+
+            // ── DRAG-AND-DROP REORDERING ──────────────────────────────────
+            const dragSrcId = ref(null);
+
+            const onDragStart = (ex, event) => {
+                dragSrcId.value = ex.id;
+                event.dataTransfer.effectAllowed = 'move';
+            };
+
+            const onDragOver = (event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+            };
+
+            const onDrop = (targetEx, event) => {
+                event.preventDefault();
+                if (!dragSrcId.value || dragSrcId.value === targetEx.id) { dragSrcId.value = null; return; }
+                const exArr = libData.exercises;
+                const srcIdx = exArr.findIndex(e => e.id === dragSrcId.value);
+                const tgtIdx = exArr.findIndex(e => e.id === targetEx.id);
+                if (srcIdx < 0 || tgtIdx < 0) { dragSrcId.value = null; return; }
+                const [removed] = exArr.splice(srcIdx, 1);
+                exArr.splice(tgtIdx, 0, removed);
+                libPersist();
+                dragSrcId.value = null;
+                nextTick(() => lucide.createIcons());
+            };
+
+            // ── EXERCISE DETAIL VIEW ──────────────────────────────────────
+            const showExDetail = ref(false);
+            const exDetailData = ref(null);
+
+            const openExDetail = (ex) => {
+                exDetailData.value = ex;
+                showExDetail.value = true;
+                nextTick(() => lucide.createIcons());
             };
 
             // ── CATEGORY MANAGEMENT ───────────────────────────────────────
@@ -714,7 +754,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 showPickModal.value      ||
                 showExModal.value        ||
                 showCatMgr.value         ||
-                showClearConfirm.value
+                showClearConfirm.value   ||
+                showExDetail.value
             );
 
             // ── Display helpers ───────────────────────────────────────────
@@ -827,6 +868,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 libData, libSearch, libCategory, filteredLib,
                 showExModal, isEditEx, exForm, openAddEx, openEditEx,
                 toggleExCat, saveEx, deleteEx,
+                dragSrcId, onDragStart, onDragOver, onDrop,
+                showExDetail, exDetailData, openExDetail,
                 catLabel, catPillStyle, unitLabel,
                 // category tree
                 catTree,
