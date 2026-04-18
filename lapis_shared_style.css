@@ -1,0 +1,490 @@
+/* lapis_shared_style.css — Lapis System UI Toolkit v1.0
+   Centralizes visual tokens for:
+     · Top Capsule Navigation
+     · Bottom Tab Bar
+     · Glass Modal Shell ("Medal" style)
+     · Drum-roll Wheel Pickers
+   ─────────────────────────────────────────────────────────────────────────── */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOP CAPSULE NAV
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lapis-top-nav {
+    position: sticky;
+    top: 0;
+    z-index: 10001;
+    padding: 16px 20px 8px;
+    display: flex;
+    align-items: center;
+    /* Prevent the sticky header from catching scroll events */
+    pointer-events: none;
+}
+.lapis-top-nav > * { pointer-events: auto; }
+
+.lapis-nav-capsule {
+    position: relative;
+    border-radius: 999px;
+    /* Glass surface for the capsule itself */
+    backdrop-filter: blur(20px) brightness(1.06);
+    -webkit-backdrop-filter: blur(20px) brightness(1.06);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.lapis-capsule-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-family: inherit;
+}
+.lapis-capsule-btn:hover   { opacity: 0.85; }
+.lapis-capsule-btn:active  { transform: scale(0.95); }
+
+/* Active glow ring on the capsule when dropdown is open */
+.lapis-nav-capsule:has([aria-expanded="true"]) {
+    box-shadow: 0 0 0 2.5px var(--primary), 0 4px 24px rgba(59, 130, 246, 0.25);
+}
+
+.lapis-capsule-title {
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    transition: color 0.2s;
+    white-space: nowrap;
+}
+.lapis-capsule-btn:hover .lapis-capsule-title { color: var(--primary); }
+
+
+/* ── Dropdown ─────────────────────────────────────────────────────────────── */
+
+.lapis-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 190px;
+    border-radius: 20px;
+    overflow: hidden;
+    z-index: 10002;
+    /* Darker blur for legibility over any background */
+    backdrop-filter: blur(28px) brightness(0.72) saturate(1.6);
+    -webkit-backdrop-filter: blur(28px) brightness(0.72) saturate(1.6);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.18);
+    animation: lapisDropIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transform-origin: top left;
+}
+
+@keyframes lapisDropIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0)     scale(1);    }
+}
+
+.lapis-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s;
+    letter-spacing: 0.01em;
+}
+.lapis-dropdown-item:first-child { border-radius: 20px 20px 0 0; }
+.lapis-dropdown-item:last-child  { border-radius: 0 0 20px 20px; }
+.lapis-dropdown-item:hover  { background: rgba(255, 255, 255, 0.09); }
+.lapis-dropdown-item.active {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 900;
+}
+.lapis-dropdown-item:not(.active):active { background: rgba(255, 255, 255, 0.14); }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOTTOM TAB BAR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lapis-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+    z-index: 7000;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(22px) saturate(1.4);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+}
+
+.lapis-nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    min-width: 64px;
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.025em;
+    color: inherit;
+    text-decoration: none;
+    opacity: 0.38;
+    border-radius: 16px;
+    transition: opacity 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+                filter  0.26s ease,
+                color   0.26s ease;
+}
+
+/* Lucide icon inside the tab */
+.lapis-nav-tab svg,
+.lapis-nav-tab [data-lucide] {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    transition: transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.lapis-nav-tab.active {
+    opacity: 1;
+    color: var(--primary);
+    transform: translateY(-5px);
+    /* Active glow on the icon */
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.50));
+}
+.lapis-nav-tab.active svg,
+.lapis-nav-tab.active [data-lucide] {
+    transform: scale(1.14);
+}
+.lapis-nav-tab:not(.active):active {
+    opacity: 0.65;
+    transform: scale(0.93);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLASS MODAL — "Medal" Shell System
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Backdrop — full-screen overlay, hidden by default */
+.lapis-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    display: none; /* opened by LapisModal.open() which sets display:flex */
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.52);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    /* Fade-in for backdrop itself */
+    animation: lapisBackdropIn 0.22s ease both;
+}
+@keyframes lapisBackdropIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Shell — slides up from the bottom edge */
+.lapis-modal-shell {
+    position: relative;
+    z-index: 9001;
+    width: 92%;
+    max-width: 440px;
+    max-height: 88dvh;
+    border-radius: 2.5rem 2.5rem 0 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    padding: 28px 24px 44px;
+    /* Glassmorphism surface — inherits color from body theme */
+    backdrop-filter: blur(28px) brightness(1.1) saturate(1.5);
+    -webkit-backdrop-filter: blur(28px) brightness(1.1) saturate(1.5);
+    /* Slide-up + scale entry animation */
+    animation: lapisShellUp 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.lapis-modal-shell::-webkit-scrollbar { display: none; }
+
+@keyframes lapisShellUp {
+    from { transform: translateY(56px) scale(0.96); opacity: 0; }
+    to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* ── Centred dialog variant ────────────────────────────────────────────────
+   Add .centered to the backdrop for alerts, confirms, or small forms.      */
+.lapis-modal-backdrop.centered {
+    align-items: center;
+    padding: 24px;
+}
+.lapis-modal-backdrop.centered .lapis-modal-shell {
+    border-radius: 2.5rem;
+    animation: lapisShellScale 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes lapisShellScale {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+}
+
+/* Shell handle bar (decorative) */
+.lapis-modal-shell::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.22);
+    margin: -12px auto 20px;
+}
+.theme-light-mode .lapis-modal-shell::before,
+body.theme-light    .lapis-modal-shell::before,
+body.theme-cherry   .lapis-modal-shell::before,
+body.theme-sky      .lapis-modal-shell::before,
+body.theme-seaside  .lapis-modal-shell::before,
+body.theme-mapleavenue .lapis-modal-shell::before,
+body.theme-waterfall   .lapis-modal-shell::before {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+/* ── Shell sections ──────────────────────────────────────────────────────── */
+
+.lapis-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.lapis-modal-title {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+}
+.lapis-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    opacity: 0.35;
+    transition: opacity 0.2s, transform 0.2s;
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-family: inherit;
+}
+.lapis-modal-close:hover  { opacity: 0.75; }
+.lapis-modal-close:active { opacity: 1; transform: scale(0.88); }
+
+.lapis-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.lapis-modal-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+}
+.lapis-modal-footer button {
+    flex: 1;
+    padding: 14px 12px;
+    border-radius: 18px;
+    font-size: 13px;
+    font-weight: 900;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.18s, opacity 0.18s;
+    border: none;
+}
+.lapis-modal-footer button:active { transform: scale(0.96); }
+
+.lapis-btn-primary {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+}
+.lapis-btn-primary:hover { opacity: 0.9; }
+
+.lapis-btn-secondary {
+    background: transparent;
+    border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
+    color: inherit;
+    opacity: 0.58;
+}
+.lapis-btn-secondary:hover { opacity: 0.9; }
+
+/* Light-mode border adjustment for secondary button */
+body.theme-light   .lapis-btn-secondary,
+body.theme-cherry  .lapis-btn-secondary,
+body.theme-sky     .lapis-btn-secondary,
+body.theme-seaside .lapis-btn-secondary {
+    border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DRUM-ROLL WHEEL PICKERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lapis-picker-wrap {
+    position: relative;
+    height: 220px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.lapis-picker-inner {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    height: 100%;
+    padding: 0 4px;
+    box-sizing: border-box;
+}
+
+/* Individual scrollable column */
+.lapis-picker-slot {
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.04);
+}
+.lapis-picker-slot::-webkit-scrollbar { display: none; }
+
+/* Dead-zone spacers (1.5 × ITEM_H so first/last item can centre) */
+.lapis-picker-spacer {
+    height: 66px;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+/* Individual row inside a column */
+.lapis-picker-item {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    scroll-snap-align: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: opacity  0.12s ease,
+                color    0.12s ease,
+                transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1),
+                font-size 0.12s ease;
+    opacity: 0.30;
+    letter-spacing: -0.01em;
+}
+.lapis-picker-item:active { opacity: 0.55; }
+
+/* Centred / active row */
+.lapis-picker-active {
+    opacity: 1 !important;
+    color: var(--primary) !important;
+    transform: scale(1.10) !important;
+    font-size: 17px !important;
+    font-weight: 900 !important;
+}
+
+/* Selection indicator line (straddles the centre row) */
+.lapis-picker-line {
+    position: absolute;
+    top: calc(50% - 22px);
+    left: 6px;
+    right: 6px;
+    height: 44px;
+    border-top:    1.5px solid rgba(59, 130, 246, 0.38);
+    border-bottom: 1.5px solid rgba(59, 130, 246, 0.38);
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.055);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Top fade mask — dark themes */
+.lapis-picker-mask-top,
+.lapis-picker-mask-bot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 72px;
+    pointer-events: none;
+    z-index: 3;
+}
+.lapis-picker-mask-top {
+    top: 0;
+    background: linear-gradient(to bottom,
+        rgba(20, 20, 30, 0.82)  0%,
+        rgba(20, 20, 30, 0.30)  55%,
+        transparent             100%);
+}
+.lapis-picker-mask-bot {
+    bottom: 0;
+    background: linear-gradient(to top,
+        rgba(20, 20, 30, 0.82)  0%,
+        rgba(20, 20, 30, 0.30)  55%,
+        transparent             100%);
+}
+
+/* Light-theme masks — fade to a warm white instead of near-black */
+body.theme-light    .lapis-picker-mask-top,
+body.theme-cherry   .lapis-picker-mask-top,
+body.theme-sky      .lapis-picker-mask-top,
+body.theme-seaside  .lapis-picker-mask-top,
+body.theme-sunset   .lapis-picker-mask-top,
+body.theme-mapleavenue .lapis-picker-mask-top,
+body.theme-waterfall   .lapis-picker-mask-top {
+    background: linear-gradient(to bottom,
+        rgba(240, 244, 255, 0.88) 0%,
+        rgba(240, 244, 255, 0.28) 55%,
+        transparent               100%);
+}
+body.theme-light    .lapis-picker-mask-bot,
+body.theme-cherry   .lapis-picker-mask-bot,
+body.theme-sky      .lapis-picker-mask-bot,
+body.theme-seaside  .lapis-picker-mask-bot,
+body.theme-sunset   .lapis-picker-mask-bot,
+body.theme-mapleavenue .lapis-picker-mask-bot,
+body.theme-waterfall   .lapis-picker-mask-bot {
+    background: linear-gradient(to top,
+        rgba(240, 244, 255, 0.88) 0%,
+        rgba(240, 244, 255, 0.28) 55%,
+        transparent               100%);
+}
+
+/* Divider glyph between wheel columns (e.g. "/" or ":") */
+.lapis-picker-divider {
+    font-size: 22px;
+    font-weight: 900;
+    opacity: 0.38;
+    flex-shrink: 0;
+    user-select: none;
+    z-index: 4;
+    padding: 0 2px;
+    letter-spacing: 0;
+}
