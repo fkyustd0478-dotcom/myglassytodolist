@@ -91,12 +91,24 @@ body.theme-ferriswheel .lapis-nav-capsule {
     border-radius: 20px;
     overflow: hidden;
     z-index: 10002;
-    /* Darker blur for legibility over any background */
-    backdrop-filter: blur(28px) brightness(0.72) saturate(1.6);
-    -webkit-backdrop-filter: blur(28px) brightness(0.72) saturate(1.6);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.18);
+    /* Solid opaque background — always legible over complex content */
+    background: #1a1f2e;
+    color: #ffffff;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.22);
     animation: lapisDropIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
     transform-origin: top left;
+}
+/* Light-theme solid dropdown */
+body.theme-light       .lapis-dropdown,
+body.theme-cherry      .lapis-dropdown,
+body.theme-sky         .lapis-dropdown,
+body.theme-seaside     .lapis-dropdown,
+body.theme-sunset      .lapis-dropdown,
+body.theme-mapleavenue .lapis-dropdown,
+body.theme-waterfall   .lapis-dropdown {
+    background: #f0f4ff;
+    color: #1a1a1a;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 @keyframes lapisDropIn {
@@ -119,13 +131,29 @@ body.theme-ferriswheel .lapis-nav-capsule {
 }
 .lapis-dropdown-item:first-child { border-radius: 20px 20px 0 0; }
 .lapis-dropdown-item:last-child  { border-radius: 0 0 20px 20px; }
-.lapis-dropdown-item:hover  { background: rgba(255, 255, 255, 0.09); }
+.lapis-dropdown-item:hover  { background: rgba(255, 255, 255, 0.10); }
 .lapis-dropdown-item.active {
     background: var(--primary);
     color: #fff;
     font-weight: 900;
 }
-.lapis-dropdown-item:not(.active):active { background: rgba(255, 255, 255, 0.14); }
+.lapis-dropdown-item:not(.active):active { background: rgba(255, 255, 255, 0.16); }
+
+/* Light-theme item states */
+body.theme-light       .lapis-dropdown-item:hover,
+body.theme-cherry      .lapis-dropdown-item:hover,
+body.theme-sky         .lapis-dropdown-item:hover,
+body.theme-seaside     .lapis-dropdown-item:hover,
+body.theme-sunset      .lapis-dropdown-item:hover,
+body.theme-mapleavenue .lapis-dropdown-item:hover,
+body.theme-waterfall   .lapis-dropdown-item:hover { background: rgba(0, 0, 0, 0.05); }
+body.theme-light       .lapis-dropdown-item:not(.active):active,
+body.theme-cherry      .lapis-dropdown-item:not(.active):active,
+body.theme-sky         .lapis-dropdown-item:not(.active):active,
+body.theme-seaside     .lapis-dropdown-item:not(.active):active,
+body.theme-sunset      .lapis-dropdown-item:not(.active):active,
+body.theme-mapleavenue .lapis-dropdown-item:not(.active):active,
+body.theme-waterfall   .lapis-dropdown-item:not(.active):active { background: rgba(0, 0, 0, 0.09); }
 
 
 /* ═══════════════════════════════════════════════════════════════════════════

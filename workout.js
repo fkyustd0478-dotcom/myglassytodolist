@@ -806,6 +806,10 @@ window.addEventListener('DOMContentLoaded', () => {
             watch(activeTab, () => nextTick(() => lucide.createIcons()));
             watch(isAnyModalOpen, () => nextTick(() => lucide.createIcons()));
             watch(() => libData.exercises.length, () => nextTick(() => lucide.createIcons()));
+            // Re-render icons when log exercises change (new exercise cards appear in log modal)
+            watch(() => logExercises.value.length, () => nextTick(() => lucide.createIcons()));
+            // Re-render icons when the inline exercise picker list is filtered
+            watch(filteredPick, () => nextTick(() => lucide.createIcons()));
             watch(() => navSettings.lang, () => {
                 currentPageTitle.value = navSettings.lang === 'zh' ? '琉璃健身' : 'Glassy Workout';
                 nextTick(() => lucide.createIcons());
