@@ -33,6 +33,57 @@ const _catLabels = {
     Cardio: '有氧', Back: '背部', Chest: '胸部', Shoulders: '肩部', Arms: '手臂'
 };
 
+const CATEGORIES_KEY = 'lapis_workout_categories';
+
+const _catColors = [
+    { background:'rgba(239,68,68,0.18)',  color:'#ef4444', border:'1px solid rgba(239,68,68,0.35)'   },
+    { background:'rgba(59,130,246,0.18)', color:'#3b82f6', border:'1px solid rgba(59,130,246,0.35)'  },
+    { background:'rgba(168,85,247,0.18)', color:'#a855f7', border:'1px solid rgba(168,85,247,0.35)'  },
+    { background:'rgba(245,158,11,0.18)', color:'#f59e0b', border:'1px solid rgba(245,158,11,0.35)'  },
+    { background:'rgba(34,197,94,0.18)',  color:'#22c55e', border:'1px solid rgba(34,197,94,0.35)'   },
+    { background:'rgba(20,184,166,0.18)', color:'#14b8a6', border:'1px solid rgba(20,184,166,0.35)'  },
+    { background:'rgba(249,115,22,0.18)', color:'#f97316', border:'1px solid rgba(249,115,22,0.35)'  },
+    { background:'rgba(236,72,153,0.18)', color:'#ec4899', border:'1px solid rgba(236,72,153,0.35)'  },
+];
+
+const _defaultCategoryTree = () => [
+    { id: _wUid(), name: 'Push', nameZh: '推', children: [
+        { id: _wUid(), name: 'Chest', nameZh: '胸部', children: [
+            { id: _wUid(), name: 'Upper Chest', nameZh: '上胸', children: [] },
+            { id: _wUid(), name: 'Lower Chest', nameZh: '下胸', children: [] },
+        ]},
+        { id: _wUid(), name: 'Shoulders', nameZh: '肩部', children: [
+            { id: _wUid(), name: 'Front Delt', nameZh: '前三角', children: [] },
+            { id: _wUid(), name: 'Side Delt',  nameZh: '側三角', children: [] },
+        ]},
+        { id: _wUid(), name: 'Triceps', nameZh: '三頭肌', children: [] },
+    ]},
+    { id: _wUid(), name: 'Pull', nameZh: '拉', children: [
+        { id: _wUid(), name: 'Back', nameZh: '背部', children: [
+            { id: _wUid(), name: 'Upper Back', nameZh: '上背', children: [] },
+            { id: _wUid(), name: 'Lower Back', nameZh: '下背', children: [] },
+        ]},
+        { id: _wUid(), name: 'Biceps', nameZh: '二頭肌', children: [] },
+    ]},
+    { id: _wUid(), name: 'Legs', nameZh: '腿部', children: [
+        { id: _wUid(), name: 'Quads',      nameZh: '股四頭肌', children: [] },
+        { id: _wUid(), name: 'Hamstrings', nameZh: '大腿後側', children: [] },
+        { id: _wUid(), name: 'Glutes',     nameZh: '臀部',     children: [] },
+        { id: _wUid(), name: 'Calves',     nameZh: '小腿',     children: [] },
+    ]},
+    { id: _wUid(), name: 'Core',   nameZh: '核心', children: [
+        { id: _wUid(), name: 'Abs', nameZh: '腹部', children: [] },
+    ]},
+    { id: _wUid(), name: 'Cardio', nameZh: '有氧', children: [
+        { id: _wUid(), name: 'Running', nameZh: '跑步', children: [] },
+        { id: _wUid(), name: 'Cycling', nameZh: '騎車', children: [] },
+    ]},
+    { id: _wUid(), name: 'Arms',   nameZh: '手臂', children: [
+        { id: _wUid(), name: 'Bicep Curls', nameZh: '二頭彎舉', children: [] },
+        { id: _wUid(), name: 'Tricep Exts', nameZh: '三頭伸展', children: [] },
+    ]},
+];
+
 // ── Translations ──────────────────────────────────────────────────────────
 const _wT = {
     zh: {
@@ -59,6 +110,8 @@ const _wT = {
         unit: '單位',
         about: '關於', version: '版本 1.0',
         manageCategories: '管理類別',
+        addL1: '新增主分支', addL2: '新增子分支', addL3: '新增末端',
+        catName: '類別名稱（英文）', catNameZh: '類別名稱（中文）',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
@@ -84,6 +137,8 @@ const _wT = {
         unit: 'Unit',
         about: 'About', version: 'Version 1.0',
         manageCategories: 'Manage Categories',
+        addL1: 'Add Branch', addL2: 'Add Sub-branch', addL3: 'Add Leaf',
+        catName: 'Category Name (EN)', catNameZh: 'Category Name (ZH)',
     }
 };
 
@@ -109,8 +164,9 @@ window.addEventListener('DOMContentLoaded', () => {
             // ── Storage ───────────────────────────────────────────────────
             const STORAGE_KEY = 'lapis_workout';
 
-            const wData  = reactive({ categories: [], logs: [] });
+            const wData   = reactive({ categories: [], logs: [] });
             const libData = reactive({ exercises: [] });
+            const catTree = ref([]);
 
             const persist = () => {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -133,6 +189,14 @@ window.addEventListener('DOMContentLoaded', () => {
                     wData.logs       = def.logs;
                     persist();
                 }
+            };
+
+            const catsPersist = () => localStorage.setItem(CATEGORIES_KEY, JSON.stringify(catTree.value));
+
+            const hydrateCats = () => {
+                const raw = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || 'null');
+                catTree.value = (raw && Array.isArray(raw) && raw.length > 0) ? raw : _defaultCategoryTree();
+                if (!raw) catsPersist();
             };
 
             const hydrateLib = () => {
@@ -347,7 +411,10 @@ window.addEventListener('DOMContentLoaded', () => {
                     e.name.toLowerCase().includes(q) ||
                     (e.nameZh && e.nameZh.includes(q))
                 );
-                if (pickCategory.value) list = list.filter(e => e.categories.includes(pickCategory.value));
+                if (pickCategory.value) {
+                    const sub = _subtreeNames(pickCategory.value);
+                    list = list.filter(e => (e.categories || []).some(c => sub.includes(c)));
+                }
                 return list;
             });
 
@@ -379,7 +446,10 @@ window.addEventListener('DOMContentLoaded', () => {
                     e.name.toLowerCase().includes(q) ||
                     (e.nameZh && e.nameZh.includes(q))
                 );
-                if (libCategory.value) list = list.filter(e => e.categories.includes(libCategory.value));
+                if (libCategory.value) {
+                    const sub = _subtreeNames(libCategory.value);
+                    list = list.filter(e => (e.categories || []).some(c => sub.includes(c)));
+                }
                 return list;
             });
 
@@ -440,6 +510,106 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (idx >= 0) libData.exercises.splice(idx, 1);
                 libPersist();
             };
+
+            // ── CATEGORY MANAGEMENT ───────────────────────────────────────
+            const showCatMgr = ref(false);
+            const catMgrMode = ref('view'); // 'view' | 'add' | 'edit'
+            const catMgrForm = reactive({ name: '', nameZh: '', parentName: null, level: 1, editOldName: null });
+
+            const catMgrAdd = (parentName, level) => {
+                catMgrForm.name = ''; catMgrForm.nameZh = '';
+                catMgrForm.parentName = parentName; catMgrForm.level = level;
+                catMgrForm.editOldName = null;
+                catMgrMode.value = 'add';
+            };
+            const catMgrEdit = (node) => {
+                catMgrForm.editOldName = node.name;
+                catMgrForm.name        = node.name;
+                catMgrForm.nameZh      = node.nameZh || '';
+                catMgrMode.value       = 'edit';
+            };
+            const catMgrSave = () => {
+                const name = catMgrForm.name.trim();
+                if (!name) return;
+                if (catMgrMode.value === 'edit') {
+                    const found = _findByName(catMgrForm.editOldName);
+                    if (found) {
+                        const old = found.node.name;
+                        found.node.name   = name;
+                        found.node.nameZh = catMgrForm.nameZh.trim();
+                        // Rename in all exercises
+                        libData.exercises.forEach(ex => {
+                            const ci = (ex.categories || []).indexOf(old);
+                            if (ci >= 0) ex.categories.splice(ci, 1, name);
+                        });
+                        libPersist();
+                    }
+                } else {
+                    const newNode = { id: _wUid(), name, nameZh: catMgrForm.nameZh.trim(), children: [] };
+                    if (catMgrForm.level === 1) {
+                        catTree.value.push(newNode);
+                    } else {
+                        const found = _findByName(catMgrForm.parentName);
+                        if (found) found.node.children.push(newNode);
+                    }
+                }
+                catsPersist();
+                catMgrMode.value = 'view';
+                catMgrForm.name = ''; catMgrForm.nameZh = ''; catMgrForm.editOldName = null;
+                nextTick(() => lucide.createIcons());
+            };
+            const catMgrDelete = (node, parentNode) => {
+                if (!confirm(t.value.deleteConfirm)) return;
+                const arr = parentNode ? (parentNode.children || []) : catTree.value;
+                const idx = arr.findIndex(n => n.name === node.name);
+                if (idx >= 0) arr.splice(idx, 1);
+                catsPersist();
+            };
+
+            // ── EXERCISE FORM — cascading selector ────────────────────────
+            const exCatSel = reactive({ l1: null, l2: null, l3: null });
+
+            const exCatL2s = computed(() => {
+                if (!exCatSel.l1) return [];
+                const n = catTree.value.find(l => l.name === exCatSel.l1);
+                return n ? (n.children || []) : [];
+            });
+            const exCatL3s = computed(() => {
+                if (!exCatSel.l2) return [];
+                for (const l1 of catTree.value) {
+                    const n = (l1.children || []).find(l => l.name === exCatSel.l2);
+                    if (n) return n.children || [];
+                }
+                return [];
+            });
+            const addCatToForm = () => {
+                const name = exCatSel.l3 || exCatSel.l2 || exCatSel.l1;
+                if (!name || exForm.categories.includes(name)) return;
+                exForm.categories.push(name);
+                exCatSel.l1 = null; exCatSel.l2 = null; exCatSel.l3 = null;
+            };
+            const removeCatFromForm = (name) => {
+                const idx = exForm.categories.indexOf(name);
+                if (idx >= 0) exForm.categories.splice(idx, 1);
+            };
+
+            // ── GROUPED EXERCISE ROWS ─────────────────────────────────────
+            const exGroupedRows = computed(() => {
+                const rows = [], shown = new Set(), filtered = filteredLib.value;
+                catTree.value.forEach((l1, ci) => {
+                    const sub = [l1.name, ...(l1.children || []).flatMap(l2 => [l2.name, ...(l2.children || []).map(l3 => l3.name)])];
+                    const exes = filtered.filter(ex => !shown.has(ex.id) && (ex.categories || []).some(c => sub.includes(c)));
+                    if (!exes.length) return;
+                    rows.push({ type: 'hdr', node: l1, ci });
+                    exes.forEach(ex => { shown.add(ex.id); rows.push({ type: 'ex', ex, ci }); });
+                });
+                const uncats = filtered.filter(ex => !shown.has(ex.id));
+                if (uncats.length) {
+                    rows.push({ type: 'hdr', node: { name: 'Other', nameZh: '其他' }, ci: -1 });
+                    uncats.forEach(ex => rows.push({ type: 'ex', ex, ci: -1 }));
+                }
+                return rows;
+            });
 
             // ── RECORDS TAB ───────────────────────────────────────────────
             const sortedLogs    = computed(() =>
@@ -521,15 +691,16 @@ window.addEventListener('DOMContentLoaded', () => {
             const clearAllData = () => {
                 localStorage.removeItem(STORAGE_KEY);
                 localStorage.removeItem(LIBRARY_KEY);
+                localStorage.removeItem(CATEGORIES_KEY);
                 const def = _defaultWorkoutData();
                 wData.categories  = def.categories;
                 wData.logs        = def.logs;
                 libData.exercises = _defaultExercises();
+                catTree.value     = _defaultCategoryTree();
                 logExercises.value     = [];
                 logDate.value          = _todayStr();
                 showClearConfirm.value = false;
-                persist();
-                libPersist();
+                persist(); libPersist(); catsPersist();
             };
 
             const toggleLang = () => {
@@ -542,11 +713,62 @@ window.addEventListener('DOMContentLoaded', () => {
                 showDateTimePicker.value ||
                 showPickModal.value      ||
                 showExModal.value        ||
+                showCatMgr.value         ||
                 showClearConfirm.value
             );
 
             // ── Display helpers ───────────────────────────────────────────
-            const catLabel  = (cat) => navSettings.lang !== 'zh' ? cat : (_catLabels[cat] || cat);
+            const _nodeName = (n) => (navSettings.lang === 'zh' && n.nameZh) ? n.nameZh : n.name;
+
+            // Safe 3-level tree lookup — no recursion
+            const _findByName = (name) => {
+                for (const l1 of catTree.value) {
+                    if (l1.name === name) return { node: l1, level: 1, parent: null };
+                    for (const l2 of (l1.children || [])) {
+                        if (l2.name === name) return { node: l2, level: 2, parent: l1 };
+                        for (const l3 of (l2.children || [])) {
+                            if (l3.name === name) return { node: l3, level: 3, parent: l2 };
+                        }
+                    }
+                }
+                return null;
+            };
+
+            // Returns all names in the subtree rooted at `name` (max depth 3)
+            const _subtreeNames = (name) => {
+                for (const l1 of catTree.value) {
+                    if (l1.name === name) {
+                        const ns = [l1.name];
+                        (l1.children || []).forEach(l2 => { ns.push(l2.name); (l2.children || []).forEach(l3 => ns.push(l3.name)); });
+                        return ns;
+                    }
+                    for (const l2 of (l1.children || [])) {
+                        if (l2.name === name) {
+                            const ns = [l2.name]; (l2.children || []).forEach(l3 => ns.push(l3.name)); return ns;
+                        }
+                        for (const l3 of (l2.children || [])) {
+                            if (l3.name === name) return [l3.name];
+                        }
+                    }
+                }
+                return [name];
+            };
+
+            const catLabel = (name) => {
+                if (navSettings.lang !== 'zh') return name;
+                const found = _findByName(name);
+                return found ? (found.node.nameZh || name) : (_catLabels[name] || name);
+            };
+
+            const catPillStyle = (name) => {
+                for (let i = 0; i < catTree.value.length; i++) {
+                    const l1 = catTree.value[i];
+                    const sub = [l1.name, ...(l1.children || []).flatMap(l2 => [l2.name, ...(l2.children || []).map(l3 => l3.name)])];
+                    if (sub.includes(name)) return _catColors[i % _catColors.length];
+                }
+                return _catColors[0];
+            };
+
             const unitLabel = (ex)  => ex.type === 'duration'
                 ? t.value.min
                 : `${ex.preferredUnit || 'kg'}/${t.value.sets_unit}`;
@@ -554,6 +776,7 @@ window.addEventListener('DOMContentLoaded', () => {
             // ── Lifecycle ─────────────────────────────────────────────────
             onMounted(() => {
                 hydrate();
+                hydrateCats();
                 hydrateLib();
                 // Load today's log if exists
                 const existing = wData.logs.find(l => l.date === logDate.value);
@@ -570,6 +793,7 @@ window.addEventListener('DOMContentLoaded', () => {
             watch(navDropdownOpen, () => nextTick(() => lucide.createIcons()));
             watch(activeTab, () => nextTick(() => lucide.createIcons()));
             watch(isAnyModalOpen, () => nextTick(() => lucide.createIcons()));
+            watch(() => libData.exercises.length, () => nextTick(() => lucide.createIcons()));
             watch(() => navSettings.lang, () => {
                 currentPageTitle.value = navSettings.lang === 'zh' ? '琉璃健身' : 'Glassy Workout';
                 nextTick(() => lucide.createIcons());
@@ -603,7 +827,14 @@ window.addEventListener('DOMContentLoaded', () => {
                 libData, libSearch, libCategory, filteredLib,
                 showExModal, isEditEx, exForm, openAddEx, openEditEx,
                 toggleExCat, saveEx, deleteEx,
-                catLabel, unitLabel,
+                catLabel, catPillStyle, unitLabel,
+                // category tree
+                catTree,
+                showCatMgr, catMgrMode, catMgrForm, catMgrAdd, catMgrEdit, catMgrSave, catMgrDelete,
+                // exercise form cascading selector
+                exCatSel, exCatL2s, exCatL3s, addCatToForm, removeCatFromForm,
+                // grouped rows
+                exGroupedRows,
                 // records tab
                 sortedLogs, expandedLogId, toggleExpand, deleteLog,
                 logSummary, logVolume, exDisplayName,

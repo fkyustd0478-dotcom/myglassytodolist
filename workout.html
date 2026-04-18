@@ -97,48 +97,62 @@
             </button>
         </div>
 
-        <!-- Category filter chips -->
-        <div class="cat-filter-row mb-4">
-            <button @click="libCategory = ''"
-                    class="cat-filter-pill glass" :style="glassStyle"
-                    :class="{ active: libCategory === '' }">{{ t.all }}</button>
-            <button v-for="cat in wData.categories" :key="cat"
-                    @click="libCategory = cat"
-                    class="cat-filter-pill glass" :style="glassStyle"
-                    :class="{ active: libCategory === cat }">{{ catLabel(cat) }}</button>
+        <!-- Category filter chips + manage button -->
+        <div class="flex items-start gap-2 mb-4">
+            <div class="cat-filter-row flex-1">
+                <button @click="libCategory = ''"
+                        class="cat-filter-pill glass" :style="glassStyle"
+                        :class="{ active: libCategory === '' }">{{ t.all }}</button>
+                <button v-for="l1 in catTree" :key="l1.name"
+                        @click="libCategory = l1.name"
+                        class="cat-filter-pill glass" :style="catPillStyle(l1.name)"
+                        :class="{ active: libCategory === l1.name }">{{ catLabel(l1.name) }}</button>
+            </div>
+            <button @click="showCatMgr = true"
+                    class="glass flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center opacity-60 active:opacity-100 transition-opacity mt-0.5"
+                    :style="glassStyle" :title="t.manageCategories">
+                <i data-lucide="list-tree" class="w-4 h-4"></i>
+            </button>
         </div>
 
-        <!-- Exercise list -->
-        <div v-if="filteredLib.length > 0" class="space-y-2">
-            <div v-for="ex in filteredLib" :key="ex.id"
-                 class="lib-row glass flex items-center gap-3" :style="glassStyle">
-                <!-- Type icon -->
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                     style="background:rgba(59,130,246,0.15)">
-                    <i :data-lucide="ex.type === 'duration' ? 'timer' : 'dumbbell'"
-                       class="w-5 h-5 text-blue-400"></i>
+        <!-- Hierarchical exercise list (grouped by L1 category) -->
+        <div v-if="exGroupedRows.length > 0">
+            <template v-for="row in exGroupedRows" :key="row.type + (row.node ? row.node.name : '') + (row.ex ? row.ex.id : '')">
+
+                <!-- Section header row -->
+                <div v-if="row.type === 'hdr'"
+                     class="flex items-center gap-2 mt-5 mb-2 first:mt-0">
+                    <span class="category-pill text-xs font-black" :style="row.ci >= 0 ? catPillStyle(row.node.name) : {}">
+                        {{ catLabel(row.node.name) }}
+                    </span>
+                    <div class="flex-1 h-px opacity-15" style="background:currentColor"></div>
                 </div>
-                <!-- Name + badges -->
-                <div class="flex-1 min-w-0">
-                    <p class="font-bold text-sm truncate">{{ exDisplayName(ex) }}</p>
-                    <div class="flex items-center gap-1 mt-1 flex-wrap">
-                        <span v-for="cat in ex.categories" :key="cat"
-                              class="category-pill" :data-cat="cat">{{ catLabel(cat) }}</span>
-                        <span class="type-badge">{{ unitLabel(ex) }}</span>
+
+                <!-- Exercise card -->
+                <div v-else class="lib-row glass flex items-center gap-3 mb-2" :style="glassStyle">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                         :style="row.ci >= 0 ? catPillStyle(catTree[row.ci] && catTree[row.ci].name) : { background:'rgba(100,116,139,0.15)' }">
+                        <i :data-lucide="row.ex.type === 'duration' ? 'timer' : 'dumbbell'" class="w-5 h-5"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-sm truncate">{{ exDisplayName(row.ex) }}</p>
+                        <div class="flex items-center gap-1 mt-1 flex-wrap">
+                            <span v-for="cat in row.ex.categories" :key="cat"
+                                  class="category-pill" :style="catPillStyle(cat)">{{ catLabel(cat) }}</span>
+                            <span class="type-badge">{{ unitLabel(row.ex) }}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button @click="openEditEx(row.ex)" class="btn-action btn-edit w-9 h-9 rounded-xl">
+                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                        </button>
+                        <button @click="deleteEx(row.ex.id)" class="btn-action btn-delete w-9 h-9 rounded-xl">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
                     </div>
                 </div>
-                <!-- Edit / Delete -->
-                <div class="flex gap-2 flex-shrink-0">
-                    <button @click="openEditEx(ex)"
-                            class="btn-action btn-edit w-9 h-9 rounded-xl">
-                        <i data-lucide="pencil" class="w-4 h-4"></i>
-                    </button>
-                    <button @click="deleteEx(ex.id)"
-                            class="btn-action btn-delete w-9 h-9 rounded-xl">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            </div>
+
+            </template>
         </div>
 
         <!-- Empty state -->
@@ -206,14 +220,52 @@
                     </div>
                 </transition>
 
-                <!-- Category multi-select -->
-                <div class="space-y-2">
+                <!-- Category — 3-level cascading selector (no recursion) -->
+                <div class="space-y-3">
                     <p class="section-label">{{ t.selectCategories }}</p>
-                    <div class="cat-select-grid">
-                        <div v-for="cat in wData.categories" :key="cat"
-                             @click="toggleExCat(cat)"
-                             class="cat-select-pill"
-                             :class="{ selected: exForm.categories.includes(cat) }">{{ catLabel(cat) }}</div>
+
+                    <!-- L1 chips -->
+                    <div class="flex flex-wrap gap-2">
+                        <div v-for="l1 in catTree" :key="l1.name"
+                             @click="exCatSel.l1 = l1.name; exCatSel.l2 = null; exCatSel.l3 = null"
+                             class="cat-filter-pill cursor-pointer transition-all active:scale-95"
+                             :style="catPillStyle(l1.name)"
+                             :class="{ active: exCatSel.l1 === l1.name }">{{ catLabel(l1.name) }}</div>
+                    </div>
+
+                    <!-- L2 chips — shown only when L1 selected and has children -->
+                    <div v-if="exCatL2s.length" class="flex flex-wrap gap-2 pl-3 border-l-2 border-white/15">
+                        <div v-for="l2 in exCatL2s" :key="l2.name"
+                             @click="exCatSel.l2 = l2.name; exCatSel.l3 = null"
+                             class="cat-filter-pill cursor-pointer transition-all active:scale-95"
+                             :style="catPillStyle(l2.name)"
+                             :class="{ active: exCatSel.l2 === l2.name }">{{ catLabel(l2.name) }}</div>
+                    </div>
+
+                    <!-- L3 chips — shown only when L2 selected and has children -->
+                    <div v-if="exCatL3s.length" class="flex flex-wrap gap-2 pl-6 border-l-2 border-white/10">
+                        <div v-for="l3 in exCatL3s" :key="l3.name"
+                             @click="exCatSel.l3 = l3.name"
+                             class="cat-filter-pill cursor-pointer transition-all active:scale-95"
+                             :style="catPillStyle(l3.name)"
+                             :class="{ active: exCatSel.l3 === l3.name }">{{ catLabel(l3.name) }}</div>
+                    </div>
+
+                    <!-- Add selected path button -->
+                    <button v-if="exCatSel.l1" @click="addCatToForm"
+                            class="px-4 py-2 rounded-xl font-black text-xs border active:scale-95 transition-transform"
+                            style="background:rgba(59,130,246,0.2);color:#3b82f6;border-color:rgba(59,130,246,0.4)">
+                        + {{ catLabel(exCatSel.l3 || exCatSel.l2 || exCatSel.l1) }}
+                    </button>
+
+                    <!-- Selected tags (click to remove) -->
+                    <div v-if="exForm.categories.length" class="flex flex-wrap gap-2">
+                        <span v-for="cat in exForm.categories" :key="cat"
+                              @click="removeCatFromForm(cat)"
+                              class="category-pill cursor-pointer active:scale-90 transition-transform"
+                              :style="catPillStyle(cat)">
+                            {{ catLabel(cat) }} ×
+                        </span>
                     </div>
                 </div>
 
@@ -263,6 +315,110 @@
             <span>{{ t.tabSettings }}</span>
         </button>
     </nav>
+
+    <!-- ── Category Management Modal (3-level nested v-for — no recursion) ─── -->
+    <transition name="slide-up">
+        <div v-show="showCatMgr"
+             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
+             @click.self="showCatMgr = false">
+            <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10 modal-content-level-4"
+                 :style="glassStyle" @click.stop>
+
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-black">{{ t.manageCategories }}</h2>
+                    <button @click="showCatMgr = false" class="opacity-40 active:opacity-70 transition-opacity">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Inline add/edit form -->
+                <div v-if="catMgrMode !== 'view'" class="glass rounded-2xl p-4 mb-4 space-y-3" :style="glassStyle">
+                    <input v-model="catMgrForm.name" :placeholder="t.catName"
+                           class="w-full bg-transparent outline-none text-sm font-bold border-b border-white/20 pb-2">
+                    <input v-model="catMgrForm.nameZh" :placeholder="t.catNameZh"
+                           class="w-full bg-transparent outline-none text-sm font-bold border-b border-white/20 pb-2">
+                    <div class="flex gap-2 pt-1">
+                        <button @click="catMgrSave"
+                                class="flex-1 py-2 rounded-xl bg-blue-600 text-white font-black text-xs">
+                            {{ t.save }}
+                        </button>
+                        <button @click="catMgrMode = 'view'"
+                                class="flex-1 py-2 rounded-xl glass font-black text-xs opacity-60" :style="glassStyle">
+                            {{ t.cancel }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ── 3-level tree (Level 1 → Level 2 → Level 3) ── no recursion ── -->
+                <div class="space-y-1 max-h-72 overflow-y-auto pr-1">
+
+                    <!-- Level 1 -->
+                    <div v-for="l1 in catTree" :key="l1.name">
+                        <div class="flex items-center gap-1.5 py-2 px-3 rounded-xl mb-0.5"
+                             :style="catPillStyle(l1.name)">
+                            <span class="font-black text-sm flex-1">{{ catLabel(l1.name) }}</span>
+                            <span class="opacity-30 text-[10px] font-mono mr-1">{{ l1.name }}</span>
+                            <button @click="catMgrEdit(l1)" class="opacity-50 hover:opacity-100 active:scale-90 transition-all p-0.5">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button @click="catMgrAdd(l1.name, 2)" class="opacity-50 hover:opacity-100 active:scale-90 transition-all p-0.5">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button @click="catMgrDelete(l1, null)" class="opacity-35 hover:opacity-80 active:scale-90 transition-all p-0.5">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+
+                        <!-- Level 2 -->
+                        <div v-for="l2 in (l1.children || [])" :key="l2.name" class="ml-5">
+                            <div class="flex items-center gap-1.5 py-1.5 px-3 rounded-xl mb-0.5 opacity-85"
+                                 :style="catPillStyle(l2.name)">
+                                <span class="font-bold text-xs flex-1">{{ catLabel(l2.name) }}</span>
+                                <span class="opacity-25 text-[10px] font-mono mr-1">{{ l2.name }}</span>
+                                <button @click="catMgrEdit(l2)" class="opacity-50 hover:opacity-100 active:scale-90 transition-all p-0.5">
+                                    <i data-lucide="pencil" class="w-3 h-3"></i>
+                                </button>
+                                <button @click="catMgrAdd(l2.name, 3)" class="opacity-50 hover:opacity-100 active:scale-90 transition-all p-0.5">
+                                    <i data-lucide="plus" class="w-3 h-3"></i>
+                                </button>
+                                <button @click="catMgrDelete(l2, l1)" class="opacity-35 hover:opacity-80 active:scale-90 transition-all p-0.5">
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+
+                            <!-- Level 3 (no add-child button — max depth reached) -->
+                            <div v-for="l3 in (l2.children || [])" :key="l3.name" class="ml-5">
+                                <div class="flex items-center gap-1.5 py-1 px-3 rounded-xl mb-0.5 opacity-70">
+                                    <span class="font-semibold text-xs flex-1">{{ catLabel(l3.name) }}</span>
+                                    <span class="opacity-20 text-[10px] font-mono mr-1">{{ l3.name }}</span>
+                                    <button @click="catMgrEdit(l3)" class="opacity-50 hover:opacity-100 active:scale-90 transition-all p-0.5">
+                                        <i data-lucide="pencil" class="w-3 h-3"></i>
+                                    </button>
+                                    <button @click="catMgrDelete(l3, l2)" class="opacity-35 hover:opacity-80 active:scale-90 transition-all p-0.5">
+                                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- end Level 3 -->
+
+                        </div>
+                        <!-- end Level 2 -->
+
+                    </div>
+                    <!-- end Level 1 -->
+
+                </div>
+
+                <!-- Add L1 branch button -->
+                <button @click="catMgrAdd(null, 1)"
+                        class="w-full mt-4 py-3 rounded-2xl font-black text-sm border-2 border-dashed opacity-50 active:opacity-80 transition-opacity"
+                        style="border-color:rgba(255,255,255,0.25)">
+                    + {{ t.addL1 }}
+                </button>
+            </div>
+        </div>
+    </transition>
 
     <!-- ── Toast ──────────────────────────────────────────────────────────── -->
     <transition name="fade">
