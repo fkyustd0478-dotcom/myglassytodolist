@@ -1,7 +1,7 @@
 // setting.js — Settings page Vue app v1.2
 // Depends on: storage.js (StorageProvider, ImageDB), nav.js (useNav)
 
-const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+const { createApp, ref, computed, watch, nextTick, onMounted, onUnmounted } = Vue;
 
 createApp({
     setup() {
@@ -40,7 +40,7 @@ createApp({
                 // Tabs
                 tabTheme: 'Theme', tabUser: 'User', tabCalendar: 'Calendar',
                 // Nav items
-                navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings',
+                navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
                 // Theme section
                 theme: 'Theme', system: 'System', light: 'Light', dark: 'Dark',
                 otherThemes: 'Other Themes',
@@ -71,7 +71,7 @@ createApp({
             },
             zh: {
                 tabTheme: '主題設定', tabUser: '使用者頁面', tabCalendar: '行事曆',
-                navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定',
+                navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定', navWorkout: '琉璃健身',
                 theme: '主題', system: '系統', light: '明亮', dark: '深色',
                 otherThemes: '其他主題',
                 cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落',
@@ -221,6 +221,8 @@ createApp({
         });
 
         let _mqCleanup = null;
+
+        watch(navDropdownOpen, () => nextTick(() => { if (window.lucide) lucide.createIcons(); }));
 
         onMounted(async () => {
             if (window.lucide) lucide.createIcons();

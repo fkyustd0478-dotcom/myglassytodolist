@@ -521,6 +521,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            watch(navDropdownOpen, () => nextTick(() => lucide.createIcons()));
             watch(activeTab, () => nextTick(() => lucide.createIcons()));
             watch(isAnyModalOpen, () => nextTick(() => lucide.createIcons()));
             watch(() => navSettings.lang, () => {
