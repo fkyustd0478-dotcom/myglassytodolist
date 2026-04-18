@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Anti-flash: read saved theme before CSS renders -->
+    <script>!function(){try{var d=JSON.parse(localStorage.getItem('todo_settings')||'{}'),t=d.theme||'light';if(t==='system')t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.className='theme-'+t;var dk=['dark','forest','night','torii','starrysky','ferriswheel'];document.documentElement.style.background=dk.indexOf(t)>=0?'#0d1117':'#f0f4ff';}catch(e){}}();</script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>琉璃健身</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="shared_theme.css">
+    <link rel="stylesheet" href="effects.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="workout_style.css">
+
+    <script src="effects.js" defer></script>
+    <script src="storage.js" defer></script>
+    <script src="nav.js" defer></script>
+    <script src="workout.js" defer></script>
+</head>

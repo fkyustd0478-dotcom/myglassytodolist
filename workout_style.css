@@ -1,0 +1,363 @@
+/* workout_style.css — Glassy Workout module styles */
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.workout-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 24px 110px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.workout-main::-webkit-scrollbar { display: none; }
+
+/* ── Exercise Card (log + library) ──────────────────────────────────────── */
+.exercise-card {
+    border-radius: 20px;
+    padding: 16px;
+    backdrop-filter: blur(16px) brightness(0.9);
+    -webkit-backdrop-filter: blur(16px) brightness(0.9);
+}
+
+/* ── Category Pill ──────────────────────────────────────────────────────── */
+.category-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.category-pill[data-cat="Push"],
+.category-pill[data-cat="Chest"]     { background: rgba(239,68,68,0.15);   color: #ef4444; border-color: rgba(239,68,68,0.3); }
+.category-pill[data-cat="Pull"]      { background: rgba(59,130,246,0.15);  color: #3b82f6; border-color: rgba(59,130,246,0.3); }
+.category-pill[data-cat="Legs"]      { background: rgba(168,85,247,0.15);  color: #a855f7; border-color: rgba(168,85,247,0.3); }
+.category-pill[data-cat="Core"]      { background: rgba(245,158,11,0.15);  color: #f59e0b; border-color: rgba(245,158,11,0.3); }
+.category-pill[data-cat="Cardio"]    { background: rgba(34,197,94,0.15);   color: #22c55e; border-color: rgba(34,197,94,0.3); }
+.category-pill[data-cat="Back"]      { background: rgba(20,184,166,0.15);  color: #14b8a6; border-color: rgba(20,184,166,0.3); }
+.category-pill[data-cat="Shoulders"] { background: rgba(249,115,22,0.15);  color: #f97316; border-color: rgba(249,115,22,0.3); }
+.category-pill[data-cat="Arms"]      { background: rgba(236,72,153,0.15);  color: #ec4899; border-color: rgba(236,72,153,0.3); }
+
+/* ── Type Badge ─────────────────────────────────────────────────────────── */
+.type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    background: rgba(168,85,247,0.15);
+    color: #a855f7;
+    border: 1px solid rgba(168,85,247,0.3);
+}
+
+/* ── Sets Table ─────────────────────────────────────────────────────────── */
+.set-header {
+    display: grid;
+    grid-template-columns: 24px 1fr 1fr 36px;
+    gap: 8px;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.4;
+    margin-bottom: 4px;
+    padding: 0 2px;
+    text-align: center;
+}
+.set-row {
+    display: grid;
+    grid-template-columns: 24px 1fr 1fr 36px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.set-num {
+    font-size: 11px;
+    font-weight: 900;
+    opacity: 0.35;
+    text-align: center;
+    line-height: 38px;
+}
+.set-input {
+    border-radius: 10px;
+    padding: 8px 4px;
+    font-size: 15px;
+    font-weight: 800;
+    border: none;
+    outline: none;
+    color: inherit;
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+    -moz-appearance: textfield;
+}
+.set-input::-webkit-outer-spin-button,
+.set-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.set-input:focus { box-shadow: 0 0 0 2px rgba(59,130,246,0.5); }
+
+.set-done-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    opacity: 0.35;
+    transition: all 0.2s;
+    color: inherit;
+    flex-shrink: 0;
+}
+.set-done-btn.done {
+    opacity: 1;
+    color: #22c55e;
+}
+.set-done-btn:active { transform: scale(0.88); }
+
+.add-set-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    margin-top: 8px;
+    transition: all 0.2s;
+    border-style: dashed !important;
+}
+
+/* ── Duration input wrapper ─────────────────────────────────────────────── */
+.duration-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+.duration-input-wrap .set-input {
+    flex: 1;
+    font-size: 28px;
+    font-weight: 900;
+    padding: 12px 8px;
+    border-radius: 14px;
+}
+
+/* ── Stat Cards ─────────────────────────────────────────────────────────── */
+.stat-card {
+    border-radius: 20px;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    backdrop-filter: blur(16px) brightness(0.9);
+    -webkit-backdrop-filter: blur(16px) brightness(0.9);
+}
+.stat-value {
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+}
+.stat-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.5;
+    margin-top: 2px;
+}
+.stat-sub {
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.55;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Log Entry (records) ────────────────────────────────────────────────── */
+.log-entry {
+    border-radius: 20px;
+    padding: 16px;
+    backdrop-filter: blur(16px) brightness(0.9);
+    -webkit-backdrop-filter: blur(16px) brightness(0.9);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.log-entry:active { transform: scale(0.98); }
+.log-entry-detail {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 12px;
+    padding-top: 12px;
+}
+.theme-light-mode .log-entry-detail { border-color: rgba(0,0,0,0.07); }
+
+/* ── Library Exercise Row ───────────────────────────────────────────────── */
+.lib-row {
+    border-radius: 16px;
+    padding: 14px 16px;
+    backdrop-filter: blur(12px) brightness(0.9);
+    -webkit-backdrop-filter: blur(12px) brightness(0.9);
+    transition: all 0.2s;
+}
+.lib-row:active { transform: scale(0.98); }
+
+/* ── Category Filter Pills Row ──────────────────────────────────────────── */
+.cat-filter-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+.cat-filter-row::-webkit-scrollbar { display: none; }
+.cat-filter-pill {
+    flex-shrink: 0;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    opacity: 0.5;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.cat-filter-pill.active {
+    opacity: 1;
+    background: var(--primary);
+    color: #fff;
+}
+
+/* ── Empty State ────────────────────────────────────────────────────────── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    opacity: 0.35;
+    gap: 12px;
+    text-align: center;
+}
+.empty-state-icon { opacity: 0.7; }
+
+/* ── Toast ──────────────────────────────────────────────────────────────── */
+.workout-toast {
+    position: fixed;
+    top: 84px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(34, 197, 94, 0.92);
+    color: #fff;
+    padding: 10px 26px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    z-index: 9999;
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.35);
+    box-shadow: 0 4px 20px rgba(34,197,94,0.4);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* ── Exercise Form Type Toggle ──────────────────────────────────────────── */
+.type-toggle {
+    display: flex;
+    gap: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid rgba(59,130,246,0.3);
+}
+.type-toggle-btn {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.45;
+}
+.type-toggle-btn.active {
+    background: var(--primary);
+    color: #fff;
+    opacity: 1;
+}
+
+/* ── Category Multi-select in form ──────────────────────────────────────── */
+.cat-select-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.cat-select-pill {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.45;
+    border: 1.5px solid rgba(255,255,255,0.15);
+}
+.theme-light-mode .cat-select-pill { border-color: rgba(0,0,0,0.1); }
+.cat-select-pill.selected {
+    opacity: 1;
+    background: var(--primary);
+    color: #fff;
+    border-color: transparent;
+}
+.cat-select-pill:active { transform: scale(0.93); }
+
+/* ── Settings Row ───────────────────────────────────────────────────────── */
+.settings-row {
+    border-radius: 16px;
+    padding: 16px;
+    backdrop-filter: blur(12px) brightness(0.9);
+    -webkit-backdrop-filter: blur(12px) brightness(0.9);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ── Section Label ──────────────────────────────────────────────────────── */
+.section-label {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    opacity: 0.4;
+    margin-bottom: 8px;
+    padding-left: 4px;
+}
+
+/* ── Workout bottom-nav tweak (4 items → tighter label) ─────────────────── */
+.workout-bottom-nav .nav-item {
+    min-width: 60px;
+}
+.workout-bottom-nav .nav-item span {
+    font-size: 9px;
+}
+
+/* ── Add-exercise-to-log dashed button ──────────────────────────────────── */
+.add-to-log-btn {
+    width: 100%;
+    border-radius: 18px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    opacity: 0.55;
+    transition: opacity 0.2s;
+    border-style: dashed !important;
+}
+.add-to-log-btn:active { opacity: 0.8; transform: scale(0.98); }
