@@ -470,10 +470,15 @@
 
         <div v-if="personalBests.length > 0" class="space-y-2">
             <div v-for="pb in personalBests" :key="pb.name"
-                 class="glass rounded-2xl p-4" :style="glassStyle">
+                 class="glass rounded-2xl p-4 cursor-pointer active:scale-98 transition-transform"
+                 :style="glassStyle"
+                 @click="openPRModal(pb)">
                 <div class="flex items-center justify-between mb-1">
                     <span class="font-black text-sm">{{ navSettings.lang === 'zh' && pb.nameZh ? pb.nameZh : pb.name }}</span>
-                    <span class="text-xs opacity-40 font-mono">{{ pb.date }}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs opacity-40 font-mono">{{ pb.date }}</span>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.35"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
                 </div>
                 <p class="text-2xl font-black leading-none mt-1">
                     {{ pb.weight }}<span class="text-sm font-bold opacity-50 ml-1">kg</span>
@@ -890,6 +895,53 @@
                         {{ t.saveLog }}
                     </button>
                     <button @click="discardAndClose()" class="lapis-btn-secondary">
+                        {{ t.cancel }}
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </transition>
+
+    <!-- ── PR History Modal ───────────────────────────────────────────────── -->
+    <transition name="slide-up">
+        <div v-show="showPRModal"
+             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             @click.self.stop.prevent="showPRModal = false">
+            <div class="lapis-modal-shell w-full" id="modal-pr-history"
+                 :style="shellStyle" @click.stop>
+
+                <div class="lapis-modal-header">
+                    <h2 class="lapis-modal-title">{{ selectedPRName }} — {{ t.progressHistory }}</h2>
+                    <button @click="showPRModal = false" class="lapis-modal-close"
+                            v-html="ICON_X"></button>
+                </div>
+
+                <div class="lapis-modal-body">
+                    <div v-if="prProgression.length > 0" class="space-y-2">
+                        <div v-for="(entry, i) in prProgression" :key="i"
+                             class="glass rounded-xl px-4 py-3 flex items-center justify-between"
+                             :style="glassStyle">
+                            <div class="flex items-center gap-2">
+                                <!-- Rank badge: #1 = most recent PR -->
+                                <span class="text-xs font-black opacity-30 font-mono w-5 text-center flex-shrink-0">#{{ i + 1 }}</span>
+                                <span class="text-xs font-mono opacity-55">{{ entry.date }}</span>
+                            </div>
+                            <span class="font-black text-sm font-mono">
+                                {{ entry.weight }}<span class="opacity-50 text-xs ml-0.5">kg</span>
+                                <span class="opacity-40 mx-1">×</span>{{ entry.reps }}
+                                <span class="opacity-40 mx-1">×</span>{{ entry.numSets }}
+                            </span>
+                        </div>
+                    </div>
+                    <div v-else class="empty-state" style="padding:40px 20px">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-state-icon"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                        <p class="text-sm font-bold">{{ t.noPBs }}</p>
+                    </div>
+                </div>
+
+                <div class="lapis-modal-footer">
+                    <button @click="showPRModal = false" class="lapis-btn-secondary">
                         {{ t.cancel }}
                     </button>
                 </div>

@@ -143,6 +143,7 @@ const _wT = {
         tabWorkout: '訓練',
         weightLog: '體重', personalBests: '個人最佳',
         noWeightLog: '尚無體重紀錄', noPBs: '尚無個人最佳',
+        progressHistory: '進展歷史',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
@@ -183,6 +184,7 @@ const _wT = {
         tabWorkout: 'Workout',
         weightLog: 'Weight', personalBests: 'Personal Bests',
         noWeightLog: 'No weight entries yet', noPBs: 'No personal bests yet',
+        progressHistory: 'Progress History',
     }
 };
 
@@ -786,13 +788,75 @@ window.addEventListener('DOMContentLoaded', () => {
                             const key = ex.exerciseId || ex.name;
                             if (!bests[key] || w > bests[key].weight ||
                                 (w === bests[key].weight && r > bests[key].reps)) {
-                                bests[key] = { name: ex.name, nameZh: ex.nameZh || '', weight: w, reps: r, date: log.date };
+                                bests[key] = { key, name: ex.name, nameZh: ex.nameZh || '', weight: w, reps: r, date: log.date };
                             }
                         });
                     });
                 });
                 return Object.values(bests).sort((a, b) => (a.nameZh || a.name).localeCompare(b.nameZh || b.name));
             });
+
+            // ── PR HISTORY MODAL ──────────────────────────────────────────
+            const showPRModal     = ref(false);
+            const selectedPRKey   = ref(null);
+            const selectedPRName  = ref('');
+
+            const getPRProgression = (exerciseKey) => {
+                // Collect every set entry for this exercise across non-deleted sessions
+                const entries = [];
+                wData.logs
+                    .filter(l => !l.isDeleted)
+                    .forEach(log => {
+                        log.exercises.forEach(ex => {
+                            if ((ex.exerciseId || ex.name) !== exerciseKey) return;
+                            (ex.sets || []).forEach(set => {
+                                const w = parseFloat(set.weight), r = parseInt(set.reps);
+                                if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return;
+                                entries.push({
+                                    date:    log.date,
+                                    time:    log.time,
+                                    weight:  w,
+                                    reps:    r,
+                                    numSets: parseInt(set.numSets) || 1,
+                                });
+                            });
+                        });
+                    });
+
+                // Sort chronologically oldest → newest
+                entries.sort((a, b) => {
+                    const dc = a.date.localeCompare(b.date);
+                    if (dc !== 0) return dc;
+                    return (a.time.hour * 60 + a.time.minute) - (b.time.hour * 60 + b.time.minute);
+                });
+
+                // Identify every moment a new peak was reached
+                let peakWeight = 0, peakReps = 0;
+                const breakthroughs = [];
+                entries.forEach(entry => {
+                    const isPR = entry.weight > peakWeight ||
+                                 (entry.weight === peakWeight && entry.reps > peakReps);
+                    if (isPR) {
+                        peakWeight = entry.weight;
+                        peakReps   = entry.reps;
+                        breakthroughs.push({ ...entry });
+                    }
+                });
+
+                // Return top 5 most recent breakthroughs (newest first)
+                return breakthroughs.slice(-5).reverse();
+            };
+
+            const prProgression = computed(() => {
+                if (!selectedPRKey.value) return [];
+                return getPRProgression(selectedPRKey.value);
+            });
+
+            const openPRModal = (pb) => {
+                selectedPRKey.value  = pb.key;
+                selectedPRName.value = (navSettings.lang === 'zh' && pb.nameZh) ? pb.nameZh : pb.name;
+                showPRModal.value    = true;
+            };
 
             // Compute a brief summary for a log entry
             const _isSets = (type) => type === 'sets' || type === 'sets_reps';
@@ -883,7 +947,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 showExModal.value        ||
                 showCatMgr.value         ||
                 showClearConfirm.value   ||
-                showExDetail.value
+                showExDetail.value       ||
+                showPRModal.value
             );
 
             // ── Display helpers ───────────────────────────────────────────
@@ -1030,6 +1095,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 ICON_CIRCLE, ICON_MINUS, ICON_SEARCH, ICON_PLUS, ICON_PLUS_CIRCLE,
                 // personal metrics
                 metricsData, weightForm, saveWeight, personalBests,
+                // PR history modal
+                showPRModal, selectedPRName, prProgression, openPRModal,
                 // stats
                 stats,
                 // settings
