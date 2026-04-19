@@ -112,6 +112,11 @@ const _wT = {
         manageCategories: '管理類別',
         addL1: '新增主分支', addL2: '新增子分支', addL3: '新增末端',
         catName: '類別名稱（英文）', catNameZh: '類別名稱（中文）',
+        tabToday: '今天', tabHistory: '歷史', tabBin: '回收桶',
+        completed: '已完成', pending: '進行中',
+        restore: '還原', permanentDelete: '永久刪除',
+        noTodaySessions: '今天沒有訓練紀錄', noHistorySessions: '沒有歷史紀錄',
+        noBinSessions: '回收桶是空的', newSession: '新增訓練',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
@@ -142,6 +147,11 @@ const _wT = {
         manageCategories: 'Manage Categories',
         addL1: 'Add Branch', addL2: 'Add Sub-branch', addL3: 'Add Leaf',
         catName: 'Category Name (EN)', catNameZh: 'Category Name (ZH)',
+        tabToday: 'Today', tabHistory: 'History', tabBin: 'Bin',
+        completed: 'Completed', pending: 'Pending',
+        restore: 'Restore', permanentDelete: 'Permanently Delete',
+        noTodaySessions: 'No sessions today', noHistorySessions: 'No history yet',
+        noBinSessions: 'Recycle bin is empty', newSession: 'New Session',
     }
 };
 
@@ -185,7 +195,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
                 if (raw) {
                     wData.categories = raw.categories || _defaultWorkoutData().categories;
-                    wData.logs       = raw.logs       || [];
+                    wData.logs = (raw.logs || []).map(l => ({
+                        ...l,
+                        isCompleted: l.isCompleted !== undefined ? l.isCompleted : false,
+                        isDeleted:   l.isDeleted   !== undefined ? l.isDeleted   : false,
+                    }));
                 } else {
                     const def = _defaultWorkoutData();
                     wData.categories = def.categories;
@@ -228,6 +242,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
             // ── Tabs ──────────────────────────────────────────────────────
             const activeTab = ref('add');
+            const recordsSubTab = ref('today');
+            const editingSessionId = ref(null);
 
             // ── ADD TAB — date/time state ─────────────────────────────────
             const _now = () => new Date();
@@ -237,18 +253,6 @@ window.addEventListener('DOMContentLoaded', () => {
             const logTime = ref({ hour: _now().getHours(), minute: _now().getMinutes() });
             const logExercises = ref([]); // [{exerciseId, name, nameZh, type, categories, sets[], minutes}]
 
-            // Load existing log for the selected date whenever date changes
-            watch(logDate, (d) => {
-                const existing = wData.logs.find(l => l.date === d);
-                if (existing) {
-                    logExercises.value = JSON.parse(JSON.stringify(existing.exercises));
-                    logTime.value = { hour: existing.time.hour, minute: existing.time.minute };
-                } else {
-                    logExercises.value = [];
-                }
-            });
-
-            const hasExistingLog = computed(() => wData.logs.some(l => l.date === logDate.value));
 
             // ── LAPIS PICKER ──────────────────────────────────────────────
             const showDateTimePicker = ref(false);
@@ -326,13 +330,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
             const saveLog = () => {
                 if (logExercises.value.length === 0) return;
+                const isEditing = !!editingSessionId.value;
+                const existing = isEditing ? wData.logs.find(l => l.id === editingSessionId.value) : null;
                 const entry = {
-                    id:        _wUid(),
-                    date:      logDate.value,
-                    time:      { ...logTime.value },
-                    exercises: JSON.parse(JSON.stringify(logExercises.value))
+                    id:          isEditing ? editingSessionId.value : _wUid(),
+                    date:        logDate.value,
+                    time:        { ...logTime.value },
+                    exercises:   JSON.parse(JSON.stringify(logExercises.value)),
+                    isCompleted: existing ? existing.isCompleted : false,
+                    isDeleted:   existing ? existing.isDeleted   : false,
                 };
-                const idx = wData.logs.findIndex(l => l.date === logDate.value);
+                const idx = isEditing ? wData.logs.findIndex(l => l.id === editingSessionId.value) : -1;
                 if (idx >= 0) wData.logs.splice(idx, 1, entry);
                 else          wData.logs.unshift(entry);
                 persist();
@@ -349,7 +357,47 @@ window.addEventListener('DOMContentLoaded', () => {
 
             const saveLogAndClose = () => {
                 saveLog();
-                showLogModal.value = false;
+                showLogModal.value     = false;
+                editingSessionId.value = null;
+                logExercises.value     = [];
+            };
+
+            const openNewSession = () => {
+                editingSessionId.value = null;
+                logDate.value = _todayStr();
+                const now = new Date();
+                logTime.value = { hour: now.getHours(), minute: now.getMinutes() };
+                logExercises.value = [];
+                showLogModal.value = true;
+            };
+
+            const openEditSession = (session) => {
+                editingSessionId.value = session.id;
+                logDate.value = session.date;
+                logTime.value = { hour: session.time.hour, minute: session.time.minute };
+                logExercises.value = JSON.parse(JSON.stringify(session.exercises));
+                showLogModal.value = true;
+            };
+
+            const softDeleteSession = (id) => {
+                const s = wData.logs.find(l => l.id === id);
+                if (s) { s.isDeleted = true; persist(); _toast(t.value.logDeleted); }
+            };
+
+            const restoreSession = (id) => {
+                const s = wData.logs.find(l => l.id === id);
+                if (s) { s.isDeleted = false; persist(); }
+            };
+
+            const permanentDeleteSession = (id) => {
+                if (!confirm(t.value.deleteConfirm)) return;
+                const idx = wData.logs.findIndex(l => l.id === id);
+                if (idx >= 0) { wData.logs.splice(idx, 1); persist(); }
+            };
+
+            const toggleComplete = (id) => {
+                const s = wData.logs.find(l => l.id === id);
+                if (s) { s.isCompleted = !s.isCompleted; persist(); }
             };
 
             // ── PICK-EXERCISE MODAL (add to log) ─────────────────────────
@@ -606,22 +654,35 @@ window.addEventListener('DOMContentLoaded', () => {
             });
 
             // ── RECORDS TAB ───────────────────────────────────────────────
-            const sortedLogs    = computed(() =>
-                [...wData.logs].sort((a, b) => b.date.localeCompare(a.date))
+            const todaySessions = computed(() => {
+                const today = _todayStr();
+                return [...wData.logs]
+                    .filter(l => !l.isDeleted && l.date === today)
+                    .sort((a, b) => (a.time.hour * 60 + a.time.minute) - (b.time.hour * 60 + b.time.minute));
+            });
+
+            const historySessions = computed(() => {
+                const today = _todayStr();
+                const filtered = [...wData.logs]
+                    .filter(l => !l.isDeleted && l.date !== today)
+                    .sort((a, b) => b.date.localeCompare(a.date));
+                const groups = [];
+                let lastKey = null;
+                filtered.forEach(l => {
+                    const [y, m] = l.date.split('-');
+                    const key = `${y}-${m}`;
+                    if (key !== lastKey) {
+                        lastKey = key;
+                        groups.push({ key, year: y, month: m, sessions: [] });
+                    }
+                    groups[groups.length - 1].sessions.push(l);
+                });
+                return groups;
+            });
+
+            const binSessions = computed(() =>
+                [...wData.logs].filter(l => l.isDeleted).sort((a, b) => b.date.localeCompare(a.date))
             );
-            const expandedLogId = ref(null);
-
-            const toggleExpand = (id) => {
-                expandedLogId.value = expandedLogId.value === id ? null : id;
-            };
-
-            const deleteLog = (id) => {
-                if (!confirm(t.value.deleteConfirm)) return;
-                const idx = wData.logs.findIndex(l => l.id === id);
-                if (idx >= 0) wData.logs.splice(idx, 1);
-                persist();
-                _toast(t.value.logDeleted);
-            };
 
             // Compute a brief summary for a log entry
             const _isSets = (type) => type === 'sets' || type === 'sets_reps';
@@ -693,6 +754,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 catTree.value     = _defaultCategoryTree();
                 logExercises.value     = [];
                 logDate.value          = _todayStr();
+                editingSessionId.value = null;
                 showClearConfirm.value = false;
                 persist(); libPersist(); catsPersist();
             };
@@ -774,12 +836,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 hydrate();
                 hydrateCats();
                 hydrateLib();
-                // Load today's log if exists
-                const existing = wData.logs.find(l => l.date === logDate.value);
-                if (existing) {
-                    logExercises.value = JSON.parse(JSON.stringify(existing.exercises));
-                    logTime.value = { ...existing.time };
-                }
 
                 // Inject Lapis navigation and initialize modal system
                 if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
@@ -826,7 +882,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 // tabs
                 activeTab,
                 // add tab
-                logDate, logTime, logExercises, hasExistingLog,
+                logDate, logTime, logExercises,
                 addSet, removeSet, toggleSetDone, removeLogExercise, saveLog,
                 showToast, toastMsg,
                 // lapis picker
@@ -834,6 +890,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 openPicker, switchPickerMode, closeWorkoutPicker, setPickerToday,
                 // workout log modal
                 showLogModal, shellStyle, saveLogAndClose,
+                openNewSession, openEditSession,
                 // pick exercise modal
                 showPickModal, pickSearch, pickCategory, filteredPick, pickExercise,
                 // exercises tab
@@ -851,7 +908,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 // grouped rows
                 exGroupedRows,
                 // records tab
-                sortedLogs, expandedLogId, toggleExpand, deleteLog,
+                recordsSubTab, editingSessionId,
+                todaySessions, historySessions, binSessions,
+                softDeleteSession, restoreSession, permanentDeleteSession, toggleComplete,
                 logSummary, logVolume, exDisplayName,
                 // stats
                 stats,

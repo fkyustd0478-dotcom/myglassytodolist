@@ -62,13 +62,6 @@
             </button>
         </div>
 
-        <!-- Existing log notice -->
-        <div v-show="hasExistingLog" class="glass rounded-2xl px-4 py-3 mb-4 flex items-center gap-2"
-             :style="glassStyle" style="border-color:rgba(251,191,36,0.5);border-width:1px">
-            <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0" style="color:#f59e0b"></i>
-            <span class="text-xs font-bold opacity-70">{{ t.existingLog }}</span>
-        </div>
-
         <!-- Exercise summary (when exercises added) -->
         <div v-if="logExercises.length > 0" class="space-y-2 mb-5">
             <div v-for="(entry, eIdx) in logExercises" :key="entry.exerciseId + eIdx"
@@ -90,7 +83,7 @@
         </div>
 
         <!-- Start Workout button -->
-        <button @click="showLogModal = true"
+        <button @click="openNewSession()"
                 class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2px] flex items-center justify-center gap-2 active:scale-95 transition-transform mb-3"
                 :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
             <i data-lucide="play-circle" class="w-5 h-5"></i>
