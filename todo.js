@@ -71,8 +71,6 @@ try {
             
             const showDateTimePicker = ref(false);
             const pickerMode = ref('date'); // 'date' | 'time'
-            let _datePicker = null;
-            let _timePicker = null;
             
             const fileInput = ref(null);
             
@@ -529,18 +527,6 @@ try {
                 dropdowns[key] = false;
             };
 
-            const setToday = () => {
-                const now = new Date();
-                form.value.date = now.toISOString().split('T')[0];
-                if (_datePicker) _datePicker.setValue(now.getFullYear(), now.getMonth() + 1, now.getDate());
-            };
-
-            const setTomorrow = () => {
-                const t = new Date();
-                t.setDate(t.getDate() + 1);
-                form.value.date = t.toISOString().split('T')[0];
-                if (_datePicker) _datePicker.setValue(t.getFullYear(), t.getMonth() + 1, t.getDate());
-            };
 
             const scrollActiveTabIntoView = () => {
                 nextTick(() => {
@@ -556,34 +542,33 @@ try {
                 `${form.value.time.hour.toString().padStart(2,'0')}:${form.value.time.minute.toString().padStart(2,'0')}`
             );
 
-            const openPicker = (mode) => {
-                pickerMode.value = mode;
-                showDateTimePicker.value = true;
-                // Set wheel positions after Vue makes the container visible
-                nextTick(() => {
-                    if (mode === 'date' && _datePicker) {
-                        const d = form.value.date ? new Date(form.value.date + 'T00:00:00') : new Date();
-                        _datePicker.setValue(d.getFullYear(), d.getMonth() + 1, d.getDate());
-                    } else if (mode === 'time' && _timePicker) {
-                        _timePicker.setValue(form.value.time.hour, form.value.time.minute);
-                    }
-                });
-            };
+            // ── LapisPickerManager (date + time wheel pickers) ────────────
+            const _picker = typeof LapisPickerManager !== 'undefined'
+                ? new LapisPickerManager({
+                    dateContainerId: 'lapis-date-picker',
+                    timeContainerId: 'lapis-time-picker',
+                    getDate: () => {
+                        const d = form.value.date
+                            ? new Date(form.value.date + 'T00:00:00')
+                            : new Date();
+                        return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+                    },
+                    getTime: () => ({ hour: form.value.time.hour, minute: form.value.time.minute }),
+                    setDate: (v) => { form.value.date = v.iso; },
+                    setTime: (v) => { form.value.time.hour = v.hour; form.value.time.minute = v.minute; },
+                    onOpen: (visible, mode) => {
+                        showDateTimePicker.value = visible;
+                        if (mode) pickerMode.value = mode;
+                    },
+                    onModeChange: (mode) => { pickerMode.value = mode; },
+                })
+                : null;
 
-            const switchPickerMode = (mode) => { pickerMode.value = mode; };
-
-            const closeDateTimePicker = () => {
-                if (_datePicker) {
-                    const v = _datePicker.getValue();
-                    form.value.date = v.iso;
-                }
-                if (_timePicker) {
-                    const v = _timePicker.getValue();
-                    form.value.time.hour = v.hour;
-                    form.value.time.minute = v.minute;
-                }
-                showDateTimePicker.value = false;
-            };
+            const openPicker          = (mode) => _picker && _picker.open(mode);
+            const switchPickerMode    = (mode) => _picker ? _picker.switchMode(mode) : (pickerMode.value = mode);
+            const closeDateTimePicker = ()     => _picker ? _picker.close() : (showDateTimePicker.value = false);
+            const setToday            = ()     => _picker && _picker.setToday();
+            const setTomorrow         = ()     => _picker && _picker.setTomorrow();
 
             const calculateNextGen = (r, d) => { 
                 if (r === 'none') return ''; 
@@ -839,21 +824,8 @@ try {
                 if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
                 if (typeof LapisModal !== 'undefined') LapisModal.init();
 
-                // Initialize Lapis date/time pickers
-                const _dateEl = document.getElementById('lapis-date-picker');
-                const _timeEl = document.getElementById('lapis-time-picker');
-                if (_dateEl && typeof LapisDatePicker !== 'undefined') {
-                    const _now = new Date();
-                    _datePicker = new LapisDatePicker(_dateEl, {
-                        year: _now.getFullYear(), month: _now.getMonth() + 1, day: _now.getDate()
-                    });
-                }
-                if (_timeEl && typeof LapisTimePicker !== 'undefined') {
-                    const _now = new Date();
-                    _timePicker = new LapisTimePicker(_timeEl, {
-                        hour: _now.getHours(), minute: _now.getMinutes()
-                    });
-                }
+                // Pre-initialize Lapis date/time pickers (via manager)
+                if (_picker) _picker.init();
 
                 nextTick(() => {
                     if (window.lucide) lucide.createIcons();

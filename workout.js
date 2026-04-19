@@ -301,42 +301,30 @@ window.addEventListener('DOMContentLoaded', () => {
             // ── LAPIS PICKER ──────────────────────────────────────────────
             const showDateTimePicker = ref(false);
             const pickerMode = ref('date'); // 'date' | 'time'
-            let _wDatePicker = null;
-            let _wTimePicker = null;
 
-            const openPicker = (mode) => {
-                pickerMode.value = mode;
-                showDateTimePicker.value = true;
-                nextTick(() => {
-                    if (mode === 'date' && _wDatePicker) {
+            const _picker = typeof LapisPickerManager !== 'undefined'
+                ? new LapisPickerManager({
+                    dateContainerId: 'lapis-workout-date-picker',
+                    timeContainerId: 'lapis-workout-time-picker',
+                    getDate: () => {
                         const [y, m, d] = logDate.value.split('-').map(Number);
-                        _wDatePicker.setValue(y, m, d);
-                    } else if (mode === 'time' && _wTimePicker) {
-                        _wTimePicker.setValue(logTime.value.hour, logTime.value.minute);
-                    }
-                });
-            };
+                        return { year: y, month: m, day: d };
+                    },
+                    getTime: () => ({ hour: logTime.value.hour, minute: logTime.value.minute }),
+                    setDate: (v) => { logDate.value = v.iso; },
+                    setTime: (v) => { logTime.value.hour = v.hour; logTime.value.minute = v.minute; },
+                    onOpen: (visible, mode) => {
+                        showDateTimePicker.value = visible;
+                        if (mode) pickerMode.value = mode;
+                    },
+                    onModeChange: (mode) => { pickerMode.value = mode; },
+                })
+                : null;
 
-            const switchPickerMode = (mode) => { pickerMode.value = mode; };
-
-            const closeWorkoutPicker = () => {
-                if (_wDatePicker) {
-                    const v = _wDatePicker.getValue();
-                    logDate.value = v.iso;
-                }
-                if (_wTimePicker) {
-                    const v = _wTimePicker.getValue();
-                    logTime.value.hour = v.hour;
-                    logTime.value.minute = v.minute;
-                }
-                showDateTimePicker.value = false;
-            };
-
-            const setPickerToday = () => {
-                const now = new Date();
-                logDate.value = _todayStr();
-                if (_wDatePicker) _wDatePicker.setValue(now.getFullYear(), now.getMonth() + 1, now.getDate());
-            };
+            const openPicker         = (mode) => _picker && _picker.open(mode);
+            const switchPickerMode   = (mode) => _picker ? _picker.switchMode(mode) : (pickerMode.value = mode);
+            const closeWorkoutPicker = ()     => _picker ? _picker.close() : (showDateTimePicker.value = false);
+            const setPickerToday     = ()     => _picker && _picker.setToday();
 
             // ── ADD TAB — exercise actions ────────────────────────────────
             const addSet = (eIdx) => {
@@ -1020,18 +1008,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
                 if (typeof LapisModal !== 'undefined') LapisModal.init();
 
-                // Initialize Lapis date/time pickers for workout Add tab
-                const _dateEl = document.getElementById('lapis-workout-date-picker');
-                const _timeEl = document.getElementById('lapis-workout-time-picker');
-                if (_dateEl && typeof LapisDatePicker !== 'undefined') {
-                    const [y, m, d] = logDate.value.split('-').map(Number);
-                    _wDatePicker = new LapisDatePicker(_dateEl, { year: y, month: m, day: d });
-                }
-                if (_timeEl && typeof LapisTimePicker !== 'undefined') {
-                    _wTimePicker = new LapisTimePicker(_timeEl, {
-                        hour: logTime.value.hour, minute: logTime.value.minute
-                    });
-                }
+                // Pre-initialize Lapis date/time pickers (via manager)
+                if (_picker) _picker.init();
 
                 nextTick(() => lucide.createIcons());
                 if (typeof ParticleEngine !== 'undefined' && navSettings.effect && navSettings.effect !== 'none') {

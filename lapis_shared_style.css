@@ -478,10 +478,10 @@ body.theme-seaside .lapis-btn-secondary {
 }
 .lapis-picker-item:active { opacity: 0.55; }
 
-/* Centred / active row */
+/* Centred / active row — glassmorphic: full opacity + size, no hue shift */
 .lapis-picker-active {
     opacity: 1 !important;
-    color: var(--primary) !important;
+    color: var(--glass-text-primary) !important;
     transform: scale(1.10) !important;
     font-size: 17px !important;
     font-weight: 900 !important;

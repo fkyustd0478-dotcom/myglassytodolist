@@ -222,8 +222,100 @@
         };
     }
 
+    // ── LapisPickerManager ────────────────────────────────────────────────────
+    // Centralizes picker initialization, state sync, and value read-back so
+    // every page avoids duplicating boilerplate.
+    //
+    // Options:
+    //   dateContainerId / timeContainerId — string IDs of the placeholder divs
+    //   getDate()  → { year, month, day }   read current date from app state
+    //   getTime()  → { hour, minute }        read current time from app state
+    //   setDate(v) — write { iso, year, month, day } back to app state
+    //   setTime(v) — write { hour, minute } back to app state
+    //   onOpen(visible, mode)  — drives v-show / pickerMode in the template
+    //   onModeChange(mode)     — drives tab-switch without re-syncing scroll
+    //
+    // API:
+    //   mgr.init()         — pre-init pickers in onMounted (container visible)
+    //   mgr.open(mode)     — sync wheel → show; uses rAF after calling onOpen
+    //   mgr.close()        — read wheels → write state → hide
+    //   mgr.switchMode(m)  — switch date/time tab
+    //   mgr.setToday()     — snap wheel + state to today
+    //   mgr.setTomorrow()  — snap wheel + state to tomorrow
+    function LapisPickerManager(options) {
+        let _datePicker = null;
+        let _timePicker = null;
+        let _ready      = false;
+
+        const _resolveEl = (id) =>
+            typeof id === 'string' ? document.getElementById(id) : id;
+
+        const _init = () => {
+            if (_ready) return;
+            const dateEl = _resolveEl(options.dateContainerId);
+            const timeEl = _resolveEl(options.timeContainerId);
+            if (dateEl) _datePicker = new LapisDatePicker(dateEl, {});
+            if (timeEl) _timePicker = new LapisTimePicker(timeEl, {});
+            _ready = true;
+        };
+
+        const _syncTo = (mode) => {
+            if (mode === 'date' && _datePicker && options.getDate) {
+                const d = options.getDate();
+                if (d) _datePicker.setValue(d.year, d.month, d.day);
+            } else if (mode === 'time' && _timePicker && options.getTime) {
+                const t = options.getTime();
+                if (t) _timePicker.setValue(t.hour, t.minute);
+            }
+        };
+
+        // Pre-initialize while container is in DOM (even when v-show hidden)
+        this.init = () => _init();
+
+        // Show picker in given mode; rAF waits for Vue DOM flush before syncing scroll
+        this.open = (mode) => {
+            _init();
+            if (options.onOpen) options.onOpen(true, mode);
+            requestAnimationFrame(() => _syncTo(mode));
+        };
+
+        // Read current wheel values → write to app state → hide
+        this.close = () => {
+            if (_datePicker && options.setDate) options.setDate(_datePicker.getValue());
+            if (_timePicker && options.setTime) options.setTime(_timePicker.getValue());
+            if (options.onOpen) options.onOpen(false, null);
+        };
+
+        // Switch date / time tab without re-syncing scroll position
+        this.switchMode = (mode) => {
+            if (options.onModeChange) options.onModeChange(mode);
+        };
+
+        this.setToday = () => {
+            const now = new Date();
+            const val = {
+                year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate(),
+                iso:  now.toISOString().split('T')[0]
+            };
+            if (_datePicker) _datePicker.setValue(val.year, val.month, val.day);
+            if (options.setDate) options.setDate(val);
+        };
+
+        this.setTomorrow = () => {
+            const t = new Date();
+            t.setDate(t.getDate() + 1);
+            const val = {
+                year: t.getFullYear(), month: t.getMonth() + 1, day: t.getDate(),
+                iso:  t.toISOString().split('T')[0]
+            };
+            if (_datePicker) _datePicker.setValue(val.year, val.month, val.day);
+            if (options.setDate) options.setDate(val);
+        };
+    }
+
     // ── Expose ────────────────────────────────────────────────────────────────
-    global.LapisDatePicker = LapisDatePicker;
-    global.LapisTimePicker = LapisTimePicker;
+    global.LapisDatePicker    = LapisDatePicker;
+    global.LapisTimePicker    = LapisTimePicker;
+    global.LapisPickerManager = LapisPickerManager;
 
 })(window);
