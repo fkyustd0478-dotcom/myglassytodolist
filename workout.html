@@ -677,7 +677,7 @@
     <!-- ── Date-Time Picker Modal ──────────────────────────────────────────── -->
     <transition name="slide-up">
         <div v-show="showDateTimePicker"
-             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
+             class="fixed inset-0 z-[9100] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
              @click.self.stop.prevent="closeWorkoutPicker">
             <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4 modal-content-level-4"
                  :style="glassStyle" @click.stop>
@@ -724,19 +724,41 @@
     <transition name="slide-up">
         <div v-show="showLogModal"
              class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm"
-             @click.self.stop.prevent="showLogModal = false">
+             @click.self.stop.prevent="discardAndClose()">
             <div class="lapis-modal-shell workout-log-shell w-full" :style="shellStyle" @click.stop>
 
+                <!-- ── Sticky header ── -->
                 <div class="lapis-modal-header">
-                    <h2 class="lapis-modal-title">{{ t.workoutLog }}</h2>
-                    <button @click="showLogModal = false" class="lapis-modal-close">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
+                    <div class="flex items-center justify-between">
+                        <h2 class="lapis-modal-title">
+                            {{ editingSessionId ? t.editSession : t.newSession }}
+                        </h2>
+                        <button @click="discardAndClose()" class="lapis-modal-close"
+                                v-html="ICON_X"></button>
+                    </div>
+                    <!-- Date + Time picker buttons -->
+                    <div class="flex gap-2 mt-3">
+                        <button @click="openPicker('date')"
+                                class="flex-1 glass rounded-xl px-3 py-2.5 flex items-center gap-2 active:scale-95 transition-transform"
+                                :style="glassStyle">
+                            <span v-html="ICON_CALENDAR" class="opacity-50 flex-shrink-0"></span>
+                            <span class="font-black text-sm">{{ logDate.replace(/-/g,'/') }}</span>
+                        </button>
+                        <button @click="openPicker('time')"
+                                class="glass rounded-xl px-3 py-2.5 flex items-center gap-2 active:scale-95 transition-transform"
+                                :style="glassStyle">
+                            <span v-html="ICON_CLOCK" class="opacity-50 flex-shrink-0"></span>
+                            <span class="font-black text-sm font-mono">
+                                {{ logTime.hour.toString().padStart(2,'0') }}:{{ logTime.minute.toString().padStart(2,'0') }}
+                            </span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="lapis-modal-body">
+                <!-- ── Scrollable body ── -->
+                <div class="log-body">
 
-                    <!-- Exercise log list -->
+                    <!-- Exercise list -->
                     <div v-if="logExercises.length > 0" class="space-y-3">
                         <div v-for="(entry, eIdx) in logExercises" :key="entry.exerciseId + eIdx"
                              class="glass rounded-2xl p-4" :style="glassStyle">
@@ -745,17 +767,16 @@
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center gap-2">
                                     <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                         :style="entry.categories && entry.categories[0] ? catPillStyle(entry.categories[0]) : { background:'rgba(100,116,139,0.15)' }">
-                                        <i :data-lucide="entry.type === 'duration' ? 'timer' : 'dumbbell'" class="w-3.5 h-3.5"></i>
-                                    </div>
+                                         :style="entry.categories && entry.categories[0] ? catPillStyle(entry.categories[0]) : { background:'rgba(100,116,139,0.15)' }"
+                                         v-html="entry.type === 'duration' ? ICON_TIMER : ICON_DUMBBELL"></div>
                                     <div>
                                         <p class="font-black text-sm leading-tight">{{ entry.nameZh || entry.name }}</p>
                                         <p v-if="entry.nameZh" class="text-[10px] opacity-40 font-mono leading-tight">{{ entry.name }}</p>
                                     </div>
                                 </div>
-                                <button @click="removeLogExercise(eIdx)" class="opacity-30 hover:opacity-70 transition-opacity active:scale-90">
-                                    <i data-lucide="x" class="w-4 h-4"></i>
-                                </button>
+                                <button @click="removeLogExercise(eIdx)"
+                                        class="opacity-30 hover:opacity-70 transition-opacity active:scale-90"
+                                        v-html="ICON_X"></button>
                             </div>
 
                             <!-- Sets (compact) -->
@@ -763,20 +784,15 @@
                                 <div v-for="(set, sIdx) in entry.sets" :key="sIdx" class="compact-set-row">
                                     <span class="compact-set-num">{{ sIdx + 1 }}</span>
                                     <input v-model="set.weight" type="number" inputmode="decimal"
-                                           :placeholder="t.weight" min="0"
-                                           class="compact-input">
+                                           :placeholder="t.weight" min="0" class="compact-input">
                                     <span class="compact-x">×</span>
                                     <input v-model="set.reps" type="number" inputmode="numeric"
-                                           :placeholder="t.reps" min="0"
-                                           class="compact-input">
+                                           :placeholder="t.reps" min="0" class="compact-input">
                                     <button @click="toggleSetDone(eIdx, sIdx)"
-                                            class="compact-done-btn"
-                                            :class="{ done: set.done }">
-                                        <i :data-lucide="set.done ? 'check' : 'circle'" class="w-3.5 h-3.5"></i>
-                                    </button>
-                                    <button @click="removeSet(eIdx, sIdx)" class="compact-del-btn">
-                                        <i data-lucide="minus" class="w-3.5 h-3.5"></i>
-                                    </button>
+                                            class="compact-done-btn" :class="{ done: set.done }"
+                                            v-html="set.done ? ICON_CHECK : ICON_CIRCLE"></button>
+                                    <button @click="removeSet(eIdx, sIdx)"
+                                            class="compact-del-btn" v-html="ICON_MINUS"></button>
                                 </div>
                                 <button @click="addSet(eIdx)"
                                         class="w-full mt-1 py-1.5 rounded-xl text-xs font-black opacity-40 hover:opacity-70 transition-opacity"
@@ -796,38 +812,32 @@
                         </div>
                     </div>
 
-                    <!-- Add exercise picker (inline) -->
+                    <!-- Inline exercise picker -->
                     <div v-show="showPickModal" class="glass rounded-2xl p-4" :style="glassStyle">
                         <p class="section-label mb-2">{{ t.pickExercise }}</p>
-                        <!-- Search -->
                         <div class="glass rounded-xl flex items-center gap-2 px-3 py-2 mb-3" :style="glassStyle">
-                            <i data-lucide="search" class="w-3.5 h-3.5 opacity-40 flex-shrink-0"></i>
+                            <span v-html="ICON_SEARCH" class="opacity-40 flex-shrink-0"></span>
                             <input v-model="pickSearch" :placeholder="t.search"
                                    class="flex-1 bg-transparent outline-none text-sm font-bold min-w-0">
                         </div>
-                        <!-- Category filter -->
                         <div class="cat-filter-row mb-3">
-                            <button @click="pickCategory = ''"
-                                    class="cat-filter-pill glass" :style="glassStyle"
+                            <button @click="pickCategory = ''" class="cat-filter-pill glass" :style="glassStyle"
                                     :class="{ active: pickCategory === '' }">{{ t.all }}</button>
                             <button v-for="l1 in catTree" :key="l1.name"
                                     @click="pickCategory = l1.name"
                                     class="cat-filter-pill glass" :style="catPillStyle(l1.name)"
                                     :class="{ active: pickCategory === l1.name }">{{ catLabel(l1.name) }}</button>
                         </div>
-                        <!-- Exercise list -->
                         <div class="space-y-1.5 max-h-48 overflow-y-auto">
-                            <div v-if="filteredPick.length === 0" class="text-center py-6 opacity-30 text-sm font-bold">
-                                {{ t.noLibrary }}
-                            </div>
+                            <div v-if="filteredPick.length === 0"
+                                 class="text-center py-6 opacity-30 text-sm font-bold">{{ t.noLibrary }}</div>
                             <button v-for="ex in filteredPick" :key="ex.id"
                                     @click="pickExercise(ex)"
                                     class="w-full glass rounded-xl px-3 py-2.5 flex items-center gap-3 text-left active:scale-98 transition-transform"
                                     :style="glassStyle">
                                 <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                     :style="ex.categories && ex.categories[0] ? catPillStyle(ex.categories[0]) : { background:'rgba(100,116,139,0.15)' }">
-                                    <i :data-lucide="ex.type === 'duration' ? 'timer' : 'dumbbell'" class="w-3.5 h-3.5"></i>
-                                </div>
+                                     :style="ex.categories && ex.categories[0] ? catPillStyle(ex.categories[0]) : { background:'rgba(100,116,139,0.15)' }"
+                                     v-html="ex.type === 'duration' ? ICON_TIMER : ICON_DUMBBELL"></div>
                                 <div class="flex-1 min-w-0">
                                     <p class="font-black text-sm truncate">{{ exDisplayName(ex) }}</p>
                                     <div class="flex gap-1 flex-wrap mt-0.5">
@@ -835,31 +845,32 @@
                                               class="category-pill" :style="catPillStyle(cat)">{{ catLabel(cat) }}</span>
                                     </div>
                                 </div>
-                                <i data-lucide="plus-circle" class="w-4 h-4 opacity-40 flex-shrink-0"></i>
+                                <span v-html="ICON_PLUS_CIRCLE" class="opacity-40 flex-shrink-0"></span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Add exercise toggle button -->
+                    <!-- Add exercise toggle -->
                     <button @click="showPickModal = !showPickModal"
                             class="w-full py-3 rounded-2xl glass font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
-                            :style="glassStyle"
-                            style="border:1px dashed rgba(255,255,255,0.2)">
-                        <i :data-lucide="showPickModal ? 'minus' : 'plus'" class="w-4 h-4"></i>
+                            :style="glassStyle" style="border:1px dashed rgba(255,255,255,0.2)">
+                        <span v-html="showPickModal ? ICON_MINUS : ICON_PLUS"></span>
                         {{ t.addExercise }}
                     </button>
 
-                </div>
+                </div><!-- end .log-body -->
 
+                <!-- ── Sticky footer ── -->
                 <div class="lapis-modal-footer">
                     <button @click="saveLogAndClose" class="lapis-btn-primary"
                             :class="{ 'opacity-40 pointer-events-none': logExercises.length === 0 }">
                         {{ t.saveLog }}
                     </button>
-                    <button @click="showLogModal = false" class="lapis-btn-secondary">
+                    <button @click="discardAndClose()" class="lapis-btn-secondary">
                         {{ t.cancel }}
                     </button>
                 </div>
+
             </div>
         </div>
     </transition>
