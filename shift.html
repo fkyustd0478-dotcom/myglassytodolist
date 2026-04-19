@@ -198,20 +198,22 @@
         </div>
     </nav>
 
-    <!-- ── Backdrop ──────────────────────────────────────────────────────── -->
+    <!-- ── Backdrop (LV2 — dims behind all modals) ──────────────────────── -->
     <transition name="fade">
         <div v-if="showTodayTasks || showDayDetail || confirmModal.show || showTagsModal"
-             class="modal-backdrop level-3"
+             class="modal-backdrop"
+             style="z-index: var(--z-modal-lv2)"
              @click="showTodayTasks = showDayDetail = confirmModal.show = showTagsModal = false">
         </div>
     </transition>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         標籤設定 Modal (z-8001)
+         標籤設定 Modal (LV2 primary)
          ══════════════════════════════════════════════════════════════════════ -->
     <transition name="slide-up">
         <div v-if="showTagsModal"
-             class="fixed inset-0 z-[8001] flex items-center justify-center p-4"
+             class="fixed inset-0 flex items-center justify-center p-4"
+             style="z-index: var(--z-modal-lv2)"
              @click.self="showTagsModal = false">
             <div class="w-[90%] max-w-md glass rounded-[2.5rem] h-[60vh] flex flex-col overflow-hidden"
                  :style="glassStyle" @click.stop>
@@ -462,96 +464,14 @@
     </transition>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         Circular Clock Picker (z-9000)
+         Circular Clock Picker — moved below level-4 modals; see end of #app
          ══════════════════════════════════════════════════════════════════════ -->
-    <transition name="fade">
-        <div v-if="clockPicker.show"
-             class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl"
-             @click.self="clockPicker.show = false">
-            <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-xs"
-                 :style="glassStyle" @click.stop>
-
-                <!-- Time display + AM/PM -->
-                <div class="flex items-center justify-center gap-3">
-                    <button @click="clockPicker.mode = 'hour'"
-                            class="text-4xl font-black transition-opacity"
-                            :class="clockPicker.mode === 'hour' ? 'opacity-100' : 'opacity-30'">
-                        {{ clockDisplayHour.toString().padStart(2,'0') }}
-                    </button>
-                    <span class="text-4xl font-black opacity-40">:</span>
-                    <button @click="clockPicker.mode = 'minute'"
-                            class="text-4xl font-black transition-opacity"
-                            :class="clockPicker.mode === 'minute' ? 'opacity-100' : 'opacity-30'">
-                        {{ clockPicker.minute.toString().padStart(2,'0') }}
-                    </button>
-                    <div class="flex flex-col gap-1 ml-1">
-                        <button @click="toggleClockAmPm(true)"
-                                class="px-2.5 py-1 rounded-lg text-[11px] font-black transition-all"
-                                :class="clockIsAM ? 'bg-blue-500 text-white' : 'glass opacity-50'">AM</button>
-                        <button @click="toggleClockAmPm(false)"
-                                class="px-2.5 py-1 rounded-lg text-[11px] font-black transition-all"
-                                :class="!clockIsAM ? 'bg-blue-500 text-white' : 'glass opacity-50'">PM</button>
-                    </div>
-                </div>
-
-                <!-- SVG Clock Face -->
-                <div class="mx-auto w-60 h-60">
-                    <svg viewBox="0 0 200 200" class="w-full h-full select-none">
-                        <circle cx="100" cy="100" r="96"
-                                fill="rgba(255,255,255,0.04)"
-                                stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
-                        <line x1="100" y1="100" :x2="clockHandX" :y2="clockHandY"
-                              stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
-                        <circle cx="100" cy="100" r="4" fill="#3b82f6"/>
-
-                        <template v-if="clockPicker.mode === 'hour'">
-                            <g v-for="dot in clockHourDots" :key="dot.h"
-                               class="cursor-pointer" @click="selectClockHour(dot.h)">
-                                <circle :cx="dot.x" :cy="dot.y" r="17"
-                                        :fill="clockDisplayHour === dot.h ? '#3b82f6' : 'rgba(255,255,255,0.08)'"/>
-                                <text :x="dot.x" :y="dot.y" text-anchor="middle"
-                                      dominant-baseline="central" fill="white"
-                                      font-size="13" font-weight="700"
-                                      style="pointer-events:none">{{ dot.h }}</text>
-                            </g>
-                        </template>
-
-                        <template v-else>
-                            <g v-for="dot in clockMinuteDots" :key="dot.m"
-                               class="cursor-pointer" @click="selectClockMinute(dot.m)">
-                                <circle :cx="dot.x" :cy="dot.y" r="17"
-                                        :fill="clockPicker.minute === dot.m ? '#3b82f6' : 'rgba(255,255,255,0.08)'"/>
-                                <text :x="dot.x" :y="dot.y" text-anchor="middle"
-                                      dominant-baseline="central" fill="white"
-                                      font-size="11" font-weight="700"
-                                      style="pointer-events:none">{{ dot.m.toString().padStart(2,'0') }}</text>
-                            </g>
-                        </template>
-                    </svg>
-                </div>
-
-                <p class="text-center text-[10px] font-black opacity-30 uppercase tracking-widest -mt-2">
-                    {{ clockPicker.mode === 'hour' ? t.clickHourHint : t.clickMinuteHint }}
-                </p>
-
-                <div class="flex gap-3 pt-1">
-                    <button @click="clockPicker.show = false"
-                            class="flex-1 py-3 rounded-2xl glass text-sm font-black" :style="glassStyle">
-                        {{ t.cancel }}
-                    </button>
-                    <button @click="confirmClockPicker"
-                            class="flex-1 py-3 rounded-2xl bg-blue-500 text-white text-sm font-black border-[2px]"
-                            :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }">
-                        {{ t.confirm }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </transition>
-
-    <!-- ── Today's Tasks (Level 4) ───────────────────────────────────────── -->
+    <!-- ── Today's Tasks (LV3 secondary) ──────────────────────────────────── -->
     <transition name="slide-up">
-        <div v-if="showTodayTasks" class="modal-backdrop level-4" @click.self="showTodayTasks = false">
+        <div v-if="showTodayTasks"
+             class="modal-backdrop"
+             style="z-index: var(--z-modal-lv3)"
+             @click.self="showTodayTasks = false">
             <div class="modal-content glass">
                 <div class="modal-header">
                     <h2 class="text-2xl font-black tracking-tight">{{ t.todayTasks }}</h2>
@@ -574,9 +494,12 @@
         </div>
     </transition>
 
-    <!-- ── Day Detail (Level 4) ──────────────────────────────────────────── -->
+    <!-- ── Day Detail (LV3 secondary) ──────────────────────────────────────── -->
     <transition name="slide-up">
-        <div v-if="showDayDetail" class="modal-backdrop level-4" @click.self="showDayDetail = false">
+        <div v-if="showDayDetail"
+             class="modal-backdrop"
+             style="z-index: var(--z-modal-lv3)"
+             @click.self="showDayDetail = false">
             <div class="modal-content glass">
                 <div class="modal-header">
                     <h2 class="text-2xl font-black tracking-tight">{{ selectedDay }}</h2>
@@ -664,9 +587,11 @@
         </div>
     </transition>
 
-    <!-- ── Confirmation Modal (Level 4) ─────────────────────────────────── -->
+    <!-- ── Confirmation Modal (LV3 secondary) ──────────────────────────────── -->
     <transition name="fade">
-        <div v-if="confirmModal && confirmModal.show" class="modal-backdrop level-4"
+        <div v-if="confirmModal && confirmModal.show"
+             class="modal-backdrop"
+             style="z-index: var(--z-modal-lv3)"
              @click.self="confirmModal.show = false">
             <div class="modal-content glass text-center">
                 <h2 class="text-xl font-black mb-4" v-text="confirmModal.title || ''"></h2>
@@ -675,6 +600,93 @@
                     <button @click="confirmModal.show = false" class="glass-button flex-1">{{ t.cancel }}</button>
                     <button @click="confirmModal.onConfirm && confirmModal.onConfirm(); confirmModal.show = false"
                             class="glass-button flex-1 bg-red-500/20 text-red-400">{{ t.confirm }}</button>
+                </div>
+            </div>
+        </div>
+    </transition>
+
+    <!-- ── Circular Clock Picker (LV3 secondary — placed last, above Tags modal) ── -->
+    <transition name="fade">
+        <div v-if="clockPicker.show"
+             class="fixed inset-0 flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl"
+             style="z-index: var(--z-modal-lv3)"
+             @click.self="clockPicker.show = false">
+            <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-xs"
+                 :style="glassStyle" @click.stop>
+
+                <!-- Time display + AM/PM -->
+                <div class="flex items-center justify-center gap-3">
+                    <button @click="clockPicker.mode = 'hour'"
+                            class="text-4xl font-black transition-opacity"
+                            :class="clockPicker.mode === 'hour' ? 'opacity-100' : 'opacity-30'">
+                        {{ clockDisplayHour.toString().padStart(2,'0') }}
+                    </button>
+                    <span class="text-4xl font-black opacity-40">:</span>
+                    <button @click="clockPicker.mode = 'minute'"
+                            class="text-4xl font-black transition-opacity"
+                            :class="clockPicker.mode === 'minute' ? 'opacity-100' : 'opacity-30'">
+                        {{ clockPicker.minute.toString().padStart(2,'0') }}
+                    </button>
+                    <div class="flex flex-col gap-1 ml-1">
+                        <button @click="toggleClockAmPm(true)"
+                                class="px-2.5 py-1 rounded-lg text-[11px] font-black transition-all"
+                                :class="clockIsAM ? 'bg-blue-500 text-white' : 'glass opacity-50'">AM</button>
+                        <button @click="toggleClockAmPm(false)"
+                                class="px-2.5 py-1 rounded-lg text-[11px] font-black transition-all"
+                                :class="!clockIsAM ? 'bg-blue-500 text-white' : 'glass opacity-50'">PM</button>
+                    </div>
+                </div>
+
+                <!-- SVG Clock Face -->
+                <div class="mx-auto w-60 h-60">
+                    <svg viewBox="0 0 200 200" class="w-full h-full select-none">
+                        <circle cx="100" cy="100" r="96"
+                                fill="rgba(255,255,255,0.04)"
+                                stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                        <line x1="100" y1="100" :x2="clockHandX" :y2="clockHandY"
+                              stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+                        <circle cx="100" cy="100" r="4" fill="#3b82f6"/>
+
+                        <template v-if="clockPicker.mode === 'hour'">
+                            <g v-for="dot in clockHourDots" :key="dot.h"
+                               class="cursor-pointer" @click="selectClockHour(dot.h)">
+                                <circle :cx="dot.x" :cy="dot.y" r="17"
+                                        :fill="clockDisplayHour === dot.h ? '#3b82f6' : 'rgba(255,255,255,0.08)'"/>
+                                <text :x="dot.x" :y="dot.y" text-anchor="middle"
+                                      dominant-baseline="central" fill="white"
+                                      font-size="13" font-weight="700"
+                                      style="pointer-events:none">{{ dot.h }}</text>
+                            </g>
+                        </template>
+
+                        <template v-else>
+                            <g v-for="dot in clockMinuteDots" :key="dot.m"
+                               class="cursor-pointer" @click="selectClockMinute(dot.m)">
+                                <circle :cx="dot.x" :cy="dot.y" r="17"
+                                        :fill="clockPicker.minute === dot.m ? '#3b82f6' : 'rgba(255,255,255,0.08)'"/>
+                                <text :x="dot.x" :y="dot.y" text-anchor="middle"
+                                      dominant-baseline="central" fill="white"
+                                      font-size="11" font-weight="700"
+                                      style="pointer-events:none">{{ dot.m.toString().padStart(2,'0') }}</text>
+                            </g>
+                        </template>
+                    </svg>
+                </div>
+
+                <p class="text-center text-[10px] font-black opacity-30 uppercase tracking-widest -mt-2">
+                    {{ clockPicker.mode === 'hour' ? t.clickHourHint : t.clickMinuteHint }}
+                </p>
+
+                <div class="flex gap-3 pt-1">
+                    <button @click="clockPicker.show = false"
+                            class="flex-1 py-3 rounded-2xl glass text-sm font-black" :style="glassStyle">
+                        {{ t.cancel }}
+                    </button>
+                    <button @click="confirmClockPicker"
+                            class="flex-1 py-3 rounded-2xl bg-blue-500 text-white text-sm font-black border-[2px]"
+                            :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }">
+                        {{ t.confirm }}
+                    </button>
                 </div>
             </div>
         </div>

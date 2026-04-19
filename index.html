@@ -225,10 +225,13 @@
             <!-- Theme/Settings Modal removed — all visual config handled by setting.html -->
 
 
-            <!-- Add/Edit Modal -->
+            <!-- Add/Edit Modal (LV2 primary) -->
             <transition name="slide-up">
-                <div v-show="isAdding || isEditing" :key="'add-edit-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm modal-backdrop-level-3" @click.self.stop.prevent="closeModal">
-                    <div class="w-[90%] max-w-md glass rounded-[2.5rem] p-8 space-y-6 h-[60vh] overflow-y-auto modal-content-level-3" :style="glassStyle" @click.stop>
+                <div v-show="isAdding || isEditing" :key="'add-edit-modal'"
+                     class="fixed inset-0 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+                     style="z-index: var(--z-modal-lv2)"
+                     @click.self.stop.prevent="closeModal">
+                    <div class="w-[90%] max-w-md glass rounded-[2.5rem] p-8 space-y-6 h-[60vh] overflow-y-auto" :style="glassStyle" @click.stop>
                         <div class="flex justify-between items-center">
                             <h2 class="text-2xl font-black">{{ isEditing ? t.editTask : t.newTask }}</h2>
                             <button @click="closeModal" class="opacity-40"><i data-lucide="x" class="w-6 h-6"></i></button>
@@ -309,57 +312,6 @@
                 </div>
             </transition>
 
-            <!-- Lapis Date-Time Picker -->
-            <transition name="slide-up">
-                <div v-show="showDateTimePicker"
-                     class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
-                     @click.self.stop.prevent="closeDateTimePicker">
-                    <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4 modal-content-level-4"
-                         :style="glassStyle" @click.stop>
-
-                        <!-- Mode Tabs -->
-                        <div class="flex gap-2">
-                            <button @click="switchPickerMode('date')"
-                                    class="flex-1 py-2 rounded-full text-xs font-black transition-all"
-                                    :class="pickerMode === 'date' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
-                                    :style="pickerMode !== 'date' ? glassStyle : {}">
-                                {{ t.date }}
-                            </button>
-                            <button @click="switchPickerMode('time')"
-                                    class="flex-1 py-2 rounded-full text-xs font-black transition-all"
-                                    :class="pickerMode === 'time' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
-                                    :style="pickerMode !== 'time' ? glassStyle : {}">
-                                {{ t.time }}
-                            </button>
-                        </div>
-
-                        <!-- Date picker -->
-                        <div v-show="pickerMode === 'date'" class="space-y-3">
-                            <div id="lapis-date-picker"></div>
-                            <div class="flex gap-2">
-                                <button @click="setToday"
-                                        class="flex-1 py-2 rounded-xl glass text-xs font-black opacity-70"
-                                        :style="glassStyle">{{ t.day }}</button>
-                                <button @click="setTomorrow"
-                                        class="flex-1 py-2 rounded-xl glass text-xs font-black opacity-70"
-                                        :style="glassStyle">+1</button>
-                            </div>
-                        </div>
-
-                        <!-- Time picker -->
-                        <div v-show="pickerMode === 'time'">
-                            <div id="lapis-time-picker"></div>
-                        </div>
-
-                        <button @click="closeDateTimePicker"
-                                class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2.5px]"
-                                :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
-                            OK
-                        </button>
-                    </div>
-                </div>
-            </transition>
-
             <!-- Bottom Navigation -->
             <nav v-show="view !== 'settings' && !isAnyModalOpen" class="bottom-nav glass" :style="glassStyle">
                 <button @click="view = 'active'" class="nav-item" :class="{ active: view === 'active' }">
@@ -380,10 +332,13 @@
                 </button>
             </nav>
 
-            <!-- Manage Lists Modal -->
+            <!-- Manage Lists Modal (LV2 primary) -->
             <transition name="fade">
-                <div v-show="manageModal.show" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl modal-backdrop-level-3" @click.self.stop.prevent="closeManageModal">
-                    <div class="glass rounded-[2.5rem] p-8 w-full max-w-md flex flex-col max-h-[85vh] modal-content-level-3" :style="glassStyle" @click.stop>
+                <div v-show="manageModal.show"
+                     class="fixed inset-0 flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl"
+                     style="z-index: var(--z-modal-lv2)"
+                     @click.self.stop.prevent="closeManageModal">
+                    <div class="glass rounded-[2.5rem] p-8 w-full max-w-md flex flex-col max-h-[85vh]" :style="glassStyle" @click.stop>
                         <div class="flex justify-between items-center mb-8">
                             <h2 class="text-2xl font-black tracking-tight">Manage Lists</h2>
                             <button @click="closeManageModal" class="opacity-40 hover:opacity-100 transition-opacity">
@@ -421,10 +376,13 @@
                 </div>
             </transition>
 
-            <!-- List Management Modal (Add/Delete) -->
+            <!-- List Management Modal (LV2 primary) -->
             <transition name="fade">
-                <div v-show="listModal.show" :key="'list-mgmt-modal'" class="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-3" @click.self.stop.prevent="closeListModal">
-                    <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center modal-content-level-3" :style="glassStyle">
+                <div v-show="listModal.show" :key="'list-mgmt-modal'"
+                     class="fixed inset-0 flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
+                     style="z-index: var(--z-modal-lv2)"
+                     @click.self.stop.prevent="closeListModal">
+                    <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center" :style="glassStyle">
                         <h3 class="text-xl font-black tracking-tight">
                             {{ listModal.mode === 'add' ? t.newList : (listModal.mode === 'edit' ? t.editList : t.deleteList) }}
                         </h3>
@@ -447,22 +405,79 @@
                 </div>
             </transition>
 
-            <!-- Confirmation Modal -->
-            <transition name="fade">
-                <div v-if="confirmModal && confirmModal.show" :key="'confirm-modal'" class="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md modal-backdrop-level-4" @click.self.stop.prevent="confirmModal.show = false">
-                    <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center modal-content-level-4" :style="glassStyle" @click.stop>
-                        <h3 class="text-xl font-black tracking-tight" v-text="confirmModal.title || ''"></h3>
-                        <p class="text-sm opacity-60 leading-relaxed" v-text="confirmModal.message || ''"></p>
-                        <div class="flex gap-3">
-                            <button @click="confirmModal.show = false" class="flex-1 py-3 rounded-xl glass text-xs font-bold">{{ t.cancel }}</button>
-                            <button @click="executeConfirm" class="flex-1 py-3 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-widest border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
-                                {{ t.confirm }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </transition>
         </div>
     </div>
+
+    <!-- ── Date-Time Picker (LV3 secondary — placed last in #app, always above LV2 modals) ── -->
+    <transition name="slide-up">
+        <div v-show="showDateTimePicker"
+             class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             style="z-index: var(--z-modal-lv3)"
+             @click.self.stop.prevent="closeDateTimePicker">
+            <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4"
+                 :style="glassStyle" @click.stop>
+
+                <!-- Mode Tabs -->
+                <div class="flex gap-2">
+                    <button @click="switchPickerMode('date')"
+                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
+                            :class="pickerMode === 'date' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
+                            :style="pickerMode !== 'date' ? glassStyle : {}">
+                        {{ t.date }}
+                    </button>
+                    <button @click="switchPickerMode('time')"
+                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
+                            :class="pickerMode === 'time' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
+                            :style="pickerMode !== 'time' ? glassStyle : {}">
+                        {{ t.time }}
+                    </button>
+                </div>
+
+                <!-- Date picker -->
+                <div v-show="pickerMode === 'date'" class="space-y-3">
+                    <div id="lapis-date-picker"></div>
+                    <div class="flex gap-2">
+                        <button @click="setToday"
+                                class="flex-1 py-2 rounded-xl glass text-xs font-black opacity-70"
+                                :style="glassStyle">{{ t.day }}</button>
+                        <button @click="setTomorrow"
+                                class="flex-1 py-2 rounded-xl glass text-xs font-black opacity-70"
+                                :style="glassStyle">+1</button>
+                    </div>
+                </div>
+
+                <!-- Time picker -->
+                <div v-show="pickerMode === 'time'">
+                    <div id="lapis-time-picker"></div>
+                </div>
+
+                <button @click="closeDateTimePicker"
+                        class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2.5px]"
+                        :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
+                    OK
+                </button>
+            </div>
+        </div>
+    </transition>
+
+    <!-- ── Confirmation Modal (LV3 secondary — placed last in #app, always above LV2 modals) ── -->
+    <transition name="fade">
+        <div v-if="confirmModal && confirmModal.show" :key="'confirm-modal'"
+             class="fixed inset-0 flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
+             style="z-index: var(--z-modal-lv3)"
+             @click.self.stop.prevent="confirmModal.show = false">
+            <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center" :style="glassStyle" @click.stop>
+                <h3 class="text-xl font-black tracking-tight" v-text="confirmModal.title || ''"></h3>
+                <p class="text-sm opacity-60 leading-relaxed" v-text="confirmModal.message || ''"></p>
+                <div class="flex gap-3">
+                    <button @click="confirmModal.show = false" class="flex-1 py-3 rounded-xl glass text-xs font-bold">{{ t.cancel }}</button>
+                    <button @click="executeConfirm" class="flex-1 py-3 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-widest border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
+                        {{ t.confirm }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </transition>
+</div>
 </body>
 </html>

@@ -147,7 +147,8 @@
     <!-- ── Add / Edit Exercise Modal ─────────────────────────────────────────── -->
     <transition name="slide-up">
         <div v-show="showExModal"
-             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             style="z-index: var(--z-modal-lv2)"
              @click.self.stop.prevent="showExModal = false">
             <div class="lapis-modal-shell w-full" :style="shellStyle" @click.stop>
 
@@ -532,9 +533,10 @@
     <!-- ── Category Management Modal (3-level nested v-for — no recursion) ─── -->
     <transition name="slide-up">
         <div v-show="showCatMgr"
-             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
+             class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             style="z-index: var(--z-modal-lv2)"
              @click.self.stop.prevent="showCatMgr = false">
-            <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10 modal-content-level-4"
+            <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10"
                  :style="glassStyle" @click.stop>
 
                 <!-- Header -->
@@ -636,10 +638,11 @@
     <!-- ── Exercise Detail Modal ─────────────────────────────────────────── -->
     <transition name="slide-up">
         <div v-show="showExDetail"
-             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
+             class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             style="z-index: var(--z-modal-lv2)"
              @click.self.stop.prevent="showExDetail = false">
             <div v-if="exDetailData"
-                 class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10 space-y-5 modal-content-level-4"
+                 class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10 space-y-5"
                  :style="glassStyle" @click.stop>
 
                 <!-- Header -->
@@ -699,56 +702,11 @@
         </div>
     </transition>
 
-    <!-- ── Date-Time Picker Modal ──────────────────────────────────────────── -->
-    <transition name="slide-up">
-        <div v-show="showDateTimePicker"
-             class="fixed inset-0 z-[9500] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
-             @click.self.stop.prevent="closeWorkoutPicker">
-            <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4 modal-content-level-4"
-                 :style="glassStyle" @click.stop>
-
-                <!-- Mode Tabs -->
-                <div class="flex gap-2">
-                    <button @click="switchPickerMode('date')"
-                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
-                            :class="pickerMode === 'date' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
-                            :style="pickerMode !== 'date' ? glassStyle : {}">
-                        {{ t.date }}
-                    </button>
-                    <button @click="switchPickerMode('time')"
-                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
-                            :class="pickerMode === 'time' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
-                            :style="pickerMode !== 'time' ? glassStyle : {}">
-                        {{ t.time }}
-                    </button>
-                </div>
-
-                <!-- Date picker -->
-                <div v-show="pickerMode === 'date'" class="space-y-3">
-                    <div id="lapis-workout-date-picker"></div>
-                    <button @click="setPickerToday"
-                            class="w-full py-2 rounded-xl glass text-xs font-black opacity-70"
-                            :style="glassStyle">TODAY</button>
-                </div>
-
-                <!-- Time picker -->
-                <div v-show="pickerMode === 'time'">
-                    <div id="lapis-workout-time-picker"></div>
-                </div>
-
-                <button @click="closeWorkoutPicker"
-                        class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2px]"
-                        :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
-                    OK
-                </button>
-            </div>
-        </div>
-    </transition>
-
     <!-- ── Workout Log Modal ─────────────────────────────────────────────────── -->
     <transition name="slide-up">
         <div v-show="showLogModal"
-             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             style="z-index: var(--z-modal-lv2)"
              @click.self.stop.prevent="discardAndClose()">
             <div class="lapis-modal-shell workout-log-shell w-full" :style="shellStyle" @click.stop>
 
@@ -906,7 +864,8 @@
     <!-- ── PR History Modal ───────────────────────────────────────────────── -->
     <transition name="slide-up">
         <div v-show="showPRModal"
-             class="fixed inset-0 z-[9000] flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             style="z-index: var(--z-modal-lv2)"
              @click.self.stop.prevent="showPRModal = false">
             <div class="lapis-modal-shell w-full" id="modal-pr-history"
                  :style="shellStyle" @click.stop>
@@ -946,6 +905,53 @@
                     </button>
                 </div>
 
+            </div>
+        </div>
+    </transition>
+
+    <!-- ── Date-Time Picker Modal (placed last — must always paint above session editor) ── -->
+    <transition name="slide-up">
+        <div v-show="showDateTimePicker"
+             class="fixed inset-0 flex items-end justify-center bg-transparent"
+             style="z-index: var(--z-modal-lv3)"
+             @click.self.stop.prevent="closeWorkoutPicker">
+            <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4"
+                 :style="glassStyle" @click.stop>
+
+                <!-- Mode Tabs -->
+                <div class="flex gap-2">
+                    <button @click="switchPickerMode('date')"
+                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
+                            :class="pickerMode === 'date' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
+                            :style="pickerMode !== 'date' ? glassStyle : {}">
+                        {{ t.date }}
+                    </button>
+                    <button @click="switchPickerMode('time')"
+                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
+                            :class="pickerMode === 'time' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
+                            :style="pickerMode !== 'time' ? glassStyle : {}">
+                        {{ t.time }}
+                    </button>
+                </div>
+
+                <!-- Date picker -->
+                <div v-show="pickerMode === 'date'" class="space-y-3">
+                    <div id="lapis-workout-date-picker"></div>
+                    <button @click="setPickerToday"
+                            class="w-full py-2 rounded-xl glass text-xs font-black opacity-70"
+                            :style="glassStyle">TODAY</button>
+                </div>
+
+                <!-- Time picker -->
+                <div v-show="pickerMode === 'time'">
+                    <div id="lapis-workout-time-picker"></div>
+                </div>
+
+                <button @click="closeWorkoutPicker"
+                        class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2px]"
+                        :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
+                    OK
+                </button>
             </div>
         </div>
     </transition>

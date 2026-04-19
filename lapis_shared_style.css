@@ -6,6 +6,16 @@
      · Drum-roll Wheel Pickers
    ─────────────────────────────────────────────────────────────────────────── */
 
+/* ── Z-Index Scale ──────────────────────────────────────────────────────────
+   Single source of truth for all stacking layers across every page.
+   Usage: style="z-index: var(--z-modal-lv2)"                                */
+:root {
+    --z-nav:         7000;   /* Bottom / Top nav bars                         */
+    --z-modal-lv2:   8000;   /* Primary modals: Add Task, Edit Session…       */
+    --z-modal-lv3:   9000;   /* Secondary modals: Date/Time Picker, Confirm   */
+    --z-top-overlay: 10000;  /* Toasts, error reporters, global dropdowns     */
+}
+
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TOP CAPSULE NAV

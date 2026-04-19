@@ -258,7 +258,7 @@
     border-radius: 999px;
     font-size: 13px;
     font-weight: 800;
-    z-index: 9999;
+    z-index: var(--z-top-overlay);
     backdrop-filter: blur(16px);
     border: 1px solid rgba(255,255,255,0.35);
     box-shadow: 0 4px 20px rgba(34,197,94,0.4);
