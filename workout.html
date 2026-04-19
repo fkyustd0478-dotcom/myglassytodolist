@@ -289,17 +289,11 @@
             <div v-if="todaySessions.length > 0" class="space-y-3">
                 <div v-for="session in todaySessions" :key="session.id"
                      class="session-card glass" :style="glassStyle">
+                    <!-- Card header: time + edit/delete -->
                     <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2 flex-1 min-w-0">
-                            <span class="font-black text-sm font-mono">
-                                {{ session.time.hour.toString().padStart(2,'0') }}:{{ session.time.minute.toString().padStart(2,'0') }}
-                            </span>
-                            <button @click="toggleComplete(session.id)"
-                                    class="status-badge"
-                                    :class="session.isCompleted ? 'completed' : 'pending'">
-                                {{ session.isCompleted ? t.completed : t.pending }}
-                            </button>
-                        </div>
+                        <span class="font-black text-sm font-mono">
+                            {{ session.time.hour.toString().padStart(2,'0') }}:{{ session.time.minute.toString().padStart(2,'0') }}
+                        </span>
                         <div class="flex items-center gap-1 flex-shrink-0">
                             <button @click="openEditSession(session)" class="session-action-btn"
                                     v-html="ICON_EDIT"></button>
@@ -307,11 +301,26 @@
                                     v-html="ICON_TRASH"></button>
                         </div>
                     </div>
-                    <div class="session-summary">
-                        <span class="text-sm font-bold">{{ session.exercises.slice(0, 2).map(ex => exDisplayName(ex)).join(', ') }}</span>
-                        <span v-if="session.exercises.length > 2" class="text-xs opacity-40 font-bold ml-1">
-                            +{{ session.exercises.length - 2 }} {{ t.moreEx }}
-                        </span>
+                    <!-- Card body: one block per exercise -->
+                    <div v-for="(ex, exIdx) in session.exercises" :key="exIdx">
+                        <div v-if="exIdx > 0" class="session-ex-divider"></div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-black text-sm">{{ exDisplayName(ex) }}</span>
+                            <button @click.stop="toggleExerciseComplete(session.id, exIdx)"
+                                    class="status-badge"
+                                    :class="ex.isCompleted ? 'completed' : 'pending'">
+                                {{ ex.isCompleted ? t.completed : t.pending }}
+                            </button>
+                        </div>
+                        <div v-if="ex.type === 'sets'" class="space-y-0.5">
+                            <div v-for="(set, sIdx) in ex.sets" :key="sIdx"
+                                 class="text-xs opacity-50 font-mono">
+                                {{ set.reps || '—' }} × {{ set.numSets || 1 }} × {{ set.weight || '—' }} kg
+                            </div>
+                        </div>
+                        <div v-else class="text-xs opacity-50 font-mono">
+                            {{ ex.minutes || '—' }} min
+                        </div>
                     </div>
                 </div>
             </div>
@@ -333,19 +342,15 @@
                     <div class="space-y-3 mb-3">
                         <div v-for="session in group.sessions" :key="session.id"
                              class="session-card glass" :style="glassStyle">
+                            <!-- Card header: date + time + edit/delete -->
                             <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center gap-2 flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
                                     <span class="text-xs font-black opacity-50 font-mono flex-shrink-0">
                                         {{ session.date.slice(5).replace('-', '/') }}
                                     </span>
                                     <span class="font-black text-sm font-mono flex-shrink-0">
                                         {{ session.time.hour.toString().padStart(2,'0') }}:{{ session.time.minute.toString().padStart(2,'0') }}
                                     </span>
-                                    <button @click="toggleComplete(session.id)"
-                                            class="status-badge"
-                                            :class="session.isCompleted ? 'completed' : 'pending'">
-                                        {{ session.isCompleted ? t.completed : t.pending }}
-                                    </button>
                                 </div>
                                 <div class="flex items-center gap-1 flex-shrink-0">
                                     <button @click="openEditSession(session)" class="session-action-btn"
@@ -354,11 +359,26 @@
                                             v-html="ICON_TRASH"></button>
                                 </div>
                             </div>
-                            <div class="session-summary">
-                                <span class="text-sm font-bold">{{ session.exercises.slice(0, 2).map(ex => exDisplayName(ex)).join(', ') }}</span>
-                                <span v-if="session.exercises.length > 2" class="text-xs opacity-40 font-bold ml-1">
-                                    +{{ session.exercises.length - 2 }} {{ t.moreEx }}
-                                </span>
+                            <!-- Card body: one block per exercise -->
+                            <div v-for="(ex, exIdx) in session.exercises" :key="exIdx">
+                                <div v-if="exIdx > 0" class="session-ex-divider"></div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-black text-sm">{{ exDisplayName(ex) }}</span>
+                                    <button @click.stop="toggleExerciseComplete(session.id, exIdx)"
+                                            class="status-badge"
+                                            :class="ex.isCompleted ? 'completed' : 'pending'">
+                                        {{ ex.isCompleted ? t.completed : t.pending }}
+                                    </button>
+                                </div>
+                                <div v-if="ex.type === 'sets'" class="space-y-0.5">
+                                    <div v-for="(set, sIdx) in ex.sets" :key="sIdx"
+                                         class="text-xs opacity-50 font-mono">
+                                        {{ set.reps || '—' }} × {{ set.numSets || 1 }} × {{ set.weight || '—' }} kg
+                                    </div>
+                                </div>
+                                <div v-else class="text-xs opacity-50 font-mono">
+                                    {{ ex.minutes || '—' }} min
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -478,12 +498,6 @@
 
     <!-- ── Bottom Navigation ───────────────────────────────────────────────── -->
     <nav class="bottom-nav glass workout-bottom-nav" :style="glassStyle">
-        <!-- Action: open session modal (not a tab switch) -->
-        <button @click="openNewSession()" class="nav-item nav-action"
-                :class="{ active: showLogModal }">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-            <span>{{ t.tabAdd }}</span>
-        </button>
         <!-- Workout sessions tab -->
         <button @click="activeTab = 'workout'" class="nav-item"
                 :class="{ active: activeTab === 'workout' }">
@@ -502,11 +516,11 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             <span>{{ t.tabRecords }}</span>
         </button>
-        <!-- Settings tab -->
-        <button @click="activeTab = 'settings'" class="nav-item"
-                :class="{ active: activeTab === 'settings' }">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span>{{ t.tabSettings }}</span>
+        <!-- Action: open session modal (not a tab switch) — far right -->
+        <button @click="openNewSession()" class="nav-item nav-action"
+                :class="{ active: showLogModal }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <span>{{ t.tabAdd }}</span>
         </button>
     </nav>
 
@@ -683,7 +697,7 @@
     <!-- ── Date-Time Picker Modal ──────────────────────────────────────────── -->
     <transition name="slide-up">
         <div v-show="showDateTimePicker"
-             class="fixed inset-0 z-[9100] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
+             class="fixed inset-0 z-[9500] flex items-end justify-center bg-black/60 backdrop-blur-sm modal-backdrop-level-4"
              @click.self.stop.prevent="closeWorkoutPicker">
             <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4 modal-content-level-4"
                  :style="glassStyle" @click.stop>
@@ -785,15 +799,18 @@
                                         v-html="ICON_X"></button>
                             </div>
 
-                            <!-- Sets (compact) -->
+                            <!-- Sets (compact): [Reps] × [numSets] × [Weight] -->
                             <div v-if="entry.type === 'sets'" class="space-y-1.5">
                                 <div v-for="(set, sIdx) in entry.sets" :key="sIdx" class="compact-set-row">
                                     <span class="compact-set-num">{{ sIdx + 1 }}</span>
-                                    <input v-model="set.weight" type="number" inputmode="decimal"
-                                           :placeholder="t.weight" min="0" class="compact-input">
-                                    <span class="compact-x">×</span>
                                     <input v-model="set.reps" type="number" inputmode="numeric"
                                            :placeholder="t.reps" min="0" class="compact-input">
+                                    <span class="compact-x">×</span>
+                                    <input v-model="set.numSets" type="number" inputmode="numeric"
+                                           :placeholder="t.sets" min="1" class="compact-input compact-input-sm">
+                                    <span class="compact-x">×</span>
+                                    <input v-model="set.weight" type="number" inputmode="decimal"
+                                           :placeholder="t.weight" min="0" class="compact-input">
                                     <button @click="toggleSetDone(eIdx, sIdx)"
                                             class="compact-done-btn" :class="{ done: set.done }"
                                             v-html="set.done ? ICON_CHECK : ICON_CIRCLE"></button>

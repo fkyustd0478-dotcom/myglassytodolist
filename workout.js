@@ -340,9 +340,10 @@ window.addEventListener('DOMContentLoaded', () => {
             const addSet = (eIdx) => {
                 const prev = logExercises.value[eIdx].sets.slice(-1)[0] || {};
                 logExercises.value[eIdx].sets.push({
-                    weight: prev.weight || '',
-                    reps:   prev.reps   || '',
-                    done:   false
+                    reps:    prev.reps    || '',
+                    numSets: prev.numSets || '1',
+                    weight:  prev.weight  || '',
+                    done:    false
                 });
             };
 
@@ -449,6 +450,14 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (s) { s.isCompleted = !s.isCompleted; persist(); }
             };
 
+            const toggleExerciseComplete = (sessionId, exIdx) => {
+                const s = wData.logs.find(l => l.id === sessionId);
+                if (s && s.exercises[exIdx] !== undefined) {
+                    s.exercises[exIdx].isCompleted = !s.exercises[exIdx].isCompleted;
+                    persist();
+                }
+            };
+
             // ── PICK-EXERCISE MODAL (add to log) ─────────────────────────
             const showPickModal  = ref(false);
             const pickSearch     = ref('');
@@ -477,17 +486,19 @@ window.addEventListener('DOMContentLoaded', () => {
                     type:          isSets ? 'sets' : 'duration',
                     preferredUnit: isSets ? (ex.preferredUnit || 'kg') : undefined,
                     categories:    [...ex.categories],
-                    sets:          isSets ? [{ weight: '', reps: '', done: false }] : [],
-                    minutes:       isSets ? undefined : ''
+                    sets:          isSets ? [{ reps: '', numSets: '1', weight: '', done: false }] : [],
+                    minutes:       isSets ? undefined : '',
+                    isCompleted:   false,
                 });
                 showPickModal.value = false;
                 pickSearch.value   = '';
                 pickCategory.value = '';
-                // Auto-focus the weight input (or minutes input) of the newly added exercise
+                // Auto-focus the reps input of the newly added exercise's first set
                 nextTick(() => {
                     if (isSets) {
+                        // 3 inputs per set: reps, numSets, weight — focus reps (3rd from end)
                         const inputs = document.querySelectorAll('.log-body .compact-input');
-                        if (inputs.length >= 2) inputs[inputs.length - 2].focus();
+                        if (inputs.length >= 3) inputs[inputs.length - 3].focus();
                     } else {
                         const inputs = document.querySelectorAll('.log-body input[inputmode="numeric"]');
                         if (inputs.length) inputs[inputs.length - 1].focus();
@@ -798,8 +809,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 log.exercises.forEach(e => {
                     if (_isSets(e.type)) {
                         (e.sets || []).forEach(s => {
-                            const w = parseFloat(s.weight), r = parseInt(s.reps);
-                            if (!isNaN(w) && !isNaN(r)) vol += w * r;
+                            const w = parseFloat(s.weight), r = parseInt(s.reps), n = parseInt(s.numSets) || 1;
+                            if (!isNaN(w) && !isNaN(r)) vol += w * r * n;
                         });
                     }
                 });
@@ -823,8 +834,8 @@ window.addEventListener('DOMContentLoaded', () => {
                         exCount[e.name] = (exCount[e.name] || 0) + 1;
                         if (_isSets(e.type)) {
                             (e.sets || []).forEach(s => {
-                                const w = parseFloat(s.weight), r = parseInt(s.reps);
-                                if (!isNaN(w) && !isNaN(r)) totalVol += w * r;
+                                const w = parseFloat(s.weight), r = parseInt(s.reps), n = parseInt(s.numSets) || 1;
+                                if (!isNaN(w) && !isNaN(r)) totalVol += w * r * n;
                             });
                         }
                     });
@@ -1011,7 +1022,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 // records tab
                 recordsSubTab, editingSessionId,
                 todaySessions, historySessions, binSessions, groupedHistory,
-                softDeleteSession, restoreSession, permanentDeleteSession, toggleComplete,
+                softDeleteSession, restoreSession, permanentDeleteSession, toggleComplete, toggleExerciseComplete,
                 logSummary, logVolume, exDisplayName,
                 // svg icon constants
                 ICON_CHECK, ICON_EDIT, ICON_TRASH, ICON_RESTORE, ICON_X,

@@ -337,9 +337,9 @@
     padding-left: 4px;
 }
 
-/* ── Workout bottom-nav tweak (5 items) ──────────────────────────────────── */
+/* ── Workout bottom-nav tweak (4 items) ──────────────────────────────────── */
 .workout-bottom-nav .nav-item {
-    min-width: 48px;
+    min-width: 56px;
 }
 .workout-bottom-nav .nav-item span {
     font-size: 9px;
@@ -403,7 +403,7 @@ body.theme-waterfall    .workout-lib-header {
     flex-shrink: 0;
 }
 .compact-input {
-    width: 68px;
+    width: 54px;
     min-width: 0;
     flex-shrink: 0;
     padding: 6px 4px;
@@ -421,6 +421,7 @@ body.theme-waterfall    .workout-lib-header {
 .compact-input::-webkit-outer-spin-button,
 .compact-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .compact-input:focus { box-shadow: 0 0 0 2px rgba(59,130,246,0.45); }
+.compact-input-sm { width: 38px; }
 body.theme-light       .compact-input,
 body.theme-cherry      .compact-input,
 body.theme-sky         .compact-input,
@@ -632,6 +633,20 @@ body.theme-waterfall   .month-group-header {
     margin-top: 4px;
     min-width: 0;
 }
+
+/* ── Session Exercise Divider ────────────────────────────────────────────── */
+.session-ex-divider {
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin: 8px 0;
+}
+.theme-light-mode .session-ex-divider,
+body.theme-light       .session-ex-divider,
+body.theme-cherry      .session-ex-divider,
+body.theme-sky         .session-ex-divider,
+body.theme-seaside     .session-ex-divider,
+body.theme-sunset      .session-ex-divider,
+body.theme-mapleavenue .session-ex-divider,
+body.theme-waterfall   .session-ex-divider { border-top-color: rgba(0,0,0,0.07); }
 
 /* ── Bin Session Card — dimmed + desaturated ─────────────────────────────── */
 .session-card.bin-card {
