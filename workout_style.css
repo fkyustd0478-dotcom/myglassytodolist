@@ -337,12 +337,16 @@
     padding-left: 4px;
 }
 
-/* ── Workout bottom-nav tweak (4 items → tighter label) ─────────────────── */
+/* ── Workout bottom-nav tweak (5 items) ──────────────────────────────────── */
 .workout-bottom-nav .nav-item {
-    min-width: 60px;
+    min-width: 48px;
 }
 .workout-bottom-nav .nav-item span {
     font-size: 9px;
+}
+/* "+" action button — accent blue when modal is open */
+.workout-bottom-nav .nav-action.active {
+    color: var(--primary, #3b82f6);
 }
 
 /* ── Add-exercise-to-log dashed button ──────────────────────────────────── */

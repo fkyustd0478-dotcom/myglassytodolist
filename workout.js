@@ -24,7 +24,8 @@ const ICON_PLUS_CIRCLE = `<svg width="16" height="16" viewBox="0 0 24 24" fill="
 const _MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const _MONTHS_ZH = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 
-const LIBRARY_KEY = 'lapis_workout_library';
+const LIBRARY_KEY    = 'lapis_workout_library';
+const METRICS_KEY    = 'lapis_workout_metrics';
 
 const _defaultExercises = () => [
     { id: _wUid(), name: 'Bench Press',    nameZh: '槓鈴臥推',   categories: ['Chest'],       type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: 'Pectoralis Major, Triceps, Anterior Deltoid' },
@@ -105,7 +106,7 @@ const _defaultCategoryTree = () => [
 const _wT = {
     zh: {
         navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定', navWorkout: '琉璃健身',
-        tabAdd: '新增', tabExercises: '所有訓練動作', tabRecords: '紀錄', tabSettings: '設定',
+        tabAdd: '新增', tabExercises: '動作庫', tabRecords: '紀錄', tabSettings: '設定',
         date: '日期', time: '時間', today: '今天',
         setsReps: '組數 / 次數', duration: '時間',
         weight: '重量', reps: '次數', sets: '組', minutes: '分鐘', min: 'min', kg: 'kg',
@@ -139,6 +140,9 @@ const _wT = {
         noBinSessions: '回收桶是空的', newSession: '新增訓練',
         editSession: '編輯訓練', discardConfirm: '確定要放棄未儲存的變更嗎？',
         moreEx: '項', restoreMsg: '已還原',
+        tabWorkout: '訓練',
+        weightLog: '體重', personalBests: '個人最佳',
+        noWeightLog: '尚無體重紀錄', noPBs: '尚無個人最佳',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
@@ -176,6 +180,9 @@ const _wT = {
         noBinSessions: 'Recycle bin is empty', newSession: 'New Session',
         editSession: 'Edit Session', discardConfirm: 'Discard unsaved changes?',
         moreEx: 'more', restoreMsg: 'Session restored',
+        tabWorkout: 'Workout',
+        weightLog: 'Weight', personalBests: 'Personal Bests',
+        noWeightLog: 'No weight entries yet', noPBs: 'No personal bests yet',
     }
 };
 
@@ -204,6 +211,17 @@ window.addEventListener('DOMContentLoaded', () => {
             const wData   = reactive({ categories: [], logs: [] });
             const libData = reactive({ exercises: [] });
             const catTree = ref([]);
+
+            const metricsData = reactive({ weights: [] });
+
+            const metricsPersist = () => {
+                localStorage.setItem(METRICS_KEY, JSON.stringify(metricsData));
+            };
+
+            const hydrateMetrics = () => {
+                const raw = JSON.parse(localStorage.getItem(METRICS_KEY) || 'null');
+                if (raw) metricsData.weights = raw.weights || [];
+            };
 
             const persist = () => {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -265,7 +283,7 @@ window.addEventListener('DOMContentLoaded', () => {
             };
 
             // ── Tabs ──────────────────────────────────────────────────────
-            const activeTab = ref('add');
+            const activeTab = ref('workout');
             const recordsSubTab = ref('today');
             const editingSessionId = ref(null);
 
@@ -734,6 +752,37 @@ window.addEventListener('DOMContentLoaded', () => {
                 }))
             );
 
+            // ── PERSONAL METRICS ──────────────────────────────────────────
+            const weightForm = reactive({ weight: '', unit: 'kg' });
+
+            const saveWeight = () => {
+                const w = parseFloat(weightForm.weight);
+                if (isNaN(w) || w <= 0) return;
+                metricsData.weights.push({ date: _todayStr(), weight: w, unit: weightForm.unit });
+                metricsPersist();
+                weightForm.weight = '';
+                _toast(t.value.logSaved);
+            };
+
+            const personalBests = computed(() => {
+                const bests = {};
+                wData.logs.filter(l => !l.isDeleted).forEach(log => {
+                    log.exercises.forEach(ex => {
+                        if (ex.type !== 'sets') return;
+                        (ex.sets || []).forEach(set => {
+                            const w = parseFloat(set.weight), r = parseInt(set.reps);
+                            if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return;
+                            const key = ex.exerciseId || ex.name;
+                            if (!bests[key] || w > bests[key].weight ||
+                                (w === bests[key].weight && r > bests[key].reps)) {
+                                bests[key] = { name: ex.name, nameZh: ex.nameZh || '', weight: w, reps: r, date: log.date };
+                            }
+                        });
+                    });
+                });
+                return Object.values(bests).sort((a, b) => (a.nameZh || a.name).localeCompare(b.nameZh || b.name));
+            });
+
             // Compute a brief summary for a log entry
             const _isSets = (type) => type === 'sets' || type === 'sets_reps';
 
@@ -805,8 +854,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 logExercises.value     = [];
                 logDate.value          = _todayStr();
                 editingSessionId.value = null;
+                metricsData.weights    = [];
                 showClearConfirm.value = false;
-                persist(); libPersist(); catsPersist();
+                persist(); libPersist(); catsPersist(); metricsPersist();
             };
 
             const toggleLang = () => {
@@ -886,6 +936,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 hydrate();
                 hydrateCats();
                 hydrateLib();
+                hydrateMetrics();
 
                 // Inject Lapis navigation and initialize modal system
                 if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
@@ -966,6 +1017,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 ICON_CHECK, ICON_EDIT, ICON_TRASH, ICON_RESTORE, ICON_X,
                 ICON_CALENDAR, ICON_CLOCK, ICON_DUMBBELL, ICON_TIMER,
                 ICON_CIRCLE, ICON_MINUS, ICON_SEARCH, ICON_PLUS, ICON_PLUS_CIRCLE,
+                // personal metrics
+                metricsData, weightForm, saveWeight, personalBests,
                 // stats
                 stats,
                 // settings

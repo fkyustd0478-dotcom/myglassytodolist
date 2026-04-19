@@ -40,58 +40,6 @@
 
     <!-- ── Tab Content ─────────────────────────────────────────────────────── -->
 
-    <!-- Add Tab -->
-    <main v-show="activeTab === 'add'" class="workout-main">
-
-        <!-- Date / Time selectors -->
-        <div class="flex gap-3 mb-5">
-            <button @click="openPicker('date')"
-                    class="flex-1 glass rounded-2xl px-4 py-3 flex items-center gap-2 active:scale-95 transition-transform"
-                    :style="glassStyle">
-                <i data-lucide="calendar" class="w-4 h-4 opacity-50 flex-shrink-0"></i>
-                <span class="font-black text-sm">{{ logDate.replace(/-/g, '/') }}</span>
-                <button @click.stop="setPickerToday"
-                        class="ml-auto text-[10px] font-black opacity-40 hover:opacity-70 transition-opacity px-2 py-1 rounded-lg"
-                        style="background:rgba(255,255,255,0.08)">TODAY</button>
-            </button>
-            <button @click="openPicker('time')"
-                    class="glass rounded-2xl px-4 py-3 flex items-center gap-2 active:scale-95 transition-transform"
-                    :style="glassStyle">
-                <i data-lucide="clock" class="w-4 h-4 opacity-50 flex-shrink-0"></i>
-                <span class="font-black text-sm">{{ logTime.hour.toString().padStart(2,'0') }}:{{ logTime.minute.toString().padStart(2,'0') }}</span>
-            </button>
-        </div>
-
-        <!-- Exercise summary (when exercises added) -->
-        <div v-if="logExercises.length > 0" class="space-y-2 mb-5">
-            <div v-for="(entry, eIdx) in logExercises" :key="entry.exerciseId + eIdx"
-                 class="glass rounded-2xl px-4 py-3 flex items-center gap-3" :style="glassStyle">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                     :style="entry.categories && entry.categories[0] ? catPillStyle(entry.categories[0]) : { background:'rgba(100,116,139,0.15)' }">
-                    <i :data-lucide="entry.type === 'duration' ? 'timer' : 'dumbbell'" class="w-4 h-4"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="font-black text-sm truncate">{{ entry.nameZh || entry.name }}</p>
-                    <p class="text-[10px] opacity-40 font-mono" v-if="entry.type === 'sets'">
-                        {{ entry.sets.length }} {{ t.sets_unit }}
-                    </p>
-                    <p class="text-[10px] opacity-40 font-mono" v-else>
-                        {{ entry.minutes || '—' }} {{ t.min }}
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Start Workout button -->
-        <button @click="openNewSession()"
-                class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2px] flex items-center justify-center gap-2 active:scale-95 transition-transform mb-3"
-                :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
-            <i data-lucide="play-circle" class="w-5 h-5"></i>
-            {{ t.startWorkout }}
-        </button>
-
-    </main>
-
     <!-- Exercises Tab -->
     <main v-show="activeTab === 'exercises'" class="workout-main">
 
@@ -323,8 +271,8 @@
         </div>
     </transition>
 
-    <!-- Records Tab -->
-    <main v-show="activeTab === 'records'" class="workout-main">
+    <!-- Workout Tab (sessions: today / history / bin) -->
+    <main v-show="activeTab === 'workout'" class="workout-main">
 
         <!-- Sub-tab switcher -->
         <div class="records-sub-tabs">
@@ -461,6 +409,65 @@
 
     </main>
 
+    <!-- Records Tab (personal metrics) -->
+    <main v-show="activeTab === 'records'" class="workout-main">
+
+        <!-- ── Body Weight ──────────────────────────────────────────────── -->
+        <p class="section-label">{{ t.weightLog }}</p>
+
+        <div class="glass rounded-2xl p-4 mb-3 flex items-center gap-3" :style="glassStyle">
+            <input v-model="weightForm.weight" type="number" inputmode="decimal"
+                   placeholder="70.0"
+                   class="flex-1 bg-transparent outline-none font-black text-xl min-w-0">
+            <div class="type-toggle" style="width:auto; border-radius:10px">
+                <div @click="weightForm.unit = 'kg'" class="type-toggle-btn px-3"
+                     :class="{ active: weightForm.unit === 'kg' }">kg</div>
+                <div @click="weightForm.unit = 'lb'" class="type-toggle-btn px-3"
+                     :class="{ active: weightForm.unit === 'lb' }">lb</div>
+            </div>
+            <button @click="saveWeight()"
+                    class="px-4 py-2 rounded-xl bg-blue-600 text-white font-black text-xs flex-shrink-0 active:scale-95 transition-transform"
+                    :class="{ 'opacity-40 pointer-events-none': !weightForm.weight }">
+                {{ t.save }}
+            </button>
+        </div>
+
+        <div v-if="metricsData.weights.length > 0" class="space-y-2 mb-8">
+            <div v-for="entry in [...metricsData.weights].reverse().slice(0, 15)"
+                 :key="entry.date + entry.weight"
+                 class="glass rounded-xl px-4 py-3 flex items-center justify-between" :style="glassStyle">
+                <span class="text-xs opacity-50 font-mono">{{ entry.date }}</span>
+                <span class="font-black text-sm">{{ entry.weight }} {{ entry.unit }}</span>
+            </div>
+        </div>
+        <div v-else class="empty-state" style="padding:40px 20px">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-state-icon"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14h6"/><path d="M12 11v6"/></svg>
+            <p class="text-sm font-bold">{{ t.noWeightLog }}</p>
+        </div>
+
+        <!-- ── Personal Bests ───────────────────────────────────────────── -->
+        <p class="section-label">{{ t.personalBests }}</p>
+
+        <div v-if="personalBests.length > 0" class="space-y-2">
+            <div v-for="pb in personalBests" :key="pb.name"
+                 class="glass rounded-2xl p-4" :style="glassStyle">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="font-black text-sm">{{ navSettings.lang === 'zh' && pb.nameZh ? pb.nameZh : pb.name }}</span>
+                    <span class="text-xs opacity-40 font-mono">{{ pb.date }}</span>
+                </div>
+                <p class="text-2xl font-black leading-none mt-1">
+                    {{ pb.weight }}<span class="text-sm font-bold opacity-50 ml-1">kg</span>
+                    <span class="text-sm font-bold opacity-50 ml-3">× {{ pb.reps }}</span>
+                </p>
+            </div>
+        </div>
+        <div v-else class="empty-state" style="padding:40px 20px">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-state-icon"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            <p class="text-sm font-bold">{{ t.noPBs }}</p>
+        </div>
+
+    </main>
+
     <!-- Settings Tab -->
     <main v-show="activeTab === 'settings'" class="workout-main">
         <div class="empty-state">
@@ -471,20 +478,34 @@
 
     <!-- ── Bottom Navigation ───────────────────────────────────────────────── -->
     <nav class="bottom-nav glass workout-bottom-nav" :style="glassStyle">
-        <button @click="activeTab = 'add'" class="nav-item" :class="{ active: activeTab === 'add' }">
-            <i data-lucide="plus-circle" class="w-6 h-6"></i>
+        <!-- Action: open session modal (not a tab switch) -->
+        <button @click="openNewSession()" class="nav-item nav-action"
+                :class="{ active: showLogModal }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             <span>{{ t.tabAdd }}</span>
         </button>
-        <button @click="activeTab = 'exercises'" class="nav-item" :class="{ active: activeTab === 'exercises' }">
-            <i data-lucide="dumbbell" class="w-6 h-6"></i>
+        <!-- Workout sessions tab -->
+        <button @click="activeTab = 'workout'" class="nav-item"
+                :class="{ active: activeTab === 'workout' }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16"/><path d="M18 4v16"/><path d="M6 8h12"/><path d="M6 16h12"/><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h.5"/><path d="M3 17.5A1.5 1.5 0 0 0 4.5 19h.5"/><path d="M21 6.5A1.5 1.5 0 0 0 19.5 5h-.5"/><path d="M21 17.5A1.5 1.5 0 0 1 19.5 19h-.5"/></svg>
+            <span>{{ t.tabWorkout }}</span>
+        </button>
+        <!-- Exercise library tab -->
+        <button @click="activeTab = 'exercises'" class="nav-item"
+                :class="{ active: activeTab === 'exercises' }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             <span>{{ t.tabExercises }}</span>
         </button>
-        <button @click="activeTab = 'records'" class="nav-item" :class="{ active: activeTab === 'records' }">
-            <i data-lucide="history" class="w-6 h-6"></i>
+        <!-- Records / metrics tab -->
+        <button @click="activeTab = 'records'" class="nav-item"
+                :class="{ active: activeTab === 'records' }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             <span>{{ t.tabRecords }}</span>
         </button>
-        <button @click="activeTab = 'settings'" class="nav-item" :class="{ active: activeTab === 'settings' }">
-            <i data-lucide="settings-2" class="w-6 h-6"></i>
+        <!-- Settings tab -->
+        <button @click="activeTab = 'settings'" class="nav-item"
+                :class="{ active: activeTab === 'settings' }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             <span>{{ t.tabSettings }}</span>
         </button>
     </nav>
