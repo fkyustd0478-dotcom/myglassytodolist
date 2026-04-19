@@ -576,25 +576,37 @@ body.theme-waterfall   .compact-input {
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    opacity: 0.45;
+    opacity: 0.55;
     padding: 8px 4px 6px;
     margin-top: 8px;
     position: sticky;
     top: 0;
     z-index: 5;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    /* Opaque enough to hide scrolling content beneath */
+    background: rgba(0, 0, 0, 0.18);
+}
+.theme-light-mode .month-group-header,
+body.theme-light       .month-group-header,
+body.theme-cherry      .month-group-header,
+body.theme-sky         .month-group-header,
+body.theme-seaside     .month-group-header,
+body.theme-sunset      .month-group-header,
+body.theme-mapleavenue .month-group-header,
+body.theme-waterfall   .month-group-header {
+    background: rgba(255, 255, 255, 0.22);
 }
 .month-group-header:first-child { margin-top: 0; }
 
-/* ── Session Action Buttons ──────────────────────────────────────────────── */
+/* ── Session Action Buttons (40 × 40 for comfortable thumb-tapping) ─────── */
 .session-action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     opacity: 0.35;
     transition: all 0.18s;
     color: inherit;
@@ -606,3 +618,20 @@ body.theme-waterfall   .compact-input {
 .session-action-btn.delete-btn  { color: #ef4444; opacity: 0.55; }
 .session-action-btn.restore-btn:hover { opacity: 1; }
 .session-action-btn.delete-btn:hover  { opacity: 1; }
+
+/* ── Session Summary Line ─────────────────────────────────────────────────── */
+.session-summary {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-top: 4px;
+    min-width: 0;
+}
+
+/* ── Bin Session Card — dimmed + desaturated ─────────────────────────────── */
+.session-card.bin-card {
+    filter: grayscale(0.25);
+    transition: filter 0.2s, opacity 0.2s;
+}
+.session-card.bin-card:hover { filter: grayscale(0); }

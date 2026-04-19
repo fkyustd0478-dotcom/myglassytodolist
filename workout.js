@@ -138,6 +138,7 @@ const _wT = {
         noTodaySessions: '今天沒有訓練紀錄', noHistorySessions: '沒有歷史紀錄',
         noBinSessions: '回收桶是空的', newSession: '新增訓練',
         editSession: '編輯訓練', discardConfirm: '確定要放棄未儲存的變更嗎？',
+        moreEx: '項', restoreMsg: '已還原',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
@@ -174,6 +175,7 @@ const _wT = {
         noTodaySessions: 'No sessions today', noHistorySessions: 'No history yet',
         noBinSessions: 'Recycle bin is empty', newSession: 'New Session',
         editSession: 'Edit Session', discardConfirm: 'Discard unsaved changes?',
+        moreEx: 'more', restoreMsg: 'Session restored',
     }
 };
 
@@ -415,7 +417,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
             const restoreSession = (id) => {
                 const s = wData.logs.find(l => l.id === id);
-                if (s) { s.isDeleted = false; persist(); }
+                if (s) { s.isDeleted = false; persist(); _toast(t.value.restoreMsg); }
             };
 
             const permanentDeleteSession = (id) => {
@@ -463,6 +465,16 @@ window.addEventListener('DOMContentLoaded', () => {
                 showPickModal.value = false;
                 pickSearch.value   = '';
                 pickCategory.value = '';
+                // Auto-focus the weight input (or minutes input) of the newly added exercise
+                nextTick(() => {
+                    if (isSets) {
+                        const inputs = document.querySelectorAll('.log-body .compact-input');
+                        if (inputs.length >= 2) inputs[inputs.length - 2].focus();
+                    } else {
+                        const inputs = document.querySelectorAll('.log-body input[inputmode="numeric"]');
+                        if (inputs.length) inputs[inputs.length - 1].focus();
+                    }
+                });
             };
 
             // ── EXERCISES TAB ─────────────────────────────────────────────
