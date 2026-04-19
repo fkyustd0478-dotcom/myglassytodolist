@@ -1,468 +1,155 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
 
-    <!-- Anti-flash: read saved theme from localStorage and apply class to <html>
-         before any CSS renders, preventing the dark-background flash on light themes -->
+    <!-- Anti-flash: apply theme class before CSS renders -->
     <script>!function(){try{var d=JSON.parse(localStorage.getItem('todo_settings')||'{}'),t=d.theme||'light';if(t==='system')t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.className='theme-'+t;var dk=['dark','forest','night','torii','starrysky','ferriswheel'];document.documentElement.style.background=dk.indexOf(t)>=0?'#0d1117':'#f0f4ff';}catch(e){}}();</script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Glassy Todo</title>
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    
+    <title>Glassy Home</title>
+
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <!-- CDNs -->
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
     <link rel="stylesheet" href="shared_theme.css">
     <link rel="stylesheet" href="effects.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="lapis_shared_style.css">
+
     <script src="effects.js" defer></script>
     <script src="storage.js" defer></script>
     <script src="nav.js" defer></script>
-    <script src="lapis_core_ui.js" defer></script>
-    <script src="lapis_picker.js" defer></script>
-    <script src="lapis_confirm.js" defer></script>
-    <script src="todo.js?v=2.1" defer></script>
+    <script src="lapis_global_nav.js" defer></script>
+    <script src="index.js" defer></script>
+
+    <style>
+        .portal-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+            border-radius: 22px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.18s ease, opacity 0.18s ease;
+        }
+        .portal-card:active { transform: scale(0.97); opacity: 0.85; }
+        .portal-icon {
+            width: 52px; height: 52px;
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .portal-info { flex: 1; min-width: 0; }
+        .portal-name { font-size: 16px; font-weight: 900; margin: 0 0 3px; line-height: 1.2; }
+        .portal-desc { font-size: 12px; opacity: 0.45; margin: 0; font-weight: 600; }
+        .portal-chevron { opacity: 0.25; flex-shrink: 0; }
+        .settings-link {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 14px 20px; border-radius: 16px;
+            text-decoration: none; color: inherit;
+            font-size: 13px; font-weight: 700; opacity: 0.45;
+            transition: opacity 0.15s;
+        }
+        .settings-link:active { opacity: 0.8; }
+    </style>
 </head>
 <body>
-    <div id="error-reporter"></div>
 
-    <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
-        <!-- Background Layers -->
-        <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
+<div id="app" v-cloak
+     :style="themeStyle"
+     :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode']"
+     style="display:flex;flex-direction:column;min-height:100dvh;overflow:hidden;position:relative;">
 
-        <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
+    <!-- Background Layers -->
+    <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
+    <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
-        <!-- Foreground Content -->
-        <div class="relative z-10 h-screen flex flex-col p-6 overflow-hidden">
-            <!-- Header & Navigation -->
-            <div class="shrink-0 space-y-4">
-                <header class="flex justify-end items-center relative">
-                    <!-- List Controls (Top Right) -->
-                    <div class="flex items-center gap-2">
-                        <button v-show="appMode === 'todo'" @click="addNewList" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
-                            <i data-lucide="plus" class="w-5 h-5"></i>
-                        </button>
-                        <button v-show="appMode === 'todo'" @click="openManageModal" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
-                            <i data-lucide="list-plus" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                </header>
+    <!-- Scrollable Content -->
+    <main style="flex:1;overflow-y:auto;padding:0 20px 88px;-webkit-overflow-scrolling:touch;">
 
-                <!-- List Navigation Bar (Todo Mode Only) -->
-                <div v-show="appMode === 'todo'" class="relative z-[7000] -mx-6">
-                    <div id="list-tabs" class="overflow-x-auto no-scrollbar bg-transparent py-2 flex items-center">
-                        <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
-                            <button @click="currentListId = list.id" @touchstart="currentListId = list.id"
-                                class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none" 
-                                :class="currentListId === list.id ? 'bg-blue-600 text-white' : ''" :style="glassStyle">
-                                {{ isDefaultList(list.id) ? t[list.id] : list.name }}
-                            </button>
-                        </div>
-                    </div>
+        <!-- Welcome Header -->
+        <div style="padding-top:52px;margin-bottom:36px;">
+            <p style="font-size:13px;font-weight:700;opacity:0.40;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">
+                {{ todayLabel }}
+            </p>
+            <h1 style="font-size:30px;font-weight:900;line-height:1.15;margin:0;">
+                {{ greeting }}
+            </h1>
+        </div>
+
+        <!-- Portal Cards -->
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
+
+            <!-- Todo -->
+            <a href="todo.html" class="portal-card glass" :style="glassStyle">
+                <div class="portal-icon" style="background:rgba(59,130,246,0.16);color:#3b82f6;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                        <line x1="8" y1="18" x2="21" y2="18"/>
+                        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+                        <line x1="3" y1="18" x2="3.01" y2="18"/>
+                    </svg>
                 </div>
-            </div>
-
-            <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto no-scrollbar pb-40" :class="{ 'pointer-events-none': isAnyModalOpen }">
-                <transition name="fade" mode="out-in">
-                    <div :key="'main-container-' + appMode" class="w-full">
-                        <!-- Mode A: Glassy Todo -->
-                        <div v-show="appMode === 'todo'">
-                            <!-- Active Tasks -->
-                            <div v-show="view === 'active'">
-                                <div v-show="sortedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noTasks }}</div>
-                                
-                                <template v-for="(group, gIdx) in groupedTodos" :key="group.category + '-' + currentListId">
-                                    <!-- Divider -->
-                                    <div class="category-divider">
-                                        <span class="category-label">{{ t[group.category] }}</span>
-                                    </div>
-
-                                    <div class="space-y-4">
-                                        <div v-for="todo in group.items" :key="todo.id" :data-todo-id="todo.id" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
-                                            <button @click="toggleTodo(todo.id)" class="text-blue-500">
-                                                <i data-lucide="circle" class="w-6 h-6"></i>
-                                            </button>
-                                            <div class="flex-1 min-w-0">
-                                                <p class="font-bold truncate">{{ todo.text }}</p>
-                                                <div class="flex items-center gap-2 mt-1">
-                                                    <span class="text-[10px] font-black uppercase opacity-60">{{ t[todo.category] }}</span>
-                                                    <span v-show="todo.dueDate" class="text-[10px] opacity-60 flex items-center gap-1">
-                                                        <i data-lucide="clock" class="w-3 h-3"></i> {{ formatDateTime(todo.dueDate) }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="actions flex gap-2">
-                                                <!-- Edit Button (Active only) -->
-                                                <button @click="editTodo(todo)" 
-                                                        class="btn-action btn-edit" 
-                                                        :class="{ 'is-hidden': todo.completed || todo.isDeleted }">
-                                                    <i data-lucide="edit-3" class="w-5 h-5"></i>
-                                                </button>
-
-                                                <!-- Recovery Button (Completed or Bin) -->
-                                                <button @click="restoreTodo(todo.id)" 
-                                                        class="btn-action btn-restore" 
-                                                        :class="{ 'is-hidden': !todo.completed && !todo.isDeleted }" 
-                                                        :title="t.restore">
-                                                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                                                </button>
-
-                                                <!-- Delete Button (Always present, logic varies) -->
-                                                <button @click="todo.isDeleted ? permanentDelete(todo.id) : deleteTodo(todo.id)" 
-                                                        class="btn-action btn-delete">
-                                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-
-                            <!-- Completed Records -->
-                            <div v-show="view === 'completed'" class="space-y-4">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h2 class="text-xl font-black">{{ t.completed }}</h2>
-                                    <div class="flex gap-4 items-center">
-                                        <span class="text-[10px] font-black opacity-40 uppercase">{{ completedTodos.length }} {{ t.tasks }}</span>
-                                        <button v-show="completedTodos.length > 0" @click="promptClearCompleted" class="text-red-500 text-xs font-black uppercase tracking-widest">{{ t.clearAll }}</button>
-                                    </div>
-                                </div>
-                                <div v-show="completedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noCompleted }}</div>
-                                <div v-for="todo in completedTodos" :key="todo.id" class="task-item glass rounded-2xl p-4 flex items-center gap-4 transition-all" :style="glassStyle">
-                                    <div class="flex-1 min-w-0">
-                                        <p class="font-bold truncate line-through opacity-50">{{ todo.text }}</p>
-                                        <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
-                                    </div>
-                                    <div class="actions flex gap-2">
-                                        <!-- Edit Button (Active only) -->
-                                        <button @click="editTodo(todo)" 
-                                                class="btn-action btn-edit" 
-                                                :class="{ 'is-hidden': todo.completed || todo.isDeleted }">
-                                            <i data-lucide="edit-3" class="w-5 h-5"></i>
-                                        </button>
-
-                                        <!-- Recovery Button (Completed or Bin) -->
-                                        <button @click="restoreTodo(todo.id)" 
-                                                class="btn-action btn-restore" 
-                                                :class="{ 'is-hidden': !todo.completed && !todo.isDeleted }" 
-                                                :title="t.restore">
-                                            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                                        </button>
-
-                                        <!-- Delete Button (Always present, logic varies) -->
-                                        <button @click="todo.isDeleted ? permanentDelete(todo.id) : deleteTodo(todo.id)" 
-                                                class="btn-action btn-delete">
-                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Recycle Bin -->
-                            <div v-show="view === 'bin'" class="space-y-4">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h2 class="text-xl font-black">{{ t.bin }}</h2>
-                                    <div class="flex gap-4 items-center">
-                                        <span class="text-[10px] font-black opacity-40 uppercase">{{ deletedTodos.length }} {{ t.tasks }}</span>
-                                        <button v-show="deletedTodos.length > 0" @click="promptClearBin" class="text-red-500 text-xs font-black uppercase tracking-widest">{{ t.clearAll }}</button>
-                                    </div>
-                                </div>
-                                <div v-show="deletedTodos.length === 0" class="text-center py-20 opacity-40 italic">{{ t.noBin }}</div>
-                                <div v-for="todo in deletedTodos" :key="todo.id" class="task-item glass rounded-2xl p-4 flex items-center justify-between" :style="glassStyle">
-                                    <div class="flex-1 min-w-0 mr-4">
-                                        <p class="opacity-50 line-through truncate">{{ todo.text }}</p>
-                                        <span class="text-[9px] opacity-30 uppercase font-bold">{{ t[todo.category] }}</span>
-                                    </div>
-                                    <div class="actions flex gap-2">
-                                        <!-- Edit Button (Active only) -->
-                                        <button @click="editTodo(todo)" 
-                                                class="btn-action btn-edit" 
-                                                :class="{ 'is-hidden': todo.completed || todo.isDeleted }">
-                                            <i data-lucide="edit-3" class="w-5 h-5"></i>
-                                        </button>
-
-                                        <!-- Recovery Button (Completed or Bin) -->
-                                        <button @click="restoreTodo(todo.id)" 
-                                                class="btn-action btn-restore" 
-                                                :class="{ 'is-hidden': !todo.completed && !todo.isDeleted }" 
-                                                :title="t.restore">
-                                            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                                        </button>
-
-                                        <!-- Delete Button (Always present, logic varies) -->
-                                        <button @click="todo.isDeleted ? permanentDelete(todo.id) : deleteTodo(todo.id)" 
-                                                class="btn-action btn-delete">
-                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Mode B: Glassy Shift (Calendar) -->
-                        <div v-show="appMode === 'shift'" class="space-y-6">
-                            <div class="text-center py-20 glass rounded-[2.5rem] p-8" :style="glassStyle">
-                                <h2 class="text-2xl font-black mb-4">琉璃輪班已移至獨立頁面</h2>
-                                <p class="opacity-60 mb-8">請點擊上方標題切換，或直接前往輪班系統。</p>
-                                <a href="javascript:void(0)" onclick="window.location.href='shift.html'" class="glass-button px-8 py-4 inline-block bg-blue-600 text-white rounded-2xl font-black">前往輪班系統</a>
-                            </div>
-                        </div>
-                    </div>
-                </transition>
-            </main>
-
-            <!-- Theme/Settings Modal removed — all visual config handled by setting.html -->
-
-
-            <!-- Add/Edit Modal (LV2 primary) -->
-            <transition name="slide-up">
-                <div v-show="isAdding || isEditing" :key="'add-edit-modal'"
-                     class="fixed inset-0 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-                     style="z-index: var(--z-modal-lv2-backdrop)"
-                     @click.self.stop.prevent="closeModal">
-                    <div class="w-[90%] max-w-md glass rounded-[2.5rem] p-8 space-y-6 h-[60vh] overflow-y-auto" :style="glassStyle" @click.stop>
-                        <div class="flex justify-between items-center">
-                            <h2 class="text-2xl font-black">{{ isEditing ? t.editTask : t.newTask }}</h2>
-                            <button @click="closeModal" class="opacity-40"><i data-lucide="x" class="w-6 h-6"></i></button>
-                        </div>
-
-                        <input v-model="form.text" :placeholder="t.placeholder" class="w-full bg-white/10 border border-white/10 rounded-2xl p-4 outline-none focus:border-blue-500 text-lg font-medium">
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black opacity-40 uppercase tracking-widest">{{ t.category }}</label>
-                                <div class="custom-dropdown">
-                                    <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('category')">
-                                        <span>{{ t[form.category] }}</span>
-                                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
-                                    </div>
-                                    <transition name="fade">
-                                        <div v-show="dropdowns.category" class="dropdown-menu glass" :style="glassStyle">
-                                            <div v-for="c in categories" :key="c" 
-                                                class="dropdown-item" :class="{ active: form.category === c }"
-                                                @click="selectDropdownOption('category', c)">
-                                                {{ t[c] }}
-                                            </div>
-                                        </div>
-                                    </transition>
-                                </div>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black opacity-40 uppercase tracking-widest">{{ t.recurring }}</label>
-                                <div class="custom-dropdown">
-                                    <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold" :style="glassStyle" @click="toggleDropdown('recurring')">
-                                        <span>{{ t[form.recurring] }}</span>
-                                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-40"></i>
-                                    </div>
-                                    <transition name="fade">
-                                        <div v-show="dropdowns.recurring" class="dropdown-menu glass" :style="glassStyle">
-                                            <div v-for="r in recurringTypes" :key="r" 
-                                                class="dropdown-item" :class="{ active: form.recurring === r }"
-                                                @click="selectDropdownOption('recurring', r)">
-                                                {{ t[r] }}
-                                            </div>
-                                        </div>
-                                    </transition>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black opacity-40 uppercase tracking-widest">{{ t.date }}</label>
-                                <button @click="openPicker('date')" class="w-full glass rounded-xl p-3 text-sm font-black text-center tracking-widest" :style="glassStyle">
-                                    {{ pickerDateStr || t.date }}
-                                </button>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black opacity-40 uppercase tracking-widest">{{ t.time }}</label>
-                                <button @click="openPicker('time')" class="w-full glass rounded-xl p-3 text-sm font-black text-center tracking-widest" :style="glassStyle">
-                                    {{ pickerTimeStr }}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-black opacity-40 uppercase tracking-widest">{{ t.alertBefore }}</label>
-                            <div class="flex items-center gap-4">
-                                <input type="range" min="0" max="15" step="1" v-model="form.alertMinutes" class="flex-1 h-1 bg-gray-300 rounded-lg appearance-none accent-blue-500">
-                                <span class="text-xs font-bold w-12">{{ form.alertMinutes }}m</span>
-                            </div>
-                        </div>
-
-                        <p v-show="form.recurring !== 'none'" class="text-[9px] text-blue-500 font-bold italic text-center">
-                            {{ t.nextGen }}: {{ calculateNextGen(form.recurring, form.date) }}
-                        </p>
-
-                        <button @pointerdown="$event.preventDefault(); document.activeElement && document.activeElement.blur()" @click="saveTodo" style="touch-action: manipulation" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform text-xl border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
-                            {{ isEditing ? t.save : t.add }}
-                        </button>
-                    </div>
+                <div class="portal-info">
+                    <p class="portal-name">{{ t.nameTodo }}</p>
+                    <p class="portal-desc">{{ t.descTodo }}</p>
                 </div>
-            </transition>
+                <svg class="portal-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
 
-            <!-- Bottom Navigation -->
-            <nav v-show="view !== 'settings' && !isAnyModalOpen" class="bottom-nav glass" :style="glassStyle">
-                <button @click="view = 'active'" class="nav-item" :class="{ active: view === 'active' }">
-                    <i data-lucide="list" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">{{ t.active }}</span>
-                </button>
-                <button @click="view = 'completed'" class="nav-item" :class="{ active: view === 'completed' }">
-                    <i data-lucide="check-square" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">{{ t.completed }}</span>
-                </button>
-                <button @click="view = 'bin'" class="nav-item" :class="{ active: view === 'bin' }">
-                    <i data-lucide="trash-2" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">{{ t.bin }}</span>
-                </button>
-                <button v-show="appMode === 'todo'" @click="startAdding" class="nav-item nav-add-btn">
-                    <i data-lucide="plus" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">{{ t.add }}</span>
-                </button>
-            </nav>
-
-            <!-- Manage Lists Modal (LV2 primary) -->
-            <transition name="fade">
-                <div v-show="manageModal.show"
-                     class="fixed inset-0 flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl"
-                     style="z-index: var(--z-modal-lv2-backdrop)"
-                     @click.self.stop.prevent="closeManageModal">
-                    <div class="glass rounded-[2.5rem] p-8 w-full max-w-md flex flex-col max-h-[85vh]" :style="glassStyle" @click.stop>
-                        <div class="flex justify-between items-center mb-8">
-                            <h2 class="text-2xl font-black tracking-tight">Manage Lists</h2>
-                            <button @click="closeManageModal" class="opacity-40 hover:opacity-100 transition-opacity">
-                                <i data-lucide="x" class="w-6 h-6"></i>
-                            </button>
-                        </div>
-
-                        <div id="manage-list-items" class="flex-1 overflow-y-auto no-scrollbar space-y-3 pr-2">
-                            <div v-for="list in lists" :key="list.id" :data-id="list.id" class="manage-list-row glass rounded-2xl p-4 flex items-center gap-4 group" :style="glassStyle">
-                                <!-- Delete Button -->
-                                <button v-if="!isDefaultList(list.id)" @click="deleteListPrompt(list)" class="w-8 h-8 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
-                                    <i data-lucide="x" class="w-4 h-4"></i>
-                                </button>
-                                <div v-else class="w-8 h-8 flex items-center justify-center opacity-10">
-                                    <i data-lucide="lock" class="w-4 h-4"></i>
-                                </div>
-
-                                <!-- List Name (Inline Edit) -->
-                                <div class="flex-1">
-                                    <input v-if="!isDefaultList(list.id)" v-model="list.name" @change="saveLists" class="bg-transparent border-none outline-none font-bold w-full focus:text-blue-500 transition-colors">
-                                    <span v-else class="font-bold opacity-40">{{ t[list.id] }}</span>
-                                </div>
-
-                                <!-- Grip Icon -->
-                                <div class="list-grip cursor-grab active:cursor-grabbing opacity-30 hover:opacity-100 transition-opacity">
-                                    <i data-lucide="menu" class="w-5 h-5"></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button @click="closeManageModal" class="w-full mt-8 py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-95 transition-transform">
-                            Done
-                        </button>
-                    </div>
+            <!-- Workout -->
+            <a href="workout.html" class="portal-card glass" :style="glassStyle">
+                <div class="portal-icon" style="background:rgba(249,115,22,0.16);color:#f97316;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 4v16"/><path d="M18 4v16"/>
+                        <path d="M6 8h12"/><path d="M6 16h12"/>
+                        <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h.5"/><path d="M3 17.5A1.5 1.5 0 0 0 4.5 19h.5"/>
+                        <path d="M21 6.5A1.5 1.5 0 0 0 19.5 5h-.5"/><path d="M21 17.5A1.5 1.5 0 0 1 19.5 19h-.5"/>
+                    </svg>
                 </div>
-            </transition>
-
-            <!-- List Management Modal (LV2 primary) -->
-            <transition name="fade">
-                <div v-show="listModal.show" :key="'list-mgmt-modal'"
-                     class="fixed inset-0 flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
-                     style="z-index: var(--z-modal-lv2-backdrop)"
-                     @click.self.stop.prevent="closeListModal">
-                    <div class="glass rounded-[2.5rem] p-8 space-y-6 w-full max-w-xs text-center" :style="glassStyle">
-                        <h3 class="text-xl font-black tracking-tight">
-                            {{ listModal.mode === 'add' ? t.newList : (listModal.mode === 'edit' ? t.editList : t.deleteList) }}
-                        </h3>
-                        
-                        <div v-show="listModal.mode !== 'delete'" class="space-y-2 text-left">
-                            <label class="text-[10px] font-bold opacity-40 uppercase tracking-widest ml-1">{{ t.listName }}</label>
-                            <input v-model="listModal.name" type="text" class="w-full glass rounded-2xl p-4 text-sm font-bold outline-none" :style="glassStyle" :placeholder="t.placeholder">
-                        </div>
-                        <p v-show="listModal.mode === 'delete'" class="text-sm opacity-60 leading-relaxed">
-                            {{ t.confirmDeleteList }}
-                        </p>
-
-                        <div class="flex gap-3">
-                            <button @click="closeListModal" class="flex-1 py-3 rounded-xl glass text-xs font-bold">{{ t.cancel }}</button>
-                            <button @click="confirmListModal" class="flex-1 py-3 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest border-[2.5px]" :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
-                                {{ listModal.mode === 'delete' ? t.confirm : t.save }}
-                            </button>
-                        </div>
-                    </div>
+                <div class="portal-info">
+                    <p class="portal-name">{{ t.nameWorkout }}</p>
+                    <p class="portal-desc">{{ t.descWorkout }}</p>
                 </div>
-            </transition>
+                <svg class="portal-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+
+            <!-- Shift -->
+            <a href="shift.html" class="portal-card glass" :style="glassStyle">
+                <div class="portal-icon" style="background:rgba(168,85,247,0.16);color:#a855f7;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </div>
+                <div class="portal-info">
+                    <p class="portal-name">{{ t.nameShift }}</p>
+                    <p class="portal-desc">{{ t.descShift }}</p>
+                </div>
+                <svg class="portal-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
 
         </div>
-    </div>
 
-    <!-- ── Date-Time Picker (LV3 secondary — placed last in #app, always above LV2 modals) ── -->
-    <transition name="slide-up">
-        <div v-show="showDateTimePicker"
-             class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
-             style="z-index: var(--z-modal-lv3-content)"
-             @click.self.stop.prevent="closeDateTimePicker">
-            <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4"
-                 :style="glassStyle" @click.stop>
+        <!-- Settings link -->
+        <a href="setting.html" class="settings-link glass" :style="glassStyle">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+                <path d="M19.07 4.93 4.93 19.07"/>
+            </svg>
+            {{ t.settings }}
+        </a>
 
-                <!-- Mode Tabs -->
-                <div class="flex gap-2">
-                    <button @click="switchPickerMode('date')"
-                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
-                            :class="pickerMode === 'date' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
-                            :style="pickerMode !== 'date' ? glassStyle : {}">
-                        {{ t.date }}
-                    </button>
-                    <button @click="switchPickerMode('time')"
-                            class="flex-1 py-2 rounded-full text-xs font-black transition-all"
-                            :class="pickerMode === 'time' ? 'bg-blue-500 text-white' : 'glass opacity-60'"
-                            :style="pickerMode !== 'time' ? glassStyle : {}">
-                        {{ t.time }}
-                    </button>
-                </div>
+    </main>
 
-                <!-- Date picker -->
-                <div v-show="pickerMode === 'date'" class="space-y-3">
-                    <div id="lapis-date-picker"></div>
-                    <div class="flex gap-2">
-                        <button @click="setToday"
-                                class="flex-1 py-2 rounded-xl glass text-xs font-black opacity-70"
-                                :style="glassStyle">{{ t.day }}</button>
-                        <button @click="setTomorrow"
-                                class="flex-1 py-2 rounded-xl glass text-xs font-black opacity-70"
-                                :style="glassStyle">+1</button>
-                    </div>
-                </div>
-
-                <!-- Time picker -->
-                <div v-show="pickerMode === 'time'">
-                    <div id="lapis-time-picker"></div>
-                </div>
-
-                <button @click="closeDateTimePicker"
-                        class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2.5px]"
-                        :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
-                    OK
-                </button>
-            </div>
-        </div>
-    </transition>
-
-    <!-- ── Confirmation Modal (LV3 secondary — LapisConfirm component) ── -->
-    <lapis-confirm v-model="confirmModal"></lapis-confirm>
 </div>
 </body>
 </html>
