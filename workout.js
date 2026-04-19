@@ -4,6 +4,17 @@
 // ── Module-level helpers ──────────────────────────────────────────────────
 const _wUid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
+// ── Static SVG icon constants (no Lucide runtime dependency) ─────────────
+const ICON_CHECK   = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const ICON_EDIT    = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`;
+const ICON_TRASH   = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
+const ICON_RESTORE = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
+const ICON_X       = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+// ── Month name lookup tables ───────────────────────────────────────────────
+const _MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const _MONTHS_ZH = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
 const LIBRARY_KEY = 'lapis_workout_library';
 
 const _defaultExercises = () => [
@@ -684,6 +695,15 @@ window.addEventListener('DOMContentLoaded', () => {
                 [...wData.logs].filter(l => l.isDeleted).sort((a, b) => b.date.localeCompare(a.date))
             );
 
+            const groupedHistory = computed(() =>
+                historySessions.value.map(g => ({
+                    ...g,
+                    monthLabel: navSettings.lang === 'zh'
+                        ? `${g.year}年${_MONTHS_ZH[parseInt(g.month) - 1]}`
+                        : `${_MONTHS_EN[parseInt(g.month) - 1]} ${g.year}`
+                }))
+            );
+
             // Compute a brief summary for a log entry
             const _isSets = (type) => type === 'sets' || type === 'sets_reps';
 
@@ -909,9 +929,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 exGroupedRows,
                 // records tab
                 recordsSubTab, editingSessionId,
-                todaySessions, historySessions, binSessions,
+                todaySessions, historySessions, binSessions, groupedHistory,
                 softDeleteSession, restoreSession, permanentDeleteSession, toggleComplete,
                 logSummary, logVolume, exDisplayName,
+                // svg icon constants
+                ICON_CHECK, ICON_EDIT, ICON_TRASH, ICON_RESTORE, ICON_X,
                 // stats
                 stats,
                 // settings

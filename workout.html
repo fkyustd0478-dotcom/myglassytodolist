@@ -325,10 +325,155 @@
 
     <!-- Records Tab -->
     <main v-show="activeTab === 'records'" class="workout-main">
-        <div class="empty-state">
-            <i data-lucide="history" class="w-12 h-12 empty-state-icon"></i>
-            <p class="text-sm font-bold">{{ t.tabRecords }}</p>
+
+        <!-- Sub-tab switcher -->
+        <div class="records-sub-tabs">
+            <button @click="recordsSubTab = 'today'"
+                    :class="{ active: recordsSubTab === 'today' }">{{ t.tabToday }}</button>
+            <button @click="recordsSubTab = 'history'"
+                    :class="{ active: recordsSubTab === 'history' }">{{ t.tabHistory }}</button>
+            <button @click="recordsSubTab = 'bin'"
+                    :class="{ active: recordsSubTab === 'bin' }">{{ t.tabBin }}</button>
         </div>
+
+        <!-- ── TODAY ─────────────────────────────────────────────────────── -->
+        <section id="section-today" v-show="recordsSubTab === 'today'">
+            <div v-if="todaySessions.length > 0" class="space-y-3">
+                <div v-for="session in todaySessions" :key="session.id"
+                     class="session-card glass" :style="glassStyle">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <span class="font-black text-sm font-mono">
+                                {{ session.time.hour.toString().padStart(2,'0') }}:{{ session.time.minute.toString().padStart(2,'0') }}
+                            </span>
+                            <button @click="toggleComplete(session.id)"
+                                    class="status-badge"
+                                    :class="session.isCompleted ? 'completed' : 'pending'">
+                                {{ session.isCompleted ? t.completed : t.pending }}
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                            <button @click="openEditSession(session)" class="session-action-btn"
+                                    v-html="ICON_EDIT"></button>
+                            <button @click="softDeleteSession(session.id)" class="session-action-btn"
+                                    v-html="ICON_TRASH"></button>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div v-for="ex in session.exercises" :key="(ex.exerciseId || ex.name)"
+                             class="flex items-center justify-between">
+                            <span class="text-sm font-bold truncate flex-1 mr-2">{{ exDisplayName(ex) }}</span>
+                            <span class="text-xs font-mono opacity-50 flex-shrink-0">
+                                {{ ex.type === 'sets'
+                                    ? (ex.sets.length + ' ' + t.sets_unit)
+                                    : ((ex.minutes || '—') + ' ' + t.min) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-state-icon"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                <p class="text-sm font-bold">{{ t.noTodaySessions }}</p>
+            </div>
+            <button @click="openNewSession()" class="add-to-log-btn glass mt-4" :style="glassStyle">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                {{ t.newSession }}
+            </button>
+        </section>
+
+        <!-- ── HISTORY ───────────────────────────────────────────────────── -->
+        <section id="section-history" v-show="recordsSubTab === 'history'">
+            <div v-if="groupedHistory.length > 0">
+                <div v-for="group in groupedHistory" :key="group.key">
+                    <div class="month-group-header">{{ group.monthLabel }}</div>
+                    <div class="space-y-3 mb-3">
+                        <div v-for="session in group.sessions" :key="session.id"
+                             class="session-card glass" :style="glassStyle">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2 flex-1 min-w-0">
+                                    <span class="text-xs font-black opacity-50 font-mono flex-shrink-0">
+                                        {{ session.date.slice(5).replace('-', '/') }}
+                                    </span>
+                                    <span class="font-black text-sm font-mono flex-shrink-0">
+                                        {{ session.time.hour.toString().padStart(2,'0') }}:{{ session.time.minute.toString().padStart(2,'0') }}
+                                    </span>
+                                    <button @click="toggleComplete(session.id)"
+                                            class="status-badge"
+                                            :class="session.isCompleted ? 'completed' : 'pending'">
+                                        {{ session.isCompleted ? t.completed : t.pending }}
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-1 flex-shrink-0">
+                                    <button @click="openEditSession(session)" class="session-action-btn"
+                                            v-html="ICON_EDIT"></button>
+                                    <button @click="softDeleteSession(session.id)" class="session-action-btn"
+                                            v-html="ICON_TRASH"></button>
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div v-for="ex in session.exercises" :key="(ex.exerciseId || ex.name)"
+                                     class="flex items-center justify-between">
+                                    <span class="text-sm font-bold truncate flex-1 mr-2">{{ exDisplayName(ex) }}</span>
+                                    <span class="text-xs font-mono opacity-50 flex-shrink-0">
+                                        {{ ex.type === 'sets'
+                                            ? (ex.sets.length + ' ' + t.sets_unit)
+                                            : ((ex.minutes || '—') + ' ' + t.min) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-state-icon"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/></svg>
+                <p class="text-sm font-bold">{{ t.noHistorySessions }}</p>
+            </div>
+        </section>
+
+        <!-- ── BIN ───────────────────────────────────────────────────────── -->
+        <section id="section-bin" v-show="recordsSubTab === 'bin'">
+            <div v-if="binSessions.length > 0" class="space-y-3">
+                <div v-for="session in binSessions" :key="session.id"
+                     class="session-card glass" :style="[glassStyle, { opacity: 0.72 }]">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black opacity-50 font-mono">
+                                {{ session.date.replace(/-/g,'/') }}
+                            </span>
+                            <span class="font-black text-sm font-mono">
+                                {{ session.time.hour.toString().padStart(2,'0') }}:{{ session.time.minute.toString().padStart(2,'0') }}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button @click="restoreSession(session.id)"
+                                    class="session-action-btn restore-btn"
+                                    v-html="ICON_RESTORE" :title="t.restore"></button>
+                            <button @click="permanentDeleteSession(session.id)"
+                                    class="session-action-btn delete-btn"
+                                    v-html="ICON_TRASH" :title="t.permanentDelete"></button>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div v-for="ex in session.exercises" :key="(ex.exerciseId || ex.name)"
+                             class="flex items-center justify-between">
+                            <span class="text-sm font-bold truncate flex-1 mr-2 opacity-60">{{ exDisplayName(ex) }}</span>
+                            <span class="text-xs font-mono opacity-40 flex-shrink-0">
+                                {{ ex.type === 'sets'
+                                    ? (ex.sets.length + ' ' + t.sets_unit)
+                                    : ((ex.minutes || '—') + ' ' + t.min) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-state-icon"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                <p class="text-sm font-bold">{{ t.noBinSessions }}</p>
+            </div>
+        </section>
+
     </main>
 
     <!-- Settings Tab -->
