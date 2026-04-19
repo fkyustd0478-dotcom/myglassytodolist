@@ -265,4 +265,4 @@ createApp({
             triggerUpload, handleUpload, clearCustomBg, clearCacheAndUpdate
         };
     }
-}).mount('#app');
+}).component('LapisConfirm', window.LapisConfirm).mount('#app');

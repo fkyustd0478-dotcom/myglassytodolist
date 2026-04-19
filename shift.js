@@ -722,4 +722,5 @@ const app = createApp({
     }
 });
 
+app.component('LapisConfirm', window.LapisConfirm);
 app.mount('#app');

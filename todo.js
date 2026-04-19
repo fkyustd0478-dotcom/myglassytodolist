@@ -976,7 +976,7 @@ try {
                 navSettings
             };
         }
-    }).mount('#app');
-} catch (e) { 
-    console.error(e); 
+    }).component('LapisConfirm', window.LapisConfirm).mount('#app');
+} catch (e) {
+    console.error(e);
 }

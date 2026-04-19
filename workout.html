@@ -24,6 +24,7 @@
     <script src="nav.js" defer></script>
     <script src="lapis_core_ui.js" defer></script>
     <script src="lapis_picker.js" defer></script>
+    <script src="lapis_confirm.js" defer></script>
     <script src="workout.js" defer></script>
 </head>
 <body>
@@ -148,7 +149,7 @@
     <transition name="slide-up">
         <div v-show="showExModal"
              class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
-             style="z-index: var(--z-modal-lv2)"
+             style="z-index: var(--z-modal-lv2-backdrop)"
              @click.self.stop.prevent="showExModal = false">
             <div class="lapis-modal-shell w-full" :style="shellStyle" @click.stop>
 
@@ -534,7 +535,7 @@
     <transition name="slide-up">
         <div v-show="showCatMgr"
              class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
-             style="z-index: var(--z-modal-lv2)"
+             style="z-index: var(--z-modal-lv2-backdrop)"
              @click.self.stop.prevent="showCatMgr = false">
             <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10"
                  :style="glassStyle" @click.stop>
@@ -639,7 +640,7 @@
     <transition name="slide-up">
         <div v-show="showExDetail"
              class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
-             style="z-index: var(--z-modal-lv2)"
+             style="z-index: var(--z-modal-lv2-backdrop)"
              @click.self.stop.prevent="showExDetail = false">
             <div v-if="exDetailData"
                  class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-10 space-y-5"
@@ -706,7 +707,7 @@
     <transition name="slide-up">
         <div v-show="showLogModal"
              class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
-             style="z-index: var(--z-modal-lv2)"
+             style="z-index: var(--z-modal-lv2-backdrop)"
              @click.self.stop.prevent="discardAndClose()">
             <div class="lapis-modal-shell workout-log-shell w-full" :style="shellStyle" @click.stop>
 
@@ -865,7 +866,7 @@
     <transition name="slide-up">
         <div v-show="showPRModal"
              class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
-             style="z-index: var(--z-modal-lv2)"
+             style="z-index: var(--z-modal-lv2-backdrop)"
              @click.self.stop.prevent="showPRModal = false">
             <div class="lapis-modal-shell w-full" id="modal-pr-history"
                  :style="shellStyle" @click.stop>
@@ -913,7 +914,7 @@
     <transition name="slide-up">
         <div v-show="showDateTimePicker"
              class="fixed inset-0 flex items-end justify-center bg-transparent"
-             style="z-index: var(--z-modal-lv3)"
+             style="z-index: var(--z-modal-lv3-content)"
              @click.self.stop.prevent="closeWorkoutPicker">
             <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4"
                  :style="glassStyle" @click.stop>
@@ -960,6 +961,9 @@
     <transition name="fade">
         <div v-show="showToast" class="workout-toast">{{ toastMsg }}</div>
     </transition>
+
+    <!-- ── Confirmation Modal (LV3 secondary — LapisConfirm component) ── -->
+    <lapis-confirm v-model="confirmModal"></lapis-confirm>
 
 </div>
 </body>

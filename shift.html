@@ -20,6 +20,7 @@
     <script src="nav.js" defer></script>
     <script src="lapis_core_ui.js" defer></script>
     <script src="lapis_picker.js" defer></script>
+    <script src="lapis_confirm.js" defer></script>
     <script src="holidays.js" defer></script>
     <script src="shift.js?v=4.2" defer></script>
 </head>
@@ -202,7 +203,7 @@
     <transition name="fade">
         <div v-if="showTodayTasks || showDayDetail || confirmModal.show || showTagsModal"
              class="modal-backdrop"
-             style="z-index: var(--z-modal-lv2)"
+             style="z-index: var(--z-modal-lv2-backdrop)"
              @click="showTodayTasks = showDayDetail = confirmModal.show = showTagsModal = false">
         </div>
     </transition>
@@ -213,7 +214,7 @@
     <transition name="slide-up">
         <div v-if="showTagsModal"
              class="fixed inset-0 flex items-center justify-center p-4"
-             style="z-index: var(--z-modal-lv2)"
+             style="z-index: var(--z-modal-lv2-backdrop)"
              @click.self="showTagsModal = false">
             <div class="w-[90%] max-w-md glass rounded-[2.5rem] h-[60vh] flex flex-col overflow-hidden"
                  :style="glassStyle" @click.stop>
@@ -470,7 +471,7 @@
     <transition name="slide-up">
         <div v-if="showTodayTasks"
              class="modal-backdrop"
-             style="z-index: var(--z-modal-lv3)"
+             style="z-index: var(--z-modal-lv3-backdrop)"
              @click.self="showTodayTasks = false">
             <div class="modal-content glass">
                 <div class="modal-header">
@@ -498,7 +499,7 @@
     <transition name="slide-up">
         <div v-if="showDayDetail"
              class="modal-backdrop"
-             style="z-index: var(--z-modal-lv3)"
+             style="z-index: var(--z-modal-lv3-backdrop)"
              @click.self="showDayDetail = false">
             <div class="modal-content glass">
                 <div class="modal-header">
@@ -587,29 +588,14 @@
         </div>
     </transition>
 
-    <!-- ── Confirmation Modal (LV3 secondary) ──────────────────────────────── -->
-    <transition name="fade">
-        <div v-if="confirmModal && confirmModal.show"
-             class="modal-backdrop"
-             style="z-index: var(--z-modal-lv3)"
-             @click.self="confirmModal.show = false">
-            <div class="modal-content glass text-center">
-                <h2 class="text-xl font-black mb-4" v-text="confirmModal.title || ''"></h2>
-                <p class="opacity-70 mb-8 font-medium" v-text="confirmModal.message || ''"></p>
-                <div class="flex gap-3">
-                    <button @click="confirmModal.show = false" class="glass-button flex-1">{{ t.cancel }}</button>
-                    <button @click="confirmModal.onConfirm && confirmModal.onConfirm(); confirmModal.show = false"
-                            class="glass-button flex-1 bg-red-500/20 text-red-400">{{ t.confirm }}</button>
-                </div>
-            </div>
-        </div>
-    </transition>
+    <!-- ── Confirmation Modal (LV3 secondary — LapisConfirm component) ── -->
+    <lapis-confirm v-model="confirmModal"></lapis-confirm>
 
     <!-- ── Circular Clock Picker (LV3 secondary — placed last, above Tags modal) ── -->
     <transition name="fade">
         <div v-if="clockPicker.show"
              class="fixed inset-0 flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl"
-             style="z-index: var(--z-modal-lv3)"
+             style="z-index: var(--z-modal-lv3-content)"
              @click.self="clockPicker.show = false">
             <div class="glass rounded-[2.5rem] p-6 space-y-4 w-full max-w-xs"
                  :style="glassStyle" @click.stop>

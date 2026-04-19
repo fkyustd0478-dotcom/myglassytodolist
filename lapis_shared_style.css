@@ -8,12 +8,16 @@
 
 /* ── Z-Index Scale ──────────────────────────────────────────────────────────
    Single source of truth for all stacking layers across every page.
-   Usage: style="z-index: var(--z-modal-lv2)"                                */
+   Usage: style="z-index: var(--z-modal-lv2-backdrop)"                        */
 :root {
-    --z-nav:         7000;   /* Bottom / Top nav bars                         */
-    --z-modal-lv2:   8000;   /* Primary modals: Add Task, Edit Session…       */
-    --z-modal-lv3:   9000;   /* Secondary modals: Date/Time Picker, Confirm   */
-    --z-top-overlay: 10000;  /* Toasts, error reporters, global dropdowns     */
+    --z-nav:                7000;   /* Bottom / Top nav bars                  */
+    --z-modal-lv2-backdrop: 8000;   /* Primary modal overlay                  */
+    --z-modal-lv2-content:  8001;   /* Primary modal dialog/shell             */
+    --z-modal-lv3-backdrop: 9000;   /* Secondary modal overlay (Picker/Confirm) */
+    --z-modal-lv3-content:  9001;   /* Secondary modal dialog                 */
+    --z-top-overlay:        10000;  /* Toasts, error reporters, global dropdowns */
+    --glass-text-primary:   var(--text-primary);
+    --glass-text-muted:     var(--text-secondary);
 }
 
 
@@ -240,7 +244,7 @@ body.theme-waterfall   .lapis-dropdown-item:not(.active):active { background: rg
 .lapis-modal-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 9000;
+    z-index: var(--z-modal-lv2-backdrop);
     display: none; /* opened by LapisModal.open() which sets display:flex */
     align-items: flex-end;
     justify-content: center;
@@ -258,7 +262,7 @@ body.theme-waterfall   .lapis-dropdown-item:not(.active):active { background: rg
 /* Shell — slides up from the bottom edge */
 .lapis-modal-shell {
     position: relative;
-    z-index: 9001;
+    z-index: var(--z-modal-lv2-content);
     width: 92%;
     max-width: 440px;
     max-height: 88dvh;
@@ -560,3 +564,9 @@ body.theme-waterfall   .lapis-picker-mask-bot {
     padding: 0 2px;
     letter-spacing: 0;
 }
+
+
+/* ── Theme-aware text utilities ─────────────────────────────────────────────
+   Used by LapisConfirm and other shared components.                          */
+.text-primary { color: var(--glass-text-primary); }
+.text-muted   { color: var(--glass-text-muted);   }

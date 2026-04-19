@@ -916,6 +916,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
             // ── SETTINGS TAB ──────────────────────────────────────────────
             const showClearConfirm = ref(false);
+            const confirmModal = reactive({ show: false, title: '', message: '', onConfirm: null });
 
             const clearAllData = () => {
                 localStorage.removeItem(STORAGE_KEY);
@@ -947,6 +948,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 showExModal.value        ||
                 showCatMgr.value         ||
                 showClearConfirm.value   ||
+                confirmModal.show        ||
                 showExDetail.value       ||
                 showPRModal.value
             );
@@ -1101,9 +1103,10 @@ window.addEventListener('DOMContentLoaded', () => {
                 stats,
                 // settings
                 showClearConfirm, clearAllData, toggleLang,
+                confirmModal,
                 // shared
                 wData, isAnyModalOpen,
             };
         }
-    }).mount('#app');
+    }).component('LapisConfirm', window.LapisConfirm).mount('#app');
 });
