@@ -963,6 +963,26 @@
     <!-- ── Confirmation Modal (LV3 secondary — LapisConfirm component) ── -->
     <lapis-confirm v-model="confirmModal"></lapis-confirm>
 
+    <!-- ── Bottom Navigation ──────────────────────────────────────────────── -->
+    <nav class="bottom-nav glass" :style="glassStyle">
+        <button @click="activeTab = 'workout'" class="nav-item" :class="{ active: activeTab === 'workout' }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+            <span>{{ t.tabWorkout }}</span>
+        </button>
+        <button @click="activeTab = 'exercises'" class="nav-item" :class="{ active: activeTab === 'exercises' }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span>{{ t.tabExercises }}</span>
+        </button>
+        <button @click="activeTab = 'records'" class="nav-item" :class="{ active: activeTab === 'records' }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>{{ t.tabRecords }}</span>
+        </button>
+        <button @click="openNewSession()" class="nav-item nav-add-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>{{ t.tabAdd }}</span>
+        </button>
+    </nav>
+
 </div>
 </body>
 </html>
