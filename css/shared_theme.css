@@ -32,25 +32,25 @@ body.theme-dark {
 
 /* Image themes — light (dark text / frosted-white glass) */
 body.theme-cherry {
-    --bg-main:        url('./theme/cherry.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/cherry.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
 }
 body.theme-sky {
-    --bg-main:        url('./theme/sky.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/sky.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
 }
 body.theme-sunset {
-    --bg-main:        url('./theme/sunset.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/sunset.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
 }
 body.theme-sea {
-    --bg-main:        url('./theme/sea.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/sea.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
@@ -58,25 +58,25 @@ body.theme-sea {
 
 /* Image themes — dark (white text / dark glass) */
 body.theme-forest {
-    --bg-main:        url('./theme/forest.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/forest.png') center / cover no-repeat fixed;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
 }
 body.theme-night {
-    --bg-main:        url('./theme/night.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/night.png') center / cover no-repeat fixed;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
 }
 body.theme-torii {
-    --bg-main:        url('./theme/torii.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/torii.png') center / cover no-repeat fixed;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
 }
 body.theme-seaside {
-    --bg-main:        url('./theme/seaside.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/seaside.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
@@ -84,13 +84,13 @@ body.theme-seaside {
 
 /* Image themes — new light */
 body.theme-mapleavenue {
-    --bg-main:        url('./theme/mapleavenue.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/mapleavenue.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
 }
 body.theme-waterfall {
-    --bg-main:        url('./theme/waterfall.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/waterfall.png') center / cover no-repeat fixed;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
@@ -98,13 +98,13 @@ body.theme-waterfall {
 
 /* Image themes — new dark */
 body.theme-starrysky {
-    --bg-main:        url('./theme/starrysky.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/starrysky.png') center / cover no-repeat fixed;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
 }
 body.theme-ferriswheel {
-    --bg-main:        url('./theme/ferriswheel.png') center / cover no-repeat fixed;
+    --bg-main:        url('../theme/ferriswheel.png') center / cover no-repeat fixed;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
@@ -156,18 +156,18 @@ body {
 }
 
 /* Scope image rules to the layer element so they don't re-apply to body */
-.bg-layer.theme-cherry  { background-image: url('./theme/cherry.png')  !important; }
-.bg-layer.theme-forest  { background-image: url('./theme/forest.png')  !important; }
-.bg-layer.theme-night   { background-image: url('./theme/night.png')   !important; }
-.bg-layer.theme-sea     { background-image: url('./theme/sea.png')     !important; }
-.bg-layer.theme-seaside { background-image: url('./theme/seaside.png') !important; }
-.bg-layer.theme-sky     { background-image: url('./theme/sky.png')     !important; }
-.bg-layer.theme-sunset  { background-image: url('./theme/sunset.png')  !important; }
-.bg-layer.theme-torii        { background-image: url('./theme/torii.png')        !important; }
-.bg-layer.theme-mapleavenue  { background-image: url('./theme/mapleavenue.png')  !important; }
-.bg-layer.theme-waterfall    { background-image: url('./theme/waterfall.png')    !important; }
-.bg-layer.theme-starrysky    { background-image: url('./theme/starrysky.png')    !important; }
-.bg-layer.theme-ferriswheel  { background-image: url('./theme/ferriswheel.png')  !important; }
+.bg-layer.theme-cherry  { background-image: url('../theme/cherry.png')  !important; }
+.bg-layer.theme-forest  { background-image: url('../theme/forest.png')  !important; }
+.bg-layer.theme-night   { background-image: url('../theme/night.png')   !important; }
+.bg-layer.theme-sea     { background-image: url('../theme/sea.png')     !important; }
+.bg-layer.theme-seaside { background-image: url('../theme/seaside.png') !important; }
+.bg-layer.theme-sky     { background-image: url('../theme/sky.png')     !important; }
+.bg-layer.theme-sunset  { background-image: url('../theme/sunset.png')  !important; }
+.bg-layer.theme-torii        { background-image: url('../theme/torii.png')        !important; }
+.bg-layer.theme-mapleavenue  { background-image: url('../theme/mapleavenue.png')  !important; }
+.bg-layer.theme-waterfall    { background-image: url('../theme/waterfall.png')    !important; }
+.bg-layer.theme-starrysky    { background-image: url('../theme/starrysky.png')    !important; }
+.bg-layer.theme-ferriswheel  { background-image: url('../theme/ferriswheel.png')  !important; }
 
 .custom-bg-layer {
     position: fixed;

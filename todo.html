@@ -464,6 +464,26 @@
 
     <!-- ── Confirmation Modal (LV3 secondary — LapisConfirm component) ── -->
     <lapis-confirm v-model="confirmModal"></lapis-confirm>
+
+    <!-- ── Bottom Navigation ──────────────────────────────────────────────── -->
+    <nav class="bottom-nav glass" :style="glassStyle">
+        <button @click="view = 'active'" class="nav-item" :class="{ active: view === 'active' }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span>{{ t.active }}</span>
+        </button>
+        <button @click="view = 'completed'" class="nav-item" :class="{ active: view === 'completed' }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>{{ t.completed }}</span>
+        </button>
+        <button @click="view = 'bin'" class="nav-item" :class="{ active: view === 'bin' }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            <span>{{ t.bin }}</span>
+        </button>
+        <button @click="startAdding()" class="nav-item nav-add-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>{{ t.add }}</span>
+        </button>
+    </nav>
     </div>
 </body>
 </html>
