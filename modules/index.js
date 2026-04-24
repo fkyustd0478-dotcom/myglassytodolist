@@ -154,7 +154,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     const data = StorageProvider.getTodoData();
                     data.todos.push({
                         id: _uid(), text, category: 'normal', recurring: 'none',
-                        dueDate: null, alertMinutes: 0, completed: false,
+                        dueDate: _dateStr(0), alertMinutes: 0, completed: false,
                         isDeleted: false, listId: 'default', createdAt: Date.now(),
                     });
                     StorageProvider.saveData(data);
@@ -180,6 +180,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (typeof ParticleEngine !== 'undefined' && navSettings.effect && navSettings.effect !== 'none') {
                     ParticleEngine.setEffect(navSettings.effect);
                 }
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'todo_data' || e.key === 'glassy_shift_data') {
+                        dashboard.value = _loadDashboard();
+                    }
+                });
             });
 
             return {

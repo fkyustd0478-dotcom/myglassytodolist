@@ -179,7 +179,7 @@
 
     <!-- ── Bottom Navigation — 4 items ──────────────────────────────────── -->
     <nav class="bottom-nav glass level-2">
-        <div class="nav-item" @click="showTodayTasks = true">
+        <div class="nav-item" :class="{ active: showTodayTasks }" @click="showTodayTasks = true">
             <div class="nav-icon-wrapper"><i data-lucide="calendar-check"></i></div>
             <span>{{ t.todayTasks }}</span>
         </div>
