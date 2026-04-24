@@ -461,46 +461,13 @@ input[type=range]::-webkit-slider-runnable-track {
     scroll-margin-inline: 12px;
 }
 
-/* ── Todo View Tab Strip (Active / Completed / Bin / Add) ────────────────── */
-.todo-view-tabs {
-    display: flex;
-    gap: 0;
-    padding-bottom: 4px;
-    overflow-x: auto;
-    scrollbar-width: none;
+/* ── Index Bottom Nav (Home / Add / Stats) ───────────────────────────────── */
+.index-bottom-nav .nav-item {
+    text-decoration: none;
+    color: inherit;
 }
-.todo-view-tabs::-webkit-scrollbar { display: none; }
-.todo-view-tabs button {
-    display: flex;
-    align-items: center;
-    padding: 7px 14px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 800;
-    white-space: nowrap;
-    opacity: 0.42;
-    transition: opacity 0.2s, background 0.2s, color 0.2s;
-}
-.todo-view-tabs button.active {
-    background: rgba(59,130,246,0.18);
+.index-bottom-nav .nav-item.active {
     color: var(--primary);
+    transform: translateY(-6px);
     opacity: 1;
-}
-.todo-view-tabs button:active { opacity: 0.7; }
-/* Add button — always accent */
-.todo-view-add-btn {
-    color: var(--primary) !important;
-    opacity: 0.75 !important;
-    margin-left: auto;
-}
-.todo-view-add-btn:active { opacity: 1 !important; }
-/* Light-theme active state */
-body.theme-light       .todo-view-tabs button.active,
-body.theme-cherry      .todo-view-tabs button.active,
-body.theme-sky         .todo-view-tabs button.active,
-body.theme-seaside     .todo-view-tabs button.active,
-body.theme-sunset      .todo-view-tabs button.active,
-body.theme-mapleavenue .todo-view-tabs button.active,
-body.theme-waterfall   .todo-view-tabs button.active {
-    background: rgba(59,130,246,0.12);
 }
