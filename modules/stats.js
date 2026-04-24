@@ -65,6 +65,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const { total, thisWeek, latest, exerciseCount } = _readStats();
 
             onMounted(() => {
+                LapisNav.inject({ bottom: false });
                 if (typeof ParticleEngine !== 'undefined' && navSettings.effect && navSettings.effect !== 'none') {
                     ParticleEngine.setEffect(navSettings.effect);
                 }

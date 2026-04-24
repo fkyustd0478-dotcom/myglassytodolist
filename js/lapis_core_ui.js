@@ -62,58 +62,29 @@
             </header>`;
         },
 
-        _buildBottomNav(lang) {
-            const currentKey = _currentKey();
-            const items = _pages.map(p => {
-                const label = lang === 'en' ? p.en : p.zh;
-                const active = p.key === currentKey ? ' active' : '';
-                return `<a href="${p.href}" class="lapis-nav-tab${active}" aria-label="${label}">
-                    <i data-lucide="${p.icon}" style="width:24px;height:24px"></i>
-                    <span>${label}</span>
-                </a>`;
-            }).join('');
-
-            return `<nav class="lapis-bottom-nav glass" data-lapis-bottom-nav aria-label="Main navigation">
-                ${items}
-            </nav>`;
-        },
-
-        // ── Public: inject both navs into target (default: document.body) ──
+        // ── Public: inject top nav into target (default: document.body) ──────
         inject(options = {}) {
-            const lang         = options.lang   || _getLang();
-            const target       = options.target || document.body;
-            const injectTop    = options.top    !== false;
-            const injectBottom = options.bottom !== false;
+            const lang   = options.lang   || _getLang();
+            const target = options.target || document.body;
 
-            if (injectTop && !document.querySelector('[data-lapis-top-nav]')) {
+            if (!document.querySelector('[data-lapis-top-nav]')) {
                 const wrapper = document.createElement('div');
                 wrapper.innerHTML = this._buildTopNav(lang);
                 target.insertBefore(wrapper.firstElementChild, target.firstChild);
-            }
-
-            if (injectBottom && !document.querySelector('[data-lapis-bottom-nav]')) {
-                const wrapper = document.createElement('div');
-                wrapper.innerHTML = this._buildBottomNav(lang);
-                target.appendChild(wrapper.firstElementChild);
             }
 
             this._bindEvents();
             if (typeof lucide !== 'undefined') lucide.createIcons();
         },
 
-        // ── Public: re-render labels after language change ─────────────────
+        // ── Public: re-render top nav labels after language change ──────────
         refresh(lang) {
             lang = lang || _getLang();
-            const top    = document.querySelector('[data-lapis-top-nav]');
-            const bottom = document.querySelector('[data-lapis-bottom-nav]');
+            const top = document.querySelector('[data-lapis-top-nav]');
 
             if (top) {
                 top.insertAdjacentHTML('afterend', this._buildTopNav(lang));
                 top.remove();
-            }
-            if (bottom) {
-                bottom.insertAdjacentHTML('afterend', this._buildBottomNav(lang));
-                bottom.remove();
             }
 
             this._open = false;
