@@ -157,12 +157,13 @@ app.component('LapisConfirm', LapisConfirm);
 
 ## SOP-08: Specialized Bottom Navigation Rule
 
-**Core Rule:** Every page owns its own bottom navigation. No page may inherit or share a bottom nav from a global utility.
+**Core Rule:** Every page owns its own bottom navigation. No page may inherit or share a bottom nav from a global utility. `LapisNav.inject()` only injects the top capsule — bottom injection has been permanently removed from `lapis_core_ui.js`.
 
-**Layout:**
-- Style: Floating Island — `position: fixed; bottom: 16px; left: 16px; right: 16px; border-radius: 28px`
-- Class: `<nav class="bottom-nav glass">` — do **not** use `.lapis-bottom-nav` (removed)
-- Theme binding: `:style="glassStyle"` (Vue) for correct glass surface per theme
+**Layout (Pinned Bottom style):**
+- Position: `fixed; bottom: 0; left: 0; right: 0; width: 100%`
+- Height: `calc(80px + env(safe-area-inset-bottom, 0px))`
+- Border-radius: `20px 20px 0 0` — rounded top corners only, flush with screen bottom
+- Class: `<nav class="bottom-nav glass">` with `:style="glassStyle"` (Vue)
 - CSS source: `css/lapis_shared_style.css` — `.bottom-nav`, `.nav-item`, `.nav-add-btn`
 
 **Per-page nav items:**
@@ -175,12 +176,12 @@ app.component('LapisConfirm', LapisConfirm);
 | `stats.html` | Home / Quick Add (+) / Stats |
 
 **Anti-Patterns:**
-- Do NOT call `LapisNav.inject({ bottom: true })` — bottom injection is permanently removed from `lapis_core_ui.js`.
-- Do NOT define `.bottom-nav` or `.nav-item` in page-specific CSS files — they are globally defined in `lapis_shared_style.css`.
-- Do NOT use edge-to-edge positioning (`bottom: 0; left: 0; right: 0`) for the bottom nav.
-- Do NOT position floating elements (e.g. tag pills) below `bottom: 92px` — they must clear the floating island.
+- Do NOT use `bottom: 16px` or a floating capsule style — the nav must be flush with the screen edge.
+- Do NOT call `LapisNav.inject({ bottom: true })` — bottom injection no longer exists.
+- Do NOT define `.bottom-nav` or `.nav-item` in page-specific CSS files — use `lapis_shared_style.css`.
+- Do NOT position fixed elements (e.g. shift tag pills) with `bottom` lower than `82px`.
 
-**Padding rule:** Any scrollable `<main>` must have `padding-bottom` of at least `100px` to ensure content is never hidden under the floating island nav.
+**Padding rule:** Every scrollable `<main>` must have `padding-bottom: 80px` to prevent content from being hidden behind the nav. For pages with extra fixed panels above the nav (e.g. shift tag pills), increase accordingly.
 
 ---
 
