@@ -53,8 +53,21 @@ myglassytodolist/
     └── setting.js  → Settings app (theme, lang, custom bg)
 ```
 
+### Navigation Structure (post 2026-04-24 refactor)
+| Page | Top Nav | Tab Control | Bottom Nav | Back to Home |
+|---|---|---|---|---|
+| `index.html` | LapisNav capsule dropdown (top-left) | — | None | N/A (IS home) |
+| `todo.html` | LapisNav capsule dropdown | `.todo-view-tabs` inline strip (Active/Completed/Bin) | **Removed** | Via LapisNav dropdown → 首頁 |
+| `workout.html` | LapisNav capsule dropdown | `.workout-top-tabs` strip (Workout/Exercises/Records) + `.workout-fab` | **Removed** | Via LapisNav dropdown → 首頁 |
+| `shift.html` | LapisNav capsule dropdown | `.shift-action-bar` compact bar | **Removed** | Via LapisNav dropdown → 首頁 |
+| `setting.html` | Inline tab switcher | Inline (Theme/Calendar/User) | None | Via LapisNav dropdown → 首頁 |
+
+> **Rule:** Detail pages (todo, workout, shift) carry ZERO cross-page bottom navigation. All cross-page links live exclusively in the LapisNav top capsule dropdown. Page-specific controls (tab switching, quick actions) are in a top strip or compact bar.
+
 ### Script Load Order (per page)
-All pages: `effects.js` → `storage.js` → `nav.js` → `lapis_core_ui.js` (if needed) → `lapis_picker.js` → `lapis_confirm.js` → `lapis_global_nav.js` (if needed) → `modules/[page].js`
+All pages: `effects.js` → `storage.js` → `nav.js` → `lapis_core_ui.js` (if needed) → `lapis_picker.js` → `lapis_confirm.js` → `modules/[page].js`
+
+**workout.html specifically:** `modules/workout_data.js` → `modules/workout_metrics.js` → `modules/workout_library_ui.js` → `modules/workout.js` (all must be in `modules/`, NOT `js/`)
 
 ### Vue Mount Points
 All pages mount a single Vue app on `<div id="app">`. No `<Teleport>` is used — modals render inline via `v-show`/`v-if`.
@@ -330,6 +343,12 @@ Apply to `.lapis-bottom-nav` and any fixed-bottom element.
 **Cause:** `LapisNav.inject()` is called before DOM is ready.
 **Fix:** Call `LapisNav.inject()` inside `DOMContentLoaded` or at the bottom of `<body>`.
 
+### workout.html Vue Variables Not Interpolated ({{ toastMsg }}, {{ t.date }} shown as text)
+**Root Cause:** `workout.html` loaded `workout_data.js`, `workout_metrics.js`, `workout_library_ui.js`, and `workout.js` from `./js/` — but all four files live in `./modules/`. Vue mounted with undefined global functions (`useWorkoutLibrary`, `useWorkoutMetrics`, `_wT`, etc.), causing a JS error that prevented the Vue app from initialising.
+**Fix (2026-04-24):** Change all four `<script src="...">` paths from `./js/` to `./modules/` in `workout.html`.
+**Verification:** Open browser DevTools → Console — should show no "is not defined" errors. All `{{ }}` bindings should resolve immediately.
+**Prevention:** When splitting a module into sub-files (`_data`, `_metrics`, `_library_ui`), place ALL sub-files in the **same directory** as the main module (`modules/`), and update `<script src>` paths accordingly. Never mix `js/` (shared utilities) with `modules/` (page-specific logic).
+
 ---
 
 ## 6. COMPONENT API REFERENCE
@@ -364,8 +383,10 @@ LapisModal.closeTop()          // closes topmost open modal
 
 ### `LapisNav` (lapis_core_ui.js)
 ```javascript
-LapisNav.inject({ activePage: 'todo' })  // activePage: 'index'|'shift'|'workout'|'setting'
+// Page keys: 'home' | 'todo' | 'shift' | 'workout' | 'setting'
+LapisNav.inject({ bottom: false })       // inject top nav only (all detail pages use this)
 LapisNav.refresh('zh')                   // re-render labels after lang change
+// _currentKey() auto-detects from window.location.pathname
 ```
 
 ### `LapisDatePicker` / `LapisTimePicker` (lapis_picker.js)

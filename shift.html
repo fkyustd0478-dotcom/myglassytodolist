@@ -35,9 +35,33 @@
     <!-- ── Header (z-10001) ─────────────────────────────────────────────── -->
     <!-- LapisNav.inject() inserts the top nav capsule above this element -->
 
+    <!-- ── Compact Action Bar (replaces bottom nav) ──────────────────────── -->
+    <div class="shift-action-bar glass" style="z-index: var(--z-nav);">
+        <button @click="showTodayTasks = true" class="shift-action-btn"
+                :class="{ active: showTodayTasks }">
+            <i data-lucide="calendar-check" class="w-5 h-5"></i>
+            <span>{{ t.todayTasks }}</span>
+        </button>
+        <button @click="toggleQuickTagCategory('pay')" class="shift-action-btn"
+                :class="{ active: activeQuickTagCategory === 'pay' }">
+            <i data-lucide="banknote" class="w-5 h-5"></i>
+            <span>{{ t.salary }}</span>
+        </button>
+        <button @click="toggleQuickTagCategory('shift')" class="shift-action-btn"
+                :class="{ active: activeQuickTagCategory === 'shift' }">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+            <span>{{ t.shiftNav }}</span>
+        </button>
+        <button @click="showTagsModal = true" class="shift-action-btn"
+                :class="{ active: showTagsModal }">
+            <i data-lucide="tags" class="w-5 h-5"></i>
+            <span>{{ t.labelSettings }}</span>
+        </button>
+    </div>
+
     <!-- ── Calendar ─────────────────────────────────────────────────────── -->
     <div class="calendar-container level-2"
-         :style="{ paddingBottom: activeQuickTagCategory ? '175px' : '90px' }">
+         :style="{ paddingBottom: activeQuickTagCategory ? '175px' : '8px' }">
         <div class="calendar-header flex items-center justify-center gap-6">
             <button @click="changeMonth(-1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
                 <i data-lucide="chevron-left" class="w-5 h-5"></i>
@@ -176,28 +200,6 @@
             </div>
         </transition>
     </div>
-
-    <!-- ── Bottom Navigation — 4 items ──────────────────────────────────── -->
-    <nav class="bottom-nav glass level-2">
-        <div class="nav-item" @click="showTodayTasks = true">
-            <div class="nav-icon-wrapper"><i data-lucide="calendar-check"></i></div>
-            <span>{{ t.todayTasks }}</span>
-        </div>
-        <div class="nav-item" :class="{ active: activeQuickTagCategory === 'pay' }"
-             @click="toggleQuickTagCategory('pay')">
-            <div class="nav-icon-wrapper"><i data-lucide="banknote"></i></div>
-            <span>{{ t.salary }}</span>
-        </div>
-        <div class="nav-item" :class="{ active: activeQuickTagCategory === 'shift' }"
-             @click="toggleQuickTagCategory('shift')">
-            <div class="nav-icon-wrapper"><i data-lucide="clock"></i></div>
-            <span>{{ t.shiftNav }}</span>
-        </div>
-        <div class="nav-item" :class="{ active: showTagsModal }" @click="showTagsModal = true">
-            <div class="nav-icon-wrapper"><i data-lucide="tags"></i></div>
-            <span>{{ t.labelSettings }}</span>
-        </div>
-    </nav>
 
     <!-- ── Backdrop (LV2 — dims behind all modals) ──────────────────────── -->
     <transition name="fade">

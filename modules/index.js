@@ -57,6 +57,7 @@ window.addEventListener('DOMContentLoaded', () => {
             });
 
             onMounted(() => {
+                if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
                 if (typeof ParticleEngine !== 'undefined' && navSettings.effect && navSettings.effect !== 'none') {
                     ParticleEngine.setEffect(navSettings.effect);
                 }

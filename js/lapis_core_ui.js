@@ -13,7 +13,8 @@
 
     // ── Page registry ─────────────────────────────────────────────────────────
     const _pages = [
-        { key: 'index',   href: './index.html',   icon: 'check-square', zh: '琉璃任務', en: 'Glassy Tasks'   },
+        { key: 'home',    href: './index.html',   icon: 'home',         zh: '首頁',     en: 'Home'           },
+        { key: 'todo',    href: './todo.html',    icon: 'check-square', zh: '琉璃任務', en: 'Glassy Todo'    },
         { key: 'shift',   href: './shift.html',   icon: 'calendar',     zh: '琉璃班表', en: 'Glassy Shift'   },
         { key: 'workout', href: './workout.html', icon: 'dumbbell',     zh: '琉璃健身', en: 'Glassy Workout'  },
         { key: 'setting', href: './setting.html', icon: 'settings',     zh: '系統設定', en: 'Settings'        },
@@ -21,10 +22,11 @@
 
     const _currentKey = () => {
         const file = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+        if (file.includes('todo'))    return 'todo';
         if (file.includes('shift'))   return 'shift';
         if (file.includes('workout')) return 'workout';
         if (file.includes('setting')) return 'setting';
-        return 'index';
+        return 'home';
     };
 
     const _pageTitle = (lang) => {

@@ -65,17 +65,34 @@
                     <div id="list-tabs" class="overflow-x-auto no-scrollbar bg-transparent py-2 flex items-center">
                         <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
                             <button @click="currentListId = list.id" @touchstart="currentListId = list.id"
-                                class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none" 
+                                class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none"
                                 :class="currentListId === list.id ? 'bg-blue-600 text-white' : ''" :style="glassStyle">
                                 {{ isDefaultList(list.id) ? t[list.id] : list.name }}
                             </button>
                         </div>
                     </div>
                 </div>
+
+                <!-- View Tab Strip (Active / Completed / Bin) -->
+                <div v-show="appMode === 'todo' && view !== 'settings'" class="todo-view-tabs -mx-6 px-6">
+                    <button @click="view = 'active'" :class="{ active: view === 'active' }">
+                        <i data-lucide="list" class="inline-block w-3.5 h-3.5 mr-1"></i>{{ t.active }}
+                    </button>
+                    <button @click="view = 'completed'" :class="{ active: view === 'completed' }">
+                        <i data-lucide="check-square" class="inline-block w-3.5 h-3.5 mr-1"></i>{{ t.completed }}
+                    </button>
+                    <button @click="view = 'bin'" :class="{ active: view === 'bin' }">
+                        <i data-lucide="trash-2" class="inline-block w-3.5 h-3.5 mr-1"></i>{{ t.bin }}
+                    </button>
+                    <button v-show="appMode === 'todo'" @click="startAdding"
+                            class="todo-view-add-btn">
+                        <i data-lucide="plus" class="inline-block w-3.5 h-3.5 mr-1"></i>{{ t.add }}
+                    </button>
+                </div>
             </div>
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto no-scrollbar pb-40" :class="{ 'pointer-events-none': isAnyModalOpen }">
+            <main class="flex-1 overflow-y-auto no-scrollbar pb-10" :class="{ 'pointer-events-none': isAnyModalOpen }">
                 <transition name="fade" mode="out-in">
                     <div :key="'main-container-' + appMode" class="w-full">
                         <!-- Mode A: Glassy Todo -->
@@ -313,26 +330,6 @@
                     </div>
                 </div>
             </transition>
-
-            <!-- Bottom Navigation -->
-            <nav v-show="view !== 'settings' && !isAnyModalOpen" class="bottom-nav glass" :style="glassStyle">
-                <button @click="view = 'active'" class="nav-item" :class="{ active: view === 'active' }">
-                    <i data-lucide="list" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">{{ t.active }}</span>
-                </button>
-                <button @click="view = 'completed'" class="nav-item" :class="{ active: view === 'completed' }">
-                    <i data-lucide="check-square" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">{{ t.completed }}</span>
-                </button>
-                <button @click="view = 'bin'" class="nav-item" :class="{ active: view === 'bin' }">
-                    <i data-lucide="trash-2" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">{{ t.bin }}</span>
-                </button>
-                <button v-show="appMode === 'todo'" @click="startAdding" class="nav-item nav-add-btn">
-                    <i data-lucide="plus" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-bold uppercase">{{ t.add }}</span>
-                </button>
-            </nav>
 
             <!-- Manage Lists Modal (LV2 primary) -->
             <transition name="fade">
