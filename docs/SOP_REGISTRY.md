@@ -155,6 +155,36 @@ app.component('LapisConfirm', LapisConfirm);
 
 ---
 
+## SOP-08: Specialized Bottom Navigation Rule
+
+**Core Rule:** Every page owns its own bottom navigation. No page may inherit or share a bottom nav from a global utility.
+
+**Layout:**
+- Style: Floating Island — `position: fixed; bottom: 16px; left: 16px; right: 16px; border-radius: 28px`
+- Class: `<nav class="bottom-nav glass">` — do **not** use `.lapis-bottom-nav` (removed)
+- Theme binding: `:style="glassStyle"` (Vue) for correct glass surface per theme
+- CSS source: `css/lapis_shared_style.css` — `.bottom-nav`, `.nav-item`, `.nav-add-btn`
+
+**Per-page nav items:**
+| Page | Nav items |
+|---|---|
+| `index.html` | Home / Quick Add (+) / Stats |
+| `todo.html` | Active / Completed / Bin / Add (+) |
+| `shift.html` | Today's Tasks / Salary / Shifts / Labels |
+| `workout.html` | Workout / Exercises / Records / Add (+) |
+| `stats.html` | Home / Quick Add (+) / Stats |
+
+**Anti-Patterns:**
+- Do NOT call `LapisNav.inject({ bottom: true })` — bottom injection is permanently removed from `lapis_core_ui.js`.
+- Do NOT define `.bottom-nav` or `.nav-item` in page-specific CSS files — they are globally defined in `lapis_shared_style.css`.
+- Do NOT use edge-to-edge positioning (`bottom: 0; left: 0; right: 0`) for the bottom nav.
+- Do NOT position floating elements (e.g. tag pills) below `bottom: 92px` — they must clear the floating island.
+
+**Padding rule:** Any scrollable `<main>` must have `padding-bottom` of at least `100px` to ensure content is never hidden under the floating island nav.
+
+---
+
+
 ## SOP-07: Write Theme-Aware CSS
 
 **When to use:** Any new CSS class that must render correctly on both dark and light themes.

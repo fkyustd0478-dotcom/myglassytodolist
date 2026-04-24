@@ -230,49 +230,6 @@ header {
     box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
-/* Bottom Navigation */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 90px;
-    display: flex !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    align-items: center;
-    justify-content: space-around;
-    padding-bottom: env(safe-area-inset-bottom, 20px);
-    z-index: 7000;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    transform: none !important;
-}
-
-.nav-add-btn {
-    color: var(--primary) !important;
-    opacity: 1 !important;
-    background: rgba(59, 130, 246, 0.15);
-    border-radius: 50%;
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
-    box-shadow: 0 0 16px rgba(59, 130, 246, 0.3);
-}
-.nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    color: inherit;
-    opacity: 0.4;
-    min-width: 80px;
-}
-.nav-item.active {
-    color: var(--primary);
-    transform: translateY(-6px);
-    opacity: 1;
-}
 
 /* Action Buttons - Always Visible & High Contrast */
 .task-item .actions { 
@@ -461,13 +418,3 @@ input[type=range]::-webkit-slider-runnable-track {
     scroll-margin-inline: 12px;
 }
 
-/* ── Index Bottom Nav (Home / Add / Stats) ───────────────────────────────── */
-.index-bottom-nav .nav-item {
-    text-decoration: none;
-    color: inherit;
-}
-.index-bottom-nav .nav-item.active {
-    color: var(--primary);
-    transform: translateY(-6px);
-    opacity: 1;
-}

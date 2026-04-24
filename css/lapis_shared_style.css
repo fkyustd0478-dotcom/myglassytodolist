@@ -171,26 +171,46 @@ body.theme-waterfall   .lapis-dropdown-item:not(.active):active { background: rg
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   BOTTOM TAB BAR
+   BOTTOM NAV — Floating Island
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.lapis-bottom-nav {
+.bottom-nav {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 90px;
-    display: flex;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    height: auto;
+    padding: 10px 4px calc(10px + env(safe-area-inset-bottom, 0px));
+    border-radius: 28px;
+    display: flex !important;
     align-items: center;
     justify-content: space-around;
-    padding-bottom: env(safe-area-inset-bottom, 16px);
-    z-index: 7000;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(22px) saturate(1.4);
-    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    z-index: var(--z-nav, 7000);
+    backdrop-filter: blur(24px) saturate(1.3);
+    -webkit-backdrop-filter: blur(24px) saturate(1.3);
+    background: rgba(20, 20, 40, 0.60);
+    border: 1.5px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.15);
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
 }
 
-.lapis-nav-tab {
+body.theme-light       .bottom-nav,
+body.theme-cherry      .bottom-nav,
+body.theme-sky         .bottom-nav,
+body.theme-seaside     .bottom-nav,
+body.theme-sunset      .bottom-nav,
+body.theme-mapleavenue .bottom-nav,
+body.theme-waterfall   .bottom-nav {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(255, 255, 255, 0.90);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10);
+}
+
+/* ── Nav items (shared across all pages) ───────────────────────────────── */
+
+.nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -204,35 +224,47 @@ body.theme-waterfall   .lapis-dropdown-item:not(.active):active { background: rg
     text-decoration: none;
     opacity: 0.38;
     border-radius: 16px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
     transition: opacity 0.26s cubic-bezier(0.4, 0, 0.2, 1),
                 transform 0.26s cubic-bezier(0.4, 0, 0.2, 1),
-                filter  0.26s ease,
-                color   0.26s ease;
+                color    0.26s ease;
 }
 
-/* Lucide icon inside the tab */
-.lapis-nav-tab svg,
-.lapis-nav-tab [data-lucide] {
+.nav-item svg,
+.nav-item [data-lucide] {
     width: 24px;
     height: 24px;
     flex-shrink: 0;
     transition: transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.lapis-nav-tab.active {
+.nav-item.active {
     opacity: 1;
     color: var(--primary);
     transform: translateY(-5px);
-    /* Active glow on the icon */
     filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.50));
 }
-.lapis-nav-tab.active svg,
-.lapis-nav-tab.active [data-lucide] {
+.nav-item.active svg,
+.nav-item.active [data-lucide] {
     transform: scale(1.14);
 }
-.lapis-nav-tab:not(.active):active {
+.nav-item:not(.active):active {
     opacity: 0.65;
     transform: scale(0.93);
+}
+
+.nav-add-btn {
+    color: var(--primary) !important;
+    opacity: 1 !important;
+    background: rgba(59, 130, 246, 0.15) !important;
+    border-radius: 50% !important;
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.3) !important;
 }
 
 
