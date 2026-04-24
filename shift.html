@@ -127,11 +127,12 @@
                     </div>
                     <!-- 3. Payday system tag -->
                     <div v-if="day.isPayday" class="indicator-tag payday-tag">{{ t.paydayTag }}</div>
-                    <!-- 4. Salary/pay tag (lowest priority) -->
+                    <!-- 4. Salary/pay tag — compact '$' when shift+other fill the cell -->
                     <div v-if="(day.data.payIds||[]).length"
                          class="indicator-tag"
                          :style="{ backgroundColor: getTagColor('pay', day.data.payIds[0]) }">
-                        {{ getTagName('pay', day.data.payIds[0]) }}
+                        <template v-if="(day.data.shiftIds||[]).length && day.otherTagsOnDay.length">$</template>
+                        <template v-else>{{ getTagName('pay', day.data.payIds[0]) }}</template>
                     </div>
                 </div>
                 <div v-if="showLunarDates && day.lunar" class="lunar-date">{{ day.lunar }}</div>
@@ -318,7 +319,7 @@
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
-                        <!-- Row 2: icon picker (None + 12 Lucide icons) -->
+                        <!-- Row 2: icon picker (None + icons shown as emoji) -->
                         <div class="icon-picker-row">
                             <button v-for="ic in OTHER_TAG_ICONS" :key="ic.id"
                                     @click="tag.icon = ic.id"
@@ -329,13 +330,18 @@
                                       :class="(tag.icon === 'none' || !tag.icon) ? 'opacity-90' : 'opacity-40'">
                                     {{ t.iconNone }}
                                 </span>
-                                <i v-else :data-lucide="ic.id" class="w-3.5 h-3.5"></i>
+                                <span v-else class="text-sm leading-none select-none">{{ ic.emoji }}</span>
                             </button>
                         </div>
-                        <!-- Row 3: date picker -->
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] font-black opacity-40 shrink-0">{{ t.otherDateLabel }}</span>
-                            <input v-model="tag.date" type="date"
+                        <!-- Row 3: date range picker -->
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-black opacity-40 shrink-0">{{ t.otherDateFrom }}</span>
+                            <input v-model="tag.startDate" type="date"
+                                   class="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold focus:outline-none focus:border-purple-500"
+                                   style="color-scheme: dark;">
+                            <span class="text-[10px] font-black opacity-40 shrink-0">{{ t.otherDateTo }}</span>
+                            <input v-model="tag.endDate" type="date"
+                                   :min="tag.startDate"
                                    class="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-bold focus:outline-none focus:border-purple-500"
                                    style="color-scheme: dark;">
                         </div>

@@ -56,6 +56,7 @@ const shiftTranslations = {
         otherNamePlaceholder: '標籤名稱', addOther: '+ 新增標籤',
         iconLabel: '圖示', iconNone: '無',
         todoItemsLabel: '待辦事項', otherDateLabel: '日期',
+        otherDateFrom: '開始', otherDateTo: '結束',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
@@ -97,6 +98,7 @@ const shiftTranslations = {
         otherNamePlaceholder: 'Tag Name', addOther: '+ Add Tag',
         iconLabel: 'Icon', iconNone: 'None',
         todoItemsLabel: 'Todo Tasks', otherDateLabel: 'Date',
+        otherDateFrom: 'From', otherDateTo: 'To',
     }
 };
 
@@ -117,6 +119,15 @@ const OTHER_TAG_ICONS = [
     { id: 'book',           emoji: '📖',  zh: '學習',  en: 'Study'    },
     { id: 'trophy',         emoji: '🏆',  zh: '成就',  en: 'Trophy'   },
     { id: 'music',          emoji: '♪',   zh: '音樂',  en: 'Music'    },
+    { id: 'phone',          emoji: '📞',  zh: '電話',  en: 'Phone'    },
+    { id: 'ship',           emoji: '🚢',  zh: '乘船',  en: 'Boat'     },
+    { id: 'waves',          emoji: '🤿',  zh: '潛水',  en: 'Snorkel'  },
+    { id: 'cat',            emoji: '🐱',  zh: '貓',    en: 'Cat'      },
+    { id: 'dog',            emoji: '🐶',  zh: '狗',    en: 'Dog'      },
+    { id: 'fish',           emoji: '🎣',  zh: '釣魚',  en: 'Fishing'  },
+    { id: 'circle-dot',     emoji: '⚽',  zh: '球類',  en: 'Ball'     },
+    { id: 'barbell',        emoji: '🏋',  zh: '槓鈴',  en: 'Barbell'  },
+    { id: 'utensils-crossed', emoji: '🍽', zh: '禁食', en: 'No Meal'  },
 ];
 
 // ── Payday helper ─────────────────────────────────────────────────────────────
@@ -207,8 +218,14 @@ const app = createApp({
             ...rawSettings,
             // Merge payday sub-object so new keys don't overwrite user data
             payday: { day: null, display: true, holidayLogic: 'advance', ...(rawSettings.payday || {}) },
-            // otherTags: user-defined event tags (default empty, each icon defaults to 'none')
-            otherTags: rawSettings.otherTags || [],
+            // otherTags: migrate single `date` field → startDate/endDate
+            otherTags: (rawSettings.otherTags || []).map(tag => {
+                if (tag.date && !tag.startDate) {
+                    const { date, ...rest } = tag;
+                    return { ...rest, startDate: date, endDate: date };
+                }
+                return tag;
+            }),
         });
 
         // ── Calendar state ───────────────────────────────────────────────────
@@ -257,12 +274,19 @@ const app = createApp({
             const todayStr = new Date().toISOString().split('T')[0];
             const effectivePaydayStr = getEffectivePayday(year, month, shiftSettings.value.payday);
 
-            // Pre-index date-specific Other tags by their assigned date
+            // Pre-index date-specific Other tags, expanding startDate→endDate ranges
             const otherTagsByDate = {};
             (shiftSettings.value.otherTags || []).forEach(tag => {
-                if (tag.date) {
-                    if (!otherTagsByDate[tag.date]) otherTagsByDate[tag.date] = [];
-                    otherTagsByDate[tag.date].push(tag);
+                const start = tag.startDate || tag.date;
+                const end   = tag.endDate   || tag.startDate || tag.date;
+                if (!start) return;
+                const cur = new Date(start + 'T00:00:00');
+                const fin = new Date((end || start) + 'T00:00:00');
+                while (cur <= fin) {
+                    const ds = cur.toISOString().split('T')[0];
+                    if (!otherTagsByDate[ds]) otherTagsByDate[ds] = [];
+                    otherTagsByDate[ds].push(tag);
+                    cur.setDate(cur.getDate() + 1);
                 }
             });
 
@@ -333,7 +357,12 @@ const app = createApp({
         // Other tags whose assigned date matches the selected day
         const selectedDayOtherTags = computed(() => {
             if (!selectedDay.value) return [];
-            return (shiftSettings.value.otherTags || []).filter(tag => tag.date === selectedDay.value);
+            return (shiftSettings.value.otherTags || []).filter(tag => {
+                const start = tag.startDate || tag.date;
+                const end   = tag.endDate   || tag.startDate || tag.date;
+                if (!start) return false;
+                return selectedDay.value >= start && selectedDay.value <= (end || start);
+            });
         });
 
         // Pending todo task texts for the selected day
@@ -501,7 +530,7 @@ const app = createApp({
 
         // ── Other-tag management ─────────────────────────────────────────────
         const addOtherTag = () => shiftSettings.value.otherTags.push({
-            id: 'other_' + Date.now(), name: t.value.otherNamePlaceholder, color: '#a855f7', icon: 'none', date: ''
+            id: 'other_' + Date.now(), name: t.value.otherNamePlaceholder, color: '#a855f7', icon: 'none', startDate: '', endDate: ''
         });
         const removeOtherTag = (id) => {
             shiftSettings.value.otherTags = shiftSettings.value.otherTags.filter(t => t.id !== id);

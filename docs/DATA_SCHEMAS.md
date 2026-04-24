@@ -72,7 +72,7 @@
 ```jsonc
 {
   "shiftTags": [{ "id": "", "name": "", "startTime": "09:00", "endTime": "18:00", "color": "#3b82f6" }],
-  "otherTags":  [{ "id": "", "name": "", "color": "#...", "icon": "star", "date": "2026-04-24" }],
+  "otherTags":  [{ "id": "", "name": "", "color": "#...", "icon": "star", "startDate": "2026-04-24", "endDate": "2026-04-27" }],
   "jobs":       [{ "id": "", "name": "", "color": "#...", "method": "hourly", "rate": 0, "units": null, "payDay": 15, "holidayLogic": "postpone" }],
   "payday":     { "day": 15, "display": true, "holidayLogic": "postpone" }
 }

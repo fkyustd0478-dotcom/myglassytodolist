@@ -177,9 +177,10 @@
 }
 
 .tag-pill.active {
-    border-color: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.90);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25), 0 4px 16px rgba(0,0,0,0.25);
+    transform: translateY(-2px) scale(1.04);
+    opacity: 1;
 }
 
 
