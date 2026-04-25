@@ -106,60 +106,93 @@ function useNav() {
     let _mqCleanup = null;
 
     // ── Background transition system ──────────────────────────────────────────
-    // Image themes are preloaded before the class switch so the bg-layer
-    // never flickers during the opacity/blur entrance animation.
     const _imgThemes = new Set([
         'cherry','sky','sunset','sea','seaside','forest','night','torii',
         'mapleavenue','waterfall','starrysky','ferriswheel'
     ]);
-    let _firstApply = true;
+    let _firstApply  = true;
+    let _flashGuard  = null;
 
+    // Lazily create a fixed blur overlay that hides transition artifacts.
+    // Kept at z-index 9998 so it stays below confirm dialogs (9001) but above bg.
+    function _getFlashGuard() {
+        if (!_flashGuard) {
+            _flashGuard = document.createElement('div');
+            _flashGuard.id = 'lapis-flash-guard';
+            _flashGuard.style.cssText = [
+                'position:fixed', 'inset:0', 'z-index:9998',
+                'backdrop-filter:blur(18px)', '-webkit-backdrop-filter:blur(18px)',
+                'background:rgba(12,12,22,0.18)',
+                'opacity:0', 'transition:opacity 0.18s ease',
+                'pointer-events:none'
+            ].join(';');
+            document.body.appendChild(_flashGuard);
+        }
+        return _flashGuard;
+    }
+
+    // Preload image and wait for GPU decode (img.decode) when available.
     function _preload(src) {
         return new Promise(r => {
             const img = new Image();
-            img.onload = img.onerror = r;
-            img.src = src;
-            setTimeout(r, 3000); // safety timeout
+            img.onload = () => {
+                (typeof img.decode === 'function' ? img.decode() : Promise.resolve())
+                    .catch(() => {}).then(r);
+            };
+            img.onerror = r;
+            img.src     = src;
+            setTimeout(r, 3000);
         });
     }
 
     async function _applyTheme(theme, useCustomBg) {
-        const cls = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
+        const cls     = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
+        const bgLayer = document.querySelector('.bg-layer');
 
-        // First load: apply synchronously — anti-flash script already set
-        // the html background; just update body class with no animation.
+        // First load: anti-flash inline script already applied correct body class;
+        // just align body.className and skip the animated transition entirely.
         if (_firstApply) {
             _firstApply = false;
             document.body.className = cls;
             return;
         }
 
-        // Animate out the bg-layer before switching
-        const bgLayer = document.querySelector('.bg-layer');
+        const guard = _getFlashGuard();
+
+        // Step 1 — Show flash guard: covers any white/blank artifacts while
+        //           the bg-layer is hidden and the new asset is loading.
+        guard.style.opacity = '1';
+
+        // Step 2 — Hide bg-layer (no transition, instant snap).
         if (bgLayer) {
             bgLayer.style.transition = 'none';
-            bgLayer.style.opacity   = '0';
-            bgLayer.style.filter    = 'blur(10px)';
-            bgLayer.offsetHeight;   // force reflow so the state registers
+            bgLayer.style.opacity    = '0';
+            bgLayer.style.filter     = 'blur(10px)';
+            bgLayer.offsetHeight;   // force reflow
         }
 
-        // For image themes: wait until the asset is in browser cache
-        // For solid/gradient themes: proceed immediately
+        // Step 3 — For image themes: preload + GPU-decode via img.decode().
+        //           Solid/gradient themes skip this (no asset to decode).
         if (_imgThemes.has(theme)) {
             await _preload('./theme/' + theme + '.png');
         }
 
+        // Step 4 — Apply new body class → CSS vars update immediately.
         document.body.className = cls;
 
-        // Double-RAF ensures the new background-image is painted before we
-        // remove the override, triggering the CSS opacity+blur transition.
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-            if (bgLayer) {
-                bgLayer.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
-                bgLayer.style.opacity    = '';
-                bgLayer.style.filter     = '';
-            }
-        }));
+        // Step 5 — Double-RAF: let Vue re-render apply new bg-layer CSS class
+        //           so the new background-image is ready before we fade in.
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+        // Step 6 — Fade bg-layer back in with new theme.
+        if (bgLayer) {
+            bgLayer.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
+            bgLayer.style.opacity    = '';
+            bgLayer.style.filter     = '';
+        }
+
+        // Step 7 — Remove flash guard; bg-layer is already fading in.
+        guard.style.opacity = '0';
     }
 
     // ── Body class injection ──────────────────────────────────────────────────

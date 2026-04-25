@@ -18,6 +18,7 @@
     --z-top-overlay:        10000;  /* Toasts, error reporters, global dropdowns */
     --glass-text-primary:   var(--text-primary);
     --glass-text-muted:     var(--text-secondary);
+    --nav-height:           120px;  /* Scroll container bottom padding — keep in sync with bottom-nav height */
 }
 
 

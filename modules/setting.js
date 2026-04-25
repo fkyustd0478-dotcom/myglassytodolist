@@ -158,49 +158,14 @@ createApp({
         const themeDropdownOpen = ref(false);
 
         // ── Actions ────────────────────────────────────────────────────────
-        const _imgThemes = new Set([
-            'cherry','sky','sunset','sea','seaside','forest','night','torii',
-            'mapleavenue','waterfall','starrysky','ferriswheel'
-        ]);
-
-        const selectTheme = async (theme) => {
-            themeDropdownOpen.value = false;
+        // Delegate all bg-layer animation to nav.js _applyTheme (triggered via
+        // navSettings.theme watch). Direct DOM manipulation here caused a race:
+        // both selectTheme and _applyTheme manipulated bg-layer simultaneously,
+        // interrupting each other's opacity transitions and producing a white flash.
+        const selectTheme = (theme) => {
+            themeDropdownOpen.value    = false;
             settings.value.useCustomBg = false;
-
-            // 1. Fade out bg-layer synchronously while it's still showing old content
-            const bgLayer = document.querySelector('.bg-layer');
-            if (bgLayer) {
-                bgLayer.style.transition = 'none';
-                bgLayer.style.opacity    = '0';
-                bgLayer.style.filter     = 'blur(10px)';
-                bgLayer.offsetHeight; // force reflow
-            }
-
-            // 2. Swap body class immediately — CSS variables update while bg-layer is invisible
-            document.body.className = 'theme-' + theme;
-
-            // 3. Preload the new bg image before revealing the layer
-            if (_imgThemes.has(theme)) {
-                await new Promise(r => {
-                    const img = new Image();
-                    img.onload = img.onerror = r;
-                    img.src = `./theme/${theme}.png`;
-                    setTimeout(r, 3000);
-                });
-            }
-
-            // 4. Push theme into reactive state (Vue re-render)
-            settings.value.theme = theme;
-
-            // 5. Fade bg-layer back in
-            await nextTick();
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                if (bgLayer) {
-                    bgLayer.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
-                    bgLayer.style.opacity    = '';
-                    bgLayer.style.filter     = '';
-                }
-            }));
+            settings.value.theme       = theme;
         };
 
         const toggleLang = () => {

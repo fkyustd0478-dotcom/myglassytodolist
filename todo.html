@@ -80,7 +80,7 @@
             </div>
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto no-scrollbar pb-[120px]" :class="{ 'pointer-events-none': isAnyModalOpen }">
+            <main class="flex-1 overflow-y-auto no-scrollbar" :class="{ 'pointer-events-none': isAnyModalOpen }" style="padding-bottom:var(--nav-height)">
                 <transition name="fade" mode="out-in">
                     <div :key="'main-container-' + appMode" class="w-full">
                         <!-- Mode A: Glassy Todo -->

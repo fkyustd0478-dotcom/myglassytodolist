@@ -176,11 +176,21 @@
     border: 2px solid transparent;
 }
 
+@keyframes tagPillPulse {
+    0%   { box-shadow: 0 0 0 0px  rgba(255,255,255,0.55), 0 4px 16px rgba(0,0,0,0.28); }
+    65%  { box-shadow: 0 0 0 8px  rgba(255,255,255,0.00), 0 4px 16px rgba(0,0,0,0.28); }
+    100% { box-shadow: 0 0 0 0px  rgba(255,255,255,0.00), 0 4px 16px rgba(0,0,0,0.28); }
+}
+
 .tag-pill.active {
     border-color: rgba(255, 255, 255, 0.90);
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25), 0 4px 16px rgba(0,0,0,0.25);
-    transform: translateY(-2px) scale(1.04);
+    animation: tagPillPulse 1.8s ease-out infinite;
+    transform: translateY(-2px) scale(1.06);
     opacity: 1;
+    color: #ffffff !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.50);
+    position: relative;
+    z-index: 7999;
 }
 
 
