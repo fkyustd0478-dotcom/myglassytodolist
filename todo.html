@@ -26,6 +26,13 @@
     <link rel="stylesheet" href="./css/effects.css">
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/lapis_shared_style.css">
+    <link rel="stylesheet" href="./css/lapis_scroll.css">
+    <style>
+        html  { background: #0d0d0d; }
+        [v-cloak] { display: none !important; }
+        body  { opacity: 0; transition: opacity 0.4s ease-in-out; }
+        body.lapis-ready { opacity: 1; }
+    </style>
     <script src="./js/effects.js" defer></script>
     <script src="./js/storage.js" defer></script>
     <script src="./js/nav.js" defer></script>
@@ -40,7 +47,7 @@
 
     <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
         <!-- Background Layers -->
-        <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
+        <div class="bg-layer"></div>
 
         <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 

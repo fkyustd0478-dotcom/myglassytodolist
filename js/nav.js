@@ -1,4 +1,4 @@
-// nav.js — Global navigation composable v3.1
+// nav.js — Global navigation composable v3.2
 // Loaded after storage.js, before page-specific scripts on all pages.
 // Usage inside Vue setup():
 //   const { navDropdownOpen, currentPageTitle, toggleNavDropdown,
@@ -103,68 +103,156 @@ function useNav() {
         if (!e.target.closest('.nav-capsule')) navDropdownOpen.value = false;
     };
 
-    let _mqCleanup = null;
+    let _mqCleanup      = null;
+    let _storageCleanup = null;
 
     // ── Background transition system ──────────────────────────────────────────
-    // Image themes are preloaded before the class switch so the bg-layer
-    // never flickers during the opacity/blur entrance animation.
     const _imgThemes = new Set([
         'cherry','sky','sunset','sea','seaside','forest','night','torii',
         'mapleavenue','waterfall','starrysky','ferriswheel'
     ]);
-    let _firstApply = true;
+    let _firstApply  = true;
+    let _flashGuard  = null;
+    let _bgSecondary = null;
 
+    // Flash guard: subtle dark-blur overlay for solid-theme transitions.
+    function _getFlashGuard() {
+        if (!_flashGuard) {
+            _flashGuard = document.createElement('div');
+            _flashGuard.id = 'lapis-flash-guard';
+            _flashGuard.style.cssText = [
+                'position:fixed', 'inset:0', 'z-index:9998',
+                'backdrop-filter:blur(18px)', '-webkit-backdrop-filter:blur(18px)',
+                'background:rgba(12,12,22,0.18)',
+                'opacity:0', 'transition:opacity 0.18s ease',
+                'pointer-events:none'
+            ].join(';');
+            document.body.appendChild(_flashGuard);
+        }
+        return _flashGuard;
+    }
+
+    // Secondary bg layer for double-buffer cross-dissolve.
+    // Inserted immediately after .bg-layer so same z-index (0) stacks on top via DOM order.
+    function _getBgSecondary() {
+        if (!_bgSecondary) {
+            _bgSecondary = document.createElement('div');
+            _bgSecondary.id = 'lapis-bg-secondary';
+            _bgSecondary.style.cssText = [
+                'position:fixed', 'top:0', 'left:0',
+                'width:100%', 'height:100%',
+                'z-index:0',
+                'pointer-events:none',
+                'opacity:0',
+                'background-size:cover',
+                'background-position:center',
+                'background-attachment:fixed',
+                'will-change:opacity'
+            ].join(';');
+            const primary = document.querySelector('.bg-layer');
+            if (primary && primary.parentNode) {
+                primary.parentNode.insertBefore(_bgSecondary, primary.nextSibling);
+            } else {
+                document.body.appendChild(_bgSecondary);
+            }
+        }
+        return _bgSecondary;
+    }
+
+    // Preload an image src and wait for GPU decode (img.decode) when available.
     function _preload(src) {
         return new Promise(r => {
             const img = new Image();
-            img.onload = img.onerror = r;
-            img.src = src;
+            img.onload = () => {
+                (typeof img.decode === 'function' ? img.decode() : Promise.resolve())
+                    .catch(() => {}).then(r);
+            };
+            img.onerror = r;
+            img.src     = src;
             setTimeout(r, 3000); // safety timeout
         });
     }
 
     async function _applyTheme(theme, useCustomBg) {
-        const cls = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
+        const cls     = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
+        const primary = document.querySelector('.bg-layer');
 
-        // First load: apply synchronously — anti-flash script already set
-        // the html background; just update body class with no animation.
         if (_firstApply) {
             _firstApply = false;
             document.body.className = cls;
+            // Prime the CSS variable so .bg-layer starts loading the image immediately.
+            // onMounted will await img.decode() before adding lapis-ready.
+            if (_imgThemes.has(theme) && !useCustomBg) {
+                document.documentElement.style.setProperty('--lapis-bg-image', `url('./theme/${theme}.png')`);
+            } else {
+                document.documentElement.style.setProperty('--lapis-bg-image', 'none');
+            }
             return;
         }
 
-        // Animate out the bg-layer before switching
-        const bgLayer = document.querySelector('.bg-layer');
-        if (bgLayer) {
-            bgLayer.style.transition = 'none';
-            bgLayer.style.opacity   = '0';
-            bgLayer.style.filter    = 'blur(10px)';
-            bgLayer.offsetHeight;   // force reflow so the state registers
-        }
+        if (_imgThemes.has(theme) && !useCustomBg) {
+            // ── Image theme: CSS-var double-buffer cross-dissolve ─────────────
+            // Primary continues showing the OLD image (via --lapis-bg-image, not yet updated).
+            // Secondary stages the NEW image directly — no CSS var dependency.
+            const secondary = _getBgSecondary();
+            secondary.style.transition      = 'none';
+            secondary.style.opacity         = '0';
+            secondary.style.backgroundImage = `url('./theme/${theme}.png')`;
+            secondary.offsetHeight;
 
-        // For image themes: wait until the asset is in browser cache
-        // For solid/gradient themes: proceed immediately
-        if (_imgThemes.has(theme)) {
             await _preload('./theme/' + theme + '.png');
-        }
 
-        document.body.className = cls;
+            // Update body class for text colours, glass styles, etc.
+            document.body.className = cls;
 
-        // Double-RAF ensures the new background-image is painted before we
-        // remove the override, triggering the CSS opacity+blur transition.
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-            if (bgLayer) {
-                bgLayer.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
-                bgLayer.style.opacity    = '';
-                bgLayer.style.filter     = '';
+            // Cross-dissolve: secondary (new) fades IN, primary (old CSS var) fades OUT
+            secondary.style.transition = 'opacity 0.6s ease';
+            secondary.style.opacity    = '1';
+            if (primary) {
+                primary.style.transition = 'opacity 0.6s ease';
+                primary.style.opacity    = '0';
             }
-        }));
+
+            await new Promise(r => setTimeout(r, 640));
+
+            // Commit: update CSS var → primary now paints the new image.
+            // Restore primary opacity; secondary fades out behind it.
+            document.documentElement.style.setProperty('--lapis-bg-image', `url('./theme/${theme}.png')`);
+            if (primary) {
+                primary.style.transition = 'none';
+                primary.style.opacity    = '1';
+                primary.style.filter     = '';
+                primary.offsetHeight;
+            }
+            secondary.style.transition = 'opacity 0.4s ease';
+            secondary.style.opacity    = '0';
+
+        } else {
+            // ── Solid/gradient or custom bg: clear image var, use flash guard ─
+            document.documentElement.style.setProperty('--lapis-bg-image', 'none');
+            const guard = _getFlashGuard();
+            guard.style.opacity = '1';
+
+            if (primary) {
+                primary.style.transition = 'none';
+                primary.style.opacity    = '0';
+                primary.style.filter     = 'blur(10px)';
+                primary.offsetHeight;
+            }
+
+            document.body.className = cls;
+            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+            if (primary) {
+                primary.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
+                primary.style.opacity    = '';
+                primary.style.filter     = '';
+            }
+            guard.style.opacity = '0';
+        }
     }
 
     // ── Body class injection ──────────────────────────────────────────────────
-    // { immediate: true } fires synchronously before onMounted (first load).
-    // Subsequent reactive changes go through the preload + transition path.
     watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
         _applyTheme(theme, useCustomBg);
     }, { immediate: true });
@@ -192,11 +280,34 @@ function useNav() {
                 if (blob) navSettings.customBg = URL.createObjectURL(blob);
             } catch (_) {}
         }
+
+        // lapis-ready gate: decode the current theme image before lifting the
+        // body opacity cloak. Prevents cold-load blank frames on image themes.
+        const activeTheme = resolvedTheme.value;
+        if (_imgThemes.has(activeTheme) && !navSettings.useCustomBg) {
+            await _preload('./theme/' + activeTheme + '.png');
+        }
+        document.body.classList.add('lapis-ready');
+
+        // Cross-tab theme sync: when any tab saves new settings to localStorage,
+        // update navSettings here so the bg transitions without a page reload.
+        const _onStorage = (e) => {
+            if (e.key !== 'todo_settings' || !e.newValue) return;
+            try {
+                const s = JSON.parse(e.newValue);
+                if (s.theme      !== undefined && s.theme      !== navSettings.theme)      navSettings.theme      = s.theme;
+                if (s.useCustomBg !== undefined && s.useCustomBg !== navSettings.useCustomBg) navSettings.useCustomBg = s.useCustomBg;
+                if (s.lang       !== undefined && s.lang       !== navSettings.lang)       navSettings.lang       = s.lang;
+            } catch (_) {}
+        };
+        window.addEventListener('storage', _onStorage);
+        _storageCleanup = () => window.removeEventListener('storage', _onStorage);
     });
 
     onUnmounted(() => {
         document.removeEventListener('click', closeNav);
-        if (_mqCleanup) _mqCleanup();
+        if (_mqCleanup)      _mqCleanup();
+        if (_storageCleanup) _storageCleanup();
     });
 
     // Re-compute title when language is changed at runtime
