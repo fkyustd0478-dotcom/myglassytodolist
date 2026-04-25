@@ -132,9 +132,8 @@ createApp({
         const themeClasses = computed(() => `theme-${resolvedTheme.value}`);
 
         const customBgStyle = computed(() => ({
-            backgroundImage: `url(${settings.value.customBg})`,
-            opacity: 1 - settings.value.customBgOpacity,
-            display: settings.value.useCustomBg ? 'block' : 'none'
+            backgroundImage: settings.value.customBg ? `url(${settings.value.customBg})` : '',
+            opacity: settings.value.useCustomBg ? (1 - settings.value.customBgOpacity) : 0,
         }));
 
         // Inactive button class — adapts to light/dark mode for visibility
@@ -145,10 +144,24 @@ createApp({
         const themeDropdownOpen = ref(false);
 
         // ── Actions ────────────────────────────────────────────────────────
-        const selectTheme = (theme) => {
-            settings.value.theme = theme;
-            settings.value.useCustomBg = false;
+        const _imgThemes = new Set([
+            'cherry','sky','sunset','sea','seaside','forest','night','torii',
+            'mapleavenue','waterfall','starrysky','ferriswheel'
+        ]);
+
+        const selectTheme = async (theme) => {
             themeDropdownOpen.value = false;
+            settings.value.useCustomBg = false;
+            // Pre-cache image so bg-layer class swap has no visible flash
+            if (_imgThemes.has(theme)) {
+                await new Promise(r => {
+                    const img = new Image();
+                    img.onload = img.onerror = r;
+                    img.src = `./theme/${theme}.png`;
+                    setTimeout(r, 3000);
+                });
+            }
+            settings.value.theme = theme;
         };
 
         const toggleLang = () => {
@@ -174,8 +187,15 @@ createApp({
                 await ImageDB.saveBlob('custom-bg', file);
                 if (currentObjectUrl.value) URL.revokeObjectURL(currentObjectUrl.value);
                 const blob = await ImageDB.getBlob('custom-bg');
-                currentObjectUrl.value = URL.createObjectURL(blob);
-                settings.value.customBg = currentObjectUrl.value;
+                const objectUrl = URL.createObjectURL(blob);
+                // Preload image so custom-bg-layer opacity transition is smooth
+                await new Promise(r => {
+                    const img = new Image();
+                    img.onload = img.onerror = r;
+                    img.src = objectUrl;
+                });
+                currentObjectUrl.value = objectUrl;
+                settings.value.customBg = objectUrl;
                 settings.value.useCustomBg = true;
             } catch (err) {
                 console.error('Upload failed', err);
