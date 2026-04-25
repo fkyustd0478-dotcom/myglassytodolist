@@ -110,11 +110,12 @@ function useNav() {
         'cherry','sky','sunset','sea','seaside','forest','night','torii',
         'mapleavenue','waterfall','starrysky','ferriswheel'
     ]);
-    let _firstApply  = true;
-    let _flashGuard  = null;
+    let _firstApply      = true;
+    let _flashGuard      = null;
+    let _bgSecondary     = null;
+    let _storageCleanup  = null;
 
-    // Lazily create a fixed blur overlay that hides transition artifacts.
-    // Kept at z-index 9998 so it stays below confirm dialogs (9001) but above bg.
+    // Flash guard: subtle dark-blur overlay for solid-theme transitions.
     function _getFlashGuard() {
         if (!_flashGuard) {
             _flashGuard = document.createElement('div');
@@ -131,7 +132,35 @@ function useNav() {
         return _flashGuard;
     }
 
-    // Preload image and wait for GPU decode (img.decode) when available.
+    // Secondary bg layer for double-buffer cross-dissolve.
+    // Inserted immediately after .bg-layer so same z-index (0) stacks on top via DOM order.
+    function _getBgSecondary() {
+        if (!_bgSecondary) {
+            _bgSecondary = document.createElement('div');
+            _bgSecondary.id = 'lapis-bg-secondary';
+            _bgSecondary.style.cssText = [
+                'position:fixed', 'top:0', 'left:0',
+                'width:100%', 'height:100%',
+                'z-index:0',
+                'pointer-events:none',
+                'opacity:0',
+                'background-size:cover',
+                'background-position:center',
+                'background-attachment:fixed',
+                'will-change:opacity'
+            ].join(';');
+            const primary = document.querySelector('.bg-layer');
+            if (primary && primary.parentNode) {
+                primary.parentNode.insertBefore(_bgSecondary, primary.nextSibling);
+            } else {
+                document.body.appendChild(_bgSecondary);
+            }
+        }
+        return _bgSecondary;
+    }
+
+    // Preload an image src and wait for GPU decode (img.decode) when available.
+    // Returns a Promise that resolves once the asset is paint-ready.
     function _preload(src) {
         return new Promise(r => {
             const img = new Image();
@@ -141,63 +170,96 @@ function useNav() {
             };
             img.onerror = r;
             img.src     = src;
-            setTimeout(r, 3000);
+            setTimeout(r, 3000); // safety timeout
         });
     }
 
     async function _applyTheme(theme, useCustomBg) {
         const cls     = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
-        const bgLayer = document.querySelector('.bg-layer');
+        const primary = document.querySelector('.bg-layer');
 
-        // First load: anti-flash inline script already applied correct body class;
-        // just align body.className and skip the animated transition entirely.
+        // First load: anti-flash inline script already set the correct body class.
+        // Just align body.className and skip all animation.
         if (_firstApply) {
             _firstApply = false;
             document.body.className = cls;
             return;
         }
 
-        const guard = _getFlashGuard();
-
-        // Step 1 — Show flash guard: covers any white/blank artifacts while
-        //           the bg-layer is hidden and the new asset is loading.
-        guard.style.opacity = '1';
-
-        // Step 2 — Hide bg-layer (no transition, instant snap).
-        if (bgLayer) {
-            bgLayer.style.transition = 'none';
-            bgLayer.style.opacity    = '0';
-            bgLayer.style.filter     = 'blur(10px)';
-            bgLayer.offsetHeight;   // force reflow
-        }
-
-        // Step 3 — For image themes: preload + GPU-decode via img.decode().
-        //           Solid/gradient themes skip this (no asset to decode).
         if (_imgThemes.has(theme)) {
+            // ── Image theme: true cross-dissolve, screen never blank ───────────
+            const secondary = _getBgSecondary();
+
+            // Freeze primary's current background-image via inline style so that
+            // Vue's reactive CSS class update (which fires while we await) has
+            // no visual effect until we deliberately unfreeze below.
+            if (primary) {
+                const cur = window.getComputedStyle(primary).backgroundImage;
+                if (cur && cur !== 'none') primary.style.backgroundImage = cur;
+            }
+
+            // Stage new image in secondary (invisible, no transition yet)
+            secondary.style.transition       = 'none';
+            secondary.style.opacity          = '0';
+            secondary.style.backgroundImage  = `url('./theme/${theme}.png')`;
+            secondary.offsetHeight; // reflow
+
+            // Confirm asset is GPU-decoded before starting the visual swap
             await _preload('./theme/' + theme + '.png');
+
+            // Update body class → CSS vars change; bg-layer class also changes
+            // but the inline freeze on primary prevents a visual pop
+            document.body.className = cls;
+
+            // Cross-dissolve: secondary (new) fades IN, primary (old) fades OUT
+            secondary.style.transition = 'opacity 0.6s ease';
+            secondary.style.opacity    = '1';
+            if (primary) {
+                primary.style.transition = 'opacity 0.6s ease';
+                primary.style.opacity    = '0';
+            }
+
+            // Wait for dissolve to finish, then hand off back to primary
+            await new Promise(r => setTimeout(r, 640));
+
+            // Unfreeze primary — Vue's CSS class (already updated) now paints
+            // the new theme. Reset opacity. Hide secondary.
+            if (primary) {
+                primary.style.backgroundImage = '';
+                primary.style.transition      = 'none';
+                primary.style.opacity         = '1';
+                primary.style.filter          = '';
+                primary.offsetHeight;
+            }
+            secondary.style.transition = 'opacity 0.4s ease';
+            secondary.style.opacity    = '0';
+
+        } else {
+            // ── Solid/gradient theme: no asset to load, use flash guard ───────
+            const guard = _getFlashGuard();
+            guard.style.opacity = '1';
+
+            if (primary) {
+                primary.style.transition       = 'none';
+                primary.style.opacity          = '0';
+                primary.style.filter           = 'blur(10px)';
+                primary.style.backgroundImage  = ''; // clear any cross-dissolve freeze
+                primary.offsetHeight;
+            }
+
+            document.body.className = cls;
+            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+            if (primary) {
+                primary.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
+                primary.style.opacity    = '';
+                primary.style.filter     = '';
+            }
+            guard.style.opacity = '0';
         }
-
-        // Step 4 — Apply new body class → CSS vars update immediately.
-        document.body.className = cls;
-
-        // Step 5 — Double-RAF: let Vue re-render apply new bg-layer CSS class
-        //           so the new background-image is ready before we fade in.
-        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-        // Step 6 — Fade bg-layer back in with new theme.
-        if (bgLayer) {
-            bgLayer.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
-            bgLayer.style.opacity    = '';
-            bgLayer.style.filter     = '';
-        }
-
-        // Step 7 — Remove flash guard; bg-layer is already fading in.
-        guard.style.opacity = '0';
     }
 
     // ── Body class injection ──────────────────────────────────────────────────
-    // { immediate: true } fires synchronously before onMounted (first load).
-    // Subsequent reactive changes go through the preload + transition path.
     watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
         _applyTheme(theme, useCustomBg);
     }, { immediate: true });
@@ -225,11 +287,34 @@ function useNav() {
                 if (blob) navSettings.customBg = URL.createObjectURL(blob);
             } catch (_) {}
         }
+
+        // lapis-ready gate: decode the current theme image before lifting the
+        // body opacity cloak. Prevents cold-load blank frames on image themes.
+        const activeTheme = resolvedTheme.value;
+        if (_imgThemes.has(activeTheme) && !navSettings.useCustomBg) {
+            await _preload('./theme/' + activeTheme + '.png');
+        }
+        document.body.classList.add('lapis-ready');
+
+        // Cross-tab theme sync: when any tab saves new settings to localStorage,
+        // update navSettings here so the bg transitions without a page reload.
+        const _onStorage = (e) => {
+            if (e.key !== 'todo_settings' || !e.newValue) return;
+            try {
+                const s = JSON.parse(e.newValue);
+                if (s.theme      !== undefined && s.theme      !== navSettings.theme)      navSettings.theme      = s.theme;
+                if (s.useCustomBg !== undefined && s.useCustomBg !== navSettings.useCustomBg) navSettings.useCustomBg = s.useCustomBg;
+                if (s.lang       !== undefined && s.lang       !== navSettings.lang)       navSettings.lang       = s.lang;
+            } catch (_) {}
+        };
+        window.addEventListener('storage', _onStorage);
+        _storageCleanup = () => window.removeEventListener('storage', _onStorage);
     });
 
     onUnmounted(() => {
         document.removeEventListener('click', closeNav);
-        if (_mqCleanup) _mqCleanup();
+        if (_mqCleanup)      _mqCleanup();
+        if (_storageCleanup) _storageCleanup();
     });
 
     // Re-compute title when language is changed at runtime

@@ -427,7 +427,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (typeof ParticleEngine !== 'undefined' && navSettings.effect && navSettings.effect !== 'none') {
                     ParticleEngine.setEffect(navSettings.effect);
                 }
-                document.body.classList.add('lapis-ready');
             });
 
             watch(isDarkTheme, (dark) => {

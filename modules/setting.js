@@ -278,7 +278,6 @@ createApp({
                     else mq.removeListener(handler);
                 };
             }
-            document.body.classList.add('lapis-ready');
         });
 
         onUnmounted(() => { if (_mqCleanup) _mqCleanup(); });

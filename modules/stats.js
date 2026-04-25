@@ -307,7 +307,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                document.body.classList.add('lapis-ready');
             });
 
             return {

@@ -169,6 +169,21 @@ body {
 .bg-layer.theme-starrysky    { background-image: url('../theme/starrysky.png')    !important; }
 .bg-layer.theme-ferriswheel  { background-image: url('../theme/ferriswheel.png')  !important; }
 
+/* ── Secondary background layer for double-buffer cross-dissolve ──────────── */
+/* Created dynamically by nav.js; this rule ensures consistent paint behaviour */
+#lapis-bg-secondary {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    will-change: opacity;
+}
+
 .custom-bg-layer {
     position: fixed;
     inset: 0;
