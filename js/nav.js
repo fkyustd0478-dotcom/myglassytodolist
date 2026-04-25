@@ -181,20 +181,18 @@ function useNav() {
         if (_firstApply) {
             _firstApply = false;
             document.body.className = cls;
-            // Prime the CSS variable so .bg-layer starts loading the image immediately.
-            // onMounted will await img.decode() before adding lapis-ready.
             if (_imgThemes.has(theme) && !useCustomBg) {
-                document.documentElement.style.setProperty('--lapis-bg-image', `url('./theme/${theme}.png')`);
+                if (primary) primary.style.backgroundImage = `url('./theme/${theme}.png')`;
             } else {
-                document.documentElement.style.setProperty('--lapis-bg-image', 'none');
+                if (primary) primary.style.backgroundImage = '';
             }
             return;
         }
 
         if (_imgThemes.has(theme) && !useCustomBg) {
-            // ── Image theme: CSS-var double-buffer cross-dissolve ─────────────
-            // Primary continues showing the OLD image (via --lapis-bg-image, not yet updated).
-            // Secondary stages the NEW image directly — no CSS var dependency.
+            // ── Image theme: double-buffer cross-dissolve ─────────────────────
+            // Primary continues showing the OLD image (backgroundImage not yet updated).
+            // Secondary stages the NEW image directly.
             const secondary = _getBgSecondary();
             secondary.style.transition      = 'none';
             secondary.style.opacity         = '0';
@@ -216,10 +214,10 @@ function useNav() {
 
             await new Promise(r => setTimeout(r, 640));
 
-            // Commit: update CSS var → primary now paints the new image.
-            // Restore primary opacity; secondary fades out behind it.
-            document.documentElement.style.setProperty('--lapis-bg-image', `url('./theme/${theme}.png')`);
+            // Commit: set primary backgroundImage to new image, then restore opacity.
+            // Secondary fades out behind it.
             if (primary) {
+                primary.style.backgroundImage = `url('./theme/${theme}.png')`;
                 primary.style.transition = 'none';
                 primary.style.opacity    = '1';
                 primary.style.filter     = '';
@@ -229,8 +227,8 @@ function useNav() {
             secondary.style.opacity    = '0';
 
         } else {
-            // ── Solid/gradient or custom bg: clear image var, use flash guard ─
-            document.documentElement.style.setProperty('--lapis-bg-image', 'none');
+            // ── Solid/gradient or custom bg: clear backgroundImage, use flash guard ─
+            if (primary) primary.style.backgroundImage = '';
             const guard = _getFlashGuard();
             guard.style.opacity = '1';
 

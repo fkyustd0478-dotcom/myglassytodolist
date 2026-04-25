@@ -10,8 +10,6 @@
     --text-primary:  #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-shadow:   0 1px 3px rgba(0, 0, 0, 0.85);
-    /* Background image token — set by nav.js after GPU decode */
-    --lapis-bg-image: none;
 }
 
 /* ── Per-Theme CSS Variables on <body> ──────────────────────────────────── */
@@ -156,8 +154,6 @@ body {
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    /* Image injected via CSS variable by nav.js after GPU decode */
-    background-image: var(--lapis-bg-image);
 }
 
 /* ── Secondary background layer for double-buffer cross-dissolve ──────────── */

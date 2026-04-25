@@ -124,6 +124,9 @@ const _wT = {
         progressHistory: '進展歷史',
         charts: '訓練圖表', snapToday: '回今天', noChartData: '尚無資料',
         chartWeight: '體重趨勢 (kg)',
+        weightHistory: '體重記錄', weightDeleteConfirm: '確定要刪除此體重紀錄嗎？',
+        sortNewest: '最新', sortOldest: '最舊', sortHeaviest: '最重', sortLightest: '最輕',
+        noWeightInMonth: '本月無紀錄',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
@@ -165,6 +168,9 @@ const _wT = {
         charts: 'Charts', snapToday: 'Today', noChartData: 'No data yet',
         chartWeight: 'Body Weight (kg)',
         progressHistory: 'Progress History',
+        weightHistory: 'Weight History', weightDeleteConfirm: 'Delete this weight entry?',
+        sortNewest: 'Newest', sortOldest: 'Oldest', sortHeaviest: 'Heaviest', sortLightest: 'Lightest',
+        noWeightInMonth: 'No entries this month',
     }
 };
 

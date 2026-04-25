@@ -24,6 +24,78 @@ window.useWorkoutMetrics = function useWorkoutMetrics(ctx) {
         metricsPersist();
     };
 
+    // ── Weight History Modal ──────────────────────────────────────────────────
+    const weightHistoryModal = ref(false);
+    const weightHistoryMonth = ref('');
+    const weightSortBy       = ref('date-desc');
+
+    const latestWeight = computed(() => {
+        if (!metricsData.weights.length) return null;
+        return [...metricsData.weights].sort((a, b) => b.date.localeCompare(a.date))[0];
+    });
+
+    const _weightMonths = computed(() => {
+        const months = new Set(metricsData.weights.map(e => e.date.slice(0, 7)));
+        return [...months].sort();
+    });
+
+    const filteredWeightHistory = computed(() => {
+        const month = weightHistoryMonth.value;
+        let list = metricsData.weights
+            .map((e, i) => ({ ...e, _idx: i }))
+            .filter(e => !month || e.date.startsWith(month));
+        const [by, dir] = weightSortBy.value.split('-');
+        list.sort((a, b) => {
+            const cmp = by === 'date' ? a.date.localeCompare(b.date) : a.weight - b.weight;
+            return dir === 'desc' ? -cmp : cmp;
+        });
+        return list;
+    });
+
+    const weightHistoryMonthLabel = computed(() => {
+        const month = weightHistoryMonth.value;
+        if (!month) return navSettings.lang === 'zh' ? '全部' : 'All';
+        const [y, m] = month.split('-');
+        return navSettings.lang === 'zh'
+            ? `${y}年${_MONTHS_ZH[parseInt(m) - 1]}`
+            : `${_MONTHS_EN[parseInt(m) - 1]} ${y}`;
+    });
+
+    const weightHistoryHasPrev = computed(() => {
+        const months = _weightMonths.value;
+        return months.indexOf(weightHistoryMonth.value) > 0;
+    });
+
+    const weightHistoryHasNext = computed(() => {
+        const months = _weightMonths.value;
+        const idx = months.indexOf(weightHistoryMonth.value);
+        return idx >= 0 && idx < months.length - 1;
+    });
+
+    const openWeightHistory = () => {
+        if (latestWeight.value) weightHistoryMonth.value = latestWeight.value.date.slice(0, 7);
+        weightHistoryModal.value = true;
+    };
+
+    const closeWeightHistory = () => { weightHistoryModal.value = false; };
+
+    const prevWeightMonth = () => {
+        const months = _weightMonths.value;
+        const idx = months.indexOf(weightHistoryMonth.value);
+        if (idx > 0) weightHistoryMonth.value = months[idx - 1];
+    };
+
+    const nextWeightMonth = () => {
+        const months = _weightMonths.value;
+        const idx = months.indexOf(weightHistoryMonth.value);
+        if (idx >= 0 && idx < months.length - 1) weightHistoryMonth.value = months[idx + 1];
+    };
+
+    const deleteWeightWithConfirm = (origIdx) => {
+        if (!confirm(t.value.weightDeleteConfirm)) return;
+        deleteWeightRecord(origIdx);
+    };
+
     // ── Personal bests ────────────────────────────────────────────────────────
     const personalBests = computed(() => {
         const bests = {};
@@ -176,6 +248,11 @@ window.useWorkoutMetrics = function useWorkoutMetrics(ctx) {
 
     return {
         weightForm, saveWeight, deleteWeightRecord,
+        latestWeight, weightHistoryModal, weightHistoryMonth, weightSortBy,
+        filteredWeightHistory, weightHistoryMonthLabel,
+        weightHistoryHasPrev, weightHistoryHasNext,
+        openWeightHistory, closeWeightHistory,
+        prevWeightMonth, nextWeightMonth, deleteWeightWithConfirm,
         personalBests,
         showPRModal, selectedPRName, prProgression, openPRModal,
         stats, logSummary, logVolume, exDisplayName,

@@ -485,19 +485,20 @@
             </div>
         </div>
 
-        <div v-if="metricsData.weights.length > 0" class="space-y-2 mb-8">
-            <div v-for="(entry, i) in [...metricsData.weights].reverse().slice(0, 15)"
-                 :key="entry.date + entry.weight + i"
-                 class="glass rounded-xl px-4 py-3 flex items-center justify-between" :style="glassStyle">
-                <span class="text-xs opacity-50 font-mono">{{ entry.date }}</span>
-                <div class="flex items-center gap-3">
-                    <span class="font-black text-sm">{{ entry.weight }} {{ entry.unit }}</span>
-                    <button @click="deleteWeightRecord(metricsData.weights.length - 1 - i)"
-                            class="opacity-30 hover:opacity-70 transition-opacity active:scale-90 transition-transform"
-                            style="font-size:16px; line-height:1; background:none; border:none; cursor:pointer; padding:2px 4px;">
-                        ×
-                    </button>
-                </div>
+        <!-- Weight summary card: tap to view full history -->
+        <div v-if="latestWeight"
+             class="glass rounded-2xl p-4 mb-8 flex items-center justify-between cursor-pointer active:scale-98 transition-transform"
+             :style="glassStyle"
+             @click="openWeightHistory()">
+            <div>
+                <p class="text-xs opacity-40 font-mono mb-1">{{ latestWeight.date }}</p>
+                <p class="text-2xl font-black leading-none">
+                    {{ latestWeight.weight }}<span class="text-sm font-bold opacity-50 ml-1">{{ latestWeight.unit }}</span>
+                </p>
+            </div>
+            <div class="flex items-center gap-1 opacity-35">
+                <span class="text-xs font-black tabular-nums">{{ metricsData.weights.length }}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
         </div>
         <div v-else class="empty-state" style="padding:40px 20px">
@@ -959,6 +960,74 @@
 
                 <div class="lapis-modal-footer">
                     <button @click="showPRModal = false" class="lapis-btn-secondary">
+                        {{ t.cancel }}
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </transition>
+
+    <!-- ── Weight History Modal ──────────────────────────────────────────────── -->
+    <transition name="slide-up">
+        <div v-show="weightHistoryModal"
+             class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+             style="z-index: var(--z-modal-lv2-backdrop)"
+             @click.self.stop.prevent="closeWeightHistory()">
+            <div class="lapis-modal-shell w-full" :style="shellStyle" @click.stop>
+
+                <div class="lapis-modal-header">
+                    <h2 class="lapis-modal-title">{{ t.weightHistory }}</h2>
+                    <button @click="closeWeightHistory()" class="lapis-modal-close" v-html="ICON_X"></button>
+                </div>
+
+                <!-- Month navigator -->
+                <div class="flex items-center justify-between px-4 py-2" style="border-bottom: 1px solid rgba(128,128,128,0.15)">
+                    <button @click="prevWeightMonth()"
+                            :class="['active:opacity-70 transition-opacity', weightHistoryHasPrev ? 'opacity-40' : 'opacity-15 pointer-events-none']">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <span class="text-sm font-black">{{ weightHistoryMonthLabel }}</span>
+                    <button @click="nextWeightMonth()"
+                            :class="['active:opacity-70 transition-opacity', weightHistoryHasNext ? 'opacity-40' : 'opacity-15 pointer-events-none']">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+
+                <!-- Sort toggles -->
+                <div class="flex gap-2 px-4 py-2 flex-wrap">
+                    <button v-for="s in [['date-desc', t.sortNewest], ['date-asc', t.sortOldest], ['weight-desc', t.sortHeaviest], ['weight-asc', t.sortLightest]]"
+                            :key="s[0]"
+                            @click="weightSortBy = s[0]"
+                            class="px-3 py-1 rounded-full text-xs font-black transition-all"
+                            :class="weightSortBy === s[0] ? 'bg-blue-600 text-white' : 'opacity-40'">
+                        {{ s[1] }}
+                    </button>
+                </div>
+
+                <div class="lapis-modal-body">
+                    <div v-if="filteredWeightHistory.length > 0" class="space-y-2">
+                        <div v-for="entry in filteredWeightHistory" :key="entry._idx"
+                             class="glass rounded-xl px-4 py-3 flex items-center justify-between"
+                             :style="glassStyle">
+                            <span class="text-xs opacity-50 font-mono">{{ entry.date }}</span>
+                            <div class="flex items-center gap-3">
+                                <span class="font-black text-sm">{{ entry.weight }} {{ entry.unit }}</span>
+                                <button @click="deleteWeightWithConfirm(entry._idx)"
+                                        class="opacity-30 hover:opacity-70 transition-opacity active:scale-90"
+                                        style="font-size:16px; line-height:1; background:none; border:none; cursor:pointer; padding:2px 4px;">
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="empty-state" style="padding:24px 20px">
+                        <p class="text-sm font-bold opacity-50">{{ t.noWeightInMonth }}</p>
+                    </div>
+                </div>
+
+                <div class="lapis-modal-footer">
+                    <button @click="closeWeightHistory()" class="lapis-btn-secondary">
                         {{ t.cancel }}
                     </button>
                 </div>
