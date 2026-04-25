@@ -123,6 +123,25 @@ window.addEventListener('DOMContentLoaded', () => {
             const closeWorkoutPicker = ()     => _picker ? _picker.close() : (showDateTimePicker.value = false);
             const setPickerToday     = ()     => _picker && _picker.setToday();
 
+            // ── Weight date picker ────────────────────────────────────────────
+            const showWeightDatePicker = ref(false);
+            let _wdPicker = null;
+
+            const openWeightDatePicker = () => {
+                if (_wdPicker && metrics) {
+                    const [y, m, d] = metrics.weightForm.date.split('-').map(Number);
+                    _wdPicker.setValue(y, m, d);
+                }
+                showWeightDatePicker.value = true;
+            };
+            const closeWeightDatePicker = () => { showWeightDatePicker.value = false; };
+            const setWeightDateToday = () => {
+                if (_wdPicker) {
+                    const n = new Date();
+                    _wdPicker.setValue(n.getFullYear(), n.getMonth() + 1, n.getDate());
+                }
+            };
+
             // ── Library composable ────────────────────────────────────────────
             const lib = useWorkoutLibrary({
                 ref, reactive, computed, nextTick,
@@ -263,6 +282,16 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (typeof LapisNav !== 'undefined')   LapisNav.inject({ bottom: false });
                 if (typeof LapisModal !== 'undefined') LapisModal.init();
                 if (_picker) _picker.init();
+                if (typeof LapisDatePicker !== 'undefined') {
+                    const wdEl = document.getElementById('weight-date-picker');
+                    if (wdEl) {
+                        const n = new Date();
+                        _wdPicker = new LapisDatePicker(wdEl, {
+                            year: n.getFullYear(), month: n.getMonth() + 1, day: n.getDate(),
+                            onConfirm(val) { metrics.weightForm.date = val.iso; showWeightDatePicker.value = false; }
+                        });
+                    }
+                }
                 nextTick(() => lucide.createIcons());
                 if (typeof ParticleEngine !== 'undefined' && navSettings.effect && navSettings.effect !== 'none') {
                     ParticleEngine.setEffect(navSettings.effect);
@@ -292,9 +321,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 logDate, logTime, logExercises,
                 addSet, removeSet, toggleSetDone, removeLogExercise, saveLog,
                 showToast, toastMsg,
-                // lapis picker
+                // lapis picker (session date/time)
                 showDateTimePicker, pickerMode,
                 openPicker, switchPickerMode, closeWorkoutPicker, setPickerToday,
+                // weight date picker
+                showWeightDatePicker, openWeightDatePicker, closeWeightDatePicker, setWeightDateToday,
                 // log modal
                 showLogModal, shellStyle, saveLogAndClose, discardAndClose,
                 openNewSession, openEditSession,

@@ -446,21 +446,28 @@
         <!-- ── Body Weight ──────────────────────────────────────────────── -->
         <p class="section-label">{{ t.weightLog }}</p>
 
-        <div class="glass rounded-2xl p-4 mb-3 flex items-center gap-3" :style="glassStyle">
-            <input v-model="weightForm.weight" type="number" inputmode="decimal"
-                   placeholder="70.0"
-                   class="flex-1 bg-transparent outline-none font-black text-xl min-w-0">
-            <div class="type-toggle" style="width:auto; border-radius:10px">
-                <div @click="weightForm.unit = 'kg'" class="type-toggle-btn px-3"
-                     :class="{ active: weightForm.unit === 'kg' }">kg</div>
-                <div @click="weightForm.unit = 'lb'" class="type-toggle-btn px-3"
-                     :class="{ active: weightForm.unit === 'lb' }">lb</div>
-            </div>
-            <button @click="saveWeight()"
-                    class="px-4 py-2 rounded-xl bg-blue-600 text-white font-black text-xs flex-shrink-0 active:scale-95 transition-transform"
-                    :class="{ 'opacity-40 pointer-events-none': !weightForm.weight }">
-                {{ t.save }}
+        <div class="glass rounded-2xl p-4 mb-3 flex flex-col gap-3" :style="glassStyle">
+            <button @click="openWeightDatePicker()"
+                    class="self-start text-xs font-black opacity-50 px-3 py-1 rounded-lg active:scale-95 transition-transform"
+                    style="border:1.5px solid currentColor;font-family:monospace;letter-spacing:0.04em;">
+                {{ weightForm.date }}
             </button>
+            <div class="flex items-center gap-3">
+                <input v-model="weightForm.weight" type="number" inputmode="decimal"
+                       placeholder="70.0"
+                       class="flex-1 bg-transparent outline-none font-black text-xl min-w-0">
+                <div class="type-toggle" style="width:auto; border-radius:10px">
+                    <div @click="weightForm.unit = 'kg'" class="type-toggle-btn px-3"
+                         :class="{ active: weightForm.unit === 'kg' }">kg</div>
+                    <div @click="weightForm.unit = 'lb'" class="type-toggle-btn px-3"
+                         :class="{ active: weightForm.unit === 'lb' }">lb</div>
+                </div>
+                <button @click="saveWeight()"
+                        class="px-4 py-2 rounded-xl bg-blue-600 text-white font-black text-xs flex-shrink-0 active:scale-95 transition-transform"
+                        :class="{ 'opacity-40 pointer-events-none': !weightForm.weight }">
+                    {{ t.save }}
+                </button>
+            </div>
         </div>
 
         <div v-if="metricsData.weights.length > 0" class="space-y-2 mb-8">
@@ -958,6 +965,31 @@
                         :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
                     OK
                 </button>
+            </div>
+        </div>
+    </transition>
+
+    <!-- ── Weight Date Picker (LV3) ──────────────────────────────────────── -->
+    <transition name="slide-up">
+        <div v-show="showWeightDatePicker"
+             class="fixed inset-0 flex items-end justify-center bg-transparent"
+             style="z-index: var(--z-modal-lv3-content)"
+             @click.self.stop.prevent="closeWeightDatePicker">
+            <div class="glass rounded-t-[2.5rem] w-full max-w-md p-6 pb-8 space-y-4"
+                 :style="glassStyle" @click.stop>
+                <div id="weight-date-picker"></div>
+                <div class="flex gap-3">
+                    <button @click="setWeightDateToday"
+                            class="flex-1 py-3 rounded-2xl font-black text-sm border-[1.5px] opacity-60 active:scale-95 transition-transform"
+                            :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }">
+                        TODAY
+                    </button>
+                    <button @click="closeWeightDatePicker"
+                            class="flex-[2] py-3 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2px] active:scale-95 transition-transform"
+                            :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
+                        OK
+                    </button>
+                </div>
             </div>
         </div>
     </transition>

@@ -447,6 +447,35 @@ body.theme-seaside .lapis-btn-secondary {
     border-color: rgba(0, 0, 0, 0.12) !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL GLASSMORPHIC SCROLLBAR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar               { width: 4px; height: 4px; }
+::-webkit-scrollbar-track         { background: transparent; }
+::-webkit-scrollbar-thumb         { background: rgba(255, 255, 255, 0.22); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover   { background: rgba(255, 255, 255, 0.38); }
+
+/* Light themes — darker thumb for contrast */
+body.theme-light      ::-webkit-scrollbar-thumb,
+body.theme-cherry     ::-webkit-scrollbar-thumb,
+body.theme-sky        ::-webkit-scrollbar-thumb,
+body.theme-seaside    ::-webkit-scrollbar-thumb,
+body.theme-sunset     ::-webkit-scrollbar-thumb,
+body.theme-mapleavenue ::-webkit-scrollbar-thumb,
+body.theme-waterfall  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+body.theme-light      ::-webkit-scrollbar-thumb:hover,
+body.theme-cherry     ::-webkit-scrollbar-thumb:hover,
+body.theme-sky        ::-webkit-scrollbar-thumb:hover,
+body.theme-seaside    ::-webkit-scrollbar-thumb:hover,
+body.theme-sunset     ::-webkit-scrollbar-thumb:hover,
+body.theme-mapleavenue ::-webkit-scrollbar-thumb:hover,
+body.theme-waterfall  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.28);
+}
+
 
 /* ═══════════════════════════════════════════════════════════════════════════
    DRUM-ROLL WHEEL PICKERS

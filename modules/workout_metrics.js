@@ -7,14 +7,15 @@ window.useWorkoutMetrics = function useWorkoutMetrics(ctx) {
     const { ref, computed, reactive, wData, metricsData, metricsPersist, navSettings, t, _todayStr, _toast } = ctx;
 
     // ── Body weight ───────────────────────────────────────────────────────────
-    const weightForm = reactive({ weight: '', unit: 'kg' });
+    const weightForm = reactive({ weight: '', unit: 'kg', date: _todayStr() });
 
     const saveWeight = () => {
         const w = parseFloat(weightForm.weight);
         if (isNaN(w) || w <= 0) return;
-        metricsData.weights.push({ date: _todayStr(), weight: w, unit: weightForm.unit });
+        metricsData.weights.push({ date: weightForm.date, weight: w, unit: weightForm.unit });
         metricsPersist();
         weightForm.weight = '';
+        weightForm.date   = _todayStr();
         _toast(t.value.logSaved);
     };
 
