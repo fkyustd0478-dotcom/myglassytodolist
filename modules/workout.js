@@ -371,7 +371,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 lib.showPickModal.value  || lib.showExModal.value  ||
                 lib.showCatMgr.value     || showClearConfirm.value ||
                 confirmModal.show        || lib.showExDetail.value ||
-                metrics.showPRModal.value
+                metrics.showPRModal.value || metrics.weightHistoryModal.value
             );
 
             // ── Lifecycle ─────────────────────────────────────────────────────
