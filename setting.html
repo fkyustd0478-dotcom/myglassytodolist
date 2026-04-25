@@ -35,7 +35,8 @@
 </head>
 <body>
     <div id="app" v-cloak
-         :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode']">
+         :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode']"
+         style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;">
 
         <!-- Background Layers -->
         <div class="bg-layer" :class="themeClasses"></div>

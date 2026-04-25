@@ -114,6 +114,17 @@ function useNav() {
     let _firstApply  = true;
     let _flashGuard  = null;
     let _bgSecondary = null;
+    let _spinner     = null;
+
+    function _showSpinner() {
+        if (!_spinner) {
+            _spinner = document.createElement('div');
+            _spinner.id = 'lapis-theme-spinner';
+            document.body.appendChild(_spinner);
+        }
+        _spinner.style.opacity = '1';
+    }
+    function _hideSpinner() { if (_spinner) _spinner.style.opacity = '0'; }
 
     // Flash guard: subtle dark-blur overlay for solid-theme transitions.
     function _getFlashGuard() {
@@ -198,7 +209,9 @@ function useNav() {
             secondary.style.backgroundImage = `url('./theme/${theme}.png')`;
             secondary.offsetHeight;
 
+            _showSpinner();
             await _preload('./theme/' + theme + '.png');
+            _hideSpinner();
 
             // Update body class for text colours, glass styles, etc.
             document.body.className = cls;

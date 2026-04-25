@@ -380,3 +380,28 @@ body {
     body.theme-mapleavenue, body.theme-waterfall) ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.18);
 }
+
+/* ── Theme-change loading spinner (z-9999, below modals) ─────────────────── */
+#lapis-theme-spinner {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    z-index: 9999;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2.5px solid rgba(255, 255, 255, 0.2);
+    border-top-color: rgba(255, 255, 255, 0.8);
+    animation: lapis-spin 0.65s linear infinite;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+:is(body.theme-light, body.theme-cherry, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) #lapis-theme-spinner {
+    border-color: rgba(0, 0, 0, 0.12);
+    border-top-color: rgba(0, 0, 0, 0.55);
+}
+@keyframes lapis-spin {
+    to { transform: rotate(360deg); }
+}
