@@ -1,4 +1,4 @@
-// nav.js — Global navigation composable v3.1
+// nav.js — Global navigation composable v3.2
 // Loaded after storage.js, before page-specific scripts on all pages.
 // Usage inside Vue setup():
 //   const { navDropdownOpen, currentPageTitle, toggleNavDropdown,
@@ -103,17 +103,17 @@ function useNav() {
         if (!e.target.closest('.nav-capsule')) navDropdownOpen.value = false;
     };
 
-    let _mqCleanup = null;
+    let _mqCleanup      = null;
+    let _storageCleanup = null;
 
     // ── Background transition system ──────────────────────────────────────────
     const _imgThemes = new Set([
         'cherry','sky','sunset','sea','seaside','forest','night','torii',
         'mapleavenue','waterfall','starrysky','ferriswheel'
     ]);
-    let _firstApply      = true;
-    let _flashGuard      = null;
-    let _bgSecondary     = null;
-    let _storageCleanup  = null;
+    let _firstApply  = true;
+    let _flashGuard  = null;
+    let _bgSecondary = null;
 
     // Flash guard: subtle dark-blur overlay for solid-theme transitions.
     function _getFlashGuard() {
@@ -178,40 +178,35 @@ function useNav() {
         const cls     = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
         const primary = document.querySelector('.bg-layer');
 
-        // First load: anti-flash inline script already set the correct body class.
-        // Just align body.className and skip all animation.
         if (_firstApply) {
             _firstApply = false;
             document.body.className = cls;
+            // Prime the CSS variable so .bg-layer starts loading the image immediately.
+            // onMounted will await img.decode() before adding lapis-ready.
+            if (_imgThemes.has(theme) && !useCustomBg) {
+                document.documentElement.style.setProperty('--lapis-bg-image', `url('./theme/${theme}.png')`);
+            } else {
+                document.documentElement.style.setProperty('--lapis-bg-image', 'none');
+            }
             return;
         }
 
-        if (_imgThemes.has(theme)) {
-            // ── Image theme: true cross-dissolve, screen never blank ───────────
+        if (_imgThemes.has(theme) && !useCustomBg) {
+            // ── Image theme: CSS-var double-buffer cross-dissolve ─────────────
+            // Primary continues showing the OLD image (via --lapis-bg-image, not yet updated).
+            // Secondary stages the NEW image directly — no CSS var dependency.
             const secondary = _getBgSecondary();
+            secondary.style.transition      = 'none';
+            secondary.style.opacity         = '0';
+            secondary.style.backgroundImage = `url('./theme/${theme}.png')`;
+            secondary.offsetHeight;
 
-            // Freeze primary's current background-image via inline style so that
-            // Vue's reactive CSS class update (which fires while we await) has
-            // no visual effect until we deliberately unfreeze below.
-            if (primary) {
-                const cur = window.getComputedStyle(primary).backgroundImage;
-                if (cur && cur !== 'none') primary.style.backgroundImage = cur;
-            }
-
-            // Stage new image in secondary (invisible, no transition yet)
-            secondary.style.transition       = 'none';
-            secondary.style.opacity          = '0';
-            secondary.style.backgroundImage  = `url('./theme/${theme}.png')`;
-            secondary.offsetHeight; // reflow
-
-            // Confirm asset is GPU-decoded before starting the visual swap
             await _preload('./theme/' + theme + '.png');
 
-            // Update body class → CSS vars change; bg-layer class also changes
-            // but the inline freeze on primary prevents a visual pop
+            // Update body class for text colours, glass styles, etc.
             document.body.className = cls;
 
-            // Cross-dissolve: secondary (new) fades IN, primary (old) fades OUT
+            // Cross-dissolve: secondary (new) fades IN, primary (old CSS var) fades OUT
             secondary.style.transition = 'opacity 0.6s ease';
             secondary.style.opacity    = '1';
             if (primary) {
@@ -219,31 +214,30 @@ function useNav() {
                 primary.style.opacity    = '0';
             }
 
-            // Wait for dissolve to finish, then hand off back to primary
             await new Promise(r => setTimeout(r, 640));
 
-            // Unfreeze primary — Vue's CSS class (already updated) now paints
-            // the new theme. Reset opacity. Hide secondary.
+            // Commit: update CSS var → primary now paints the new image.
+            // Restore primary opacity; secondary fades out behind it.
+            document.documentElement.style.setProperty('--lapis-bg-image', `url('./theme/${theme}.png')`);
             if (primary) {
-                primary.style.backgroundImage = '';
-                primary.style.transition      = 'none';
-                primary.style.opacity         = '1';
-                primary.style.filter          = '';
+                primary.style.transition = 'none';
+                primary.style.opacity    = '1';
+                primary.style.filter     = '';
                 primary.offsetHeight;
             }
             secondary.style.transition = 'opacity 0.4s ease';
             secondary.style.opacity    = '0';
 
         } else {
-            // ── Solid/gradient theme: no asset to load, use flash guard ───────
+            // ── Solid/gradient or custom bg: clear image var, use flash guard ─
+            document.documentElement.style.setProperty('--lapis-bg-image', 'none');
             const guard = _getFlashGuard();
             guard.style.opacity = '1';
 
             if (primary) {
-                primary.style.transition       = 'none';
-                primary.style.opacity          = '0';
-                primary.style.filter           = 'blur(10px)';
-                primary.style.backgroundImage  = ''; // clear any cross-dissolve freeze
+                primary.style.transition = 'none';
+                primary.style.opacity    = '0';
+                primary.style.filter     = 'blur(10px)';
                 primary.offsetHeight;
             }
 

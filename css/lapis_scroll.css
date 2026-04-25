@@ -1,0 +1,39 @@
+/* lapis_scroll.css — Glass scrollbar global styles v1.0 */
+
+/* ── Global scrollbar ────────────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 4px; height: 4px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: rgba(255, 255, 255, 0.25); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.42); }
+
+/* Light-theme thumb (darker for contrast) */
+:is(body.theme-light, body.theme-cherry, body.theme-sky,
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.18);
+}
+:is(body.theme-light, body.theme-cherry, body.theme-sky,
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.30);
+}
+
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.25) transparent; }
+:is(body.theme-light, body.theme-cherry, body.theme-sky,
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-mapleavenue, body.theme-waterfall) * {
+    scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+}
+
+/* ── .page-content scroll container utility ──────────────────────────────── */
+.page-content {
+    position: relative;
+    z-index: 10;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    padding-bottom: var(--nav-height, 120px);
+}

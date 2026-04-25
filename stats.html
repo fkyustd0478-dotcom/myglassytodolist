@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="./css/effects.css">
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/lapis_shared_style.css">
+    <link rel="stylesheet" href="./css/lapis_scroll.css">
 
     <script src="https://unpkg.com/lucide@latest" defer></script>
     <script src="./js/effects.js" defer></script>
@@ -27,7 +28,8 @@
     <style>
         /* ── Anti-flicker ─────────────────────────────────────────────────── */
         [v-cloak] { display: none !important; }
-        body { opacity: 0; transition: opacity 0.4s ease-in-out; }
+        html  { background: #0d0d0d; }
+        body  { opacity: 0; transition: opacity 0.4s ease-in-out; }
         body.lapis-ready { opacity: 1; }
 
         /* ── Stat cards ───────────────────────────────────────────────────── */
@@ -97,7 +99,7 @@
      :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode']"
      style="display:flex;flex-direction:column;min-height:100dvh;overflow:hidden;position:relative;">
 
-    <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
+    <div class="bg-layer"></div>
     <div class="custom-bg-layer" :style="customBgStyle"></div>
 
     <!-- ── Toast ──────────────────────────────────────────────────────────── -->

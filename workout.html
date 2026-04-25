@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/workout_style.css">
     <link rel="stylesheet" href="./css/lapis_shared_style.css">
+    <link rel="stylesheet" href="./css/lapis_scroll.css">
 
     <script src="./js/effects.js" defer></script>
     <script src="./js/storage.js" defer></script>
@@ -33,7 +34,8 @@
     <script src="./modules/workout.js" defer></script>
     <style>
         [v-cloak] { display: none !important; }
-        body { opacity: 0; transition: opacity 0.4s ease-in-out; }
+        html  { background: #0d0d0d; }
+        body  { opacity: 0; transition: opacity 0.4s ease-in-out; }
         body.lapis-ready { opacity: 1; }
 
         /* ── Workout Charts ──────────────────────────────────────────────── */
@@ -56,7 +58,7 @@
      style="display:flex; flex-direction:column; min-height:100dvh; overflow:hidden; position:relative;">
 
     <!-- Background Layers -->
-    <div class="bg-layer" :class="themeClasses" :key="navSettings.theme"></div>
+    <div class="bg-layer"></div>
     <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
     <!-- ── Header (injected by LapisNav) ─────────────────────────────────── -->
@@ -484,11 +486,18 @@
         </div>
 
         <div v-if="metricsData.weights.length > 0" class="space-y-2 mb-8">
-            <div v-for="entry in [...metricsData.weights].reverse().slice(0, 15)"
-                 :key="entry.date + entry.weight"
+            <div v-for="(entry, i) in [...metricsData.weights].reverse().slice(0, 15)"
+                 :key="entry.date + entry.weight + i"
                  class="glass rounded-xl px-4 py-3 flex items-center justify-between" :style="glassStyle">
                 <span class="text-xs opacity-50 font-mono">{{ entry.date }}</span>
-                <span class="font-black text-sm">{{ entry.weight }} {{ entry.unit }}</span>
+                <div class="flex items-center gap-3">
+                    <span class="font-black text-sm">{{ entry.weight }} {{ entry.unit }}</span>
+                    <button @click="deleteWeightRecord(metricsData.weights.length - 1 - i)"
+                            class="opacity-30 hover:opacity-70 transition-opacity active:scale-90 transition-transform"
+                            style="font-size:16px; line-height:1; background:none; border:none; cursor:pointer; padding:2px 4px;">
+                        ×
+                    </button>
+                </div>
             </div>
         </div>
         <div v-else class="empty-state" style="padding:40px 20px">

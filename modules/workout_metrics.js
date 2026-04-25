@@ -19,6 +19,11 @@ window.useWorkoutMetrics = function useWorkoutMetrics(ctx) {
         _toast(t.value.logSaved);
     };
 
+    const deleteWeightRecord = (idx) => {
+        metricsData.weights.splice(idx, 1);
+        metricsPersist();
+    };
+
     // ── Personal bests ────────────────────────────────────────────────────────
     const personalBests = computed(() => {
         const bests = {};
@@ -170,7 +175,7 @@ window.useWorkoutMetrics = function useWorkoutMetrics(ctx) {
     );
 
     return {
-        weightForm, saveWeight,
+        weightForm, saveWeight, deleteWeightRecord,
         personalBests,
         showPRModal, selectedPRName, prProgression, openPRModal,
         stats, logSummary, logVolume, exDisplayName,
