@@ -45,14 +45,15 @@
 <body>
     <div id="error-reporter"></div>
 
-    <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]">
+    <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]"
+         style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;">
         <!-- Background Layers -->
         <div class="bg-layer"></div>
 
         <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
         <!-- Foreground Content -->
-        <div class="relative z-10 h-screen flex flex-col p-6 overflow-hidden">
+        <div class="relative z-10 flex flex-col p-6 overflow-hidden" style="flex:1;height:100dvh;">
             <!-- Header & Navigation -->
             <div class="shrink-0 space-y-4">
                 <header class="flex items-center justify-between relative">

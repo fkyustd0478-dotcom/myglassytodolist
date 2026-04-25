@@ -55,7 +55,7 @@
 <div id="app" v-cloak
      :style="themeStyle"
      :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]"
-     style="display:flex; flex-direction:column; min-height:100dvh; overflow:hidden; position:relative;">
+     style="display:flex; flex-direction:column; height:100dvh; overflow:hidden; position:relative;">
 
     <!-- Background Layers -->
     <div class="bg-layer"></div>
@@ -1098,7 +1098,7 @@
                             :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }">
                         TODAY
                     </button>
-                    <button @click="closeWeightDatePicker"
+                    <button @click="confirmWeightDatePicker"
                             class="flex-[2] py-3 rounded-2xl bg-blue-600 text-white font-black text-sm border-[2px] active:scale-95 transition-transform"
                             :style="{ borderColor: isDarkTheme ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)' }">
                         OK

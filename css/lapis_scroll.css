@@ -30,7 +30,8 @@
 .page-content {
     position: relative;
     z-index: 10;
-    height: 100vh;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;

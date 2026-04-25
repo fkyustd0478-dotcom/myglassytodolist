@@ -224,7 +224,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
                 showWeightDatePicker.value = true;
             };
-            const closeWeightDatePicker = () => { showWeightDatePicker.value = false; };
+            const closeWeightDatePicker   = () => { showWeightDatePicker.value = false; };
+            const confirmWeightDatePicker = () => {
+                if (_wdPicker) _wdPicker.confirm();
+                else showWeightDatePicker.value = false;
+            };
             const setWeightDateToday = () => {
                 if (_wdPicker) {
                     const n = new Date();
@@ -461,7 +465,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 showDateTimePicker, pickerMode,
                 openPicker, switchPickerMode, closeWorkoutPicker, setPickerToday,
                 // weight date picker
-                showWeightDatePicker, openWeightDatePicker, closeWeightDatePicker, setWeightDateToday,
+                showWeightDatePicker, openWeightDatePicker, closeWeightDatePicker, confirmWeightDatePicker, setWeightDateToday,
                 // charts
                 snapChartsToToday,
                 // log modal
