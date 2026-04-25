@@ -30,6 +30,11 @@
     <script src="./modules/workout_metrics.js" defer></script>
     <script src="./modules/workout_library_ui.js" defer></script>
     <script src="./modules/workout.js" defer></script>
+    <style>
+        [v-cloak] { display: none !important; }
+        body { opacity: 0; transition: opacity 0.4s ease-in-out; }
+        body.lapis-ready { opacity: 1; }
+    </style>
 </head>
 <body>
 <div id="app" v-cloak

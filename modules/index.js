@@ -185,6 +185,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         dashboard.value = _loadDashboard();
                     }
                 });
+                document.body.classList.add('lapis-ready');
             });
 
             return {

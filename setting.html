@@ -25,6 +25,11 @@
     <script src="./js/lapis_picker.js" defer></script>
     <script src="./js/lapis_confirm.js" defer></script>
     <script src="./modules/setting.js?v=1.2" defer></script>
+    <style>
+        [v-cloak] { display: none !important; }
+        body { opacity: 0; transition: opacity 0.4s ease-in-out; }
+        body.lapis-ready { opacity: 1; }
+    </style>
 </head>
 <body>
     <div id="app" v-cloak

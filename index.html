@@ -29,6 +29,11 @@
     <script src="./modules/index.js" defer></script>
 
     <style>
+        /* ── Anti-flicker ─────────────────────────────────────────────────── */
+        [v-cloak] { display: none !important; }
+        body { opacity: 0; transition: opacity 0.4s ease-in-out; }
+        body.lapis-ready { opacity: 1; }
+
         /* ── Typography ───────────────────────────────────────────────────── */
         .hub-subtitle {
             font-size: 13px; font-weight: 700; opacity: 0.40;
