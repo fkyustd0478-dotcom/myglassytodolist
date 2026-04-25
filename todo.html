@@ -48,14 +48,18 @@
         <div class="relative z-10 h-screen flex flex-col p-6 overflow-hidden">
             <!-- Header & Navigation -->
             <div class="shrink-0 space-y-4">
-                <header class="flex justify-end items-center relative">
-                    <!-- List Controls (Top Right) -->
-                    <div class="flex items-center gap-2">
-                        <button v-show="appMode === 'todo'" @click="addNewList" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
-                            <i data-lucide="plus" class="w-5 h-5"></i>
+                <header class="flex items-center justify-between relative">
+                    <!-- Left: Current list title -->
+                    <h1 class="text-xl font-black tracking-tight truncate pr-3">
+                        {{ isDefaultList(currentListId) ? (t[currentListId] || currentListId) : (lists.find(l => l.id === currentListId)?.name || 'Todo') }}
+                    </h1>
+                    <!-- Right: List controls -->
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button @click="addNewList" class="w-9 h-9 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
                         </button>
-                        <button v-show="appMode === 'todo'" @click="openManageModal" class="w-10 h-10 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
-                            <i data-lucide="list-plus" class="w-5 h-5"></i>
+                        <button @click="openManageModal" class="w-9 h-9 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
+                            <i data-lucide="list-plus" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </header>

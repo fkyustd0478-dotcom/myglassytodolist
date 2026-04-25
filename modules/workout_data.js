@@ -122,6 +122,8 @@ const _wT = {
         weightLog: '體重', personalBests: '個人最佳',
         noWeightLog: '尚無體重紀錄', noPBs: '尚無個人最佳',
         progressHistory: '進展歷史',
+        charts: '訓練圖表', snapToday: '回今天', noChartData: '尚無資料',
+        chartWeight: '體重趨勢 (kg)',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
@@ -160,6 +162,8 @@ const _wT = {
         moreEx: 'more', restoreMsg: 'Session restored', tabWorkout: 'Workout',
         weightLog: 'Weight', personalBests: 'Personal Bests',
         noWeightLog: 'No weight entries yet', noPBs: 'No personal bests yet',
+        charts: 'Charts', snapToday: 'Today', noChartData: 'No data yet',
+        chartWeight: 'Body Weight (kg)',
         progressHistory: 'Progress History',
     }
 };

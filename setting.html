@@ -225,8 +225,9 @@
                 </div>
             </div>
 
-            <!-- ── Calendar Tab ───────────────────────────────────────────── -->
+            <!-- ── Features Tab ───────────────────────────────────────────── -->
             <div v-show="settingsTab === 'calendar'" class="space-y-4">
+                <!-- Section 1: Calendar Info -->
                 <div class="glass rounded-3xl p-5 space-y-5" :style="glassStyle">
                     <div class="flex items-center gap-2 opacity-40">
                         <i data-lucide="calendar" class="w-4 h-4"></i>
@@ -263,6 +264,39 @@
                             <div class="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300"
                                  :style="{ left: settings.showLunarDates ? '26px' : '4px' }"></div>
                         </button>
+                    </div>
+                </div>
+
+                <!-- Section 2: Workout Charts -->
+                <div class="glass rounded-3xl p-5 space-y-4" :style="glassStyle">
+                    <div class="flex items-center gap-2 opacity-40">
+                        <i data-lucide="activity" class="w-4 h-4"></i>
+                        <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.workoutSection }}</h3>
+                    </div>
+                    <!-- Weight chart toggle -->
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold">{{ t.showWeightChartLabel }}</span>
+                        <button @click="settings.showWeightChart = !settings.showWeightChart"
+                                class="w-12 h-6 rounded-full relative transition-all duration-300"
+                                :class="settings.showWeightChart ? 'bg-blue-500' : 'bg-white/10'">
+                            <div class="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300"
+                                 :style="{ left: settings.showWeightChart ? '26px' : '4px' }"></div>
+                        </button>
+                    </div>
+                    <!-- Category chart toggles -->
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-3">{{ t.workoutCatChartsLabel }}</p>
+                        <div v-for="cat in _WORKOUT_CATS" :key="cat" class="flex items-center justify-between py-1">
+                            <span class="text-sm font-bold">
+                                {{ settings.lang === 'zh' ? _catLabelZh[cat] : _catLabelEn[cat] }}
+                            </span>
+                            <button @click="settings.workoutCatCharts[cat] = !settings.workoutCatCharts[cat]"
+                                    class="w-12 h-6 rounded-full relative transition-all duration-300"
+                                    :class="settings.workoutCatCharts[cat] ? 'bg-blue-500' : 'bg-white/10'">
+                                <div class="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300"
+                                     :style="{ left: settings.workoutCatCharts[cat] ? '26px' : '4px' }"></div>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

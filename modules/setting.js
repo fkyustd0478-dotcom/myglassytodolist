@@ -28,6 +28,8 @@ createApp({
             calendarInfoEnabled: true,
             showHolidayTags: true,
             showLunarDates: true,
+            showWeightChart: true,
+            workoutCatCharts: { Chest: true, Back: true, Shoulders: true, Arms: true, Legs: true, Core: true, Cardio: true },
             ...StorageProvider.getCommonSettings()
         });
 
@@ -35,10 +37,14 @@ createApp({
         const currentObjectUrl = ref(null);
 
         // ── Translations ───────────────────────────────────────────────────
+        const _WORKOUT_CATS = ['Chest','Back','Shoulders','Arms','Legs','Core','Cardio'];
+        const _catLabelEn = { Chest:'Chest', Back:'Back', Shoulders:'Shoulders', Arms:'Arms', Legs:'Legs', Core:'Core', Cardio:'Cardio' };
+        const _catLabelZh = { Chest:'胸部', Back:'背部', Shoulders:'肩部', Arms:'手臂', Legs:'腿部', Core:'核心', Cardio:'有氧' };
+
         const translations = {
             en: {
                 // Tabs
-                tabTheme: 'Theme', tabUser: 'User', tabCalendar: 'Calendar',
+                tabTheme: 'Theme', tabUser: 'User', tabCalendar: 'Features',
                 // Nav items
                 navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
                 // Theme section
@@ -68,9 +74,13 @@ createApp({
                 calendarInfoEnabled: 'Show Calendar Info',
                 showHolidayTags: 'Holiday Tags',
                 showLunarDates: 'Lunar Dates',
+                // Workout chart settings
+                workoutSection: 'Workout Charts',
+                showWeightChartLabel: 'Weight Trend',
+                workoutCatChartsLabel: 'Category Volume Charts',
             },
             zh: {
-                tabTheme: '主題設定', tabUser: '使用者頁面', tabCalendar: '行事曆',
+                tabTheme: '主題設定', tabUser: '使用者頁面', tabCalendar: '頁面功能設定',
                 navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定', navWorkout: '琉璃健身',
                 theme: '主題', system: '系統', light: '明亮', dark: '深色',
                 otherThemes: '其他主題',
@@ -93,6 +103,10 @@ createApp({
                 calendarInfoEnabled: '顯示行事曆資訊',
                 showHolidayTags: '顯示節假日標籤',
                 showLunarDates: '顯示農曆日期',
+                // Workout chart settings
+                workoutSection: '健身圖表',
+                showWeightChartLabel: '體重趨勢圖',
+                workoutCatChartsLabel: '分類訓練量圖',
             }
         };
 
@@ -258,6 +272,8 @@ createApp({
             navSettings.calendarInfoEnabled = val.calendarInfoEnabled;
             navSettings.showHolidayTags     = val.showHolidayTags;
             navSettings.showLunarDates      = val.showLunarDates;
+            navSettings.showWeightChart     = val.showWeightChart;
+            navSettings.workoutCatCharts    = val.workoutCatCharts;
             if (val.customBg) navSettings.customBg = val.customBg;
         }, { deep: true });
 
@@ -308,7 +324,8 @@ createApp({
             systemDark, resolvedTheme, isDarkTheme, glassStyle, themeClasses,
             customBgStyle, inactiveBtn, themeDropdownOpen,
             selectTheme, toggleLang, toggleNotifications, toggleCustomBg,
-            triggerUpload, handleUpload, clearCustomBg, clearCacheAndUpdate
+            triggerUpload, handleUpload, clearCustomBg, clearCacheAndUpdate,
+            _WORKOUT_CATS, _catLabelEn, _catLabelZh,
         };
     }
 }).component('LapisConfirm', window.LapisConfirm).mount('#app');

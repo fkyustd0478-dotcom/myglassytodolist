@@ -26,6 +26,7 @@
     <script src="./js/lapis_picker.js" defer></script>
     <script src="./js/lapis_confirm.js" defer></script>
     <script src="./js/lapis_global_nav.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts" defer></script>
     <script src="./modules/workout_data.js" defer></script>
     <script src="./modules/workout_metrics.js" defer></script>
     <script src="./modules/workout_library_ui.js" defer></script>
@@ -34,6 +35,18 @@
         [v-cloak] { display: none !important; }
         body { opacity: 0; transition: opacity 0.4s ease-in-out; }
         body.lapis-ready { opacity: 1; }
+
+        /* ── Workout Charts ──────────────────────────────────────────────── */
+        .wk-chart-card { border-radius: 20px; padding: 16px 16px 6px; margin-bottom: 10px; }
+        .wk-snap-btn {
+            font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 4px 12px; border-radius: 20px; cursor: pointer;
+            border: 1.5px solid rgba(59,130,246,0.45);
+            color: #3b82f6; background: rgba(59,130,246,0.10);
+            transition: all 0.18s;
+        }
+        .wk-snap-btn:active { transform: scale(0.93); }
+        .apexcharts-tooltip { z-index: 7500 !important; }
     </style>
 </head>
 <body>
@@ -482,6 +495,29 @@
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-state-icon"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14h6"/><path d="M12 11v6"/></svg>
             <p class="text-sm font-bold">{{ t.noWeightLog }}</p>
         </div>
+
+        <!-- ── Analytics Charts ─────────────────────────────────────────── -->
+        <div class="flex items-center justify-between mt-6 mb-2">
+            <p class="section-label" style="margin:0;">{{ t.charts }}</p>
+            <button class="wk-snap-btn" @click="snapChartsToToday()">{{ t.snapToday }}</button>
+        </div>
+
+        <!-- Body Weight Chart -->
+        <div v-if="navSettings.showWeightChart !== false" class="wk-chart-card glass" :style="glassStyle">
+            <p class="section-label" style="font-size:10px;margin-bottom:6px;">{{ t.chartWeight }}</p>
+            <div id="wk-weight-chart"></div>
+        </div>
+
+        <!-- Category Volume Charts -->
+        <template v-for="cat in ['Chest','Back','Shoulders','Arms','Legs','Core','Cardio']" :key="cat">
+            <div v-if="(navSettings.workoutCatCharts || {})[cat] !== false"
+                 class="wk-chart-card glass" :style="glassStyle">
+                <p class="section-label" style="font-size:10px;margin-bottom:6px;">
+                    {{ navSettings.lang === 'zh' ? ({Chest:'胸部',Back:'背部',Shoulders:'肩部',Arms:'手臂',Legs:'腿部',Core:'核心',Cardio:'有氧'})[cat] : cat }} Vol (kg)
+                </p>
+                <div :id="'wk-cat-chart-' + cat"></div>
+            </div>
+        </template>
 
         <!-- ── Personal Bests ───────────────────────────────────────────── -->
         <p class="section-label">{{ t.personalBests }}</p>

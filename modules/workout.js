@@ -4,6 +4,96 @@
 window.addEventListener('DOMContentLoaded', () => {
     const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
 
+    // ── Chart helpers (ApexCharts, outside Vue) ───────────────────────────────
+    const _CRT_DAY_MS   = 86400000;
+    const _MAIN_CATS    = ['Chest','Back','Shoulders','Arms','Legs','Core','Cardio'];
+    let   _wBodyChart   = null;
+    const _catCharts    = {};
+
+    function _wBodySeries(weights) {
+        return (weights || [])
+            .filter(w => w.weight > 0)
+            .map(w => ({ x: new Date(w.date + 'T00:00:00').getTime(), y: w.weight }));
+    }
+
+    function _catVolSeries(logs, mainCat, catTree) {
+        const node = (catTree || []).find(n => n.name === mainCat);
+        const subs = new Set(node ? (node.children || []).map(c => c.name) : []);
+        subs.add(mainCat);
+        const byDate = {};
+        (logs || []).filter(l => !l.isDeleted).forEach(log => {
+            let vol = 0;
+            (log.exercises || []).forEach(e => {
+                if (!e.categories || !e.categories.some(c => subs.has(c))) return;
+                if (e.type !== 'sets') return;
+                (e.sets || []).forEach(s => {
+                    const w = parseFloat(s.weight), r = parseInt(s.reps), n = parseInt(s.numSets) || 1;
+                    if (!isNaN(w) && !isNaN(r)) vol += w * r * n;
+                });
+            });
+            if (vol > 0) byDate[log.date] = (byDate[log.date] || 0) + vol;
+        });
+        return Object.entries(byDate)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([date, vol]) => ({ x: new Date(date + 'T00:00:00').getTime(), y: Math.round(vol) }));
+    }
+
+    function _crtChartOpts(series, name, isDark, noDataText) {
+        const textColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.40)';
+        const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+        const now = Date.now();
+        return {
+            chart: {
+                type: 'area', height: 150, background: 'transparent',
+                toolbar: { show: false, autoSelected: 'pan' },
+                zoom: { type: 'x', enabled: true },
+                animations: { enabled: false },
+                fontFamily: '"Inter", system-ui, sans-serif',
+            },
+            series: [{ name, data: series }],
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2, colors: ['#3b82f6'] },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    type: 'vertical', shadeIntensity: 1,
+                    colorStops: [
+                        { offset: 0,   color: '#3b82f6', opacity: 0.28 },
+                        { offset: 100, color: '#3b82f6', opacity: 0    },
+                    ],
+                },
+            },
+            markers: { size: 4, colors: ['#3b82f6'], strokeColors: isDark ? '#ffffff' : '#1a1a1a', strokeWidth: 2, hover: { size: 7 } },
+            xaxis: {
+                type: 'datetime', min: now - 14 * _CRT_DAY_MS, max: now,
+                labels: { datetimeUTC: false, format: 'MM/dd', style: { colors: textColor, fontSize: '10px', fontWeight: '700' } },
+                axisBorder: { show: false }, axisTicks: { show: false },
+            },
+            yaxis: { labels: { style: { colors: textColor, fontSize: '10px', fontWeight: '700' } } },
+            grid: { borderColor: gridColor, strokeDashArray: 4, padding: { left: 4, right: 8, top: 0, bottom: 0 } },
+            tooltip: { theme: isDark ? 'dark' : 'light', x: { format: 'yyyy/MM/dd' }, style: { fontSize: '11px' } },
+            noData: {
+                text: noDataText, align: 'center', verticalAlign: 'middle',
+                style: { fontSize: '12px', fontWeight: '700', color: textColor },
+            },
+            theme: { mode: isDark ? 'dark' : 'light' },
+        };
+    }
+
+    function _crtThemeOpts(isDark) {
+        const textColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.40)';
+        const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+        return {
+            markers: { strokeColors: isDark ? '#ffffff' : '#1a1a1a' },
+            xaxis:   { labels: { style: { colors: textColor } } },
+            yaxis:   { labels: { style: { colors: textColor } } },
+            grid:    { borderColor: gridColor },
+            tooltip: { theme: isDark ? 'dark' : 'light' },
+            theme:   { mode: isDark ? 'dark' : 'light' },
+            noData:  { style: { color: textColor } },
+        };
+    }
+
     createApp({
         setup() {
             // ── Nav ───────────────────────────────────────────────────────────
@@ -154,6 +244,14 @@ window.addEventListener('DOMContentLoaded', () => {
                 wData, metricsData, metricsPersist, navSettings, t, _todayStr, _toast
             });
 
+            // ── Snap charts to today ──────────────────────────────────────────
+            const snapChartsToToday = () => {
+                const now   = Date.now();
+                const range = { xaxis: { min: now - 14 * _CRT_DAY_MS, max: now } };
+                if (_wBodyChart) _wBodyChart.updateOptions(range, false, true);
+                Object.values(_catCharts).forEach(c => c.updateOptions(range, false, true));
+            };
+
             // ── Add tab — exercise actions ────────────────────────────────────
             const addSet = (eIdx) => {
                 const prev = logExercises.value[eIdx].sets.slice(-1)[0] || {};
@@ -292,11 +390,50 @@ window.addEventListener('DOMContentLoaded', () => {
                         });
                     }
                 }
+                // ── ApexCharts init ─────────────────────────────────────────
+                if (typeof ApexCharts !== 'undefined') {
+                    const dark     = isDarkTheme.value;
+                    const noData   = t.value.noChartData || 'No data';
+                    const catSetts = navSettings.workoutCatCharts || {};
+
+                    if (navSettings.showWeightChart !== false) {
+                        const el = document.getElementById('wk-weight-chart');
+                        if (el) {
+                            _wBodyChart = new ApexCharts(el, _crtChartOpts(
+                                _wBodySeries(metricsData.weights),
+                                t.value.chartWeight || 'Weight (kg)',
+                                dark, noData
+                            ));
+                            _wBodyChart.render();
+                        }
+                    }
+
+                    _MAIN_CATS.forEach(cat => {
+                        if (catSetts[cat] === false) return;
+                        const el = document.getElementById('wk-cat-chart-' + cat);
+                        if (!el) return;
+                        const label = navSettings.lang === 'zh'
+                            ? ({Chest:'胸部',Back:'背部',Shoulders:'肩部',Arms:'手臂',Legs:'腿部',Core:'核心',Cardio:'有氧'})[cat]
+                            : cat;
+                        _catCharts[cat] = new ApexCharts(el, _crtChartOpts(
+                            _catVolSeries(wData.logs, cat, catTree.value),
+                            label + ' Vol (kg)', dark, noData
+                        ));
+                        _catCharts[cat].render();
+                    });
+                }
+
                 nextTick(() => lucide.createIcons());
                 if (typeof ParticleEngine !== 'undefined' && navSettings.effect && navSettings.effect !== 'none') {
                     ParticleEngine.setEffect(navSettings.effect);
                 }
                 document.body.classList.add('lapis-ready');
+            });
+
+            watch(isDarkTheme, (dark) => {
+                const opts = _crtThemeOpts(dark);
+                if (_wBodyChart) _wBodyChart.updateOptions(opts, false, false);
+                Object.values(_catCharts).forEach(c => c.updateOptions(opts, false, false));
             });
 
             watch(navDropdownOpen, () => nextTick(() => lucide.createIcons()));
@@ -326,6 +463,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 openPicker, switchPickerMode, closeWorkoutPicker, setPickerToday,
                 // weight date picker
                 showWeightDatePicker, openWeightDatePicker, closeWeightDatePicker, setWeightDateToday,
+                // charts
+                snapChartsToToday,
                 // log modal
                 showLogModal, shellStyle, saveLogAndClose, discardAndClose,
                 openNewSession, openEditSession,
