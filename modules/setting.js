@@ -37,9 +37,9 @@ createApp({
         const currentObjectUrl = ref(null);
 
         // ── Translations ───────────────────────────────────────────────────
-        const _WORKOUT_CATS = ['Chest','Back','Shoulders','Arms','Legs','Core','Cardio'];
-        const _catLabelEn = { Chest:'Chest', Back:'Back', Shoulders:'Shoulders', Arms:'Arms', Legs:'Legs', Core:'Core', Cardio:'Cardio' };
-        const _catLabelZh = { Chest:'胸部', Back:'背部', Shoulders:'肩部', Arms:'手臂', Legs:'腿部', Core:'核心', Cardio:'有氧' };
+        const WORKOUT_CATEGORIES = ['Chest','Back','Shoulders','Arms','Legs','Core','Cardio'];
+        const catLabelEn = { Chest:'Chest', Back:'Back', Shoulders:'Shoulders', Arms:'Arms', Legs:'Legs', Core:'Core', Cardio:'Cardio' };
+        const catLabelZh = { Chest:'胸部', Back:'背部', Shoulders:'肩部', Arms:'手臂', Legs:'腿部', Core:'核心', Cardio:'有氧' };
 
         const translations = {
             en: {
@@ -290,7 +290,7 @@ createApp({
             customBgStyle, inactiveBtn, themeDropdownOpen,
             selectTheme, toggleLang, toggleNotifications, toggleCustomBg,
             triggerUpload, handleUpload, clearCustomBg, clearCacheAndUpdate,
-            _WORKOUT_CATS, _catLabelEn, _catLabelZh,
+            WORKOUT_CATEGORIES, catLabelEn, catLabelZh,
         };
     }
 }).component('LapisConfirm', window.LapisConfirm).mount('#app');

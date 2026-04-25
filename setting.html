@@ -286,9 +286,9 @@
                     <!-- Category chart toggles -->
                     <div class="space-y-1">
                         <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-3">{{ t.workoutCatChartsLabel }}</p>
-                        <div v-for="cat in _WORKOUT_CATS" :key="cat" class="flex items-center justify-between py-1">
+                        <div v-for="cat in WORKOUT_CATEGORIES" :key="cat" class="flex items-center justify-between py-1">
                             <span class="text-sm font-bold">
-                                {{ settings.lang === 'zh' ? _catLabelZh[cat] : _catLabelEn[cat] }}
+                                {{ settings.lang === 'zh' ? catLabelZh[cat] : catLabelEn[cat] }}
                             </span>
                             <button @click="settings.workoutCatCharts[cat] = !settings.workoutCatCharts[cat]"
                                     class="w-12 h-6 rounded-full relative transition-all duration-300"
