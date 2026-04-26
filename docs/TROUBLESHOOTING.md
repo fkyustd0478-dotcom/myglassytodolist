@@ -80,6 +80,22 @@
 
 ---
 
+## Theme Image 404 — CSS `url()` Relative Path Resolution ✅ RESOLVED 2026-04-25
+
+**Symptom:** Browser DevTools shows 404 errors for theme images, e.g. `GET /css/theme/cherry.png 404`.
+
+**Root Cause:** CSS `url('./theme/cherry.png')` inside a CSS file (e.g. `css/shared_theme.css`) resolves the path **relative to the CSS file's location**, not the HTML document. So `./theme/cherry.png` from `css/shared_theme.css` resolves to `css/theme/cherry.png` — which does not exist.
+
+**Fix:** Never assign theme background-image paths inside CSS files using relative `./theme/` URLs. Instead, assign `backgroundImage` via **JavaScript inline styles**:
+```javascript
+element.style.backgroundImage = `url('./theme/${theme}.png')`;
+```
+Inline styles resolve relative to the **HTML document URL**, so `./theme/cherry.png` correctly maps to the root-level `theme/` directory.
+
+**Prevention Rule:** All `url(path)` values in CSS files that reference static assets must use paths relative to the CSS file's own location, or use root-relative paths (`/theme/cherry.png`). For dynamic theme paths set by JavaScript, always use `element.style.backgroundImage` — never a CSS custom property injected from a CSS file.
+
+---
+
 ## Navigation Elements Misplaced (Top vs Bottom) ✅ RESOLVED 2026-04-24
 
 **Symptom:** Tab controls for workout/todo/shift appeared at the top of the page instead of the established bottom navigation pattern.
