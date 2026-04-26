@@ -57,7 +57,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
     const _uid     = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
-    const _dateStr = (d = 0) => { const dt = new Date(); dt.setDate(dt.getDate() + d); return dt.toISOString().split('T')[0]; };
+    const _dateStr = (d = 0) => { const dt = new Date(); dt.setDate(dt.getDate() + d); return toLocalISO(dt); };
     const _DAY_MS  = 86400000;
 
     // ── Data loading ──────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const now = new Date();
         const mon = new Date(now);
         mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-        const monStr  = mon.toISOString().split('T')[0];
+        const monStr  = toLocalISO(mon);
         const total   = logs.filter(l => !l.isDeleted).length;
         const thisWk  = logs.filter(l => !l.isDeleted && l.date >= monStr).length;
         const latest  = weights.length > 0 ? weights[weights.length - 1] : null;

@@ -143,7 +143,7 @@ function getEffectivePayday(year, month, ps) {
     let date = new Date(year, month, Math.min(day, lastDay));
 
     const isNonWorkday = (dt) => {
-        const str = dt.toISOString().split('T')[0];
+        const str = toLocalISO(dt);
         const dow = dt.getDay(); // 0 = Sun, 6 = Sat
         const isHol = typeof TAIWAN_HOLIDAYS !== 'undefined' && !!TAIWAN_HOLIDAYS[str];
         return dow === 0 || dow === 6 || isHol;
@@ -157,7 +157,7 @@ function getEffectivePayday(year, month, ps) {
         while (isNonWorkday(date) && guard++ < 10)
             date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
     }
-    return date.toISOString().split('T')[0];
+    return toLocalISO(date);
 }
 
 const { createApp, ref, computed, onMounted, onUnmounted, watch, nextTick, reactive } = Vue;
@@ -271,7 +271,7 @@ const app = createApp({
             for (let i = 1; i <= 42 - days.length; i++)
                 days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
 
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = toLocalISO(Date.now());
             const effectivePaydayStr = getEffectivePayday(year, month, shiftSettings.value.payday);
 
             // Pre-index date-specific Other tags, expanding startDate→endDate ranges
@@ -283,7 +283,7 @@ const app = createApp({
                 const cur = new Date(start + 'T00:00:00');
                 const fin = new Date((end || start) + 'T00:00:00');
                 while (cur <= fin) {
-                    const ds = cur.toISOString().split('T')[0];
+                    const ds = toLocalISO(cur);
                     if (!otherTagsByDate[ds]) otherTagsByDate[ds] = [];
                     otherTagsByDate[ds].push(tag);
                     cur.setDate(cur.getDate() + 1);
@@ -300,7 +300,7 @@ const app = createApp({
             });
 
             return days.map(day => {
-                const dateStr = day.date.toISOString().split('T')[0];
+                const dateStr = toLocalISO(day.date);
                 const todoTexts = todosByDate[dateStr] || [];
                 return {
                     ...day, dateStr,
@@ -403,7 +403,7 @@ const app = createApp({
         // ── Today Tasks ──────────────────────────────────────────────────────
         const todayTasks = computed(() => {
             const todoData = StorageProvider.getTodoData();
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = toLocalISO(Date.now());
             const todos = Array.isArray(todoData.todos) ? todoData.todos : [];
             return todos
                 .filter(t => t.dueDate === todayStr && !t.isDeleted)

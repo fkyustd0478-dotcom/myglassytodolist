@@ -178,7 +178,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const recordsSubTab    = ref('today');
             const editingSessionId = ref(null);
             const _now             = () => new Date();
-            const _todayStr        = () => _now().toISOString().split('T')[0];
+            const _todayStr        = () => toLocalISO(Date.now());
             const logDate          = ref(_todayStr());
             const logTime          = ref({ hour: _now().getHours(), minute: _now().getMinutes() });
             const logExercises     = ref([]);
@@ -390,7 +390,11 @@ window.addEventListener('DOMContentLoaded', () => {
                         const n = new Date();
                         _wdPicker = new LapisDatePicker(wdEl, {
                             year: n.getFullYear(), month: n.getMonth() + 1, day: n.getDate(),
-                            onConfirm(val) { metrics.weightForm.date = val.iso; showWeightDatePicker.value = false; }
+                            onConfirm(val) {
+                                metrics.weightForm.date = val.iso;
+                                metrics.weightForm.ts   = new Date(val.iso + 'T00:00:00').getTime();
+                                showWeightDatePicker.value = false;
+                            }
                         });
                     }
                 }

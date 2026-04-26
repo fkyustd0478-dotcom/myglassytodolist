@@ -29,7 +29,22 @@
     * **Component Logic:** Ensure new entries and historical logs follow the existing modal and monthly grouping structures.
 * **Naming:** Use semantic naming. Avoid generic terms like `data`, `temp`, or `item` unless contextually appropriate.
 
-## 4. Workflow & Verification
+## 4. Data Schemas
+
+### Weight Record (`lapis_workout_metrics` → `weights[]`)
+```json
+{ "date": "2026-04-26", "weight": 70.5, "unit": "kg", "ts": 1745625600000 }
+```
+* `date` — local calendar date string `YYYY-MM-DD` (derived from device clock, NOT UTC)
+* `ts` — Unix timestamp in ms; primary source of truth for time ordering; backward-compatible (old records without `ts` are read from `date + 'T00:00:00'` local time)
+
+### Date Utility Rule
+* **Never** use `new Date().toISOString().split('T')[0]` for local date strings — this returns UTC date and causes rollback bugs in UTC+8 between midnight and 08:00.
+* **Always** use `toLocalISO(timestamp)` (defined in `js/lapis_core_ui.js`, exposed as `window.toLocalISO`) for all local date string generation.
+* `toLocalISO` uses `getFullYear()` / `getMonth()+1` / `getDate()` which respect the device timezone.
+* Safe date-only string → Date object: `new Date('YYYY-MM-DDT00:00:00')` (with time, no timezone suffix) → LOCAL midnight per ECMAScript spec.
+
+## 5. Workflow & Verification
 1.  **Understand:** Analyze requirements and clarify ambiguities.
 2.  **Propose:** Provide implementation plans before modifying files.
 3.  **Diff Only:** Never overwrite files blindly; present a `diff` and wait for confirmation.

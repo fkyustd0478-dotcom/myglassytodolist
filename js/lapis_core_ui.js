@@ -11,6 +11,16 @@
         catch (_) { return 'zh'; }
     };
 
+    // Timezone-safe local date string: never uses toISOString() to avoid UTC rollback
+    function _toLocalISO(ts) {
+        const d = (ts instanceof Date) ? ts : new Date(ts !== undefined ? ts : Date.now());
+        const y  = d.getFullYear();
+        const m  = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${dd}`;
+    }
+    global.toLocalISO = _toLocalISO;
+
     // ── Page registry ─────────────────────────────────────────────────────────
     const _pages = [
         { key: 'home',    href: './index.html',   icon: 'home',         zh: '首頁',     en: 'Home'           },

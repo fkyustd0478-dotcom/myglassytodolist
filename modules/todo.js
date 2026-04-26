@@ -80,11 +80,11 @@ try {
                 text: '', 
                 category: 'normal', 
                 recurring: 'none', 
-                date: new Date().toISOString().split('T')[0], 
+                date: toLocalISO(Date.now()),
                 time: { hour: new Date().getHours(), minute: new Date().getMinutes() },
                 alertMinutes: 15
             });
-            
+
             const effects = ref({ airplane: false, crab: false, ship: false });
 
             // --- Constants & Translations ---
@@ -282,9 +282,9 @@ try {
                     text: form.value.text || '', 
                     category: 'normal', 
                     recurring: 'none', 
-                    date: now.toISOString().split('T')[0], 
-                    time: { 
-                        hour: now.getHours(), 
+                    date: toLocalISO(now),
+                    time: {
+                        hour: now.getHours(),
                         minute: now.getMinutes()
                     },
                     alertMinutes: 15
@@ -310,9 +310,9 @@ try {
                     text: todo.text, 
                     category: todo.category, 
                     recurring: todo.recurring, 
-                    date: d.toISOString().split('T')[0], 
-                    time: { 
-                        hour: d.getHours(), 
+                    date: toLocalISO(d),
+                    time: {
+                        hour: d.getHours(),
                         minute: d.getMinutes()
                     },
                     alertMinutes: todo.alertMinutes || 15
@@ -481,7 +481,7 @@ try {
             const openDatePicker = () => {
                 const now = new Date();
                 if (!form.value.date) {
-                    form.value.date = now.toISOString().split('T')[0];
+                    form.value.date = toLocalISO(now);
                 }
                 // Only default time if it's a new task (hour/minute are 0)
                 if (!isEditing.value && form.value.time.hour === 0 && form.value.time.minute === 0) {
@@ -576,7 +576,7 @@ try {
                 if (r === 'daily') date.setDate(date.getDate() + 1); 
                 else if (r === 'weekly') date.setDate(date.getDate() + 7); 
                 else if (r === 'monthly') date.setMonth(date.getMonth() + 1); 
-                return date.toISOString().split('T')[0]; 
+                return toLocalISO(date);
             };
 
             const formatDateTime = (s) => new Date(s).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
