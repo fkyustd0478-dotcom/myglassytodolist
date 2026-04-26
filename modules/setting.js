@@ -273,8 +273,11 @@ createApp({
             navSettings.workoutCatCharts    = val.workoutCatCharts;
             navSettings.customBg            = val.customBg;
             // customBg-only upload: Vue watch won't fire (theme/useCustomBg unchanged)
-            if (val.customBg !== prevCustomBg && window.LapisNav && window.LapisNav._applyTheme) {
-                window.LapisNav._applyTheme();
+            if (val.customBg !== prevCustomBg && typeof LapisCore !== 'undefined') {
+                LapisCore.applyTheme(val.theme, val.useCustomBg, {
+                    customBg: val.customBg,
+                    customBgOpacity: val.customBgOpacity,
+                });
             }
         }, { deep: true });
 

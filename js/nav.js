@@ -1,5 +1,5 @@
-// nav.js — Global navigation composable v3.2
-// Loaded after storage.js, before page-specific scripts on all pages.
+// nav.js — Global navigation composable v4.0
+// Loaded after core_engine.js (LapisCore handles all bg rendering).
 // Usage inside Vue setup():
 //   const { navDropdownOpen, currentPageTitle, toggleNavDropdown,
 //           navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle,
@@ -106,125 +106,33 @@ function useNav() {
     let _mqCleanup      = null;
     let _storageCleanup = null;
 
-    // ── Double-Buffer Background Engine ───────────────────────────────────────
-    // Uses two static layers (#bg-layer-a / #bg-layer-b) from the HTML.
-    // img.decode() ensures GPU decompression before making a layer visible.
-    const _imgThemes = new Set([
-        'cherry','sky','sunset','sea','seaside','forest','night','torii',
-        'mapleavenue','waterfall','starrysky','ferriswheel'
-    ]);
-    let _firstApply    = true;
-    let _activeLayerId = 'a';   // tracks which layer is currently shown
-    let _spinner       = null;
-    let _applyTimer    = null;  // debounce handle for rapid theme clicks
+    // ── Background Engine (delegates to LapisCore) ────────────────────────────
+    let _firstApply = true;
+    let _applyTimer = null;
 
-    function _showSpinner() {
-        if (!_spinner) {
-            _spinner = document.createElement('div');
-            _spinner.id = 'lapis-theme-spinner';
-            document.body.appendChild(_spinner);
-        }
-        _spinner.style.opacity = '1';
-    }
-    function _hideSpinner() { if (_spinner) _spinner.style.opacity = '0'; }
-
-    function _bgLayer(id) { return document.getElementById('bg-layer-' + id); }
-    function _otherId(id)  { return id === 'a' ? 'b' : 'a'; }
-
-    // Decode an image URL off-screen; resolves when GPU-ready (or after 3 s).
-    function _decodeImage(src) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                (typeof img.decode === 'function' ? img.decode() : Promise.resolve())
-                    .catch(() => {}).then(resolve);
-            };
-            img.onerror = resolve; // silent — let caller handle missing asset
-            img.src = src;
-            setTimeout(resolve, 3000); // safety net
-        });
+    function _themeOpts() {
+        return {
+            customBg:        navSettings.customBg,
+            customBgOpacity: navSettings.customBgOpacity,
+        };
     }
 
-    async function _applyTheme(theme, useCustomBg) {
-        const cls     = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
-        const hasCustBg = useCustomBg && navSettings.customBg;
-        const bgUrl   = hasCustBg
-            ? navSettings.customBg
-            : (_imgThemes.has(theme) ? `./theme/${theme}.png` : '');
-        const targetOpacity = hasCustBg ? (1 - (navSettings.customBgOpacity || 0)) : 1;
-
+    function _applyTheme(theme, useCustomBg) {
         // Update body class immediately (drives CSS variables / glass style)
-        document.body.className = cls;
-
-        const nextId  = _otherId(_activeLayerId);
-        const current = _bgLayer(_activeLayerId);
-        const next    = _bgLayer(nextId);
-
-        if (!next) return; // bg-system not in DOM (safety guard)
-
-        if (_firstApply) {
-            _firstApply = false;
-            if (bgUrl) {
-                next.style.backgroundImage    = `url('${bgUrl}')`;
-                next.style.backgroundSize     = 'cover';
-                next.style.backgroundPosition = 'center';
-                next.style.backgroundRepeat   = 'no-repeat';
-                next.style.setProperty('--lapis-bg-opacity', targetOpacity);
-                next.classList.add('active');
-                if (current) current.classList.remove('active');
-                _activeLayerId = nextId;
-            }
-            // Solid/gradient theme: layers stay transparent; #lapis-bg-system
-            // renders body's var(--bg-main) gradient as the background.
-            return;
-        }
-
-        try {
-            if (bgUrl) {
-                // Stage the new image on the inactive layer (invisible)
-                next.classList.remove('active');
-                next.style.removeProperty('--lapis-bg-opacity');
-                next.style.backgroundImage    = `url('${bgUrl}')`;
-                next.style.backgroundSize     = 'cover';
-                next.style.backgroundPosition = 'center';
-                next.style.backgroundRepeat   = 'no-repeat';
-
-                _showSpinner();
-                await _decodeImage(bgUrl);
-                _hideSpinner();
-
-                // Force reflow — flushes GPU pipeline before transition (WebView fix)
-                next.style.display = 'none';
-                void next.offsetHeight;   // read triggers synchronous layout
-                next.style.display = 'block';
-
-                // Apply & swap with opacity transition
-                next.style.setProperty('--lapis-bg-opacity', targetOpacity);
-                next.classList.add('active');
-                if (current) current.classList.remove('active');
-                _activeLayerId = nextId;
-            } else {
-                // Solid/gradient theme — clear both layers; #lapis-bg-system shows gradient
-                if (current) current.classList.remove('active');
-                next.classList.remove('active');
-                next.style.backgroundImage = '';
-                _activeLayerId = nextId;
-            }
-        } catch (err) {
-            _hideSpinner();
-            console.warn('[Lapis] Background swap failed:', err);
-        }
+        document.body.className = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
+        if (typeof LapisCore === 'undefined') return;
+        const skipAnimation = _firstApply;
+        if (_firstApply) _firstApply = false;
+        LapisCore.applyTheme(theme, useCustomBg, { ..._themeOpts(), skipAnimation });
     }
 
-    // Expose for same-tab direct calls (e.g. setting.js on customBg-only upload)
+    // Exposed for same-tab direct calls (setting.js on customBg-only changes)
     window.LapisNav = window.LapisNav || {};
     window.LapisNav._applyTheme = () => _applyTheme(resolvedTheme.value, navSettings.useCustomBg);
 
-    // ── Body class injection ──────────────────────────────────────────────────
+    // ── Body class injection + theme watch ────────────────────────────────────
     watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
-        // First apply: immediate (page is still invisible, no animation needed)
         if (_firstApply) { _applyTheme(theme, useCustomBg); return; }
-        // Subsequent: debounce 100 ms to prevent GPU decoder thrashing on rapid clicks
         clearTimeout(_applyTimer);
         _applyTimer = setTimeout(() => _applyTheme(theme, useCustomBg), 100);
     }, { immediate: true });
@@ -232,8 +140,7 @@ function useNav() {
     // Live opacity update when custom-bg slider moves
     watch(() => navSettings.customBgOpacity, (opacity) => {
         if (!navSettings.useCustomBg) return;
-        const active = _bgLayer(_activeLayerId);
-        if (active) active.style.setProperty('--lapis-bg-opacity', 1 - opacity);
+        if (typeof LapisCore !== 'undefined') LapisCore.setActiveOpacity(1 - opacity);
     });
 
     onMounted(async () => {
@@ -252,19 +159,23 @@ function useNav() {
             };
         }
 
-        // lapis-ready gate: GPU-decode the active theme image before revealing the page.
+        // lapis-ready gate: pre-decode theme image before revealing the page.
         try {
-            const activeTheme = resolvedTheme.value;
-            if (_imgThemes.has(activeTheme) && !navSettings.useCustomBg) {
-                await _decodeImage('./theme/' + activeTheme + '.png');
-            } else if (navSettings.useCustomBg && navSettings.customBg) {
-                await _decodeImage(navSettings.customBg);
+            if (typeof LapisCore !== 'undefined') {
+                const activeTheme = resolvedTheme.value;
+                const isImgTheme  = ['cherry','sky','sunset','sea','seaside','forest',
+                    'night','torii','mapleavenue','waterfall','starrysky','ferriswheel']
+                    .includes(activeTheme);
+                if (isImgTheme && !navSettings.useCustomBg) {
+                    await LapisCore.preloadImage('./theme/' + activeTheme + '.png');
+                } else if (navSettings.useCustomBg && navSettings.customBg) {
+                    await LapisCore.preloadImage(navSettings.customBg);
+                }
             }
         } catch (_) {}
         document.body.classList.add('lapis-ready');
 
-        // Cross-tab theme sync: when any tab saves new settings to localStorage,
-        // update navSettings here so the bg transitions without a page reload.
+        // Cross-tab sync
         const _onStorage = (e) => {
             if (e.key !== 'todo_settings' || !e.newValue) return;
             try {
@@ -273,7 +184,6 @@ function useNav() {
                 if (s.useCustomBg     !== undefined && s.useCustomBg     !== navSettings.useCustomBg)     navSettings.useCustomBg     = s.useCustomBg;
                 if (s.customBgOpacity !== undefined && s.customBgOpacity !== navSettings.customBgOpacity) navSettings.customBgOpacity = s.customBgOpacity;
                 if (s.lang            !== undefined && s.lang            !== navSettings.lang)            navSettings.lang            = s.lang;
-                // customBg change requires explicit repaint (Vue watch only tracks theme/useCustomBg)
                 if (s.customBg !== undefined && s.customBg !== navSettings.customBg) {
                     navSettings.customBg = s.customBg;
                     _applyTheme(resolvedTheme.value, navSettings.useCustomBg);

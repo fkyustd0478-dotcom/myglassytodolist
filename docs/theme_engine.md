@@ -1,7 +1,48 @@
 # Theme & Background Engine
 
-> **Where it lives**: `js/nav.js` (`_applyTheme`, `_decodeImage`, `_bgLayer`, `_onStorage`)
-> **CSS**: `css/shared_theme.css` (`#lapis-bg-system`, `.lapis-bg-layer`)
+> **Where it lives**: `js/core_engine.js` (`LapisCore.applyTheme`, `preloadImage`, `updateGlobalThemeVar`)
+> **Vue orchestration**: `js/nav.js` (reads `navSettings`, calls `LapisCore`)
+> **CSS**: `css/shared_theme.css` (`#lapis-bg-system`, `.lapis-bg-layer`, `--lapis-dynamic-bg`)
+
+---
+
+## v4.0 Reactive CSS Variable Architecture
+
+As of the v4 refactor, the engine uses **CSS variable injection via a persistent `<style>` tag** instead of setting `element.style.backgroundImage` directly. This solves Base64 rendering failures observed in certain WebView environments where inline styles containing large data URIs are silently dropped.
+
+### Style Invalidator (`LapisCore.updateGlobalThemeVar`)
+
+```javascript
+// js/core_engine.js
+function updateGlobalThemeVar(url) {
+    let tag = document.getElementById('lapis-dynamic-theme-css');
+    if (!tag) { tag = document.createElement('style'); tag.id = 'lapis-dynamic-theme-css'; document.head.appendChild(tag); }
+    tag.textContent = url ? `:root { --lapis-dynamic-bg: url("${url}"); }` : ':root { --lapis-dynamic-bg: none; }';
+    document.documentElement.setAttribute('data-theme-ts', Date.now());
+}
+```
+
+- The `<style>` tag is a **formal CSSOM resource** — the browser processes it through the full style pipeline, including GPU texture upload.
+- `data-theme-ts` attribute change forces the CSS engine to **re-evaluate the entire cascade**, preventing stale computed style caching.
+
+### CSS Layer (css/shared_theme.css)
+
+```css
+:root {
+    --lapis-dynamic-bg:    none;      /* managed by LapisCore */
+    --lapis-fallback-color: #0d0d0d;  /* shown while image loads */
+}
+.lapis-bg-layer {
+    background-color: var(--lapis-fallback-color);
+    background-image: var(--lapis-dynamic-bg);       /* reactive */
+    background-size: cover;
+    background-position: center;
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity;
+}
+```
+
+Both layers (`#bg-layer-a` and `#bg-layer-b`) reference the same CSS variable. When `updateGlobalThemeVar(newUrl)` is called, the new image becomes the background for both layers simultaneously — the opacity double-buffer transition then orchestrates which layer is visible.
 
 ---
 

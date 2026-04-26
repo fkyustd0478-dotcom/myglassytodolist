@@ -19,7 +19,8 @@
 ### Tech Manuals (implementation details & bug history)
 | File | Contents |
 |---|---|
-| [`docs/theme_engine.md`](./docs/theme_engine.md) | Double-buffer background engine, `_applyTheme`, Base64 storage, cross-tab sync |
+| [`docs/theme_engine.md`](./docs/theme_engine.md) | CSS variable engine, `LapisCore.applyTheme`, style invalidation, reflow hack, cross-tab sync |
+| [`docs/navigation_engine.md`](./docs/navigation_engine.md) | View Transitions API, `LapisCore.navigate`, link interception, cross-document transitions |
 | [`docs/date_logic.md`](./docs/date_logic.md) | UTC rollback bug, 1970 picker bug, `ts` storage rule, safe date parsing |
 | [`docs/TROUBLESHOOTING.md`](./docs/TROUBLESHOOTING.md) | Known UI issues, z-index conflicts, picker freeze, theme flash |
 | [`docs/UI_HARDENING.md`](./docs/UI_HARDENING.md) | UI edge cases and hardening notes |
@@ -53,7 +54,8 @@ myglassytodolist/
 │   ├── TROUBLESHOOTING.md    → Known issues & resolved bugs
 │   ├── SOP_REGISTRY.md       → Standard operating procedures
 │   ├── LOGIC_DEEP_DIVE.md    → PR calc, salary, recurring logic
-│   ├── theme_engine.md       → Background double-buffer engine
+│   ├── theme_engine.md       → CSS variable engine, LapisCore, reflow hack
+│   ├── navigation_engine.md  → View Transitions API, SPA navigate, link interception
 │   └── date_logic.md         → Date init, 1970 bug, UTC fix
 │
 ├── css/
@@ -65,7 +67,8 @@ myglassytodolist/
 │   └── workout_style.css      → Workout-specific layout
 │
 ├── js/
-│   ├── nav.js              → useNav() composable: theme, glass styles, resolvedTheme
+│   ├── core_engine.js      → LapisCore: CSS var injection, preloadImage, applyTheme, navigate
+│   ├── nav.js              → useNav() composable: Vue reactivity layer over LapisCore
 │   ├── storage.js          → StorageProvider (localStorage CRUD) + ImageDB (IndexedDB)
 │   ├── effects.js          → ParticleEngine: setEffect('none'|'cherry'|'rain'|'snow')
 │   ├── lapis_core_ui.js    → LapisNav (top capsule dropdown), LapisModal (open/close/ESC)
@@ -97,7 +100,7 @@ myglassytodolist/
 > **Rule:** Each detail page owns its own `<nav class="bottom-nav glass">`. Cross-page links live only in the LapisNav top capsule dropdown. Never use a shared global bottom nav on detail pages.
 
 ### Script Load Order
-Standard: `effects.js` → `storage.js` → `nav.js` → `lapis_core_ui.js` → `lapis_picker.js` → `lapis_confirm.js` → `modules/[page].js`
+Standard: `effects.js` → `storage.js` → `core_engine.js` → `nav.js` → `lapis_core_ui.js` → `lapis_picker.js` → `lapis_confirm.js` → `modules/[page].js`
 
 **workout.html specifically:** `modules/workout_data.js` → `modules/workout_metrics.js` → `modules/workout_library_ui.js` → `modules/workout.js` *(all in `modules/`, NOT `js/`)*
 
