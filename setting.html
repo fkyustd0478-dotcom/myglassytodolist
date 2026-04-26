@@ -289,6 +289,13 @@
                                  :style="{ left: settings.showWeightChart ? '26px' : '4px' }"></div>
                         </button>
                     </div>
+                    <!-- Empty state when no exercises exist in library -->
+                    <div v-if="availableCategories.length === 0"
+                         class="text-center py-4 opacity-50 text-xs font-bold">
+                        {{ settings.lang === 'zh'
+                            ? '尚未建立任何動作分類，請至訓練頁面新增動作。'
+                            : 'No exercise categories yet. Add exercises in the Workout page.' }}
+                    </div>
                     <!-- Dynamic category chart toggles — grouped by main category -->
                     <div v-if="availableCategories.length > 0" class="space-y-4">
                         <p class="text-[10px] font-black uppercase tracking-widest opacity-40">{{ t.workoutCatChartsLabel }}</p>

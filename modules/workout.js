@@ -38,7 +38,8 @@ window.addEventListener('DOMContentLoaded', () => {
             .map(([date, vol]) => ({ x: new Date(date + 'T00:00:00').getTime(), y: Math.round(vol) }));
     }
 
-    function _crtChartOpts(series, name, isDark, noDataText) {
+    function _crtChartOpts(series, name, isDark, noDataText, color) {
+        const c = color || '#3b82f6';
         const textColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.40)';
         const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
         const now = Date.now();
@@ -52,18 +53,18 @@ window.addEventListener('DOMContentLoaded', () => {
             },
             series: [{ name, data: series }],
             dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 2, colors: ['#3b82f6'] },
+            stroke: { curve: 'smooth', width: 2, colors: [c] },
             fill: {
                 type: 'gradient',
                 gradient: {
                     type: 'vertical', shadeIntensity: 1,
                     colorStops: [
-                        { offset: 0,   color: '#3b82f6', opacity: 0.28 },
-                        { offset: 100, color: '#3b82f6', opacity: 0    },
+                        { offset: 0,   color: c, opacity: 0.28 },
+                        { offset: 100, color: c, opacity: 0    },
                     ],
                 },
             },
-            markers: { size: 4, colors: ['#3b82f6'], strokeColors: isDark ? '#ffffff' : '#1a1a1a', strokeWidth: 2, hover: { size: 7 } },
+            markers: { size: 4, colors: [c], strokeColors: isDark ? '#ffffff' : '#1a1a1a', strokeWidth: 2, hover: { size: 7 } },
             xaxis: {
                 type: 'datetime', min: now - 14 * _CRT_DAY_MS, max: now,
                 labels: { datetimeUTC: false, format: 'MM/dd', style: { colors: textColor, fontSize: '10px', fontWeight: '700' } },
@@ -172,6 +173,15 @@ window.addEventListener('DOMContentLoaded', () => {
                 const raw = JSON.parse(localStorage.getItem(METRICS_KEY) || 'null');
                 if (raw) metricsData.weights = raw.weights || [];
             };
+
+            // ── Dynamic category list (from Action Library via WorkoutConfig) ────
+            const dynCatCharts = computed(() => {
+                void libData.exercises.length; // reactive dependency
+                const groups = typeof WorkoutConfig !== 'undefined'
+                    ? WorkoutConfig.getAvailableExerciseCategories()
+                    : _MAIN_CATS.map(name => ({ main: { name, nameZh: name }, subs: [{ name, nameZh: name }] }));
+                return groups.flatMap(g => g.subs.map(s => ({ subCat: s.name, name: s.name, nameZh: s.nameZh })));
+            });
 
             // ── Session state ─────────────────────────────────────────────────
             const activeTab        = ref('workout');
@@ -416,18 +426,19 @@ window.addEventListener('DOMContentLoaded', () => {
                         }
                     }
 
-                    _MAIN_CATS.forEach(cat => {
-                        if (catSetts[cat] === false) return;
-                        const el = document.getElementById('wk-cat-chart-' + cat);
+                    dynCatCharts.value.forEach((item, idx) => {
+                        if (catSetts[item.subCat] === false) return;
+                        const el = document.getElementById('wk-cat-chart-' + item.subCat);
                         if (!el) return;
-                        const label = navSettings.lang === 'zh'
-                            ? ({Chest:'胸部',Back:'背部',Shoulders:'肩部',Arms:'手臂',Legs:'腿部',Core:'核心',Cardio:'有氧'})[cat]
-                            : cat;
-                        _catCharts[cat] = new ApexCharts(el, _crtChartOpts(
-                            _catVolSeries(wData.logs, cat, catTree.value),
-                            label + ' Vol (kg)', dark, noData
+                        const label = navSettings.lang === 'zh' ? (item.nameZh || item.name) : item.name;
+                        const color = Array.isArray(LapisChartPalette)
+                            ? LapisChartPalette[idx % LapisChartPalette.length]
+                            : '#3b82f6';
+                        _catCharts[item.subCat] = new ApexCharts(el, _crtChartOpts(
+                            _catVolSeries(wData.logs, item.subCat, catTree.value),
+                            label + ' Vol (kg)', dark, noData, color
                         ));
-                        _catCharts[cat].render();
+                        _catCharts[item.subCat].render();
                     });
                 }
 
@@ -471,7 +482,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 // weight date picker
                 showWeightDatePicker, openWeightDatePicker, closeWeightDatePicker, confirmWeightDatePicker, setWeightDateToday,
                 // charts
-                snapChartsToToday,
+                dynCatCharts, snapChartsToToday,
                 // log modal
                 showLogModal, shellStyle, saveLogAndClose, discardAndClose,
                 openNewSession, openEditSession,

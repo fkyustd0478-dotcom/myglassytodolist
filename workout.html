@@ -30,6 +30,7 @@
     <script src="./js/lapis_global_nav.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts" defer></script>
     <script src="./modules/workout_data.js" defer></script>
+    <script src="./modules/workout_config.js" defer></script>
     <script src="./modules/workout_metrics.js" defer></script>
     <script src="./modules/workout_library_ui.js" defer></script>
     <script src="./modules/workout.js" defer></script>
@@ -519,14 +520,14 @@
             <div id="wk-weight-chart"></div>
         </div>
 
-        <!-- Category Volume Charts -->
-        <template v-for="cat in ['Chest','Back','Shoulders','Arms','Legs','Core','Cardio']" :key="cat">
-            <div v-if="(navSettings.workoutCatCharts || {})[cat] !== false"
+        <!-- Category Volume Charts — dynamic from Action Library -->
+        <template v-for="item in dynCatCharts" :key="item.subCat">
+            <div v-if="(navSettings.workoutCatCharts || {})[item.subCat] !== false"
                  class="wk-chart-card glass" :style="glassStyle">
                 <p class="section-label" style="font-size:10px;margin-bottom:6px;">
-                    {{ navSettings.lang === 'zh' ? ({Chest:'胸部',Back:'背部',Shoulders:'肩部',Arms:'手臂',Legs:'腿部',Core:'核心',Cardio:'有氧'})[cat] : cat }} Vol (kg)
+                    {{ navSettings.lang === 'zh' ? item.nameZh : item.name }} Vol (kg)
                 </p>
-                <div :id="'wk-cat-chart-' + cat"></div>
+                <div :id="'wk-cat-chart-' + item.subCat"></div>
             </div>
         </template>
 
