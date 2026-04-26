@@ -1,4 +1,4 @@
-// core_engine.js — LapisCore standalone module v1.0
+// core_engine.js — LapisCore standalone module v1.1
 // Provides: window.LapisCore
 //   .updateGlobalThemeVar(url)  — CSS variable style injection
 //   .preloadImage(url)          — GPU bitmap pre-decode via img.decode()
@@ -71,32 +71,59 @@ window.LapisCore = (() => {
 
     // ── B. GPU Pre-decode ─────────────────────────────────────────────────────
     // Decodes the image bitmap off-screen so VRAM holds it before transition.
+    // onerror resolves immediately on 404/network error — no 3 s wait.
+    // clearTimeout ensures the safety timer is cancelled once the image settles.
     function preloadImage(url) {
         return new Promise((resolve) => {
             if (!url) { resolve(); return; }
             const img = new Image();
+            let timer;
+            const done = () => { clearTimeout(timer); resolve(); };
             img.onload = () => {
                 (typeof img.decode === 'function' ? img.decode() : Promise.resolve())
-                    .catch(() => {}).then(resolve);
+                    .catch(() => {}).then(done);
             };
-            img.onerror = resolve;
+            img.onerror = done;   // 404 or network error → resolve immediately
             img.src = url;
-            setTimeout(resolve, 3000); // safety timeout
+            timer = setTimeout(done, 3000); // absolute safety net
         });
     }
 
-    // ── C. View Transition wrapper ────────────────────────────────────────────
+    // ── C. Html Background Sync ───────────────────────────────────────────────
+    // Keeps <html> background aligned with the incoming theme before a View
+    // Transition snapshot is captured.  Without this, the cross-fade reveals the
+    // previous theme's html background colour between the two transition frames.
+    const _darkSet = new Set(['dark', 'forest', 'night', 'torii', 'starrysky', 'ferriswheel']);
+    function _syncHtmlBg(theme, hasCustBg) {
+        document.documentElement.style.background =
+            (!hasCustBg && _darkSet.has(theme)) ? '#0d1117' : '#f0f4ff';
+    }
+
+    // ── D. View Transition wrapper ────────────────────────────────────────────
     // Wraps DOM mutations in startViewTransition when available.
-    // The callback MUST be synchronous — async callbacks prevent screenshot capture.
-    function _runTransition(syncCallback) {
+    // The update callback MUST be synchronous — async callbacks prevent screenshot
+    // capture.  Returns a Promise that resolves once the animation finishes so
+    // callers can await it, preventing overlapping concurrent transitions.
+    async function _runTransition(syncCallback) {
         if (typeof document.startViewTransition === 'function') {
-            document.startViewTransition(syncCallback);
+            let called = false;
+            try {
+                await document.startViewTransition(() => {
+                    called = true;
+                    syncCallback();
+                }).finished;
+            } catch (_) {
+                // transition.finished rejected — animation was skipped or interrupted.
+                // Only re-apply if callback never ran (e.g. startViewTransition threw
+                // before invoking it — extremely rare but possible in degraded states).
+                if (!called) syncCallback();
+            }
         } else {
             syncCallback();
         }
     }
 
-    // ── D. Theme Application ──────────────────────────────────────────────────
+    // ── E. Theme Application ──────────────────────────────────────────────────
     // opts: { customBg, customBgOpacity, skipAnimation }
     async function applyTheme(theme, useCustomBg, opts) {
         opts = opts || {};
@@ -144,18 +171,21 @@ window.LapisCore = (() => {
                 await preloadImage(bgUrl);
                 _hideSpinner();
 
-                // Step 2 — Trigger View Transition.
+                // Step 2 — Align <html> background with incoming theme so the View
+                // Transition cross-fade backdrop never shows a mismatched colour.
+                _syncHtmlBg(theme, hasCustBg);
+
+                // Step 3 — Trigger View Transition.
                 // Browser captures "before" screenshot now (current layer still visible).
                 // Callback MUST be synchronous — async callbacks block the capture.
-                _runTransition(() => {
+                // await ensures we don't start a new transition while this one plays.
+                await _runTransition(() => {
                     // Inject URL via CSSOM (avoids WebView inline-style rendering bugs)
                     updateGlobalThemeVar(bgUrl);
 
-                    // Force GPU pipeline flush — synchronous reflow commits new texture
-                    // to the compositor before the opacity transition begins.
-                    next.style.display = 'none';
+                    // Force style recalculation so --lapis-dynamic-bg is resolved on
+                    // the compositor before the opacity transition begins.
                     void next.offsetHeight;
-                    next.style.display = '';
 
                     // Swap layers — View Transition cross-fades screenshot → new state
                     next.style.setProperty('--lapis-bg-opacity', targetOpacity);
@@ -166,7 +196,8 @@ window.LapisCore = (() => {
 
             } else {
                 // Solid theme: clear CSS var, deactivate all layers so --bg-main shows
-                _runTransition(() => {
+                _syncHtmlBg(theme, hasCustBg);
+                await _runTransition(() => {
                     updateGlobalThemeVar('');
                     if (current) current.classList.remove('active');
                     next.classList.remove('active');
@@ -194,14 +225,14 @@ window.LapisCore = (() => {
         }
     }
 
-    // ── E. Live Opacity Update ────────────────────────────────────────────────
+    // ── F. Live Opacity Update ────────────────────────────────────────────────
     // Called by nav.js when the custom-bg opacity slider moves.
     function setActiveOpacity(opacity) {
         const layer = _bgLayer(_activeLayerId);
         if (layer) layer.style.setProperty('--lapis-bg-opacity', opacity);
     }
 
-    // ── F. SPA Navigation ─────────────────────────────────────────────────────
+    // ── G. SPA Navigation ─────────────────────────────────────────────────────
     // Uses View Transition API for a smooth cross-page animation; falls back to
     // a plain location.href if the API is unavailable. Full fetch-based SPA
     // injection is planned for a future phase once Vue app lifecycle hooks are
@@ -215,7 +246,7 @@ window.LapisCore = (() => {
         }
     }
 
-    // ── G. Global Link Interception ───────────────────────────────────────────
+    // ── H. Global Link Interception ───────────────────────────────────────────
     // Intercepts same-origin <a> clicks and routes them through navigate()
     // to get the View Transition animation on every page change.
     function _initLinkInterception() {
