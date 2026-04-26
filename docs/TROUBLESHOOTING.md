@@ -80,19 +80,37 @@
 
 ---
 
-## Theme Image 404 — CSS `url()` Relative Path Resolution ✅ RESOLVED 2026-04-25
+## Theme Image 404 — CSS `url()` Relative Path & GitHub Pages Sub-directory ✅ RESOLVED 2026-04-25 / 2026-04-26
 
-**Symptom:** Browser DevTools shows 404 errors for theme images, e.g. `GET /css/theme/cherry.png 404`.
+**Symptom A — CSS file resolution:** Browser shows `GET /css/theme/cherry.png 404`.
+**Root Cause A:** `url('./theme/cherry.png')` inside a CSS file (e.g. `css/shared_theme.css`) resolves relative to the **CSS file's location**. From `css/shared_theme.css`, `./theme/` maps to `css/theme/` — which does not exist.
 
-**Root Cause:** CSS `url('./theme/cherry.png')` inside a CSS file (e.g. `css/shared_theme.css`) resolves the path **relative to the CSS file's location**, not the HTML document. So `./theme/cherry.png` from `css/shared_theme.css` resolves to `css/theme/cherry.png` — which does not exist.
+**Symptom B — GitHub Pages sub-directory 404:** Hosted at `https://user.github.io/repo-name/`. Browser shows `GET /theme/cherry.png 404` (missing `repo-name` segment).
+**Root Cause B:** CSS custom property `url()` values may be resolved by the browser at the point the `var()` is **consumed** (i.e. in the CSS file that contains the `background-image: var(--x)` rule), not where the property was defined. If the variable is defined in an injected `<style>` tag but consumed in `css/shared_theme.css`, some browsers resolve the URL relative to `css/shared_theme.css`. A root-relative path like `/theme/cherry.png` skips the GitHub Pages repository sub-directory entirely.
 
-**Fix:** Never assign theme background-image paths inside CSS files using relative `./theme/` URLs. Instead, assign `backgroundImage` via **JavaScript inline styles**:
+**Fix (both symptoms):** Use `document.baseURI` to compute an **absolute URL** in JavaScript before the path ever enters any CSS context:
 ```javascript
-element.style.backgroundImage = `url('./theme/${theme}.png')`;
+const _docBase = (() => {
+    const b = document.baseURI || location.href;
+    return b.slice(0, b.lastIndexOf('/') + 1);
+})();
+const _themeUrl = (name) => _docBase + 'theme/' + name + '.png';
+// → 'https://user.github.io/repo-name/theme/cherry.png'  (unambiguous)
 ```
-Inline styles resolve relative to the **HTML document URL**, so `./theme/cherry.png` correctly maps to the root-level `theme/` directory.
+Absolute URLs contain the full origin + path and are never re-resolved against any CSS file's location.
 
-**Prevention Rule:** All `url(path)` values in CSS files that reference static assets must use paths relative to the CSS file's own location, or use root-relative paths (`/theme/cherry.png`). For dynamic theme paths set by JavaScript, always use `element.style.backgroundImage` — never a CSS custom property injected from a CSS file.
+**Ghost 404 Guard:** Never pass an empty string to `new Image().src` or to any CSS `url()`. Guard preload calls:
+```javascript
+function _preload(src) {
+    if (!src) return Promise.resolve(); // prevents url('') spurious request
+    ...
+}
+```
+
+**Prevention Rules:**
+1. Never write `url('./theme/X.png')` inside a CSS file — use paths relative to that CSS file (`../theme/X.png`) or absolute URLs.
+2. For JS-driven dynamic paths, compute an absolute URL via `document.baseURI` before injecting into any CSS context.
+3. Never use root-relative paths (`/theme/X.png`) on GitHub Pages — they omit the repository sub-directory name.
 
 ---
 

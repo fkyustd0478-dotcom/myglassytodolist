@@ -106,9 +106,26 @@ function useNav() {
     let _mqCleanup      = null;
     let _storageCleanup = null;
 
-    // ── Background Engine (delegates to LapisCore) ────────────────────────────
-    let _firstApply = true;
-    let _applyTimer = null;
+    // ── Background transition system ──────────────────────────────────────────
+    const _imgThemes = new Set([
+        'cherry','sky','sunset','sea','seaside','forest','night','torii',
+        'mapleavenue','waterfall','starrysky','ferriswheel'
+    ]);
+
+    // Compute absolute base URL from document.baseURI so theme image paths
+    // resolve correctly in GitHub Pages sub-directory deployments and avoid
+    // the CSS url() resolution ambiguity (CSS files in css/ resolve ./
+    // relative to their own location, not the document root).
+    const _docBase = (() => {
+        const b = (typeof document !== 'undefined' && document.baseURI) || location.href;
+        return b.slice(0, b.lastIndexOf('/') + 1);
+    })();
+    const _themeUrl = (name) => _docBase + 'theme/' + name + '.png';
+
+    let _firstApply  = true;
+    let _flashGuard  = null;
+    let _bgSecondary = null;
+    let _spinner     = null;
 
     function _themeOpts() {
         return {
@@ -117,20 +134,101 @@ function useNav() {
         };
     }
 
-    function _applyTheme(theme, useCustomBg) {
-        // Update body class immediately (drives CSS variables / glass style)
-        document.body.className = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
-        if (typeof LapisCore === 'undefined') return;
-        const skipAnimation = _firstApply;
-        if (_firstApply) _firstApply = false;
-        LapisCore.applyTheme(theme, useCustomBg, { ..._themeOpts(), skipAnimation });
+    // Preload an image src and wait for GPU decode (img.decode) when available.
+    function _preload(src) {
+        if (!src) return Promise.resolve(); // guard: never fire url('') ghost request
+        return new Promise(r => {
+            const img = new Image();
+            img.onload = () => {
+                (typeof img.decode === 'function' ? img.decode() : Promise.resolve())
+                    .catch(() => {}).then(r);
+            };
+            img.onerror = r;
+            img.src     = src;
+            setTimeout(r, 3000); // safety timeout
+        });
     }
 
-    // Exposed for same-tab direct calls (setting.js on customBg-only changes)
-    window.LapisNav = window.LapisNav || {};
-    window.LapisNav._applyTheme = () => _applyTheme(resolvedTheme.value, navSettings.useCustomBg);
+    async function _applyTheme(theme, useCustomBg) {
+        const cls     = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
+        const primary = document.querySelector('.bg-layer');
 
-    // ── Body class injection + theme watch ────────────────────────────────────
+        if (_firstApply) {
+            _firstApply = false;
+            document.body.className = cls;
+            if (_imgThemes.has(theme) && !useCustomBg) {
+                if (primary) primary.style.backgroundImage = `url('${_themeUrl(theme)}')`;
+            } else {
+                if (primary) primary.style.backgroundImage = '';
+            }
+            return;
+        }
+
+        if (_imgThemes.has(theme) && !useCustomBg) {
+            // ── Image theme: double-buffer cross-dissolve ─────────────────────
+            // Primary continues showing the OLD image (backgroundImage not yet updated).
+            // Secondary stages the NEW image directly.
+            const secondary = _getBgSecondary();
+            secondary.style.transition      = 'none';
+            secondary.style.opacity         = '0';
+            secondary.style.backgroundImage = `url('${_themeUrl(theme)}')`;
+            secondary.offsetHeight;
+
+            _showSpinner();
+            await _preload(_themeUrl(theme));
+            _hideSpinner();
+
+            // Update body class for text colours, glass styles, etc.
+            document.body.className = cls;
+
+            // Cross-dissolve: secondary (new) fades IN, primary (old CSS var) fades OUT
+            secondary.style.transition = 'opacity 0.6s ease';
+            secondary.style.opacity    = '1';
+            if (primary) {
+                primary.style.transition = 'opacity 0.6s ease';
+                primary.style.opacity    = '0';
+            }
+
+            await new Promise(r => setTimeout(r, 640));
+
+            // Commit: set primary backgroundImage to new image, then restore opacity.
+            // Secondary fades out behind it.
+            if (primary) {
+                primary.style.backgroundImage = `url('${_themeUrl(theme)}')`;
+                primary.style.transition = 'none';
+                primary.style.opacity    = '1';
+                primary.style.filter     = '';
+                primary.offsetHeight;
+            }
+            secondary.style.transition = 'opacity 0.4s ease';
+            secondary.style.opacity    = '0';
+
+        } else {
+            // ── Solid/gradient or custom bg: clear backgroundImage, use flash guard ─
+            if (primary) primary.style.backgroundImage = '';
+            const guard = _getFlashGuard();
+            guard.style.opacity = '1';
+
+            if (primary) {
+                primary.style.transition = 'none';
+                primary.style.opacity    = '0';
+                primary.style.filter     = 'blur(10px)';
+                primary.offsetHeight;
+            }
+
+            document.body.className = cls;
+            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+            if (primary) {
+                primary.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
+                primary.style.opacity    = '';
+                primary.style.filter     = '';
+            }
+            guard.style.opacity = '0';
+        }
+    }
+
+    // ── Body class injection ──────────────────────────────────────────────────
     watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
         if (_firstApply) { _applyTheme(theme, useCustomBg); return; }
         clearTimeout(_applyTimer);
@@ -159,20 +257,21 @@ function useNav() {
             };
         }
 
-        // lapis-ready gate: pre-decode theme image before revealing the page.
-        try {
-            if (typeof LapisCore !== 'undefined') {
-                const activeTheme = resolvedTheme.value;
-                const isImgTheme  = ['cherry','sky','sunset','sea','seaside','forest',
-                    'night','torii','mapleavenue','waterfall','starrysky','ferriswheel']
-                    .includes(activeTheme);
-                if (isImgTheme && !navSettings.useCustomBg) {
-                    await LapisCore.preloadImage('./theme/' + activeTheme + '.png');
-                } else if (navSettings.useCustomBg && navSettings.customBg) {
-                    await LapisCore.preloadImage(navSettings.customBg);
-                }
-            }
-        } catch (_) {}
+        // Restore custom background from IndexedDB (object URLs are session-scoped)
+        if (navSettings.useCustomBg && typeof ImageDB !== 'undefined') {
+            try {
+                const blob = await ImageDB.getBlob('custom-bg');
+                if (blob) navSettings.customBg = URL.createObjectURL(blob);
+            } catch (_) {}
+        }
+
+        // lapis-ready gate: decode the current theme image before lifting the
+        // body opacity cloak. Prevents cold-load blank frames on image themes.
+        const activeTheme = resolvedTheme.value;
+        if (_imgThemes.has(activeTheme) && !navSettings.useCustomBg) {
+            await _preload(_themeUrl(activeTheme));
+        }
+
         document.body.classList.add('lapis-ready');
 
         // Cross-tab sync
