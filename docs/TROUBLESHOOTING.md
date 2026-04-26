@@ -3,7 +3,51 @@
 
 ---
 
-## UI Blocking (Modal Cannot Be Clicked)
+## Black Screen on Load ✅ RESOLVED 2026-04-26
+
+**Symptom:** Page loads but stays completely black / invisible. No UI is shown.
+
+**Root Cause — opacity cloak never lifted:** Every HTML page starts with `body { opacity: 0 }`. `nav.js` adds the class `lapis-ready` (which sets `opacity: 1`) only after the initial theme image pre-decode completes. If anything in that async chain throws an uncaught exception, `lapis-ready` is never added and the body stays invisible.
+
+**Root Cause — invalid localStorage theme:** A theme string that is not in the valid set (e.g. a corrupted value) was loaded and matched no CSS rule, leaving the body with `--bg-main` unset (defaults to `#121212`). For dark image themes the solid fallback colour `#0d1117` is near-black — identical to a black screen.
+
+**Root Cause — concurrent overlapping transitions:** Rapid theme switching launched multiple concurrent `_applyTheme` async calls. The first call faded `primary.opacity` to `0`; the second call ran before the first restored it. If an error interrupted the second call's recovery path, primary was left at `opacity: 0`.
+
+**Fix (nav.js — all three causes resolved):**
+
+1. **`try-finally` lapis-ready gate** — `lapis-ready` is always added regardless of preload success/failure:
+```javascript
+try {
+    await _preload(_themeUrl(activeTheme));
+} catch (_) {}
+document.body.classList.add('lapis-ready'); // always executes
+```
+
+2. **`try-catch` in `_applyTheme`** with emergency opacity recovery:
+```javascript
+} catch (err) {
+    console.warn('[LapisNav] _applyTheme error, recovering:', err);
+    _hideSpinner();
+    document.body.className = cls;                     // correct body class applied
+    if (primary) { primary.style.opacity = '1'; ... }  // opacity ALWAYS restored
+    if (_bgSecondary) _bgSecondary.style.opacity = '0';
+}
+```
+
+3. **Theme validation at init** — invalid saved theme is reset to `'light'` before any rendering:
+```javascript
+if (_savedSettings.theme && !_validThemes.has(_savedSettings.theme)) {
+    _savedSettings.theme = 'light';
+}
+```
+
+4. **100 ms debounce** on the Vue theme watch prevents concurrent overlapping transitions.
+
+**Debug tip:** Open DevTools → Console and look for `[LapisNav] theme URL →` logs. This confirms the exact URL being requested. A 404 in the Network tab for that URL means the `theme/` directory is missing or pathing is wrong.
+
+---
+
+
 
 **Cause:** A lower z-index element has `position: relative/absolute` without explicit z-index, creating an unintended stacking context that traps the modal.
 

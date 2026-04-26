@@ -19,6 +19,18 @@ function useNav() {
     );
 
     // ── Shared theme state ─────────────────────────────────────────────────
+    const _validThemes = new Set([
+        'light', 'dark', 'system',
+        'cherry', 'sky', 'sunset', 'sea', 'seaside', 'forest', 'night', 'torii',
+        'mapleavenue', 'waterfall', 'starrysky', 'ferriswheel',
+    ]);
+    const _savedSettings = StorageProvider.getCommonSettings();
+    // Guard: invalid theme string in localStorage would boot into solid-color fallback
+    // that could look like a black screen on dark themes — reset to safe default.
+    if (_savedSettings.theme && !_validThemes.has(_savedSettings.theme)) {
+        console.warn('[LapisNav] invalid saved theme "' + _savedSettings.theme + '", resetting to light');
+        _savedSettings.theme = 'light';
+    }
     const navSettings = reactive({
         theme: 'light',           // default when localStorage is empty
         useCustomBg: false,
@@ -30,7 +42,7 @@ function useNav() {
         calendarInfoEnabled: true,
         showHolidayTags: true,
         showLunarDates: true,
-        ...StorageProvider.getCommonSettings()
+        ..._savedSettings
     });
 
     // ── Theme resolution ───────────────────────────────────────────────────
@@ -120,7 +132,11 @@ function useNav() {
         const b = (typeof document !== 'undefined' && document.baseURI) || location.href;
         return b.slice(0, b.lastIndexOf('/') + 1);
     })();
-    const _themeUrl = (name) => _docBase + 'theme/' + name + '.png';
+    const _themeUrl = (name) => {
+        const url = _docBase + 'theme/' + name + '.png';
+        console.debug('[LapisNav] theme URL →', url);
+        return url;
+    };
 
     let _firstApply  = true;
     let _flashGuard  = null;
@@ -164,71 +180,84 @@ function useNav() {
             return;
         }
 
-        if (_imgThemes.has(theme) && !useCustomBg) {
-            // ── Image theme: double-buffer cross-dissolve ─────────────────────
-            // Primary continues showing the OLD image (backgroundImage not yet updated).
-            // Secondary stages the NEW image directly.
-            const secondary = _getBgSecondary();
-            secondary.style.transition      = 'none';
-            secondary.style.opacity         = '0';
-            secondary.style.backgroundImage = `url('${_themeUrl(theme)}')`;
-            secondary.offsetHeight;
+        try {
+            if (_imgThemes.has(theme) && !useCustomBg) {
+                // ── Image theme: double-buffer cross-dissolve ─────────────────────
+                const bgUrl     = _themeUrl(theme);
+                const secondary = _getBgSecondary();
+                secondary.style.transition      = 'none';
+                secondary.style.opacity         = '0';
+                secondary.style.backgroundImage = `url('${bgUrl}')`;
+                secondary.offsetHeight;
 
-            _showSpinner();
-            await _preload(_themeUrl(theme));
+                _showSpinner();
+                await _preload(bgUrl);
+                _hideSpinner();
+
+                document.body.className = cls;
+
+                secondary.style.transition = 'opacity 0.6s ease';
+                secondary.style.opacity    = '1';
+                if (primary) {
+                    primary.style.transition = 'opacity 0.6s ease';
+                    primary.style.opacity    = '0';
+                }
+
+                await new Promise(r => setTimeout(r, 640));
+
+                if (primary) {
+                    primary.style.backgroundImage = `url('${bgUrl}')`;
+                    primary.style.transition      = 'none';
+                    primary.style.opacity         = '1';
+                    primary.style.filter          = '';
+                    primary.offsetHeight;
+                }
+                secondary.style.transition = 'opacity 0.4s ease';
+                secondary.style.opacity    = '0';
+
+            } else {
+                // ── Solid/gradient or custom bg: clear backgroundImage, flash guard ─
+                if (primary) primary.style.backgroundImage = '';
+                const guard = _getFlashGuard();
+                guard.style.opacity = '1';
+
+                if (primary) {
+                    primary.style.transition = 'none';
+                    primary.style.opacity    = '0';
+                    primary.style.filter     = 'blur(10px)';
+                    primary.offsetHeight;
+                }
+
+                document.body.className = cls;
+                await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+                if (primary) {
+                    primary.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
+                    primary.style.opacity    = '';
+                    primary.style.filter     = '';
+                }
+                guard.style.opacity = '0';
+            }
+        } catch (err) {
+            // Emergency fallback: any uncaught error must NOT leave the page invisible.
+            // Restore body class and force primary layer to opacity:1 with no background-image
+            // so the body's --bg-main solid colour is always visible.
+            console.warn('[LapisNav] _applyTheme error, recovering:', err);
             _hideSpinner();
-
-            // Update body class for text colours, glass styles, etc.
             document.body.className = cls;
-
-            // Cross-dissolve: secondary (new) fades IN, primary (old CSS var) fades OUT
-            secondary.style.transition = 'opacity 0.6s ease';
-            secondary.style.opacity    = '1';
             if (primary) {
-                primary.style.transition = 'opacity 0.6s ease';
-                primary.style.opacity    = '0';
+                primary.style.transition      = 'none';
+                primary.style.opacity         = '1';
+                primary.style.backgroundImage = '';
             }
-
-            await new Promise(r => setTimeout(r, 640));
-
-            // Commit: set primary backgroundImage to new image, then restore opacity.
-            // Secondary fades out behind it.
-            if (primary) {
-                primary.style.backgroundImage = `url('${_themeUrl(theme)}')`;
-                primary.style.transition = 'none';
-                primary.style.opacity    = '1';
-                primary.style.filter     = '';
-                primary.offsetHeight;
-            }
-            secondary.style.transition = 'opacity 0.4s ease';
-            secondary.style.opacity    = '0';
-
-        } else {
-            // ── Solid/gradient or custom bg: clear backgroundImage, use flash guard ─
-            if (primary) primary.style.backgroundImage = '';
-            const guard = _getFlashGuard();
-            guard.style.opacity = '1';
-
-            if (primary) {
-                primary.style.transition = 'none';
-                primary.style.opacity    = '0';
-                primary.style.filter     = 'blur(10px)';
-                primary.offsetHeight;
-            }
-
-            document.body.className = cls;
-            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-            if (primary) {
-                primary.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
-                primary.style.opacity    = '';
-                primary.style.filter     = '';
-            }
-            guard.style.opacity = '0';
+            if (_bgSecondary) _bgSecondary.style.opacity = '0';
         }
     }
 
     // ── Body class injection ──────────────────────────────────────────────────
+    // Debounce prevents concurrent overlapping async transitions (rapid theme clicks)
+    // which would leave primary opacity:0. First apply bypasses debounce (page hidden).
+    let _applyTimer = null;
     watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
         if (_firstApply) { _applyTheme(theme, useCustomBg); return; }
         clearTimeout(_applyTimer);
@@ -265,13 +294,15 @@ function useNav() {
             } catch (_) {}
         }
 
-        // lapis-ready gate: decode the current theme image before lifting the
-        // body opacity cloak. Prevents cold-load blank frames on image themes.
-        const activeTheme = resolvedTheme.value;
-        if (_imgThemes.has(activeTheme) && !navSettings.useCustomBg) {
-            await _preload(_themeUrl(activeTheme));
-        }
-
+        // lapis-ready gate: pre-decode theme image before revealing the page.
+        // try-catch GUARANTEES lapis-ready is always added — any uncaught error
+        // here would otherwise leave body at opacity:0 (permanent black screen).
+        try {
+            const activeTheme = resolvedTheme.value;
+            if (_imgThemes.has(activeTheme) && !navSettings.useCustomBg) {
+                await _preload(_themeUrl(activeTheme));
+            }
+        } catch (_) {}
         document.body.classList.add('lapis-ready');
 
         // Cross-tab sync

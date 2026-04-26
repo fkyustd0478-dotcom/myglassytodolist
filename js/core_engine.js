@@ -18,6 +18,22 @@ window.LapisCore = (() => {
         'mapleavenue', 'waterfall', 'starrysky', 'ferriswheel',
     ]);
 
+    // ── Asset path helper ─────────────────────────────────────────────────────
+    // Builds an absolute URL from document.baseURI so theme images resolve
+    // correctly in GitHub Pages sub-directory deployments (e.g.
+    // https://user.github.io/repo-name/theme/cherry.png) and avoid the CSS
+    // url() context ambiguity where ../theme/ in a <style> tag jumps above
+    // the repo root, giving /theme/ 404s.
+    const _docBase = (() => {
+        const b = (typeof document !== 'undefined' && document.baseURI) || location.href;
+        return b.slice(0, b.lastIndexOf('/') + 1);
+    })();
+    function _themeUrl(name) {
+        const url = _docBase + 'theme/' + name + '.png';
+        console.debug('[LapisCore] theme URL →', url);
+        return url;
+    }
+
     // ── Double-buffer state ───────────────────────────────────────────────────
     let _activeLayerId = 'a';
     function _bgLayer(id) { return document.getElementById('bg-layer-' + id); }
@@ -91,7 +107,7 @@ window.LapisCore = (() => {
         const hasCustBg     = useCustomBg && customBg;
         const bgUrl         = hasCustBg
             ? customBg
-            : (_imgThemes.has(theme) ? `../theme/${theme}.png` : '');
+            : (_imgThemes.has(theme) ? _themeUrl(theme) : '');
         const targetOpacity = hasCustBg ? (1 - customBgOpacity) : 1;
 
         const nextId  = _otherId(_activeLayerId);
