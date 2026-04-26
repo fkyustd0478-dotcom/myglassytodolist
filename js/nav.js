@@ -249,9 +249,15 @@ function useNav() {
             if (e.key !== 'todo_settings' || !e.newValue) return;
             try {
                 const s = JSON.parse(e.newValue);
-                if (s.theme      !== undefined && s.theme      !== navSettings.theme)      navSettings.theme      = s.theme;
-                if (s.useCustomBg !== undefined && s.useCustomBg !== navSettings.useCustomBg) navSettings.useCustomBg = s.useCustomBg;
-                if (s.lang       !== undefined && s.lang       !== navSettings.lang)       navSettings.lang       = s.lang;
+                if (s.theme           !== undefined && s.theme           !== navSettings.theme)           navSettings.theme           = s.theme;
+                if (s.useCustomBg     !== undefined && s.useCustomBg     !== navSettings.useCustomBg)     navSettings.useCustomBg     = s.useCustomBg;
+                if (s.customBgOpacity !== undefined && s.customBgOpacity !== navSettings.customBgOpacity) navSettings.customBgOpacity = s.customBgOpacity;
+                if (s.lang            !== undefined && s.lang            !== navSettings.lang)            navSettings.lang            = s.lang;
+                // customBg change requires explicit repaint (Vue watch only tracks theme/useCustomBg)
+                if (s.customBg !== undefined && s.customBg !== navSettings.customBg) {
+                    navSettings.customBg = s.customBg;
+                    _applyTheme(resolvedTheme.value, navSettings.useCustomBg);
+                }
             } catch (_) {}
         };
         window.addEventListener('storage', _onStorage);

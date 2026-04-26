@@ -270,7 +270,7 @@ createApp({
             navSettings.showLunarDates      = val.showLunarDates;
             navSettings.showWeightChart     = val.showWeightChart;
             navSettings.workoutCatCharts    = val.workoutCatCharts;
-            if (val.customBg) navSettings.customBg = val.customBg;
+            navSettings.customBg = val.customBg;
         }, { deep: true });
 
         watch(() => settings.value.effect, (newEffect) => {

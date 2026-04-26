@@ -229,7 +229,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
             const openWeightDatePicker = () => {
                 if (_wdPicker && metrics) {
-                    const [y, m, d] = metrics.weightForm.date.split('-').map(Number);
+                    const dateStr = metrics.weightForm.date || toLocalISO(Date.now());
+                    const [y, m, d] = dateStr.split('-').map(Number);
                     _wdPicker.setValue(y, m, d);
                 }
                 showWeightDatePicker.value = true;

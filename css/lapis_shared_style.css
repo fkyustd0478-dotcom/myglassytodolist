@@ -526,7 +526,7 @@ body.theme-waterfall  ::-webkit-scrollbar-thumb:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 1rem;
     font-weight: 700;
     scroll-snap-align: center;
     cursor: pointer;
@@ -539,16 +539,28 @@ body.theme-waterfall  ::-webkit-scrollbar-thumb:hover {
                 font-size 0.12s ease;
     opacity: 0.30;
     letter-spacing: -0.01em;
+    color: #333;
 }
 .lapis-picker-item:active { opacity: 0.55; }
+
+/* Dark themes: override picker item color to stay readable */
+body.theme-dark         .lapis-picker-item,
+body.theme-forest       .lapis-picker-item,
+body.theme-night        .lapis-picker-item,
+body.theme-torii        .lapis-picker-item,
+body.theme-starrysky    .lapis-picker-item,
+body.theme-ferriswheel  .lapis-picker-item,
+body.theme-sea          .lapis-picker-item,
+body.theme-sunset       .lapis-picker-item,
+body.theme-sky          .lapis-picker-item { color: rgba(255, 255, 255, 0.75); }
 
 /* Centred / active row — glassmorphic: full opacity + size, no hue shift */
 .lapis-picker-active {
     opacity: 1 !important;
     color: var(--glass-text-primary) !important;
     transform: scale(1.10) !important;
-    font-size: 17px !important;
-    font-weight: 900 !important;
+    font-size: 1.4rem !important;
+    font-weight: 800 !important;
 }
 
 /* Selection indicator line (straddles the centre row) */
