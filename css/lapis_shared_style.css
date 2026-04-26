@@ -559,9 +559,18 @@ body.theme-sky          .lapis-picker-item { color: rgba(255, 255, 255, 0.75); }
     opacity: 1 !important;
     color: var(--glass-text-primary) !important;
     transform: scale(1.10) !important;
-    font-size: 1.4rem !important;
+    font-size: 1.5rem !important;
     font-weight: 800 !important;
 }
+
+/* Light themes: force active item to absolute black for maximum contrast */
+body.theme-light        .lapis-picker-active,
+body.theme-cherry       .lapis-picker-active,
+body.theme-sky          .lapis-picker-active,
+body.theme-seaside      .lapis-picker-active,
+body.theme-sunset       .lapis-picker-active,
+body.theme-mapleavenue  .lapis-picker-active,
+body.theme-waterfall    .lapis-picker-active { color: #000 !important; }
 
 /* Selection indicator line (straddles the centre row) */
 .lapis-picker-line {

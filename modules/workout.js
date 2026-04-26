@@ -228,12 +228,14 @@ window.addEventListener('DOMContentLoaded', () => {
             let _wdPicker = null;
 
             const openWeightDatePicker = () => {
-                if (_wdPicker && metrics) {
-                    const dateStr = metrics.weightForm.date || toLocalISO(Date.now());
-                    const [y, m, d] = dateStr.split('-').map(Number);
-                    _wdPicker.setValue(y, m, d);
-                }
                 showWeightDatePicker.value = true;
+                nextTick(() => {
+                    if (_wdPicker && metrics) {
+                        const dateStr = metrics.weightForm.date || toLocalISO(Date.now());
+                        const [y, m, d] = dateStr.split('-').map(Number);
+                        _wdPicker.setValue(y, m, d);
+                    }
+                });
             };
             const closeWeightDatePicker   = () => { showWeightDatePicker.value = false; };
             const confirmWeightDatePicker = () => {
