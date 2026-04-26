@@ -1,13 +1,28 @@
 # LAPIS PROJECT — CONTEXT.md
 > **Documentation Hub** — entry point for all LLM-assisted development.
-> Last audited: 2026-04-24
+> Last audited: 2026-04-26
 
-| Sub-document | Contents |
+## Documentation Map
+
+### Rulebook
+| File | Role |
+|---|---|
+| [`CLAUDE.md`](./CLAUDE.md) | AI coding standards, guardrails, naming/date/asset rules |
+
+### Manifests (this file + sub-indexes)
+| File | Contents |
 |---|---|
 | [`docs/DATA_SCHEMAS.md`](./docs/DATA_SCHEMAS.md) | localStorage keys, JSON schemas, IndexedDB API |
-| [`docs/TROUBLESHOOTING.md`](./docs/TROUBLESHOOTING.md) | Known issues, debug notes, resolved error history |
 | [`docs/SOP_REGISTRY.md`](./docs/SOP_REGISTRY.md) | SOP-01 → SOP-07 standard procedures |
 | [`docs/LOGIC_DEEP_DIVE.md`](./docs/LOGIC_DEEP_DIVE.md) | PR calculation, salary logic, recurring tasks, nav detection |
+
+### Tech Manuals (implementation details & bug history)
+| File | Contents |
+|---|---|
+| [`docs/theme_engine.md`](./docs/theme_engine.md) | Double-buffer background engine, `_applyTheme`, Base64 storage, cross-tab sync |
+| [`docs/date_logic.md`](./docs/date_logic.md) | UTC rollback bug, 1970 picker bug, `ts` storage rule, safe date parsing |
+| [`docs/TROUBLESHOOTING.md`](./docs/TROUBLESHOOTING.md) | Known UI issues, z-index conflicts, picker freeze, theme flash |
+| [`docs/UI_HARDENING.md`](./docs/UI_HARDENING.md) | UI edge cases and hardening notes |
 
 ---
 
@@ -34,10 +49,12 @@ myglassytodolist/
 ├── setting.html        → App settings (theme, calendar, user profile)
 │
 ├── docs/               → Documentation hub (sub-documents)
-│   ├── DATA_SCHEMAS.md
-│   ├── TROUBLESHOOTING.md
-│   ├── SOP_REGISTRY.md
-│   └── LOGIC_DEEP_DIVE.md
+│   ├── DATA_SCHEMAS.md       → localStorage keys, JSON schemas
+│   ├── TROUBLESHOOTING.md    → Known issues & resolved bugs
+│   ├── SOP_REGISTRY.md       → Standard operating procedures
+│   ├── LOGIC_DEEP_DIVE.md    → PR calc, salary, recurring logic
+│   ├── theme_engine.md       → Background double-buffer engine
+│   └── date_logic.md         → Date init, 1970 bug, UTC fix
 │
 ├── css/
 │   ├── shared_theme.css       → Global CSS vars: --glass-bg, --primary, --text-*
