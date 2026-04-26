@@ -184,7 +184,8 @@ createApp({
                 await new Promise(r => {
                     const img = new Image();
                     img.onload = img.onerror = r;
-                    img.src = `./theme/${theme}.png`;
+                    const base = (() => { const b = document.baseURI || location.href; return b.slice(0, b.lastIndexOf('/') + 1); })();
+                    img.src = base + `theme/${theme}.png`;
                     setTimeout(r, 3000);
                 });
             }

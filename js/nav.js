@@ -111,6 +111,17 @@ function useNav() {
         'cherry','sky','sunset','sea','seaside','forest','night','torii',
         'mapleavenue','waterfall','starrysky','ferriswheel'
     ]);
+
+    // Compute absolute base URL from document.baseURI so theme image paths
+    // resolve correctly in GitHub Pages sub-directory deployments and avoid
+    // the CSS url() resolution ambiguity (CSS files in css/ resolve ./
+    // relative to their own location, not the document root).
+    const _docBase = (() => {
+        const b = (typeof document !== 'undefined' && document.baseURI) || location.href;
+        return b.slice(0, b.lastIndexOf('/') + 1);
+    })();
+    const _themeUrl = (name) => _docBase + 'theme/' + name + '.png';
+
     let _firstApply  = true;
     let _flashGuard  = null;
     let _bgSecondary = null;
@@ -172,6 +183,7 @@ function useNav() {
 
     // Preload an image src and wait for GPU decode (img.decode) when available.
     function _preload(src) {
+        if (!src) return Promise.resolve(); // guard: never fire url('') ghost request
         return new Promise(r => {
             const img = new Image();
             img.onload = () => {
@@ -192,7 +204,7 @@ function useNav() {
             _firstApply = false;
             document.body.className = cls;
             if (_imgThemes.has(theme) && !useCustomBg) {
-                if (primary) primary.style.backgroundImage = `url('./theme/${theme}.png')`;
+                if (primary) primary.style.backgroundImage = `url('${_themeUrl(theme)}')`;
             } else {
                 if (primary) primary.style.backgroundImage = '';
             }
@@ -206,11 +218,11 @@ function useNav() {
             const secondary = _getBgSecondary();
             secondary.style.transition      = 'none';
             secondary.style.opacity         = '0';
-            secondary.style.backgroundImage = `url('./theme/${theme}.png')`;
+            secondary.style.backgroundImage = `url('${_themeUrl(theme)}')`;
             secondary.offsetHeight;
 
             _showSpinner();
-            await _preload('./theme/' + theme + '.png');
+            await _preload(_themeUrl(theme));
             _hideSpinner();
 
             // Update body class for text colours, glass styles, etc.
@@ -229,7 +241,7 @@ function useNav() {
             // Commit: set primary backgroundImage to new image, then restore opacity.
             // Secondary fades out behind it.
             if (primary) {
-                primary.style.backgroundImage = `url('./theme/${theme}.png')`;
+                primary.style.backgroundImage = `url('${_themeUrl(theme)}')`;
                 primary.style.transition = 'none';
                 primary.style.opacity    = '1';
                 primary.style.filter     = '';
@@ -296,7 +308,7 @@ function useNav() {
         // body opacity cloak. Prevents cold-load blank frames on image themes.
         const activeTheme = resolvedTheme.value;
         if (_imgThemes.has(activeTheme) && !navSettings.useCustomBg) {
-            await _preload('./theme/' + activeTheme + '.png');
+            await _preload(_themeUrl(activeTheme));
         }
         document.body.classList.add('lapis-ready');
 
