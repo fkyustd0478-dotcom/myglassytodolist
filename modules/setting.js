@@ -1,5 +1,5 @@
 // setting.js — Settings page Vue app v1.2
-// Depends on: storage.js (StorageProvider, ImageDB), nav.js (useNav)
+// Depends on: storage.js (StorageProvider), nav.js (useNav)
 
 const { createApp, ref, computed, watch, nextTick, onMounted, onUnmounted } = Vue;
 
@@ -33,8 +33,7 @@ createApp({
             ...StorageProvider.getCommonSettings()
         });
 
-        const fileInput        = ref(null);
-        const currentObjectUrl = ref(null);
+        const fileInput = ref(null);
 
         // ── Dynamic exercise categories (from Action Library) ──────────────
         const availableCategories = ref(
@@ -193,33 +192,56 @@ createApp({
             fileInput.value && fileInput.value.click();
         };
 
-        const handleUpload = async (e) => {
+        const _MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+
+        // Resize image via canvas until data URL is within _MAX_BYTES.
+        function _resizeToLimit(dataUrl) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.naturalWidth, h = img.naturalHeight;
+                    let quality = 0.85;
+                    const canvas = document.createElement('canvas');
+                    const tryEncode = () => {
+                        canvas.width  = w;
+                        canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        const result = canvas.toDataURL('image/jpeg', quality);
+                        if (result.length <= _MAX_BYTES || quality < 0.25) {
+                            resolve(result);
+                        } else {
+                            // Reduce quality first, then dimensions
+                            quality > 0.4 ? (quality -= 0.15) : (w = Math.round(w * 0.75), h = Math.round(h * 0.75), quality = 0.75);
+                            tryEncode();
+                        }
+                    };
+                    tryEncode();
+                };
+                img.src = dataUrl;
+            });
+        }
+
+        const handleUpload = (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            try {
-                await ImageDB.saveBlob('custom-bg', file);
-                if (currentObjectUrl.value) URL.revokeObjectURL(currentObjectUrl.value);
-                const blob = await ImageDB.getBlob('custom-bg');
-                const objectUrl = URL.createObjectURL(blob);
-                // Preload image so custom-bg-layer opacity transition is smooth
-                await new Promise(r => {
-                    const img = new Image();
-                    img.onload = img.onerror = r;
-                    img.src = objectUrl;
-                });
-                currentObjectUrl.value = objectUrl;
-                settings.value.customBg = objectUrl;
-                settings.value.useCustomBg = true;
-            } catch (err) {
-                console.error('Upload failed', err);
-            }
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    let dataUrl = ev.target.result;
+                    if (dataUrl.length > _MAX_BYTES) {
+                        dataUrl = await _resizeToLimit(dataUrl);
+                    }
+                    settings.value.customBg    = dataUrl;
+                    settings.value.useCustomBg = true;
+                } catch (err) {
+                    console.error('[Lapis] Upload failed', err);
+                }
+            };
+            reader.readAsDataURL(file);
         };
 
-        const clearCustomBg = async () => {
-            try { await ImageDB.deleteBlob('custom-bg'); } catch (_) {}
-            if (currentObjectUrl.value) URL.revokeObjectURL(currentObjectUrl.value);
-            currentObjectUrl.value = null;
-            settings.value.customBg = '';
+        const clearCustomBg = () => {
+            settings.value.customBg    = '';
             settings.value.useCustomBg = false;
         };
 
@@ -264,16 +286,7 @@ createApp({
             if (typeof LapisModal !== 'undefined') LapisModal.init();
             if (window.lucide) lucide.createIcons();
 
-            if (settings.value.useCustomBg) {
-                try {
-                    const blob = await ImageDB.getBlob('custom-bg');
-                    if (blob) {
-                        if (currentObjectUrl.value) URL.revokeObjectURL(currentObjectUrl.value);
-                        currentObjectUrl.value = URL.createObjectURL(blob);
-                        settings.value.customBg = currentObjectUrl.value;
-                    }
-                } catch (_) {}
-            }
+            // Custom bg is stored as Base64 in localStorage; no restore needed.
             if (window.ParticleEngine) ParticleEngine.setEffect(settings.value.effect);
 
             // Live OS dark/light sync

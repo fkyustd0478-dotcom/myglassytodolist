@@ -106,15 +106,16 @@ function useNav() {
     let _mqCleanup      = null;
     let _storageCleanup = null;
 
-    // ── Background transition system ──────────────────────────────────────────
+    // ── Double-Buffer Background Engine ───────────────────────────────────────
+    // Uses two static layers (#bg-layer-a / #bg-layer-b) from the HTML.
+    // img.decode() ensures GPU decompression before making a layer visible.
     const _imgThemes = new Set([
         'cherry','sky','sunset','sea','seaside','forest','night','torii',
         'mapleavenue','waterfall','starrysky','ferriswheel'
     ]);
-    let _firstApply  = true;
-    let _flashGuard  = null;
-    let _bgSecondary = null;
-    let _spinner     = null;
+    let _firstApply    = true;
+    let _activeLayerId = 'a';   // tracks which layer is currently shown
+    let _spinner       = null;
 
     function _showSpinner() {
         if (!_spinner) {
@@ -126,141 +127,80 @@ function useNav() {
     }
     function _hideSpinner() { if (_spinner) _spinner.style.opacity = '0'; }
 
-    // Flash guard: subtle dark-blur overlay for solid-theme transitions.
-    function _getFlashGuard() {
-        if (!_flashGuard) {
-            _flashGuard = document.createElement('div');
-            _flashGuard.id = 'lapis-flash-guard';
-            _flashGuard.style.cssText = [
-                'position:fixed', 'inset:0', 'z-index:9998',
-                'backdrop-filter:blur(18px)', '-webkit-backdrop-filter:blur(18px)',
-                'background:rgba(12,12,22,0.18)',
-                'opacity:0', 'transition:opacity 0.18s ease',
-                'pointer-events:none'
-            ].join(';');
-            document.body.appendChild(_flashGuard);
-        }
-        return _flashGuard;
-    }
+    function _bgLayer(id) { return document.getElementById('bg-layer-' + id); }
+    function _otherId(id)  { return id === 'a' ? 'b' : 'a'; }
 
-    // Secondary bg layer for double-buffer cross-dissolve.
-    // Inserted immediately after .bg-layer so same z-index (0) stacks on top via DOM order.
-    function _getBgSecondary() {
-        if (!_bgSecondary) {
-            _bgSecondary = document.createElement('div');
-            _bgSecondary.id = 'lapis-bg-secondary';
-            _bgSecondary.style.cssText = [
-                'position:fixed', 'top:0', 'left:0',
-                'width:100%', 'height:100%',
-                'z-index:0',
-                'pointer-events:none',
-                'opacity:0',
-                'background-size:cover',
-                'background-position:center',
-                'background-attachment:fixed',
-                'will-change:opacity'
-            ].join(';');
-            const primary = document.querySelector('.bg-layer');
-            if (primary && primary.parentNode) {
-                primary.parentNode.insertBefore(_bgSecondary, primary.nextSibling);
-            } else {
-                document.body.appendChild(_bgSecondary);
-            }
-        }
-        return _bgSecondary;
-    }
-
-    // Preload an image src and wait for GPU decode (img.decode) when available.
-    // Returns a Promise that resolves once the asset is paint-ready.
-    function _preload(src) {
-        return new Promise(r => {
+    // Decode an image URL off-screen; resolves when GPU-ready (or after 3 s).
+    function _decodeImage(src) {
+        return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => {
                 (typeof img.decode === 'function' ? img.decode() : Promise.resolve())
-                    .catch(() => {}).then(r);
+                    .catch(() => {}).then(resolve);
             };
-            img.onerror = r;
-            img.src     = src;
-            setTimeout(r, 3000); // safety timeout
+            img.onerror = resolve; // silent — let caller handle missing asset
+            img.src = src;
+            setTimeout(resolve, 3000); // safety net
         });
     }
 
     async function _applyTheme(theme, useCustomBg) {
         const cls     = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
-        const primary = document.querySelector('.bg-layer');
+        const hasCustBg = useCustomBg && navSettings.customBg;
+        const bgUrl   = hasCustBg
+            ? navSettings.customBg
+            : (_imgThemes.has(theme) ? `./theme/${theme}.png` : '');
+        const targetOpacity = hasCustBg ? (1 - (navSettings.customBgOpacity || 0)) : 1;
+
+        // Update body class immediately (drives CSS variables / glass style)
+        document.body.className = cls;
+
+        const nextId  = _otherId(_activeLayerId);
+        const current = _bgLayer(_activeLayerId);
+        const next    = _bgLayer(nextId);
+
+        if (!next) return; // bg-system not in DOM (safety guard)
 
         if (_firstApply) {
             _firstApply = false;
-            document.body.className = cls;
-            if (_imgThemes.has(theme) && !useCustomBg) {
-                if (primary) primary.style.backgroundImage = `url('./theme/${theme}.png')`;
-            } else {
-                if (primary) primary.style.backgroundImage = '';
+            if (bgUrl) {
+                next.style.backgroundImage = `url('${bgUrl}')`;
+                next.style.setProperty('--lapis-bg-opacity', targetOpacity);
+                next.classList.add('active');
+                if (current) current.classList.remove('active');
+                _activeLayerId = nextId;
             }
+            // Solid/gradient theme: layers stay transparent; #lapis-bg-system
+            // renders body's var(--bg-main) gradient as the background.
             return;
         }
 
-        if (_imgThemes.has(theme) && !useCustomBg) {
-            // ── Image theme: double-buffer cross-dissolve ─────────────────────
-            // Primary continues showing the OLD image (backgroundImage not yet updated).
-            // Secondary stages the NEW image directly.
-            const secondary = _getBgSecondary();
-            secondary.style.transition      = 'none';
-            secondary.style.opacity         = '0';
-            secondary.style.backgroundImage = `url('./theme/${theme}.png')`;
-            secondary.offsetHeight;
+        try {
+            if (bgUrl) {
+                // Stage the new image on the inactive layer (invisible)
+                next.classList.remove('active');
+                next.style.removeProperty('--lapis-bg-opacity');
+                next.style.backgroundImage = `url('${bgUrl}')`;
 
-            _showSpinner();
-            await _preload('./theme/' + theme + '.png');
+                _showSpinner();
+                await _decodeImage(bgUrl);
+                _hideSpinner();
+
+                // Apply & swap with opacity transition
+                next.style.setProperty('--lapis-bg-opacity', targetOpacity);
+                next.classList.add('active');
+                if (current) current.classList.remove('active');
+                _activeLayerId = nextId;
+            } else {
+                // Solid/gradient theme — clear both layers; #lapis-bg-system shows gradient
+                if (current) current.classList.remove('active');
+                next.classList.remove('active');
+                next.style.backgroundImage = '';
+                _activeLayerId = nextId;
+            }
+        } catch (err) {
             _hideSpinner();
-
-            // Update body class for text colours, glass styles, etc.
-            document.body.className = cls;
-
-            // Cross-dissolve: secondary (new) fades IN, primary (old CSS var) fades OUT
-            secondary.style.transition = 'opacity 0.6s ease';
-            secondary.style.opacity    = '1';
-            if (primary) {
-                primary.style.transition = 'opacity 0.6s ease';
-                primary.style.opacity    = '0';
-            }
-
-            await new Promise(r => setTimeout(r, 640));
-
-            // Commit: set primary backgroundImage to new image, then restore opacity.
-            // Secondary fades out behind it.
-            if (primary) {
-                primary.style.backgroundImage = `url('./theme/${theme}.png')`;
-                primary.style.transition = 'none';
-                primary.style.opacity    = '1';
-                primary.style.filter     = '';
-                primary.offsetHeight;
-            }
-            secondary.style.transition = 'opacity 0.4s ease';
-            secondary.style.opacity    = '0';
-
-        } else {
-            // ── Solid/gradient or custom bg: clear backgroundImage, use flash guard ─
-            if (primary) primary.style.backgroundImage = '';
-            const guard = _getFlashGuard();
-            guard.style.opacity = '1';
-
-            if (primary) {
-                primary.style.transition = 'none';
-                primary.style.opacity    = '0';
-                primary.style.filter     = 'blur(10px)';
-                primary.offsetHeight;
-            }
-
-            document.body.className = cls;
-            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-            if (primary) {
-                primary.style.transition = 'opacity 0.8s cubic-bezier(0.4,0,0.2,1), filter 0.8s ease';
-                primary.style.opacity    = '';
-                primary.style.filter     = '';
-            }
-            guard.style.opacity = '0';
+            console.warn('[Lapis] Background swap failed:', err);
         }
     }
 
@@ -268,6 +208,13 @@ function useNav() {
     watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
         _applyTheme(theme, useCustomBg);
     }, { immediate: true });
+
+    // Live opacity update when custom-bg slider moves
+    watch(() => navSettings.customBgOpacity, (opacity) => {
+        if (!navSettings.useCustomBg) return;
+        const active = _bgLayer(_activeLayerId);
+        if (active) active.style.setProperty('--lapis-bg-opacity', 1 - opacity);
+    });
 
     onMounted(async () => {
         _updateTitle();
@@ -285,20 +232,15 @@ function useNav() {
             };
         }
 
-        // Restore custom background from IndexedDB (object URLs are session-scoped)
-        if (navSettings.useCustomBg && typeof ImageDB !== 'undefined') {
-            try {
-                const blob = await ImageDB.getBlob('custom-bg');
-                if (blob) navSettings.customBg = URL.createObjectURL(blob);
-            } catch (_) {}
-        }
-
-        // lapis-ready gate: decode the current theme image before lifting the
-        // body opacity cloak. Prevents cold-load blank frames on image themes.
-        const activeTheme = resolvedTheme.value;
-        if (_imgThemes.has(activeTheme) && !navSettings.useCustomBg) {
-            await _preload('./theme/' + activeTheme + '.png');
-        }
+        // lapis-ready gate: GPU-decode the active theme image before revealing the page.
+        try {
+            const activeTheme = resolvedTheme.value;
+            if (_imgThemes.has(activeTheme) && !navSettings.useCustomBg) {
+                await _decodeImage('./theme/' + activeTheme + '.png');
+            } else if (navSettings.useCustomBg && navSettings.customBg) {
+                await _decodeImage(navSettings.customBg);
+            }
+        } catch (_) {}
         document.body.classList.add('lapis-ready');
 
         // Cross-tab theme sync: when any tab saves new settings to localStorage,

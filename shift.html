@@ -33,13 +33,13 @@
     <script src="./modules/shift.js?v=4.2" defer></script>
 </head>
 <body>
+<div id="lapis-bg-system">
+    <div id="bg-layer-a" class="lapis-bg-layer active"></div>
+    <div id="bg-layer-b" class="lapis-bg-layer"></div>
+</div>
 <div id="app" v-cloak
      :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]"
      style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;">
-
-    <!-- Background Layers -->
-    <div class="bg-layer"></div>
-    <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
     <!-- ── Header (z-10001) ─────────────────────────────────────────────── -->
     <!-- LapisNav.inject() inserts the top nav capsule above this element -->

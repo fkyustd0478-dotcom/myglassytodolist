@@ -115,9 +115,6 @@ body.theme-ferriswheel {
 body.using-custom-bg {
     --bg-main: #ffffff !important;
 }
-body.using-custom-bg .bg-layer {
-    display: none !important;
-}
 
 /* ── Base Layer ──────────────────────────────────────────────────────────── */
 body {
@@ -404,4 +401,31 @@ body {
 }
 @keyframes lapis-spin {
     to { transform: rotate(360deg); }
+}
+
+/* ── Ironclad Double-Buffer Background System ─────────────────────────── */
+/* Rendered outside Vue — immune to v-cloak and framework load timing.     */
+#lapis-bg-system {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-color: #0d0d0d;          /* absolute fallback before JS */
+    background: var(--bg-main, #0d0d0d); /* inherits theme gradient from body */
+    pointer-events: none;
+}
+
+.lapis-bg-layer {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    will-change: opacity;
+}
+
+/* --lapis-bg-opacity lets JS set fractional opacity (used for custom-bg slider) */
+.lapis-bg-layer.active {
+    opacity: var(--lapis-bg-opacity, 1);
 }

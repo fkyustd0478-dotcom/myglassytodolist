@@ -96,14 +96,15 @@
     </style>
 </head>
 <body>
+<div id="lapis-bg-system">
+    <div id="bg-layer-a" class="lapis-bg-layer active"></div>
+    <div id="bg-layer-b" class="lapis-bg-layer"></div>
+</div>
 
 <div id="app" v-cloak
      :style="themeStyle"
      :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode']"
      style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;">
-
-    <div class="bg-layer"></div>
-    <div class="custom-bg-layer" :style="customBgStyle"></div>
 
     <!-- ── Toast ──────────────────────────────────────────────────────────── -->
     <transition name="fade">
