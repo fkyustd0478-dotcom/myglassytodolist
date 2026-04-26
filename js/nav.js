@@ -146,7 +146,6 @@ function useNav() {
     // ── Body class injection ──────────────────────────────────────────────────
     // Debounce prevents concurrent overlapping async transitions (rapid theme clicks)
     // which would leave primary opacity:0. First apply bypasses debounce (page hidden).
-    let _applyTimer = null;
     watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
         if (_firstApply) { _applyTheme(theme, useCustomBg); return; }
         clearTimeout(_applyTimer);
