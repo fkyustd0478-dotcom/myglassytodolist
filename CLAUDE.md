@@ -44,7 +44,37 @@
 * `toLocalISO` uses `getFullYear()` / `getMonth()+1` / `getDate()` which respect the device timezone.
 * Safe date-only string → Date object: `new Date('YYYY-MM-DDT00:00:00')` (with time, no timezone suffix) → LOCAL midnight per ECMAScript spec.
 
-## 5. Workflow & Verification
+## 5. Data & Logic Architecture
+
+### `modules/workout_config.js`
+* API: `WorkoutConfig.getAvailableExerciseCategories()` → `Array<{ main:{name,nameZh}, subs:[{name,nameZh}] }>`
+* Filters to sub-categories with ≥1 exercise. Requires `workout_data.js` loaded first.
+
+### `workoutCatCharts` (in `todo_settings`)
+* `{ [subCatName]: false }` — missing key = visible (default on); `false` = hidden.
+
+> Background engine implementation details → [`docs/theme_engine.md`](./docs/theme_engine.md)
+
+## 6. Date Initialization & Asset Pathing
+
+### Picker Date Init
+* Show the container **before** calling `picker.setValue()` — hidden elements ignore `scrollTop`:
+  ```javascript
+  showPicker.value = true;
+  nextTick(() => picker.setValue(y, m, d));
+  ```
+* Initialize form date fields with `toLocalISO(Date.now())` and `ts` with `Date.now()`; never `null`/`0`/`''`.
+
+### Unix Timestamp Rule
+* Every persisted record with a `date` string must also carry `ts` (Unix ms).
+* `ts` is the primary ordering key; read fallback: `ts || new Date(date + 'T00:00:00').getTime()`.
+
+### Asset Path Rule
+* Use `./` relative paths for all static assets — `/` breaks in sub-directory and `file://` contexts.
+
+> Date bug history and root-cause analysis → [`docs/date_logic.md`](./docs/date_logic.md)
+
+## 7. Workflow & Verification
 1.  **Understand:** Analyze requirements and clarify ambiguities.
 2.  **Propose:** Provide implementation plans before modifying files.
 3.  **Diff Only:** Never overwrite files blindly; present a `diff` and wait for confirmation.

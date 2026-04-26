@@ -20,6 +20,7 @@ window.addEventListener('DOMContentLoaded', () => {
             snapToday:           '回今天',
             noWeightData:        '尚無體重紀錄',
             noVolumeData:        '尚無訓練紀錄',
+            noChartsEnabled:     '目前未啟用任何圖表，請至「頁面功能設定」開啟',
             quickAdd:            '快速新增',
             quickTask:           '任務',
             logWeight:           '體重',
@@ -43,6 +44,7 @@ window.addEventListener('DOMContentLoaded', () => {
             snapToday:           'Today',
             noWeightData:        'No weight data yet',
             noVolumeData:        'No workout data yet',
+            noChartsEnabled:     'No charts enabled. Go to Settings → Features to enable.',
             quickAdd:            'Quick Add',
             quickTask:           'Task',
             logWeight:           'Weight',
@@ -59,6 +61,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const _uid     = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
     const _dateStr = (d = 0) => { const dt = new Date(); dt.setDate(dt.getDate() + d); return toLocalISO(dt); };
     const _DAY_MS  = 86400000;
+    const _palette = () => (typeof LapisChartPalette !== 'undefined' && Array.isArray(LapisChartPalette))
+        ? LapisChartPalette : ['#3b82f6'];
 
     // ── Data loading ──────────────────────────────────────────────────────────
     function _readData() {
@@ -88,6 +92,26 @@ window.addEventListener('DOMContentLoaded', () => {
             .map(w => ({ x: new Date(w.date + 'T00:00:00').getTime(), y: w.weight }));
     }
 
+    // Per sub-category volume: sum sets × reps × weight for exercises tagged with subCat
+    function _catVolSeries(logs, subCat) {
+        const byDate = {};
+        logs.filter(l => !l.isDeleted).forEach(log => {
+            let vol = 0;
+            log.exercises.forEach(e => {
+                if (e.type !== 'sets') return;
+                if (!(e.categories || []).includes(subCat)) return;
+                (e.sets || []).forEach(s => {
+                    const w = parseFloat(s.weight), r = parseInt(s.reps), n = parseInt(s.numSets) || 1;
+                    if (!isNaN(w) && !isNaN(r)) vol += w * r * n;
+                });
+            });
+            if (vol > 0) byDate[log.date] = (byDate[log.date] || 0) + vol;
+        });
+        return Object.entries(byDate)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([date, vol]) => ({ x: new Date(date + 'T00:00:00').getTime(), y: Math.round(vol) }));
+    }
+
     function _volumeSeries(logs) {
         const byDate = {};
         logs.filter(l => !l.isDeleted).forEach(log => {
@@ -110,9 +134,11 @@ window.addEventListener('DOMContentLoaded', () => {
     // ── Chart instances (module-level for snap access) ────────────────────────
     let _wChart = null;
     let _vChart = null;
+    const _catChartsMap = {};
 
     // ── ApexCharts options factory ────────────────────────────────────────────
-    function _chartOpts(series, seriesName, isDark, noDataText) {
+    function _chartOpts(series, seriesName, isDark, noDataText, color) {
+        const c         = color || '#3b82f6';
         const textColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.40)';
         const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
         const now       = Date.now();
@@ -129,21 +155,21 @@ window.addEventListener('DOMContentLoaded', () => {
             },
             series: [{ name: seriesName, data: series }],
             dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 2, colors: ['#3b82f6'] },
+            stroke: { curve: 'smooth', width: 2, colors: [c] },
             fill: {
                 type: 'gradient',
                 gradient: {
                     type: 'vertical',
                     shadeIntensity: 1,
                     colorStops: [
-                        { offset: 0,   color: '#3b82f6', opacity: 0.28 },
-                        { offset: 100, color: '#3b82f6', opacity: 0    },
+                        { offset: 0,   color: c, opacity: 0.28 },
+                        { offset: 100, color: c, opacity: 0    },
                     ],
                 },
             },
             markers: {
                 size: 4,
-                colors: ['#3b82f6'],
+                colors: [c],
                 strokeColors: isDark ? '#ffffff' : '#1a1a1a',
                 strokeWidth: 2,
                 hover: { size: 7 },
@@ -200,6 +226,30 @@ window.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // ── Build per-category chart descriptor list (reads settings + WorkoutConfig) ──
+    function _buildCatCharts(logs) {
+        const catSetts = (StorageProvider.getCommonSettings() || {}).workoutCatCharts || {};
+        const groups   = typeof WorkoutConfig !== 'undefined'
+            ? WorkoutConfig.getAvailableExerciseCategories()
+            : [];
+        const pal = _palette();
+        let idx = 0;
+        const result = [];
+        groups.forEach(g => {
+            g.subs.forEach(sub => {
+                if (catSetts[sub.name] === false) return;
+                result.push({
+                    subCat: sub.name,
+                    name:   sub.name,
+                    nameZh: sub.nameZh,
+                    series: _catVolSeries(logs, sub.name),
+                    color:  pal[idx++ % pal.length],
+                });
+            });
+        });
+        return result;
+    }
+
     // ── Vue App ───────────────────────────────────────────────────────────────
     createApp({
         setup() {
@@ -214,8 +264,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
             // ── Stats snapshot ────────────────────────────────────────────────
             const { total, thisWk, latest, exerciseCount, logs, weights } = _readData();
-            const weightSeries = _weightSeries(weights);
-            const volumeSeries = _volumeSeries(logs);
+            const weightSeries   = _weightSeries(weights);
+            const volumeSeries   = _volumeSeries(logs);
+            const catCharts      = _buildCatCharts(logs);
+            const showWeightChart = (StorageProvider.getCommonSettings() || {}).showWeightChart !== false;
+            const hasAnyChart    = showWeightChart || catCharts.length > 0;
 
             // ── Snap to today ─────────────────────────────────────────────────
             const snapToToday = () => {
@@ -223,6 +276,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 const range = { xaxis: { min: now - 14 * _DAY_MS, max: now } };
                 if (_wChart) _wChart.updateOptions(range, false, true);
                 if (_vChart) _vChart.updateOptions(range, false, true);
+                Object.values(_catChartsMap).forEach(c => c.updateOptions(range, false, true));
             };
 
             // ── Quick Add state ───────────────────────────────────────────────
@@ -281,6 +335,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 const opts = _themeOpts(dark);
                 if (_wChart) _wChart.updateOptions(opts, false, false);
                 if (_vChart) _vChart.updateOptions(opts, false, false);
+                Object.values(_catChartsMap).forEach(c => c.updateOptions(opts, false, false));
             });
 
             // ── Init ──────────────────────────────────────────────────────────
@@ -294,10 +349,12 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (typeof ApexCharts !== 'undefined') {
                     const dark = isDarkTheme.value;
 
-                    const wEl = document.getElementById('weight-chart');
-                    if (wEl && weightSeries.length > 0) {
-                        _wChart = new ApexCharts(wEl, _chartOpts(weightSeries, t.value.chartWeight, dark, t.value.noWeightData));
-                        _wChart.render();
+                    if (showWeightChart) {
+                        const wEl = document.getElementById('weight-chart');
+                        if (wEl && weightSeries.length > 0) {
+                            _wChart = new ApexCharts(wEl, _chartOpts(weightSeries, t.value.chartWeight, dark, t.value.noWeightData));
+                            _wChart.render();
+                        }
                     }
 
                     const vEl = document.getElementById('volume-chart');
@@ -305,9 +362,17 @@ window.addEventListener('DOMContentLoaded', () => {
                         _vChart = new ApexCharts(vEl, _chartOpts(volumeSeries, t.value.chartVolume, dark, t.value.noVolumeData));
                         _vChart.render();
                     }
+
+                    catCharts.forEach(c => {
+                        const el = document.getElementById('stats-cat-chart-' + c.subCat);
+                        if (!el) return;
+                        const label = (navSettings.lang === 'zh' ? c.nameZh : c.name) + ' Vol (kg)';
+                        const inst  = new ApexCharts(el, _chartOpts(c.series, label, dark, t.value.noVolumeData, c.color));
+                        inst.render();
+                        _catChartsMap[c.subCat] = inst;
+                    });
                 }
 
-                document.body.classList.add('lapis-ready');
             });
 
             return {
@@ -318,6 +383,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 exerciseCount,
                 weightSeries,
                 volumeSeries,
+                catCharts,
+                showWeightChart,
+                hasAnyChart,
                 snapToToday,
                 quickMode, quickText, quickWeight, toastMsg, toastShow,
                 openQuickAdd, closeQuickAdd, saveQuick,

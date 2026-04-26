@@ -21,6 +21,12 @@
     }
     global.toLocalISO = _toLocalISO;
 
+    // Chart color palette — 10 distinct colors for dynamic category charts
+    global.LapisChartPalette = [
+        '#3b82f6','#ef4444','#22c55e','#f59e0b','#a855f7',
+        '#14b8a6','#f97316','#ec4899','#06b6d4','#84cc16'
+    ];
+
     // ── Page registry ─────────────────────────────────────────────────────────
     const _pages = [
         { key: 'home',    href: './index.html',   icon: 'home',         zh: '首頁',     en: 'Home'           },

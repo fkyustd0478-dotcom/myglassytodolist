@@ -1,5 +1,5 @@
-// nav.js — Global navigation composable v3.2
-// Loaded after storage.js, before page-specific scripts on all pages.
+// nav.js — Global navigation composable v4.0
+// Loaded after core_engine.js (LapisCore handles all bg rendering).
 // Usage inside Vue setup():
 //   const { navDropdownOpen, currentPageTitle, toggleNavDropdown,
 //           navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle,
@@ -127,58 +127,11 @@ function useNav() {
     let _bgSecondary = null;
     let _spinner     = null;
 
-    function _showSpinner() {
-        if (!_spinner) {
-            _spinner = document.createElement('div');
-            _spinner.id = 'lapis-theme-spinner';
-            document.body.appendChild(_spinner);
-        }
-        _spinner.style.opacity = '1';
-    }
-    function _hideSpinner() { if (_spinner) _spinner.style.opacity = '0'; }
-
-    // Flash guard: subtle dark-blur overlay for solid-theme transitions.
-    function _getFlashGuard() {
-        if (!_flashGuard) {
-            _flashGuard = document.createElement('div');
-            _flashGuard.id = 'lapis-flash-guard';
-            _flashGuard.style.cssText = [
-                'position:fixed', 'inset:0', 'z-index:9998',
-                'backdrop-filter:blur(18px)', '-webkit-backdrop-filter:blur(18px)',
-                'background:rgba(12,12,22,0.18)',
-                'opacity:0', 'transition:opacity 0.18s ease',
-                'pointer-events:none'
-            ].join(';');
-            document.body.appendChild(_flashGuard);
-        }
-        return _flashGuard;
-    }
-
-    // Secondary bg layer for double-buffer cross-dissolve.
-    // Inserted immediately after .bg-layer so same z-index (0) stacks on top via DOM order.
-    function _getBgSecondary() {
-        if (!_bgSecondary) {
-            _bgSecondary = document.createElement('div');
-            _bgSecondary.id = 'lapis-bg-secondary';
-            _bgSecondary.style.cssText = [
-                'position:fixed', 'top:0', 'left:0',
-                'width:100%', 'height:100%',
-                'z-index:0',
-                'pointer-events:none',
-                'opacity:0',
-                'background-size:cover',
-                'background-position:center',
-                'background-attachment:fixed',
-                'will-change:opacity'
-            ].join(';');
-            const primary = document.querySelector('.bg-layer');
-            if (primary && primary.parentNode) {
-                primary.parentNode.insertBefore(_bgSecondary, primary.nextSibling);
-            } else {
-                document.body.appendChild(_bgSecondary);
-            }
-        }
-        return _bgSecondary;
+    function _themeOpts() {
+        return {
+            customBg:        navSettings.customBg,
+            customBgOpacity: navSettings.customBgOpacity,
+        };
     }
 
     // Preload an image src and wait for GPU decode (img.decode) when available.
@@ -277,8 +230,16 @@ function useNav() {
 
     // ── Body class injection ──────────────────────────────────────────────────
     watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
-        _applyTheme(theme, useCustomBg);
+        if (_firstApply) { _applyTheme(theme, useCustomBg); return; }
+        clearTimeout(_applyTimer);
+        _applyTimer = setTimeout(() => _applyTheme(theme, useCustomBg), 100);
     }, { immediate: true });
+
+    // Live opacity update when custom-bg slider moves
+    watch(() => navSettings.customBgOpacity, (opacity) => {
+        if (!navSettings.useCustomBg) return;
+        if (typeof LapisCore !== 'undefined') LapisCore.setActiveOpacity(1 - opacity);
+    });
 
     onMounted(async () => {
         _updateTitle();
@@ -310,17 +271,22 @@ function useNav() {
         if (_imgThemes.has(activeTheme) && !navSettings.useCustomBg) {
             await _preload(_themeUrl(activeTheme));
         }
+
         document.body.classList.add('lapis-ready');
 
-        // Cross-tab theme sync: when any tab saves new settings to localStorage,
-        // update navSettings here so the bg transitions without a page reload.
+        // Cross-tab sync
         const _onStorage = (e) => {
             if (e.key !== 'todo_settings' || !e.newValue) return;
             try {
                 const s = JSON.parse(e.newValue);
-                if (s.theme      !== undefined && s.theme      !== navSettings.theme)      navSettings.theme      = s.theme;
-                if (s.useCustomBg !== undefined && s.useCustomBg !== navSettings.useCustomBg) navSettings.useCustomBg = s.useCustomBg;
-                if (s.lang       !== undefined && s.lang       !== navSettings.lang)       navSettings.lang       = s.lang;
+                if (s.theme           !== undefined && s.theme           !== navSettings.theme)           navSettings.theme           = s.theme;
+                if (s.useCustomBg     !== undefined && s.useCustomBg     !== navSettings.useCustomBg)     navSettings.useCustomBg     = s.useCustomBg;
+                if (s.customBgOpacity !== undefined && s.customBgOpacity !== navSettings.customBgOpacity) navSettings.customBgOpacity = s.customBgOpacity;
+                if (s.lang            !== undefined && s.lang            !== navSettings.lang)            navSettings.lang            = s.lang;
+                if (s.customBg !== undefined && s.customBg !== navSettings.customBg) {
+                    navSettings.customBg = s.customBg;
+                    _applyTheme(resolvedTheme.value, navSettings.useCustomBg);
+                }
             } catch (_) {}
         };
         window.addEventListener('storage', _onStorage);

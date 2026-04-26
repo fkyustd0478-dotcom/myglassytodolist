@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
 
     <!-- Anti-flash: read saved theme from localStorage and apply class to <html>
          before any CSS renders, preventing the dark-background flash on light themes -->
@@ -35,6 +36,7 @@
     </style>
     <script src="./js/effects.js" defer></script>
     <script src="./js/storage.js" defer></script>
+    <script src="./js/core_engine.js" defer></script>
     <script src="./js/nav.js" defer></script>
     <script src="./js/lapis_core_ui.js" defer></script>
     <script src="./js/lapis_picker.js" defer></script>
@@ -43,15 +45,14 @@
     <script src="./modules/todo.js?v=2.1" defer></script>
 </head>
 <body>
+<div id="lapis-bg-system">
+    <div id="bg-layer-a" class="lapis-bg-layer active"></div>
+    <div id="bg-layer-b" class="lapis-bg-layer"></div>
+</div>
     <div id="error-reporter"></div>
 
     <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]"
          style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;">
-        <!-- Background Layers -->
-        <div class="bg-layer"></div>
-
-        <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
-
         <!-- Foreground Content -->
         <div class="relative z-10 flex flex-col p-6 overflow-hidden" style="flex:1;height:100dvh;">
             <!-- Header & Navigation -->
@@ -88,7 +89,7 @@
             </div>
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto no-scrollbar pb-[120px]" :class="{ 'pointer-events-none': isAnyModalOpen }">
+            <main class="flex-1 overflow-y-auto no-scrollbar" :class="{ 'pointer-events-none': isAnyModalOpen }" style="padding-bottom:var(--nav-height)">
                 <transition name="fade" mode="out-in">
                     <div :key="'main-container-' + appMode" class="w-full">
                         <!-- Mode A: Glassy Todo -->

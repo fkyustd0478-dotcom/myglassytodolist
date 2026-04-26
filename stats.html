@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
 
     <script>!function(){try{var d=JSON.parse(localStorage.getItem('todo_settings')||'{}'),t=d.theme||'light';if(t==='system')t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.className='theme-'+t;var dk=['dark','forest','night','torii','starrysky','ferriswheel'];document.documentElement.style.background=dk.indexOf(t)>=0?'#0d1117':'#f0f4ff';}catch(e){}}();</script>
 
@@ -21,8 +22,11 @@
     <script src="https://unpkg.com/lucide@latest" defer></script>
     <script src="./js/effects.js" defer></script>
     <script src="./js/storage.js" defer></script>
+    <script src="./js/core_engine.js" defer></script>
     <script src="./js/nav.js" defer></script>
     <script src="./js/lapis_core_ui.js" defer></script>
+    <script src="./modules/workout_data.js" defer></script>
+    <script src="./modules/workout_config.js" defer></script>
     <script src="./modules/stats.js" defer></script>
 
     <style>
@@ -93,14 +97,15 @@
     </style>
 </head>
 <body>
+<div id="lapis-bg-system">
+    <div id="bg-layer-a" class="lapis-bg-layer active"></div>
+    <div id="bg-layer-b" class="lapis-bg-layer"></div>
+</div>
 
 <div id="app" v-cloak
      :style="themeStyle"
      :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode']"
      style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;">
-
-    <div class="bg-layer"></div>
-    <div class="custom-bg-layer" :style="customBgStyle"></div>
 
     <!-- ── Toast ──────────────────────────────────────────────────────────── -->
     <transition name="fade">
@@ -146,8 +151,13 @@
         <!-- ── Charts section ─────────────────────────────────────────────── -->
         <p class="section-hdr">{{ t.sectionCharts }}</p>
 
+        <!-- No charts enabled placeholder -->
+        <div v-if="!hasAnyChart" class="chart-card glass" :style="glassStyle">
+            <p class="chart-empty" style="padding:40px 0;">{{ t.noChartsEnabled }}</p>
+        </div>
+
         <!-- Body Weight Chart -->
-        <div class="chart-card glass" :style="glassStyle">
+        <div v-if="showWeightChart" class="chart-card glass" :style="glassStyle">
             <div class="chart-header">
                 <p class="stat-label" style="margin:0;">{{ t.chartWeight }}</p>
                 <button class="snap-btn" @click="snapToToday">{{ t.snapToday }}</button>
@@ -156,13 +166,24 @@
             <p v-show="weightSeries.length === 0" class="chart-empty">{{ t.noWeightData }}</p>
         </div>
 
-        <!-- Volume Chart -->
+        <!-- Total Volume Chart -->
         <div class="chart-card glass" :style="glassStyle">
             <div class="chart-header">
                 <p class="stat-label" style="margin:0;">{{ t.chartVolume }}</p>
             </div>
             <div id="volume-chart"></div>
             <p v-show="volumeSeries.length === 0" class="chart-empty">{{ t.noVolumeData }}</p>
+        </div>
+
+        <!-- Per-category volume charts (dynamic, filtered by workoutCatCharts setting) -->
+        <div v-for="c in catCharts" :key="c.subCat" class="chart-card glass" :style="glassStyle">
+            <div class="chart-header">
+                <p class="stat-label" style="margin:0;">
+                    {{ navSettings.lang === 'zh' ? c.nameZh : c.name }} Vol (kg)
+                </p>
+            </div>
+            <div :id="'stats-cat-chart-' + c.subCat"></div>
+            <p v-show="c.series.length === 0" class="chart-empty">{{ t.noVolumeData }}</p>
         </div>
 
     </main>

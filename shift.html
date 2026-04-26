@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
 
     <!-- Anti-flash: read saved theme from localStorage and apply class to <html>
          before any CSS renders, preventing the dark-background flash on light themes -->
@@ -24,6 +25,7 @@
     </style>
     <script src="./js/effects.js" defer></script>
     <script src="./js/storage.js" defer></script>
+    <script src="./js/core_engine.js" defer></script>
     <script src="./js/nav.js" defer></script>
     <script src="./js/lapis_core_ui.js" defer></script>
     <script src="./js/lapis_picker.js" defer></script>
@@ -32,13 +34,13 @@
     <script src="./modules/shift.js?v=4.2" defer></script>
 </head>
 <body>
+<div id="lapis-bg-system">
+    <div id="bg-layer-a" class="lapis-bg-layer active"></div>
+    <div id="bg-layer-b" class="lapis-bg-layer"></div>
+</div>
 <div id="app" v-cloak
      :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]"
      style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;">
-
-    <!-- Background Layers -->
-    <div class="bg-layer"></div>
-    <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
     <!-- ── Header (z-10001) ─────────────────────────────────────────────── -->
     <!-- LapisNav.inject() inserts the top nav capsule above this element -->
@@ -265,7 +267,7 @@
                 </div><!-- /sticky header -->
 
                 <!-- ── Scrollable content ─────────────────────────────────── -->
-                <div class="flex-1 overflow-y-auto px-8 pb-[120px] space-y-4">
+                <div class="flex-1 overflow-y-auto px-8 space-y-4" style="padding-bottom:var(--nav-height)">
                 <!-- ── 輪班設定 Tab ─────────────────────────────────────── -->
                 <div v-show="tagsTab === 'shift'" class="space-y-2">
                     <div class="flex items-center gap-2 opacity-40 px-1 mb-3">

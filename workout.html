@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
 
     <!-- Anti-flash: read saved theme before CSS renders -->
     <script>!function(){try{var d=JSON.parse(localStorage.getItem('todo_settings')||'{}'),t=d.theme||'light';if(t==='system')t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.className='theme-'+t;var dk=['dark','forest','night','torii','starrysky','ferriswheel'];document.documentElement.style.background=dk.indexOf(t)>=0?'#0d1117':'#f0f4ff';}catch(e){}}();</script>
@@ -22,6 +23,7 @@
 
     <script src="./js/effects.js" defer></script>
     <script src="./js/storage.js" defer></script>
+    <script src="./js/core_engine.js" defer></script>
     <script src="./js/nav.js" defer></script>
     <script src="./js/lapis_core_ui.js" defer></script>
     <script src="./js/lapis_picker.js" defer></script>
@@ -29,6 +31,7 @@
     <script src="./js/lapis_global_nav.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts" defer></script>
     <script src="./modules/workout_data.js" defer></script>
+    <script src="./modules/workout_config.js" defer></script>
     <script src="./modules/workout_metrics.js" defer></script>
     <script src="./modules/workout_library_ui.js" defer></script>
     <script src="./modules/workout.js" defer></script>
@@ -52,14 +55,14 @@
     </style>
 </head>
 <body>
+<div id="lapis-bg-system">
+    <div id="bg-layer-a" class="lapis-bg-layer active"></div>
+    <div id="bg-layer-b" class="lapis-bg-layer"></div>
+</div>
 <div id="app" v-cloak
      :style="themeStyle"
      :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]"
      style="display:flex; flex-direction:column; height:100dvh; overflow:hidden; position:relative;">
-
-    <!-- Background Layers -->
-    <div class="bg-layer"></div>
-    <div v-show="navSettings.useCustomBg" class="custom-bg-layer" :style="customBgStyle"></div>
 
     <!-- ── Header (injected by LapisNav) ─────────────────────────────────── -->
 
@@ -518,14 +521,14 @@
             <div id="wk-weight-chart"></div>
         </div>
 
-        <!-- Category Volume Charts -->
-        <template v-for="cat in ['Chest','Back','Shoulders','Arms','Legs','Core','Cardio']" :key="cat">
-            <div v-if="(navSettings.workoutCatCharts || {})[cat] !== false"
+        <!-- Category Volume Charts — dynamic from Action Library -->
+        <template v-for="item in dynCatCharts" :key="item.subCat">
+            <div v-if="(navSettings.workoutCatCharts || {})[item.subCat] !== false"
                  class="wk-chart-card glass" :style="glassStyle">
                 <p class="section-label" style="font-size:10px;margin-bottom:6px;">
-                    {{ navSettings.lang === 'zh' ? ({Chest:'胸部',Back:'背部',Shoulders:'肩部',Arms:'手臂',Legs:'腿部',Core:'核心',Cardio:'有氧'})[cat] : cat }} Vol (kg)
+                    {{ navSettings.lang === 'zh' ? item.nameZh : item.name }} Vol (kg)
                 </p>
-                <div :id="'wk-cat-chart-' + cat"></div>
+                <div :id="'wk-cat-chart-' + item.subCat"></div>
             </div>
         </template>
 
