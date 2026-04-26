@@ -91,7 +91,7 @@ window.LapisCore = (() => {
         const hasCustBg     = useCustomBg && customBg;
         const bgUrl         = hasCustBg
             ? customBg
-            : (_imgThemes.has(theme) ? `./theme/${theme}.png` : '');
+            : (_imgThemes.has(theme) ? `../theme/${theme}.png` : '');
         const targetOpacity = hasCustBg ? (1 - customBgOpacity) : 1;
 
         const nextId  = _otherId(_activeLayerId);
