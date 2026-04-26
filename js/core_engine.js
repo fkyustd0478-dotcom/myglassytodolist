@@ -100,9 +100,9 @@ window.LapisCore = (() => {
     // opts: { customBg, customBgOpacity, skipAnimation }
     async function applyTheme(theme, useCustomBg, opts) {
         opts = opts || {};
-        const customBg         = opts.customBg         || '';
-        const customBgOpacity  = opts.customBgOpacity  || 0;
-        const skipAnimation    = opts.skipAnimation    || false;
+        const customBg        = opts.customBg        || '';
+        const customBgOpacity = opts.customBgOpacity  || 0;
+        const skipAnimation   = opts.skipAnimation    || false;
 
         const hasCustBg     = useCustomBg && customBg;
         const bgUrl         = hasCustBg
@@ -116,6 +116,7 @@ window.LapisCore = (() => {
         if (!next) return;
 
         // ── Initial paint: set immediately, page still invisible ──────────────
+        // Must always leave UI in a visible state — no animation, no spinner.
         if (skipAnimation) {
             if (bgUrl) {
                 updateGlobalThemeVar(bgUrl);
@@ -124,7 +125,11 @@ window.LapisCore = (() => {
                 if (current) current.classList.remove('active');
                 _activeLayerId = nextId;
             } else {
+                // Solid/gradient theme: clear bg image and deactivate ALL layers so
+                // #lapis-bg-system's background: var(--bg-main) gradient shows through.
                 updateGlobalThemeVar('');
+                if (current) current.classList.remove('active');
+                next.classList.remove('active');
             }
             return;
         }
@@ -132,25 +137,27 @@ window.LapisCore = (() => {
         // ── Animated swap ─────────────────────────────────────────────────────
         try {
             if (bgUrl) {
-                // 1. Pre-decode bitmap into VRAM before touching the DOM
+                // Step 1 — GPU warm-up: decode bitmap into VRAM before any DOM change.
+                // Mandatory: startViewTransition captures a screenshot immediately;
+                // the new texture must be GPU-committed first to avoid a blank frame.
                 _showSpinner();
                 await preloadImage(bgUrl);
                 _hideSpinner();
 
-                // 2. startViewTransition captures before-state; callback updates DOM
+                // Step 2 — Trigger View Transition.
+                // Browser captures "before" screenshot now (current layer still visible).
+                // Callback MUST be synchronous — async callbacks block the capture.
                 _runTransition(() => {
-                    next.classList.remove('active');
-                    next.style.removeProperty('--lapis-bg-opacity');
-
-                    // 3. Inject URL via CSSOM (avoids WebView inline-style rendering bugs)
+                    // Inject URL via CSSOM (avoids WebView inline-style rendering bugs)
                     updateGlobalThemeVar(bgUrl);
 
-                    // 4. Force GPU pipeline flush — synchronous reflow commits new pixels
+                    // Force GPU pipeline flush — synchronous reflow commits new texture
+                    // to the compositor before the opacity transition begins.
                     next.style.display = 'none';
-                    void next.offsetHeight;   // triggers synchronous layout
-                    next.style.display = 'block';
+                    void next.offsetHeight;
+                    next.style.display = '';
 
-                    // 5. Swap layers — CSS opacity transition plays from here
+                    // Swap layers — View Transition cross-fades screenshot → new state
                     next.style.setProperty('--lapis-bg-opacity', targetOpacity);
                     next.classList.add('active');
                     if (current) current.classList.remove('active');
@@ -158,17 +165,32 @@ window.LapisCore = (() => {
                 });
 
             } else {
-                // Solid theme: clear CSS var, deactivate all layers
+                // Solid theme: clear CSS var, deactivate all layers so --bg-main shows
                 _runTransition(() => {
                     updateGlobalThemeVar('');
                     if (current) current.classList.remove('active');
-                    if (next)    next.classList.remove('active');
+                    next.classList.remove('active');
                     _activeLayerId = nextId;
                 });
             }
         } catch (err) {
+            // Emergency fallback — guarantee the UI is NEVER left on a blank screen.
+            // Apply the theme immediately without animation so at least one valid
+            // state is always rendered.
             _hideSpinner();
-            console.warn('[LapisCore] applyTheme failed:', err);
+            console.warn('[LapisCore] applyTheme failed, applying instant fallback:', err);
+            try {
+                updateGlobalThemeVar(bgUrl || '');
+                if (bgUrl) {
+                    next.style.setProperty('--lapis-bg-opacity', targetOpacity);
+                    next.classList.add('active');
+                    if (current) current.classList.remove('active');
+                    _activeLayerId = nextId;
+                } else {
+                    if (current) current.classList.remove('active');
+                    next.classList.remove('active');
+                }
+            } catch (_) {}
         }
     }
 
