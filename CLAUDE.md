@@ -59,7 +59,37 @@
 * Missing key = visible (default on); `false` = hidden
 * Backward-compatible: old keys from `_MAIN_CATS` still work
 
-## 6. Workflow & Verification
+## 6. Date Initialization & Asset Pathing
+
+### Picker / Form Date Init (avoid 1970 bug)
+* **Root cause**: Scroll-wheel pickers use `scrollTop` to set position. Calling `setValue()` while the container is hidden (`v-show=false` / `display:none`) is a no-op — the wheel stays at index 0, which renders as 1970/01/01.
+* **Rule**: Always show the modal/container **first**, then call `setValue()` inside `nextTick()`:
+  ```javascript
+  const openPicker = () => {
+      showPicker.value = true;           // render the element
+      nextTick(() => {
+          const dateStr = form.date || toLocalISO(Date.now());
+          const [y, m, d] = dateStr.split('-').map(Number);
+          picker.setValue(y, m, d);      // scrollTop now works on visible DOM
+      });
+  };
+  ```
+* **Form initialization**: Always initialize date fields with `toLocalISO(Date.now())` and timestamp fields with `Date.now()`:
+  ```javascript
+  const form = reactive({ weight: '', unit: 'kg', date: toLocalISO(Date.now()), ts: Date.now() });
+  ```
+  Never leave them as `null`, `0`, or `''` — a falsy date causes the picker to fall back to epoch.
+
+### Unix Timestamp Storage Rule
+* Every record that has a `date` string **must** also carry a `ts` (Unix ms) field.
+* `ts` is the **primary ordering key**; `date` is the human-readable display string.
+* On read, fall back gracefully: `ts || new Date(date + 'T00:00:00').getTime()`.
+
+### Asset Path Rule
+* Always use **relative paths** (`./favicon.ico`, `./theme/x.png`) for static assets.
+* Absolute root paths (`/favicon.ico`) break in sub-directory deployments and local `file://` contexts.
+
+## 7. Workflow & Verification
 1.  **Understand:** Analyze requirements and clarify ambiguities.
 2.  **Propose:** Provide implementation plans before modifying files.
 3.  **Diff Only:** Never overwrite files blindly; present a `diff` and wait for confirmation.
