@@ -92,6 +92,74 @@ window.addEventListener('storage', (e) => {
 
 ---
 
+## Reflow Hack (WebView / Capacitor GPU Fix)
+
+### Problem
+
+In WebView / Capacitor environments (and occasionally mobile Safari), setting `backgroundImage` on a layer and immediately triggering a CSS opacity transition can result in a **black or white flash** — the GPU has not yet committed the new texture to the compositor, so it shows a blank buffer for one or two frames before the image appears.
+
+### Fix
+
+After `await _decodeImage(bgUrl)` but before adding `.active`, force a synchronous layout calculation by momentarily setting `display: none` and reading `offsetHeight`:
+
+```javascript
+// Force GPU pipeline flush
+next.style.display = 'none';
+void next.offsetHeight;   // reading layout property → synchronous reflow
+next.style.display = 'block';
+
+// Now safe to start the opacity transition
+next.style.setProperty('--lapis-bg-opacity', targetOpacity);
+next.classList.add('active');
+```
+
+Reading `offsetHeight` (or any layout property like `getBoundingClientRect()`) forces the browser to perform a **synchronous layout pass**, which commits the current render tree — including the new `backgroundImage` — to the GPU compositor before the transition begins. This eliminates the blank-frame artifact.
+
+### Inline Style Overrides
+
+To prevent stale CSS cascade values from overriding the background sizing (another WebView gotcha), these properties are set explicitly via inline styles on every swap:
+
+```javascript
+next.style.backgroundSize     = 'cover';
+next.style.backgroundPosition = 'center';
+next.style.backgroundRepeat   = 'no-repeat';
+```
+
+### Debounce (GPU Decoder Thrashing Prevention)
+
+Rapid theme clicks can queue multiple `_decodeImage` calls simultaneously, saturating the GPU decoder. A 100 ms debounce on the Vue watch prevents this:
+
+```javascript
+watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
+    if (_firstApply) { _applyTheme(theme, useCustomBg); return; }  // no debounce on init
+    clearTimeout(_applyTimer);
+    _applyTimer = setTimeout(() => _applyTheme(theme, useCustomBg), 100);
+}, { immediate: true });
+```
+
+The first apply bypasses debounce because the page is still invisible (body `opacity: 0`).
+
+---
+
+## `window.LapisNav._applyTheme` (Same-Tab Direct Call)
+
+The Vue watch in `nav.js` only triggers on `[resolvedTheme, useCustomBg]`. When the user uploads a new image while `useCustomBg` is already `true`, neither watched value changes — the background would not update until refresh.
+
+Fix: expose `_applyTheme` on the global `LapisNav` object so `setting.js` can call it directly:
+
+```javascript
+// nav.js — inside useNav()
+window.LapisNav = window.LapisNav || {};
+window.LapisNav._applyTheme = () => _applyTheme(resolvedTheme.value, navSettings.useCustomBg);
+
+// setting.js — in watch(settings, ...)
+if (val.customBg !== prevCustomBg && window.LapisNav && window.LapisNav._applyTheme) {
+    window.LapisNav._applyTheme();
+}
+```
+
+---
+
 ## Clearing Custom Background
 
 `clearCustomBg()` in `modules/setting.js` sets both `customBg = ''` and `useCustomBg = false`. The `watch(settings, ...)` in `setting.js` unconditionally syncs `navSettings.customBg = val.customBg`, so the empty string propagates and `_applyTheme` falls back to the active theme image or solid color.

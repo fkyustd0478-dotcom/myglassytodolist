@@ -116,6 +116,7 @@ function useNav() {
     let _firstApply    = true;
     let _activeLayerId = 'a';   // tracks which layer is currently shown
     let _spinner       = null;
+    let _applyTimer    = null;  // debounce handle for rapid theme clicks
 
     function _showSpinner() {
         if (!_spinner) {
@@ -164,7 +165,10 @@ function useNav() {
         if (_firstApply) {
             _firstApply = false;
             if (bgUrl) {
-                next.style.backgroundImage = `url('${bgUrl}')`;
+                next.style.backgroundImage    = `url('${bgUrl}')`;
+                next.style.backgroundSize     = 'cover';
+                next.style.backgroundPosition = 'center';
+                next.style.backgroundRepeat   = 'no-repeat';
                 next.style.setProperty('--lapis-bg-opacity', targetOpacity);
                 next.classList.add('active');
                 if (current) current.classList.remove('active');
@@ -180,11 +184,19 @@ function useNav() {
                 // Stage the new image on the inactive layer (invisible)
                 next.classList.remove('active');
                 next.style.removeProperty('--lapis-bg-opacity');
-                next.style.backgroundImage = `url('${bgUrl}')`;
+                next.style.backgroundImage    = `url('${bgUrl}')`;
+                next.style.backgroundSize     = 'cover';
+                next.style.backgroundPosition = 'center';
+                next.style.backgroundRepeat   = 'no-repeat';
 
                 _showSpinner();
                 await _decodeImage(bgUrl);
                 _hideSpinner();
+
+                // Force reflow — flushes GPU pipeline before transition (WebView fix)
+                next.style.display = 'none';
+                void next.offsetHeight;   // read triggers synchronous layout
+                next.style.display = 'block';
 
                 // Apply & swap with opacity transition
                 next.style.setProperty('--lapis-bg-opacity', targetOpacity);
@@ -204,9 +216,17 @@ function useNav() {
         }
     }
 
+    // Expose for same-tab direct calls (e.g. setting.js on customBg-only upload)
+    window.LapisNav = window.LapisNav || {};
+    window.LapisNav._applyTheme = () => _applyTheme(resolvedTheme.value, navSettings.useCustomBg);
+
     // ── Body class injection ──────────────────────────────────────────────────
     watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
-        _applyTheme(theme, useCustomBg);
+        // First apply: immediate (page is still invisible, no animation needed)
+        if (_firstApply) { _applyTheme(theme, useCustomBg); return; }
+        // Subsequent: debounce 100 ms to prevent GPU decoder thrashing on rapid clicks
+        clearTimeout(_applyTimer);
+        _applyTimer = setTimeout(() => _applyTheme(theme, useCustomBg), 100);
     }, { immediate: true });
 
     // Live opacity update when custom-bg slider moves

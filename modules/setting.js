@@ -261,6 +261,7 @@ createApp({
         // picking light/dark in the UI reverts visually to the previous theme.
         watch(settings, (val) => {
             StorageProvider.saveCommonSettings(val);
+            const prevCustomBg       = navSettings.customBg;
             navSettings.theme               = val.theme;
             navSettings.useCustomBg         = val.useCustomBg;
             navSettings.customBgOpacity     = val.customBgOpacity;
@@ -270,7 +271,11 @@ createApp({
             navSettings.showLunarDates      = val.showLunarDates;
             navSettings.showWeightChart     = val.showWeightChart;
             navSettings.workoutCatCharts    = val.workoutCatCharts;
-            navSettings.customBg = val.customBg;
+            navSettings.customBg            = val.customBg;
+            // customBg-only upload: Vue watch won't fire (theme/useCustomBg unchanged)
+            if (val.customBg !== prevCustomBg && window.LapisNav && window.LapisNav._applyTheme) {
+                window.LapisNav._applyTheme();
+            }
         }, { deep: true });
 
         watch(() => settings.value.effect, (newEffect) => {
