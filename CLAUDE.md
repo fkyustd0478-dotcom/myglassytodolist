@@ -44,7 +44,22 @@
 * `toLocalISO` uses `getFullYear()` / `getMonth()+1` / `getDate()` which respect the device timezone.
 * Safe date-only string → Date object: `new Date('YYYY-MM-DDT00:00:00')` (with time, no timezone suffix) → LOCAL midnight per ECMAScript spec.
 
-## 5. Workflow & Verification
+## 5. Data & Logic Architecture
+
+### `modules/workout_config.js`
+* Exposes `window.WorkoutConfig.getAvailableExerciseCategories()`
+* Reads `lapis_workout_categories` (category tree) and `lapis_workout_library` (exercises) from localStorage
+* Falls back to `_defaultCategoryTree()` / `_defaultExercises()` from `workout_data.js` when localStorage is empty
+* Returns `Array<{ main: {name, nameZh}, subs: Array<{name, nameZh}> }>` — only includes sub-categories that have ≥1 exercise in the library
+* **Depends on**: `workout_data.js` must be loaded before `workout_config.js`
+* **Used by**: `setting.html` for dynamic workout chart toggle rendering
+
+### Category Toggle Persistence (`lapis_settings` → `workoutCatCharts`)
+* Object keyed by sub-category name (e.g., `{ Chest: false, Back: true }`)
+* Missing key = visible (default on); `false` = hidden
+* Backward-compatible: old keys from `_MAIN_CATS` still work
+
+## 6. Workflow & Verification
 1.  **Understand:** Analyze requirements and clarify ambiguities.
 2.  **Propose:** Provide implementation plans before modifying files.
 3.  **Diff Only:** Never overwrite files blindly; present a `diff` and wait for confirmation.

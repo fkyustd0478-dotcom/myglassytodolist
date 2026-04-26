@@ -36,10 +36,19 @@ createApp({
         const fileInput        = ref(null);
         const currentObjectUrl = ref(null);
 
+        // ── Dynamic exercise categories (from Action Library) ──────────────
+        const availableCategories = ref(
+            typeof WorkoutConfig !== 'undefined'
+                ? WorkoutConfig.getAvailableExerciseCategories()
+                : []
+        );
+
+        // Toggle a sub-category chart on/off; undefined = on, false = off
+        const toggleCatChart = (catName) => {
+            settings.value.workoutCatCharts[catName] = settings.value.workoutCatCharts[catName] !== false ? false : true;
+        };
+
         // ── Translations ───────────────────────────────────────────────────
-        const WORKOUT_CATEGORIES = ['Chest','Back','Shoulders','Arms','Legs','Core','Cardio'];
-        const catLabelEn = { Chest:'Chest', Back:'Back', Shoulders:'Shoulders', Arms:'Arms', Legs:'Legs', Core:'Core', Cardio:'Cardio' };
-        const catLabelZh = { Chest:'胸部', Back:'背部', Shoulders:'肩部', Arms:'手臂', Legs:'腿部', Core:'核心', Cardio:'有氧' };
 
         const translations = {
             en: {
@@ -289,7 +298,7 @@ createApp({
             customBgStyle, inactiveBtn, themeDropdownOpen,
             selectTheme, toggleLang, toggleNotifications, toggleCustomBg,
             triggerUpload, handleUpload, clearCustomBg, clearCacheAndUpdate,
-            WORKOUT_CATEGORIES, catLabelEn, catLabelZh,
+            availableCategories, toggleCatChart,
         };
     }
 }).component('LapisConfirm', window.LapisConfirm).mount('#app');
