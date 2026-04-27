@@ -110,7 +110,12 @@
 
 .calendar-day.today {
     border-color: var(--primary);
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(59, 130, 246, 0.18);
+}
+
+.calendar-day.today .day-number {
+    color: #3b82f6;
+    font-weight: 900;
 }
 
 .day-number {

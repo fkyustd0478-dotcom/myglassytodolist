@@ -41,7 +41,6 @@
     <script src="./js/lapis_core_ui.js" defer></script>
     <script src="./js/lapis_picker.js" defer></script>
     <script src="./js/lapis_confirm.js" defer></script>
-    <script src="./js/lapis_global_nav.js" defer></script>
     <script src="./modules/todo.js?v=2.1" defer></script>
 </head>
 <body>
@@ -68,10 +67,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0 pr-6">
-                        <button @click="addNewList" class="w-9 h-9 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
-                        </button>
+                    <div class="flex items-center shrink-0 pr-6">
                         <button @click="openManageModal" class="w-9 h-9 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" :style="glassStyle">
                             <i data-lucide="list-plus" class="w-4 h-4"></i>
                         </button>
@@ -346,10 +342,21 @@
                      style="z-index: var(--z-modal-lv2-backdrop)"
                      @click.self.stop.prevent="closeManageModal">
                     <div class="glass rounded-[2.5rem] p-8 w-full max-w-md flex flex-col max-h-[85vh]" :style="glassStyle" @click.stop>
-                        <div class="flex justify-between items-center mb-8">
-                            <h2 class="text-2xl font-black tracking-tight">Manage Lists</h2>
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-black tracking-tight">{{ t.manageLists }}</h2>
                             <button @click="closeManageModal" class="opacity-40 hover:opacity-100 transition-opacity">
                                 <i data-lucide="x" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+
+                        <!-- New list input -->
+                        <div class="flex gap-2 mb-6">
+                            <input v-model="newListName" @keyup.enter="addListFromModal" type="text"
+                                   class="flex-1 glass rounded-2xl px-4 py-3 text-sm font-bold outline-none"
+                                   :style="glassStyle" :placeholder="t.newListPlaceholder">
+                            <button @click="addListFromModal"
+                                    class="px-4 py-3 rounded-2xl bg-blue-600 text-white text-xs font-black shrink-0 active:scale-95 transition-transform">
+                                {{ t.addList }}
                             </button>
                         </div>
 
@@ -376,8 +383,8 @@
                             </div>
                         </div>
 
-                        <button @click="closeManageModal" class="w-full mt-8 py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-95 transition-transform">
-                            Done
+                        <button @click="closeManageModal" class="w-full mt-6 py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-95 transition-transform">
+                            {{ t.confirm }}
                         </button>
                     </div>
                 </div>
