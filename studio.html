@@ -34,11 +34,11 @@
         body  { opacity: 0; transition: opacity 0.4s ease-in-out; }
         body.lapis-ready { opacity: 1; }
 
-        /* Nav swap: incoming slides up, outgoing slides down */
+        /* Horizontal nav-swap: new nav slides in from right, old exits to left */
         .nav-swap-enter-active,
         .nav-swap-leave-active { transition: transform 0.26s cubic-bezier(0.4,0,0.2,1), opacity 0.26s ease; }
-        .nav-swap-enter-from,
-        .nav-swap-leave-to     { transform: translateY(100%); opacity: 0; }
+        .nav-swap-enter-from   { transform: translateX(100%); opacity: 0; }
+        .nav-swap-leave-to     { transform: translateX(-100%); opacity: 0; }
 
         /* Upload drop zone */
         .studio-drop-zone { border: 2px dashed rgba(255,255,255,0.18); transition: border-color 0.2s; }
@@ -48,11 +48,15 @@
         body.theme-sunset .studio-drop-zone, body.theme-mapleavenue .studio-drop-zone,
         body.theme-waterfall .studio-drop-zone { border-color: rgba(0,0,0,0.14); }
 
-        /* Shape selector active state */
+        /* Shape selector button active state */
         .shape-btn.is-active { background: #3b82f6 !important; color: #fff !important; }
 
-        /* Cropper: crop-wrap needs explicit flex sizing */
-        #crop-wrap { min-height: 0; }
+        /* Undo button: disabled style */
+        .nav-item[disabled] { opacity: 0.3; pointer-events: none; }
+
+        /* Crop wrap must not clip the SVG overlay */
+        #crop-wrap { min-height: 0; position: relative; }
+        #crop-wrap .cropper-container { display: block; }
     </style>
 </head>
 <body>
@@ -71,7 +75,7 @@
     <main class="relative z-10 flex-1 overflow-hidden flex flex-col"
           style="padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px))">
 
-        <!-- A: Upload zone (no image loaded) -->
+        <!-- A: Upload zone (no image) -->
         <div v-show="contentView === 'upload'"
              class="studio-drop-zone flex-1 flex flex-col items-center justify-center gap-6 m-4 rounded-[2.5rem]"
              :class="{ 'drag-over': dragOver }"
@@ -97,10 +101,22 @@
                  style="pointer-events:none;user-select:none;">
         </div>
 
-        <!-- C: Crop workspace -->
+        <!-- C: Crop workspace — image at top (flex-1), shape selector at bottom (shrink-0) -->
         <div v-show="contentView === 'crop'" class="flex-1 flex flex-col overflow-hidden min-h-0">
-            <!-- Shape / ratio selector (scrollable) -->
-            <div class="shrink-0 overflow-x-auto no-scrollbar px-3 py-2 flex items-center gap-2">
+
+            <!-- Cropper.js container + shape overlay -->
+            <div id="crop-wrap" class="flex-1 overflow-hidden">
+                <img id="crop-image" style="max-width:100%;display:block;">
+                <!-- Shape-aware overlay: dims area OUTSIDE the selected shape -->
+                <div v-if="isSpecialShape && cropBoxData && containerSize.w"
+                     style="position:absolute;inset:0;pointer-events:none;z-index:20;"
+                     v-html="shapeOverlaySvg">
+                </div>
+            </div>
+
+            <!-- Shape / ratio selector (between image and nav) -->
+            <div class="shrink-0 overflow-x-auto no-scrollbar px-3 py-2 flex items-center gap-2"
+                 style="border-top:1px solid rgba(255,255,255,0.08)">
                 <!-- Standard ratios -->
                 <button v-for="r in cropRatios" :key="r.key"
                         @click="setRatio(r)"
@@ -110,7 +126,8 @@
                     {{ r.label }}
                 </button>
                 <!-- Divider -->
-                <div class="shrink-0 w-px h-5 mx-1 opacity-20" :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
+                <div class="shrink-0 w-px h-5 mx-1 opacity-20"
+                     :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
                 <!-- Special shape masks -->
                 <button v-for="s in specialShapes" :key="s.key"
                         @click="setSpecialShape(s)"
@@ -120,10 +137,6 @@
                         :title="t[s.key]"
                         v-html="s.svg">
                 </button>
-            </div>
-            <!-- Cropper.js container -->
-            <div id="crop-wrap" class="flex-1 overflow-hidden px-3 pb-2">
-                <img id="crop-image" style="max-width:100%;display:block;">
             </div>
         </div>
 
@@ -163,29 +176,33 @@
             </button>
         </nav>
 
-        <!-- ── Bottom Nav: crop tool ──────────────────────────────────────── -->
+        <!-- ── Bottom Nav: crop tool (4-button action row) ────────────────── -->
         <nav v-else key="nav-crop"
              class="bottom-nav glass" style="backdrop-filter:blur(24px);" :style="glassStyle">
+            <!-- 返回: exit crop without applying -->
             <button @click="exitCrop" class="nav-item">
                 <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 <span>{{ t.back }}</span>
             </button>
-            <button @click="resetCrop" class="nav-item">
-                <i data-lucide="refresh-ccw" class="w-5 h-5"></i>
-                <span>{{ t.reset }}</span>
+            <!-- 復原: undo last apply -->
+            <button @click="undo" class="nav-item" :disabled="canUndoCt === 0">
+                <i data-lucide="undo-2" class="w-5 h-5"></i>
+                <span>{{ t.undo }}</span>
             </button>
+            <!-- 套用: apply crop → update preview, push history, stay for more edits -->
             <button @click="confirmCrop" class="nav-item active">
                 <i data-lucide="check" class="w-5 h-5"></i>
                 <span>{{ t.apply }}</span>
             </button>
-            <button @click="promptDownload" class="nav-item">
+            <!-- 保存: apply crop (if any) + trigger download -->
+            <button @click="saveFromCrop" class="nav-item">
                 <i data-lucide="download" class="w-5 h-5"></i>
                 <span>{{ t.save }}</span>
             </button>
         </nav>
     </transition>
 
-    <!-- Hidden file input (triggered by Upload button) -->
+    <!-- Hidden file input -->
     <input id="studio-file-input" type="file" accept="image/*" class="hidden" @change="handleFileInput">
 
     <!-- Filename modal (LV2 bottom-sheet) -->
@@ -215,8 +232,8 @@
 
 <script defer>
 (function waitForVue() {
-    if (typeof Vue === 'undefined'              || typeof useNav === 'undefined' ||
-        typeof LapisStudioEngine === 'undefined' || typeof Cropper === 'undefined') {
+    if (typeof Vue === 'undefined'               || typeof useNav === 'undefined' ||
+        typeof LapisStudioEngine === 'undefined'  || typeof Cropper === 'undefined') {
         return setTimeout(waitForVue, 20);
     }
     const { createApp, ref, computed, onMounted, onUnmounted, nextTick } = Vue;
@@ -235,21 +252,54 @@
             const cropShape         = ref('free');
             const showFilenameModal = ref(false);
             const downloadFilename  = ref('');
-            let _cropper            = null;
-            let _resultCanvas       = null;
 
-            // Drives which content panel is shown
+            // Crop overlay state
+            const cropBoxData   = ref(null);  // {left,top,width,height} from Cropper.js
+            const containerSize = ref({ w: 0, h: 0 }); // #crop-wrap dimensions
+
+            // History
+            const canUndoCt = ref(0);    // reactive count, drives Undo button state
+            let _undoStack  = [];        // string[] of data URLs (max 10)
+            let _cropper    = null;
+            let _resultCanvas = null;
+
+            // Drives content panel visibility
             const contentView = computed(() => {
                 if (activeNav.value === 'crop') return 'crop';
                 if (!imageUrl.value)            return 'upload';
                 return currentTab.value;
             });
 
+            const isSpecialShape = computed(() =>
+                ['circle', 'ellipse', 'heart', 'star'].includes(cropShape.value)
+            );
+
+            // ── Shape-aware crop overlay SVG ──────────────────────────────────
+            // Uses SVG mask: white rect (show all) punched with black shape (hide = transparent).
+            // Applied to a dark rect → area OUTSIDE the shape is dimmed.
+            const shapeOverlaySvg = computed(() => {
+                if (!isSpecialShape.value || !cropBoxData.value || !containerSize.value.w) return '';
+                const { left: bx, top: by, width: bw, height: bh } = cropBoxData.value;
+                const { w: cw, h: ch } = containerSize.value;
+                const inner = LapisStudioEngine.svgShapeInner(cropShape.value, bx, by, bw, bh);
+                if (!inner) return '';
+                return `<svg xmlns="http://www.w3.org/2000/svg" `
+                     + `style="width:100%;height:100%;display:block;" `
+                     + `viewBox="0 0 ${cw} ${ch}">`
+                     + `<defs><mask id="csm-${cropShape.value}">`
+                     + `<rect width="${cw}" height="${ch}" fill="white"/>`
+                     + inner
+                     + `</mask></defs>`
+                     + `<rect width="${cw}" height="${ch}" fill="rgba(0,0,0,0.52)" `
+                     + `mask="url(#csm-${cropShape.value})"/>`
+                     + `</svg>`;
+            });
+
             // ── i18n ─────────────────────────────────────────────────────────
             const translations = {
                 zh: {
-                    upload: '上傳', crop: '剪裁', effects: '特效', save: '儲存',
-                    back: '返回', reset: '重置', apply: '套用',
+                    upload: '上傳', crop: '剪裁', effects: '特效', save: '保存',
+                    back: '返回', undo: '復原', apply: '套用',
                     tapToUpload: '點擊或拖曳圖片至此',
                     uploadHint: '支援 JPG、PNG、WebP，最大 10 MB',
                     choosePhoto: '選擇照片', comingSoon: '即將推出',
@@ -262,14 +312,14 @@
                 },
                 en: {
                     upload: 'Upload', crop: 'Crop', effects: 'Effects', save: 'Save',
-                    back: 'Back', reset: 'Reset', apply: 'Apply',
+                    back: 'Back', undo: 'Undo', apply: 'Apply',
                     tapToUpload: 'Tap or drag an image here',
                     uploadHint: 'JPG, PNG, WebP — max 10 MB',
                     choosePhoto: 'Choose Photo', comingSoon: 'Coming Soon',
                     saveAs: 'Save As', cancel: 'Cancel',
                     free: 'Free', '1:1': '1:1', '4:3': '4:3', '9:16': '9:16',
                     circle: 'Circle', ellipse: 'Ellipse', heart: 'Heart', star: 'Star',
-                    errSize: 'Image exceeds 10 MB. Please choose a smaller file.',
+                    errSize: 'Image exceeds 10 MB.',
                     errLoad: 'Failed to load image.',
                     noImage: 'Please upload an image first.',
                 },
@@ -278,9 +328,9 @@
 
             // ── Crop config ───────────────────────────────────────────────────
             const cropRatios = computed(() => [
-                { key: 'free', label: t.value.free,  ratio: NaN  },
-                { key: '1:1',  label: t.value['1:1'], ratio: 1    },
-                { key: '4:3',  label: t.value['4:3'], ratio: 4/3  },
+                { key: 'free', label: t.value.free,    ratio: NaN  },
+                { key: '1:1',  label: t.value['1:1'],  ratio: 1    },
+                { key: '4:3',  label: t.value['4:3'],  ratio: 4/3  },
                 { key: '9:16', label: t.value['9:16'], ratio: 9/16 },
             ]);
 
@@ -300,6 +350,8 @@
                     imageUrl.value    = url;
                     resultUrl.value   = '';
                     _resultCanvas     = null;
+                    _undoStack        = [];
+                    canUndoCt.value   = 0;
                     currentTab.value  = 'preview';
                     activeNav.value   = 'main';
                 } catch (e) {
@@ -316,13 +368,39 @@
                 currentTab.value = currentTab.value === 'effects' ? 'preview' : 'effects';
             }
 
+            // ── History management ────────────────────────────────────────────
+            function _pushHistory() {
+                _undoStack.push(resultUrl.value);   // '' = original state
+                if (_undoStack.length > 10) _undoStack.shift();
+                canUndoCt.value = _undoStack.length;
+            }
+
+            function undo() {
+                if (_undoStack.length === 0) return;
+                resultUrl.value = _undoStack.pop();  // '' restores to original
+                _resultCanvas   = null;
+                canUndoCt.value = _undoStack.length;
+                if (activeNav.value === 'crop') {
+                    if (_cropper) { _cropper.destroy(); _cropper = null; }
+                    cropBoxData.value = null;
+                    activeNav.value   = 'main';
+                }
+                currentTab.value = 'preview';
+            }
+
             // ── Crop ─────────────────────────────────────────────────────────
             async function enterCrop() {
                 if (!imageUrl.value) { alert(t.value.noImage); return; }
-                cropShape.value = 'free';
-                activeNav.value = 'crop';
+                cropShape.value   = 'free';
+                cropBoxData.value = null;
+                activeNav.value   = 'crop';
                 await nextTick();
                 _initCropper(NaN);
+            }
+
+            function _syncContainerSize() {
+                const wrap = document.getElementById('crop-wrap');
+                if (wrap) containerSize.value = { w: wrap.offsetWidth, h: wrap.offsetHeight };
             }
 
             function _initCropper(aspectRatio) {
@@ -336,23 +414,31 @@
                     background: false,
                     movable: true,
                     zoomable: true,
+                    ready() {
+                        _syncContainerSize();
+                        if (_cropper) cropBoxData.value = _cropper.getCropBoxData();
+                    },
+                    crop() {
+                        _syncContainerSize();
+                        if (_cropper) cropBoxData.value = _cropper.getCropBoxData();
+                    },
                 });
             }
 
             function setRatio(r) {
                 cropShape.value = r.key;
-                if (_cropper) _cropper.setAspectRatio(r.ratio);   // NaN = free
+                if (_cropper) _cropper.setAspectRatio(r.ratio);
             }
 
             function setSpecialShape(s) {
                 cropShape.value = s.key;
-                if (_cropper) _cropper.setAspectRatio(1);          // force square crop for mask shapes
+                if (_cropper) _cropper.setAspectRatio(1);  // square base for all masks
             }
 
-            function resetCrop() { if (_cropper) _cropper.reset(); }
-
+            // Apply: crop + push history + exit to preview (re-enter crop for more edits)
             function confirmCrop() {
                 if (!_cropper) return;
+                _pushHistory();
                 const raw      = _cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' });
                 const specials = ['circle', 'ellipse', 'heart', 'star'];
                 const output   = specials.includes(cropShape.value)
@@ -360,19 +446,28 @@
                 _resultCanvas   = output;
                 resultUrl.value = output.toDataURL('image/png');
                 _cropper.destroy(); _cropper = null;
-                activeNav.value = 'main';
-                currentTab.value = 'preview';
+                cropBoxData.value = null;
+                activeNav.value   = 'main';
+                currentTab.value  = 'preview';
             }
 
             function exitCrop() {
                 if (_cropper) { _cropper.destroy(); _cropper = null; }
-                activeNav.value = 'main';
+                cropBoxData.value = null;
+                activeNav.value   = 'main';
+            }
+
+            // Save from crop: apply current crop + open download modal
+            async function saveFromCrop() {
+                confirmCrop();
+                await nextTick();
+                promptDownload();
             }
 
             // ── Download ─────────────────────────────────────────────────────
             function promptDownload() {
                 if (!imageUrl.value) { alert(t.value.noImage); return; }
-                downloadFilename.value = `glassystudio_${Date.now()}`;
+                downloadFilename.value  = `glassystudio_${Date.now()}`;
                 showFilenameModal.value = true;
             }
 
@@ -382,16 +477,16 @@
                     LapisStudioEngine.download(_resultCanvas, downloadFilename.value);
                     return;
                 }
-                // Draw original blob URL to canvas for download
+                // No canvas cached: draw from data URL (after undo) or original blob URL
+                const src = resultUrl.value || imageUrl.value;
                 const img = new Image();
                 img.onload = () => {
                     const c = document.createElement('canvas');
-                    c.width  = img.naturalWidth;
-                    c.height = img.naturalHeight;
+                    c.width = img.naturalWidth; c.height = img.naturalHeight;
                     c.getContext('2d').drawImage(img, 0, 0);
                     LapisStudioEngine.download(c, downloadFilename.value);
                 };
-                img.src = imageUrl.value;
+                img.src = src;
             }
 
             // ── Lifecycle ─────────────────────────────────────────────────────
@@ -400,7 +495,7 @@
                 if (window.lucide) lucide.createIcons();
             });
             onUnmounted(() => {
-                if (_cropper)      _cropper.destroy();
+                if (_cropper)       _cropper.destroy();
                 if (imageUrl.value) URL.revokeObjectURL(imageUrl.value);
             });
 
@@ -408,10 +503,13 @@
                 navSettings, isDarkTheme, glassStyle, themeClasses,
                 customBgStyle, systemDark, resolvedTheme,
                 imageUrl, resultUrl, activeNav, currentTab, contentView,
-                dragOver, cropShape, showFilenameModal, downloadFilename,
+                dragOver, cropShape, cropBoxData, containerSize,
+                isSpecialShape, shapeOverlaySvg,
+                canUndoCt, showFilenameModal, downloadFilename,
                 t, cropRatios, specialShapes,
                 handleFileInput, triggerUpload, onDrop, toggleEffects,
-                enterCrop, exitCrop, resetCrop, confirmCrop, setRatio, setSpecialShape,
+                enterCrop, exitCrop, confirmCrop, saveFromCrop,
+                setRatio, setSpecialShape, undo,
                 promptDownload, doDownload,
             };
         }
