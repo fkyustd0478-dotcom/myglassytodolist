@@ -847,12 +847,28 @@ try {
                     scrollTaskToCenter(document.querySelector('[data-todo-id]'));
                     setupEffects();
 
-                    // Initialize Sortable for lists
+                    // Initialize Sortable for manage-modal list (grip handle)
                     const listEl = document.getElementById('manage-list-items');
                     if (listEl && window.Sortable) {
                         new Sortable(listEl, {
                             handle: '.list-grip',
                             animation: 150,
+                            onEnd: (evt) => {
+                                const movedItem = lists.value.splice(evt.oldIndex, 1)[0];
+                                lists.value.splice(evt.newIndex, 0, movedItem);
+                                saveLists();
+                            }
+                        });
+                    }
+
+                    // Initialize Sortable for tab row (long-press on touch, drag on desktop)
+                    const tabsEl = document.getElementById('list-tabs');
+                    if (tabsEl && window.Sortable) {
+                        new Sortable(tabsEl, {
+                            animation: 150,
+                            delay: 300,
+                            delayOnTouchOnly: true,
+                            touchStartThreshold: 5,
                             onEnd: (evt) => {
                                 const movedItem = lists.value.splice(evt.oldIndex, 1)[0];
                                 lists.value.splice(evt.newIndex, 0, movedItem);
