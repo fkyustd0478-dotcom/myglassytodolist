@@ -146,7 +146,8 @@ function useNav() {
     // ── Body class injection ──────────────────────────────────────────────────
     // Debounce prevents concurrent overlapping async transitions (rapid theme clicks)
     // which would leave primary opacity:0. First apply bypasses debounce (page hidden).
-    watch([resolvedTheme, () => navSettings.useCustomBg], ([theme, useCustomBg]) => {
+    // customBg is tracked so uploading a new image triggers the transition immediately.
+    watch([resolvedTheme, () => navSettings.useCustomBg, () => navSettings.customBg], ([theme, useCustomBg]) => {
         if (_firstApply) { _applyTheme(theme, useCustomBg); return; }
         clearTimeout(_applyTimer);
         _applyTimer = setTimeout(() => _applyTheme(theme, useCustomBg), 100);
@@ -182,20 +183,13 @@ function useNav() {
             } catch (_) {}
         }
 
-        // lapis-ready gate: pre-decode theme image before revealing the page.
+        // lapis-ready gate: pre-decode custom image before revealing the page.
+        // Preset themes use CSS gradients — no preload needed.
         // try-catch GUARANTEES lapis-ready is always added — any uncaught error
         // here would otherwise leave body at opacity:0 (permanent black screen).
         try {
-            if (typeof LapisCore !== 'undefined') {
-                const activeTheme = resolvedTheme.value;
-                const isImgTheme  = ['cherry','sky','sunset','sea','seaside','forest',
-                    'night','torii','mapleavenue','waterfall','starrysky','ferriswheel']
-                    .includes(activeTheme);
-                if (isImgTheme && !navSettings.useCustomBg) {
-                    await LapisCore.preloadImage('./theme/' + activeTheme + '.png');
-                } else if (navSettings.useCustomBg && navSettings.customBg) {
-                    await LapisCore.preloadImage(navSettings.customBg);
-                }
+            if (typeof LapisCore !== 'undefined' && navSettings.useCustomBg && navSettings.customBg) {
+                await LapisCore.preloadImage(navSettings.customBg);
             }
         } catch (_) {}
         document.body.classList.add('lapis-ready');
