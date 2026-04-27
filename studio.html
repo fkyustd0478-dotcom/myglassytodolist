@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <script>!function(){try{var d=JSON.parse(localStorage.getItem('todo_settings')||'{}'),t=d.theme||'light';if(t==='system')t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.className='theme-'+t;var dk=['dark','forest','night','torii','purple','ferriswheel','starrynight'];document.documentElement.style.background=dk.indexOf(t)>=0?'#0d1117':'#f0f4ff';}catch(e){}}();</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>琉璃工坊 — Studio</title>
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="./css/shared_theme.css">
+    <link rel="stylesheet" href="./css/effects.css">
+    <link rel="stylesheet" href="./css/lapis_shared_style.css">
+    <link rel="stylesheet" href="./css/lapis_scroll.css">
+
+    <script src="./js/effects.js" defer></script>
+    <script src="./js/storage.js" defer></script>
+    <script src="./js/core_engine.js" defer></script>
+    <script src="./js/nav.js" defer></script>
+    <script src="./js/lapis_core_ui.js" defer></script>
+
+    <style>
+        [v-cloak] { display: none !important; }
+        html  { background: #0d0d0d; }
+        body  { opacity: 0; transition: opacity 0.4s ease-in-out; }
+        body.lapis-ready { opacity: 1; }
+    </style>
+</head>
+<body>
+<div id="lapis-bg-system">
+    <div id="bg-layer-a" class="lapis-bg-layer active"></div>
+    <div id="bg-layer-b" class="lapis-bg-layer"></div>
+</div>
+
+<div id="app" v-cloak
+     :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode']"
+     style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;">
+
+    <!-- Header (injected by LapisNav) -->
+
+    <!-- Main Content -->
+    <main class="relative z-10 flex-1 overflow-y-auto no-scrollbar px-6 py-4" style="padding-bottom:var(--nav-height)">
+
+        <!-- Active Tab: Crop -->
+        <div v-show="activeTab === 'crop'" class="flex flex-col items-center justify-center h-full gap-6">
+            <div class="glass rounded-[2.5rem] p-10 flex flex-col items-center gap-4 max-w-sm w-full" :style="glassStyle">
+                <i data-lucide="crop" class="w-12 h-12 opacity-40"></i>
+                <h2 class="text-xl font-black tracking-tight">{{ t.crop }}</h2>
+                <p class="text-sm opacity-40 text-center">{{ t.comingSoon }}</p>
+            </div>
+        </div>
+
+        <!-- Active Tab: Effects -->
+        <div v-show="activeTab === 'effects'" class="flex flex-col items-center justify-center h-full gap-6">
+            <div class="glass rounded-[2.5rem] p-10 flex flex-col items-center gap-4 max-w-sm w-full" :style="glassStyle">
+                <i data-lucide="sparkles" class="w-12 h-12 opacity-40"></i>
+                <h2 class="text-xl font-black tracking-tight">{{ t.effects }}</h2>
+                <p class="text-sm opacity-40 text-center">{{ t.comingSoon }}</p>
+            </div>
+        </div>
+
+        <!-- Active Tab: Collage -->
+        <div v-show="activeTab === 'collage'" class="flex flex-col items-center justify-center h-full gap-6">
+            <div class="glass rounded-[2.5rem] p-10 flex flex-col items-center gap-4 max-w-sm w-full" :style="glassStyle">
+                <i data-lucide="layout-grid" class="w-12 h-12 opacity-40"></i>
+                <h2 class="text-xl font-black tracking-tight">{{ t.collage }}</h2>
+                <p class="text-sm opacity-40 text-center">{{ t.comingSoon }}</p>
+            </div>
+        </div>
+
+        <!-- Active Tab: Upload -->
+        <div v-show="activeTab === 'upload'" class="flex flex-col items-center justify-center h-full gap-6">
+            <div class="glass rounded-[2.5rem] p-10 flex flex-col items-center gap-4 max-w-sm w-full" :style="glassStyle">
+                <i data-lucide="upload-cloud" class="w-12 h-12 opacity-40"></i>
+                <h2 class="text-xl font-black tracking-tight">{{ t.upload }}</h2>
+                <p class="text-sm opacity-40 text-center">{{ t.comingSoon }}</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav glass" :style="glassStyle">
+        <button @click="activeTab = 'crop'" class="nav-item" :class="{ active: activeTab === 'crop' }">
+            <i data-lucide="crop" class="w-5 h-5"></i>
+            <span>{{ t.crop }}</span>
+        </button>
+        <button @click="activeTab = 'effects'" class="nav-item" :class="{ active: activeTab === 'effects' }">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+            <span>{{ t.effects }}</span>
+        </button>
+        <button @click="activeTab = 'collage'" class="nav-item" :class="{ active: activeTab === 'collage' }">
+            <i data-lucide="layout-grid" class="w-5 h-5"></i>
+            <span>{{ t.collage }}</span>
+        </button>
+        <button @click="activeTab = 'upload'" class="nav-item" :class="{ active: activeTab === 'upload' }">
+            <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+            <span>{{ t.upload }}</span>
+        </button>
+    </nav>
+
+</div>
+
+<script defer>
+(function waitForVue() {
+    if (typeof Vue === 'undefined' || typeof useNav === 'undefined') {
+        return setTimeout(waitForVue, 20);
+    }
+    const { createApp, ref, computed, onMounted } = Vue;
+    createApp({
+        setup() {
+            const { navDropdownOpen, currentPageTitle, toggleNavDropdown,
+                    navSettings, isDarkTheme, glassStyle, themeClasses,
+                    customBgStyle, systemDark, resolvedTheme } = useNav();
+
+            const activeTab = ref('crop');
+
+            const translations = {
+                zh: { crop: '剪裁', effects: '特效', collage: '拼貼', upload: '上傳', comingSoon: '即將推出' },
+                en: { crop: 'Crop', effects: 'Effects', collage: 'Collage', upload: 'Upload', comingSoon: 'Coming Soon' },
+            };
+            const t = computed(() => translations[navSettings.lang] || translations.zh);
+
+            onMounted(() => {
+                if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
+                if (window.lucide) lucide.createIcons();
+            });
+
+            return { navDropdownOpen, currentPageTitle, toggleNavDropdown,
+                     navSettings, isDarkTheme, glassStyle, themeClasses,
+                     customBgStyle, systemDark, resolvedTheme, activeTab, t };
+        }
+    }).mount('#app');
+})();
+</script>
+</body>
+</html>

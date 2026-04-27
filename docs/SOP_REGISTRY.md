@@ -100,18 +100,47 @@ app.component('LapisConfirm', LapisConfirm);
 **When to use:** Creating a new HTML page in the Lapis navigation system.
 
 **Procedure:**
-1. Copy the anti-flash `<script>` block verbatim into `<head>`.
-2. Load scripts in order: CDN → `effects.js` → `storage.js` → `nav.js` → `lapis_core_ui.js` → `modules/[page].js`.
-3. Add `<div id="app" v-cloak>` as the Vue mount target.
-4. Register the page in `lapis_core_ui.js → _pages[]` (key, href, icon, zh, en) and update `_currentKey()`.
-5. Call `LapisNav.inject({ bottom: false })` inside `onMounted`.
-6. Add a page-specific bottom nav `<nav class="bottom-nav glass">` with the page's own items.
-7. Add `[page]_style.css` to `css/`.
+1. Copy the anti-flash `<script>` block verbatim into `<head>` (sets `<html>` class + dark background before CSS).
+2. Load scripts in order: CDN (Tailwind, Vue, Lucide) → `effects.js` → `storage.js` → `core_engine.js` → `nav.js` → `lapis_core_ui.js` → `modules/[page].js`.
+3. Add `body { opacity:0 } body.lapis-ready { opacity:1 }` in a `<style>` block (lapis-ready gate).
+4. Add `<div id="lapis-bg-system">` with two `.lapis-bg-layer` divs before `#app`.
+5. Add `<div id="app" v-cloak :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode']">` as the Vue mount target.
+6. Register the page in `lapis_core_ui.js → _pages[]` (key, href, icon, zh, en) and add a `file.includes('[key]')` branch to `_currentKey()`.
+7. In `onMounted`: call `LapisNav.inject({ bottom: false })` and `lucide.createIcons()`.
+8. Add a page-specific bottom nav `<nav class="bottom-nav glass" :style="glassStyle">` with 3–4 `nav-item` buttons.
+9. Use a `waitForVue` polling wrapper (see scaffold below) so the inline `<script defer>` safely waits for all deps.
+
+**Minimal Vue scaffold (inline `<script defer>`):**
+```javascript
+(function waitForVue() {
+    if (typeof Vue === 'undefined' || typeof useNav === 'undefined') {
+        return setTimeout(waitForVue, 20);
+    }
+    const { createApp, ref, computed, onMounted } = Vue;
+    createApp({
+        setup() {
+            const { navSettings, isDarkTheme, glassStyle, themeClasses,
+                    customBgStyle, systemDark, resolvedTheme } = useNav();
+            const activeTab = ref('tab1');
+            const t = computed(() => ({ tab1: navSettings.lang === 'zh' ? '標籤' : 'Tab' }));
+            onMounted(() => {
+                if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
+                if (window.lucide) lucide.createIcons();
+            });
+            return { navSettings, isDarkTheme, glassStyle, themeClasses,
+                     customBgStyle, systemDark, resolvedTheme, activeTab, t };
+        }
+    }).mount('#app');
+})();
+```
+
+**Reference implementations:** `studio.html`, `language.html` (Phase 12.0 scaffolds).
 
 **Anti-Patterns:**
-- Do NOT forget to add the page to `_pages[]` in `lapis_core_ui.js`.
+- Do NOT forget to add the page to `_pages[]` in `lapis_core_ui.js` AND update `_currentKey()`.
+- Do NOT use `document.addEventListener('DOMContentLoaded', ...)` — use the `waitForVue` poller instead; `defer` scripts may run before Vue globals are ready.
 - Do NOT mix `js/` (shared utilities) with `modules/` (page-specific scripts).
-- Do NOT replicate the `manifest.json` bug from todo.html.
+- Do NOT omit the `lapis-ready` body gate — page will stay at `opacity:0` permanently.
 
 ---
 
