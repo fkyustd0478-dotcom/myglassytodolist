@@ -188,11 +188,22 @@ window.LapisCore = (() => {
                     next.style.backgroundImage = 'none';
                     void next.offsetHeight;
                     next.style.backgroundImage = 'var(--lapis-dynamic-bg)';
+                    // Suppress CSS opacity transition so View Transition snapshots the
+                    // layer at its FINAL opacity, not at the start of a 0.6 s fade.
+                    // Without this, the "after" screenshot captures opacity≈0 and the
+                    // cross-fade animates to a transparent layer instead of the image.
+                    next.style.transition = 'none';
+                    if (current) current.style.transition = 'none';
                     next.style.setProperty('--lapis-bg-opacity', targetOpacity);
                     next.classList.add('active');
                     if (current) current.classList.remove('active');
                     _activeLayerId = nextId;
                 });
+                // Restore CSS transitions after VT snapshot is committed so future
+                // opacity changes (e.g. custom-bg slider) still animate smoothly.
+                next.style.transition = '';
+                next.style.backgroundImage = '';   // inline override no longer needed
+                if (current) current.style.transition = '';
 
             } else if (bgCssValue) {
                 // Preset gradient path — computed by browser immediately, no preload needed.
@@ -200,27 +211,37 @@ window.LapisCore = (() => {
                 await _runTransition(() => {
                     updateGlobalThemeVar(bgCssValue);
                     // Repaint shake: briefly show the layer at near-zero opacity to force
-                    // the compositor to paint the gradient texture into the compositing
-                    // layer before the CSS opacity transition starts.  At opacity:0 the
-                    // compositor skips painting entirely — this bypasses that optimisation.
+                    // the compositor to paint the gradient texture before the VT snapshot.
+                    // At opacity:0 the compositor skips painting — this bypasses that.
                     next.style.opacity = '0.01';
                     void next.offsetHeight;
                     next.style.opacity = '';
+                    // Suppress CSS opacity transition — same reason as custom image path.
+                    next.style.transition = 'none';
+                    if (current) current.style.transition = 'none';
                     next.style.setProperty('--lapis-bg-opacity', targetOpacity);
                     next.classList.add('active');
                     if (current) current.classList.remove('active');
                     _activeLayerId = nextId;
                 });
+                next.style.transition = '';
+                if (current) current.style.transition = '';
 
             } else {
                 // Solid theme (light / dark): clear CSS var, show --bg-main gradient.
                 _syncHtmlBg(theme, false);
                 await _runTransition(() => {
                     updateGlobalThemeVar('');
+                    // Suppress transition so VT snapshots both layers at opacity:0
+                    // immediately, not mid-fade.
+                    next.style.transition = 'none';
+                    if (current) current.style.transition = 'none';
                     if (current) current.classList.remove('active');
                     next.classList.remove('active');
                     _activeLayerId = nextId;
                 });
+                next.style.transition = '';
+                if (current) current.style.transition = '';
             }
         } catch (err) {
             // Emergency fallback — guarantee the UI is NEVER left on a blank screen.
