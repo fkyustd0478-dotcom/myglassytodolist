@@ -277,6 +277,7 @@ body {
 .modal-active .top-nav,
 .modal-active .lapis-top-nav,
 .modal-active .bottom-nav,
+.modal-active .todo-manage-row,
 .modal-active .todo-tab-row,
 .modal-active header,
 .modal-active #list-tabs,
