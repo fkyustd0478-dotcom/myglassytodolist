@@ -60,8 +60,10 @@ createApp({
                 otherThemes: 'Other Themes',
                 cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset',
                 forest: 'Forest', sea: 'Sea', night: 'Night', torii: 'Torii',
-                orange: 'Ember', waterfall: 'Waterfall',
-                purple: 'Cosmos', ferriswheel: 'Ferris Wheel',
+                waterfall: 'Waterfall', ferriswheel: 'Ferris Wheel', starrynight: 'Starry Night',
+                orange: 'Ember', purple: 'Cosmos',
+                cherrrypink: 'Cherry Pink', skyblue: 'Sky Blue', grassgreen: 'Grass Green',
+                beige: 'Beige', lightgrey: 'Light Grey', lavender: 'Lavender',
                 // Effects
                 visualFx: 'Visual Effects',
                 effectNone: 'None', effectCherry: 'Petals', effectRain: 'Rain', effectSnow: 'Snow',
@@ -94,8 +96,10 @@ createApp({
                 otherThemes: '其他主題',
                 cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落',
                 forest: '森林', sea: '大海', night: '夜景', torii: '鳥居',
-                orange: '火焰', waterfall: '瀑布',
-                purple: '宇宙', ferriswheel: '摩天輪',
+                waterfall: '瀑布', ferriswheel: '摩天輪', starrynight: '星空',
+                orange: '火焰', purple: '宇宙',
+                cherrrypink: '櫻花粉', skyblue: '天空藍', grassgreen: '草綠色',
+                beige: '米黃色', lightgrey: '淺灰色', lavender: '淡紫色',
                 visualFx: '視覺特效',
                 effectNone: '無', effectCherry: '櫻花', effectRain: '下雨', effectSnow: '下雪',
                 uiOpacity: '自定義圖片透明度', custom: '自定義 (上傳)', upload: '上傳照片',
@@ -124,8 +128,10 @@ createApp({
             { id: 'cherry' }, { id: 'forest' }, { id: 'night' },
             { id: 'sea' }, { id: 'seaside' }, { id: 'sky' },
             { id: 'sunset' }, { id: 'torii' },
-            { id: 'orange' }, { id: 'waterfall' },
-            { id: 'purple' }, { id: 'ferriswheel' }
+            { id: 'waterfall' }, { id: 'ferriswheel' }, { id: 'starrynight' },
+            { id: 'orange' }, { id: 'purple' },
+            { id: 'cherrrypink' }, { id: 'skyblue' }, { id: 'grassgreen' },
+            { id: 'beige' }, { id: 'lightgrey' }, { id: 'lavender' }
         ];
 
         // ── Theme computed ─────────────────────────────────────────────────
@@ -141,7 +147,7 @@ createApp({
             if (settings.value.theme === 'orange')     return false;
             if (settings.value.theme === 'waterfall')  return false;
             if (settings.value.theme === 'system')     return systemDark.value;
-            const darkThemes = ['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel'];
+            const darkThemes = ['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight'];
             if (settings.value.useCustomBg) return settings.value.customBgOpacity < 0.5;
             return darkThemes.includes(settings.value.theme);
         });
