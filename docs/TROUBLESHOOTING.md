@@ -169,3 +169,52 @@ function _preload(src) {
 - `todo.html`: Active / Completed / Bin / Add (+)
 - `shift.html`: Today's Tasks / Salary / Shifts / Label Settings
 - `workout.html`: Workout / Exercises / Records / Add (+)
+
+---
+
+## Theme Switch Results in Black/White Screen (Opacity Loss) ✅ RESOLVED 2026-04-27
+
+**Symptom:** After switching any theme type (gradient, light/dark, or custom image) via `LapisCore.applyTheme()`, the screen turns completely black or white. No console errors. Manual F5 restores normal display.
+
+**Root Cause — `className` assignment strips `lapis-ready`:**
+
+Every HTML page starts with `body { opacity: 0 }` and reveals itself by adding `lapis-ready` in `onMounted`:
+
+```css
+body              { opacity: 0; }
+body.lapis-ready  { opacity: 1; }
+```
+
+The previous `_applyTheme` in `nav.js` used a direct assignment:
+
+```javascript
+document.body.className = 'theme-' + theme;  // ← replaces the entire class string
+```
+
+This silently removed `lapis-ready` from the body, returning it to `opacity: 0` on every theme switch.
+
+**Why it appeared to work briefly (the View Transition mask):**
+
+View Transition pseudo-elements (`::view-transition-old(root)`, `::view-transition-new(root)`) are composited above the page content. While the cross-fade animation played, these pseudo-elements showed the correct theme, masking the invisible (`opacity: 0`) DOM underneath. Once the animation ended and the pseudo-elements were removed, the actual body (now without `lapis-ready`) was revealed — all white or all black depending on the theme's `--bg-main` fallback colour.
+
+This is why F5 fixed it: a fresh load re-ran `onMounted`, which re-added `lapis-ready`.
+
+**Fix (`js/nav.js` — `_applyTheme`):**
+
+Replace the destructive `className =` assignment with `classList` operations that only touch theme-related classes, leaving `lapis-ready` and any other classes intact:
+
+```javascript
+// Before (bug): wipes all classes including lapis-ready
+document.body.className = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
+
+// After (fix): only swap theme-* and using-custom-bg; preserve everything else
+const keep = Array.from(document.body.classList)
+    .filter(c => !c.startsWith('theme-') && c !== 'using-custom-bg');
+document.body.className = [
+    'theme-' + theme,
+    ...(useCustomBg ? ['using-custom-bg'] : []),
+    ...keep,
+].join(' ');
+```
+
+**Prevention rule:** Never use `element.className =` to set a subset of classes on elements that may have framework-managed or lifecycle-managed classes. Use `classList.add` / `classList.remove` or a filter-and-rebuild approach so unrelated classes are preserved.
