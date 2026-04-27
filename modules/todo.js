@@ -27,6 +27,20 @@ try {
                 show: false
             });
 
+            const newListName = ref('');
+
+            const addListFromModal = () => {
+                const name = newListName.value.trim();
+                if (!name) return;
+                const newId = 'list-' + Date.now().toString(36);
+                lists.value.push({ id: newId, name });
+                currentListId.value = newId;
+                newListName.value = '';
+                StorageProvider.saveData({ todos: todos.value, lists: lists.value });
+                renderTrigger.value++;
+                nextTick(() => { if (window.lucide) lucide.createIcons(); scrollActiveTabIntoView(); });
+            };
+
             const showSettingsModal = ref(false);
 
             const saveLists = () => {
@@ -96,7 +110,7 @@ try {
                     active: 'Active', bin: 'Recycle Bin', noCompleted: 'No completed records', tasks: 'Tasks', day: 'Day', month: 'Month',
                     alertBefore: 'Alert before (mins)', edit: 'Edit', enable: 'Enable', disable: 'Disable', removeImg: 'Remove Image',
                     editList: 'Edit List', deleteList: 'Delete List', newList: 'New List', confirmDeleteList: 'Are you sure you want to delete this list and all its tasks?',
-                    cancel: 'Cancel', confirm: 'Confirm', listName: 'List Name',
+                    cancel: 'Cancel', confirm: 'Confirm', listName: 'List Name', manageLists: 'Manage Lists', newListPlaceholder: 'New list name...', addList: 'Add',
                     default: 'Default', personal: 'Personal', work: 'Work',
                     clearAll: 'Clear All', restore: 'Restore', permDelete: 'Permanent Delete', noBin: 'Recycle Bin is empty',
                     confirmClearCompleted: 'Are you sure you want to permanently delete all completed tasks?',
@@ -112,7 +126,7 @@ try {
                     active: '進行中', bin: '回收站', noCompleted: '暫無完成紀錄', tasks: '項任務', day: '日', month: '月',
                     alertBefore: '提醒時間 (分鐘前)', edit: '編輯', enable: '啟用', disable: '停用', removeImg: '移除圖片',
                     editList: '編輯名稱', deleteList: '刪除清單', newList: '新增清單', confirmDeleteList: '確定要刪除此清單及其所有任務嗎？',
-                    cancel: '取消', confirm: '確認', listName: '清單名稱',
+                    cancel: '取消', confirm: '確認', listName: '清單名稱', manageLists: '清單管理', newListPlaceholder: '輸入新清單名稱...', addList: '新增',
                     default: '預設', personal: '個人', work: '工作',
                     clearAll: '全部清空', restore: '還原', permDelete: '永久刪除', noBin: '回收站是空的',
                     confirmClearCompleted: '確定要永久刪除所有已完成的任務嗎？',
@@ -937,6 +951,7 @@ try {
                 isDefaultList, uploadProgress, confirmModal, promptClearCompleted, promptClearBin, executeConfirm,
                 manageModal, openManageModal: () => manageModal.value.show = true,
                 closeManageModal: () => manageModal.value.show = false,
+                newListName, addListFromModal,
                 saveLists,
                 clearCacheAndUpdate,
                 isAnyModalOpen,
