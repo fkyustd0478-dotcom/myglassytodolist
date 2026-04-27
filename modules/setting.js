@@ -34,6 +34,7 @@ createApp({
         });
 
         const fileInput = ref(null);
+        const showImportGuide = ref(false);
 
         // ── Dynamic exercise categories (from Action Library) ──────────────
         const availableCategories = ref(
@@ -88,6 +89,18 @@ createApp({
                 workoutSection: 'Workout Charts',
                 showWeightChartLabel: 'Weight Trend',
                 workoutCatChartsLabel: 'Category Volume Charts',
+                // Data management
+                dataSection: 'Data Management',
+                importGuideBtn: 'Format Guide',
+                importGuideTitle: 'Data Format Reference',
+                importGuideWeightTitle: 'Body Weight',
+                importGuideWeightDesc: 'Stored in localStorage key: lapis_workout_metrics',
+                importGuideWorkoutTitle: 'Workout Sessions',
+                importGuideWorkoutDesc: 'Stored in localStorage key: lapis_workout',
+                importGuideTodoTitle: 'Todo Tasks',
+                importGuideTodoDesc: 'Stored in localStorage key: todo_data',
+                importGuideSafetyNote: 'Tip: Use the browser DevTools → Application → Local Storage to directly edit or import JSON data. Changes are applied immediately on next page load.',
+                importGuideClose: 'Close',
             },
             zh: {
                 tabTheme: '主題設定', tabUser: '使用者頁面', tabCalendar: '頁面功能設定',
@@ -119,6 +132,18 @@ createApp({
                 workoutSection: '健身圖表',
                 showWeightChartLabel: '體重趨勢圖',
                 workoutCatChartsLabel: '分類訓練量圖',
+                // Data management
+                dataSection: '數據管理',
+                importGuideBtn: '格式說明',
+                importGuideTitle: '資料格式參考',
+                importGuideWeightTitle: '體重記錄',
+                importGuideWeightDesc: 'localStorage 鍵名：lapis_workout_metrics',
+                importGuideWorkoutTitle: '訓練課程',
+                importGuideWorkoutDesc: 'localStorage 鍵名：lapis_workout',
+                importGuideTodoTitle: '待辦任務',
+                importGuideTodoDesc: 'localStorage 鍵名：todo_data',
+                importGuideSafetyNote: '提示：使用瀏覽器 DevTools → Application → Local Storage 可直接編輯或貼入 JSON 資料，重新載入頁面後立即生效。',
+                importGuideClose: '關閉',
             }
         };
 
@@ -324,6 +349,7 @@ createApp({
             selectTheme, toggleLang, toggleNotifications, toggleCustomBg,
             triggerUpload, handleUpload, clearCustomBg, clearCacheAndUpdate,
             availableCategories, toggleCatChart,
+            showImportGuide,
         };
     }
 }).component('LapisConfirm', window.LapisConfirm).mount('#app');

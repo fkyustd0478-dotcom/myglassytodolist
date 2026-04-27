@@ -325,15 +325,117 @@
 
             <!-- ── User Tab ────────────────────────────────────────────────── -->
             <div v-show="settingsTab === 'user'" class="space-y-4">
-                <div class="glass rounded-3xl p-8 flex flex-col items-center gap-4" :style="glassStyle">
-                    <div class="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center">
-                        <i data-lucide="user" class="w-10 h-10 opacity-40"></i>
+                <!-- Data Management -->
+                <div class="glass rounded-3xl p-5 space-y-4" :style="glassStyle">
+                    <div class="flex items-center gap-2 opacity-40">
+                        <i data-lucide="database" class="w-4 h-4"></i>
+                        <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.dataSection }}</h3>
                     </div>
-                    <p class="text-sm font-bold opacity-40">{{ t.userComingSoon }}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold">{{ t.importGuideTitle }}</span>
+                        <button @click="showImportGuide = true"
+                                class="flex items-center gap-1.5 px-4 py-2 rounded-full glass text-xs font-black opacity-70 hover:opacity-100 transition-opacity"
+                                :style="glassStyle">
+                            <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                            {{ t.importGuideBtn }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
         </div>
+
+        <!-- ── Import Guide Modal ─────────────────────────────────────────── -->
+        <transition name="fade">
+            <div v-if="showImportGuide"
+                 class="fixed inset-0 flex items-end justify-center p-4"
+                 style="z-index: var(--z-modal-lv2-backdrop)"
+                 @click.self="showImportGuide = false">
+                <div class="glass rounded-[2rem] w-full max-w-lg max-h-[82vh] flex flex-col overflow-hidden"
+                     :style="glassStyle" @click.stop>
+
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-5 h-5 opacity-60"></i>
+                            <h2 class="text-lg font-black tracking-tight">{{ t.importGuideTitle }}</h2>
+                        </div>
+                        <button @click="showImportGuide = false" class="opacity-40 hover:opacity-100 transition-opacity">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Scrollable body -->
+                    <div class="flex-1 overflow-y-auto px-6 pb-6 space-y-5 text-sm">
+
+                        <!-- Weight -->
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="scale" class="w-4 h-4 opacity-50"></i>
+                                <p class="font-black text-xs uppercase tracking-widest opacity-60">{{ t.importGuideWeightTitle }}</p>
+                            </div>
+                            <p class="text-xs opacity-50">{{ t.importGuideWeightDesc }}</p>
+                            <pre class="rounded-xl p-3 text-[11px] leading-relaxed overflow-x-auto"
+                                 :style="isDarkTheme ? 'background:rgba(0,0,0,0.4)' : 'background:rgba(0,0,0,0.05)'"
+>{ "weights": [
+  { "date": "2026-04-26", "weight": 70.5,
+    "unit": "kg", "ts": 1745625600000 }
+] }</pre>
+                        </div>
+
+                        <!-- Workout Sessions -->
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="dumbbell" class="w-4 h-4 opacity-50"></i>
+                                <p class="font-black text-xs uppercase tracking-widest opacity-60">{{ t.importGuideWorkoutTitle }}</p>
+                            </div>
+                            <p class="text-xs opacity-50">{{ t.importGuideWorkoutDesc }}</p>
+                            <pre class="rounded-xl p-3 text-[11px] leading-relaxed overflow-x-auto"
+                                 :style="isDarkTheme ? 'background:rgba(0,0,0,0.4)' : 'background:rgba(0,0,0,0.05)'"
+>{ "version": 1, "logs": [
+  { "id": "abc123", "date": "2026-04-26",
+    "exercises": [
+      { "name": "Bench Press", "type": "sets",
+        "sets": [
+          { "reps": 10, "weight": 60, "numSets": 3 }
+        ]
+      }
+    ]
+  }
+] }</pre>
+                        </div>
+
+                        <!-- Todo Tasks -->
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check-square" class="w-4 h-4 opacity-50"></i>
+                                <p class="font-black text-xs uppercase tracking-widest opacity-60">{{ t.importGuideTodoTitle }}</p>
+                            </div>
+                            <p class="text-xs opacity-50">{{ t.importGuideTodoDesc }}</p>
+                            <pre class="rounded-xl p-3 text-[11px] leading-relaxed overflow-x-auto"
+                                 :style="isDarkTheme ? 'background:rgba(0,0,0,0.4)' : 'background:rgba(0,0,0,0.05)'"
+>{ "todos": [
+  { "id": "t1", "text": "Task title",
+    "category": "normal", "completed": false,
+    "dueDate": "2026-04-26", "listId": "default",
+    "isDeleted": false }
+], "lists": [
+  { "id": "default", "name": "Default" }
+] }</pre>
+                        </div>
+
+                        <!-- Safety note -->
+                        <div class="flex gap-3 rounded-xl p-3"
+                             :style="isDarkTheme ? 'background:rgba(59,130,246,0.15)' : 'background:rgba(59,130,246,0.08)'">
+                            <i data-lucide="info" class="w-4 h-4 text-blue-400 shrink-0 mt-0.5"></i>
+                            <p class="text-xs leading-relaxed opacity-70">{{ t.importGuideSafetyNote }}</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </transition>
+
     </div>
 </body>
 </html>
