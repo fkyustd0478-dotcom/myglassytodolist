@@ -67,6 +67,9 @@ window.LapisCore = (() => {
                 : `url("${cssValue}")`;
         }
         tag.textContent = `:root { --lapis-dynamic-bg: ${value}; }`;
+        // Force synchronous CSS sheet parse: reading cssRules flushes the browser's
+        // pending CSSOM processing before any subsequent style reads or reflows.
+        void (tag.sheet && tag.sheet.cssRules.length);
         // data-theme-ts toggle forces CSS cascade re-evaluation across the tree
         document.documentElement.setAttribute('data-theme-ts', Date.now());
     }
@@ -196,8 +199,13 @@ window.LapisCore = (() => {
                 _syncHtmlBg(theme, false);
                 await _runTransition(() => {
                     updateGlobalThemeVar(bgCssValue);
-                    // Force style recalculation so gradient is resolved before opacity plays.
+                    // Repaint shake: briefly show the layer at near-zero opacity to force
+                    // the compositor to paint the gradient texture into the compositing
+                    // layer before the CSS opacity transition starts.  At opacity:0 the
+                    // compositor skips painting entirely — this bypasses that optimisation.
+                    next.style.opacity = '0.01';
                     void next.offsetHeight;
+                    next.style.opacity = '';
                     next.style.setProperty('--lapis-bg-opacity', targetOpacity);
                     next.classList.add('active');
                     if (current) current.classList.remove('active');
