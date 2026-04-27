@@ -275,6 +275,7 @@ body {
 
 /* Navigation Hiding Logic (when a modal is open) */
 .modal-active .top-nav,
+.modal-active .lapis-top-nav,
 .modal-active .bottom-nav,
 .modal-active header,
 .modal-active #list-tabs,
