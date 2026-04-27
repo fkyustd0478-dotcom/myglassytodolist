@@ -60,8 +60,8 @@ createApp({
                 otherThemes: 'Other Themes',
                 cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset',
                 forest: 'Forest', sea: 'Sea', night: 'Night', torii: 'Torii',
-                mapleavenue: 'Maple Avenue', waterfall: 'Waterfall',
-                starrysky: 'Starry Sky', ferriswheel: 'Ferris Wheel',
+                orange: 'Ember', waterfall: 'Waterfall',
+                purple: 'Cosmos', ferriswheel: 'Ferris Wheel',
                 // Effects
                 visualFx: 'Visual Effects',
                 effectNone: 'None', effectCherry: 'Petals', effectRain: 'Rain', effectSnow: 'Snow',
@@ -94,8 +94,8 @@ createApp({
                 otherThemes: '其他主題',
                 cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落',
                 forest: '森林', sea: '大海', night: '夜景', torii: '鳥居',
-                mapleavenue: '楓葉大道', waterfall: '瀑布',
-                starrysky: '星空', ferriswheel: '摩天輪',
+                orange: '火焰', waterfall: '瀑布',
+                purple: '宇宙', ferriswheel: '摩天輪',
                 visualFx: '視覺特效',
                 effectNone: '無', effectCherry: '櫻花', effectRain: '下雨', effectSnow: '下雪',
                 uiOpacity: '自定義圖片透明度', custom: '自定義 (上傳)', upload: '上傳照片',
@@ -124,8 +124,8 @@ createApp({
             { id: 'cherry' }, { id: 'forest' }, { id: 'night' },
             { id: 'sea' }, { id: 'seaside' }, { id: 'sky' },
             { id: 'sunset' }, { id: 'torii' },
-            { id: 'mapleavenue' }, { id: 'waterfall' },
-            { id: 'starrysky' }, { id: 'ferriswheel' }
+            { id: 'orange' }, { id: 'waterfall' },
+            { id: 'purple' }, { id: 'ferriswheel' }
         ];
 
         // ── Theme computed ─────────────────────────────────────────────────
@@ -135,13 +135,13 @@ createApp({
         });
 
         const isDarkTheme = computed(() => {
-            if (settings.value.theme === 'light')        return false;
-            if (settings.value.theme === 'cherry')       return false;
-            if (settings.value.theme === 'seaside')      return false;
-            if (settings.value.theme === 'mapleavenue')  return false;
-            if (settings.value.theme === 'waterfall')    return false;
-            if (settings.value.theme === 'system')       return systemDark.value;
-            const darkThemes = ['dark', 'forest', 'night', 'torii', 'starrysky', 'ferriswheel'];
+            if (settings.value.theme === 'light')      return false;
+            if (settings.value.theme === 'cherry')     return false;
+            if (settings.value.theme === 'seaside')    return false;
+            if (settings.value.theme === 'orange')     return false;
+            if (settings.value.theme === 'waterfall')  return false;
+            if (settings.value.theme === 'system')     return systemDark.value;
+            const darkThemes = ['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel'];
             if (settings.value.useCustomBg) return settings.value.customBgOpacity < 0.5;
             return darkThemes.includes(settings.value.theme);
         });

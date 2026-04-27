@@ -1,10 +1,12 @@
-// core_engine.js — LapisCore standalone module v1.2
+// core_engine.js — LapisCore standalone module v2.0
 // Provides: window.LapisCore
 //   .updateGlobalThemeVar(cssValue) — CSS variable style injection (gradient or url)
 //   .preloadImage(url)              — GPU bitmap pre-decode via img.decode()
 //   .applyTheme(theme, useCustomBg, opts) — hybrid gradient/image double-buffer swap
 //   .setActiveOpacity(opacity)      — live custom-bg opacity update
 //   .navigate(url) / .Maps(url)     — SPA-style navigation with View Transition
+//   .isImgTheme(name)               — true if name is a preset image theme
+//   .themeUrl(name)                 — absolute URL for a preset theme PNG
 //
 // Depends on: nothing (loads before nav.js and Vue)
 // Load order: storage.js → core_engine.js → nav.js → lapis_core_ui.js → …
@@ -12,22 +14,28 @@
 
 window.LapisCore = (() => {
 
+    // ── Absolute base URL ─────────────────────────────────────────────────────
+    // Computed once from document.baseURI so all asset paths are absolute.
+    // Prevents GitHub Pages sub-directory 404s and CSS url() re-resolution bugs.
+    const _docBase = (() => {
+        const b = document.baseURI || location.href;
+        return b.slice(0, b.lastIndexOf('/') + 1);
+    })();
+    const _themeUrl = (name) => _docBase + 'theme/' + name + '.png';
+
+    // ── Preset image themes ───────────────────────────────────────────────────
+    // These themes load a PNG from the theme/ directory.
+    const _imgThemes = new Set([
+        'cherry', 'sky', 'sunset', 'sea', 'seaside', 'forest', 'night', 'torii',
+    ]);
+
     // ── Preset gradient map ───────────────────────────────────────────────────
-    // All built-in themes use CSS gradients — no image files, no network requests.
-    // Keys match the theme identifiers stored in localStorage / navSettings.theme.
+    // Pure CSS gradient themes — no image files, no network requests.
     const _themeGradients = new Map([
-        ['cherry',       'linear-gradient(135deg, #FFB7B2 0%, #FFDAC1 100%)'],
-        ['sky',          'linear-gradient(180deg, #89f7fe 0%, #66a6ff 100%)'],
-        ['sunset',       'linear-gradient(180deg, #fc4a1a 0%, #f7971e 50%, #ffd200 100%)'],
-        ['sea',          'linear-gradient(180deg, #2a5298 0%, #1e3c72 100%)'],
-        ['seaside',      'linear-gradient(180deg, #74ebd5 0%, #acb6e5 100%)'],
-        ['forest',       'linear-gradient(135deg, #134E5E 0%, #71B280 100%)'],
-        ['night',        'linear-gradient(135deg, #141E30 0%, #243B55 100%)'],
-        ['torii',        'linear-gradient(135deg, #1a1a2e 0%, #4a1942 50%, #8b1a1a 100%)'],
-        ['mapleavenue',  'linear-gradient(135deg, #8B0000 0%, #FF4500 100%)'],
-        ['waterfall',    'linear-gradient(180deg, #1a6b8a 0%, #43b89c 50%, #85d8ce 100%)'],
-        ['starrysky',    'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)'],
-        ['ferriswheel',  'linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #533483 100%)'],
+        ['waterfall',   'linear-gradient(180deg, #1a6b8a 0%, #43b89c 50%, #85d8ce 100%)'],
+        ['ferriswheel', 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #533483 100%)'],
+        ['orange',      'linear-gradient(135deg, #8B0000 0%, #FF4500 100%)'],
+        ['purple',      'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)'],
     ]);
 
     // ── Double-buffer state ───────────────────────────────────────────────────
@@ -98,7 +106,7 @@ window.LapisCore = (() => {
     // Keeps <html> background aligned with the incoming theme before a View
     // Transition snapshot is captured.  Without this, the cross-fade reveals the
     // previous theme's html background colour between the two transition frames.
-    const _darkSet = new Set(['dark', 'forest', 'night', 'torii', 'starrysky', 'ferriswheel']);
+    const _darkSet = new Set(['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel']);
     function _syncHtmlBg(theme, hasCustBg) {
         document.documentElement.style.background =
             (!hasCustBg && _darkSet.has(theme)) ? '#0d1117' : '#f0f4ff';
@@ -131,10 +139,10 @@ window.LapisCore = (() => {
     // ── E. Theme Application ──────────────────────────────────────────────────
     // opts: { customBg, customBgOpacity, skipAnimation }
     //
-    // Three execution paths:
-    //   hasCustBg  — custom uploaded image: preload + spinner + GPU repaint hack
-    //   gradient   — preset theme gradient: instant, no network, no spinner
-    //   solid      — light/dark/system: deactivate bg layers, --bg-main shows
+    // Four execution paths:
+    //   needsPreload — custom image or preset PNG: preload + spinner + GPU repaint hack
+    //   gradient     — preset theme gradient: instant, no network, no spinner
+    //   solid        — light/dark/system: deactivate bg layers, --bg-main shows
     async function applyTheme(theme, useCustomBg, opts) {
         opts = opts || {};
         const customBg        = opts.customBg        || '';
@@ -142,9 +150,11 @@ window.LapisCore = (() => {
         const skipAnimation   = opts.skipAnimation    || false;
 
         const hasCustBg     = useCustomBg && customBg;
-        const bgCssValue    = hasCustBg
-            ? customBg
-            : (_themeGradients.get(theme) || '');
+        const isImgTheme    = !hasCustBg && _imgThemes.has(theme);
+        const needsPreload  = hasCustBg || isImgTheme;
+        const bgCssValue    = hasCustBg  ? customBg
+                            : isImgTheme ? _themeUrl(theme)
+                            : (_themeGradients.get(theme) || '');
         const targetOpacity = hasCustBg ? (1 - customBgOpacity) : 1;
 
         const nextId  = _otherId(_activeLayerId);
@@ -173,13 +183,13 @@ window.LapisCore = (() => {
 
         // ── Animated swap ─────────────────────────────────────────────────────
         try {
-            if (hasCustBg) {
-                // Custom image path — GPU warm-up mandatory: the bitmap must be in VRAM
-                // before startViewTransition captures its screenshot.
+            if (needsPreload) {
+                // Custom or preset image — GPU warm-up mandatory: the bitmap must be in
+                // VRAM before startViewTransition captures its screenshot.
                 _showSpinner();
                 await preloadImage(bgCssValue);
                 _hideSpinner();
-                _syncHtmlBg(theme, true);
+                _syncHtmlBg(theme, hasCustBg);
 
                 await _runTransition(() => {
                     updateGlobalThemeVar(bgCssValue);
@@ -312,7 +322,9 @@ window.LapisCore = (() => {
         applyTheme,
         setActiveOpacity,
         navigate,
-        Maps: navigate,          // alias per spec
+        Maps: navigate,
+        isImgTheme: (name) => _imgThemes.has(name),
+        themeUrl: _themeUrl,
     };
 
 })();

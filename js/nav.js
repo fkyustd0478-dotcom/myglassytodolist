@@ -22,7 +22,7 @@ function useNav() {
     const _validThemes = new Set([
         'light', 'dark', 'system',
         'cherry', 'sky', 'sunset', 'sea', 'seaside', 'forest', 'night', 'torii',
-        'mapleavenue', 'waterfall', 'starrysky', 'ferriswheel',
+        'orange', 'purple', 'waterfall', 'ferriswheel',
     ]);
     const _savedSettings = StorageProvider.getCommonSettings();
     // Guard: invalid theme string in localStorage would boot into solid-color fallback
@@ -52,13 +52,13 @@ function useNav() {
     });
 
     const isDarkTheme = computed(() => {
-        if (navSettings.theme === 'light')        return false;
-        if (navSettings.theme === 'cherry')       return false;
-        if (navSettings.theme === 'seaside')      return false;
-        if (navSettings.theme === 'mapleavenue')  return false;
-        if (navSettings.theme === 'waterfall')    return false;
-        if (navSettings.theme === 'system')       return systemDark.value;
-        const dark = ['dark', 'forest', 'night', 'torii', 'starrysky', 'ferriswheel'];
+        if (navSettings.theme === 'light')      return false;
+        if (navSettings.theme === 'cherry')     return false;
+        if (navSettings.theme === 'seaside')    return false;
+        if (navSettings.theme === 'orange')     return false;
+        if (navSettings.theme === 'waterfall')  return false;
+        if (navSettings.theme === 'system')     return systemDark.value;
+        const dark = ['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel'];
         if (navSettings.useCustomBg) return navSettings.customBgOpacity < 0.5;
         return dark.includes(navSettings.theme);
     });
@@ -70,16 +70,16 @@ function useNav() {
             cherry: '櫻花', sky: '藍天', seaside: '海濱',
             sunset: '日落', forest: '森林', sea: '大海',
             night: '夜景', torii: '鳥居',
-            mapleavenue: '楓葉大道', waterfall: '瀑布',
-            starrysky: '星空', ferriswheel: '摩天輪'
+            orange: '火焰', waterfall: '瀑布',
+            purple: '宇宙', ferriswheel: '摩天輪'
         },
         en: {
             system: 'System', light: 'Light', dark: 'Dark',
             cherry: 'Cherry', sky: 'Sky', seaside: 'Seaside',
             sunset: 'Sunset', forest: 'Forest', sea: 'Sea',
             night: 'Night', torii: 'Torii',
-            mapleavenue: 'Maple Avenue', waterfall: 'Waterfall',
-            starrysky: 'Starry Sky', ferriswheel: 'Ferris Wheel'
+            orange: 'Ember', waterfall: 'Waterfall',
+            purple: 'Cosmos', ferriswheel: 'Ferris Wheel'
         }
     };
 
@@ -191,13 +191,18 @@ function useNav() {
             } catch (_) {}
         }
 
-        // lapis-ready gate: pre-decode custom image before revealing the page.
-        // Preset themes use CSS gradients — no preload needed.
+        // lapis-ready gate: pre-decode image before revealing the page.
+        // Custom bg and preset PNG themes both require a preload; gradient/solid do not.
         // try-catch GUARANTEES lapis-ready is always added — any uncaught error
         // here would otherwise leave body at opacity:0 (permanent black screen).
         try {
-            if (typeof LapisCore !== 'undefined' && navSettings.useCustomBg && navSettings.customBg) {
-                await LapisCore.preloadImage(navSettings.customBg);
+            if (typeof LapisCore !== 'undefined') {
+                const theme = resolvedTheme.value;
+                if (navSettings.useCustomBg && navSettings.customBg) {
+                    await LapisCore.preloadImage(navSettings.customBg);
+                } else if (LapisCore.isImgTheme(theme)) {
+                    await LapisCore.preloadImage(LapisCore.themeUrl(theme));
+                }
             }
         } catch (_) {}
         document.body.classList.add('lapis-ready');

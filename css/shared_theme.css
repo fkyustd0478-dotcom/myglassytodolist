@@ -88,8 +88,8 @@ body.theme-seaside {
     --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
 }
 
-/* Image themes — new light */
-body.theme-mapleavenue {
+/* Gradient themes — light */
+body.theme-orange {
     --bg-main:        #f0f4ff;
     --text-primary:   #1a1a1a;
     --text-secondary: rgba(0, 0, 0, 0.6);
@@ -102,8 +102,8 @@ body.theme-waterfall {
     --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
 }
 
-/* Image themes — new dark */
-body.theme-starrysky {
+/* Gradient themes — dark */
+body.theme-purple {
     --bg-main:        #0d1117;
     --text-primary:   #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
@@ -195,14 +195,14 @@ body {
 
 /* Dark-theme glass border (white) */
 :is(body.theme-dark, body.theme-forest, body.theme-night,
-    body.theme-torii, body.theme-starrysky, body.theme-ferriswheel) .glass {
+    body.theme-torii, body.theme-purple, body.theme-ferriswheel) .glass {
     border: 2.5px solid rgba(255, 255, 255, 0.9);
 }
 
 /* Light-theme glass — soft frosted white (seaside moved here) */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
     body.theme-sunset, body.theme-sea, body.theme-seaside,
-    body.theme-mapleavenue, body.theme-waterfall) .glass {
+    body.theme-orange, body.theme-waterfall) .glass {
     background: rgba(255, 255, 255, 0.75) !important;
     border: 1.5px solid rgba(0, 0, 0, 0.08) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05),
@@ -264,8 +264,19 @@ body {
 }
 
 /* ── Vue Transitions ─────────────────────────────────────────────────────── */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.4s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-6px) scaleY(0.95); }
+.fade-enter-from .dropdown-menu,
+.fade-leave-to .dropdown-menu { transform-origin: top center; }
+
+/* Dropdown-specific override: snappier entry on theme picker */
+.custom-dropdown .dropdown-menu.fade-enter-active,
+.custom-dropdown .dropdown-menu.fade-leave-active {
+    transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top center;
+}
 
 .slide-up-enter-active, .slide-up-leave-active {
     transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s;
@@ -276,11 +287,11 @@ body {
 /* Light themes (seaside moved here) */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
     body.theme-sunset, body.theme-sea, body.theme-seaside,
-    body.theme-mapleavenue, body.theme-waterfall) #app { color: #1a1a1a; }
+    body.theme-orange, body.theme-waterfall) #app { color: #1a1a1a; }
 
 /* Dark themes */
 :is(body.theme-dark, body.theme-forest, body.theme-night,
-    body.theme-torii, body.theme-starrysky, body.theme-ferriswheel) #app { color: #ffffff; }
+    body.theme-torii, body.theme-purple, body.theme-ferriswheel) #app { color: #ffffff; }
 
 /* Fallback for #app class bindings still used in Vue templates */
 #app.theme-light-mode { color: #1a1a1a; }
@@ -318,7 +329,7 @@ body {
 /* Light-mode dropdown hover */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
     body.theme-sunset, body.theme-sea, body.theme-seaside,
-    body.theme-mapleavenue, body.theme-waterfall) .dropdown-item:hover {
+    body.theme-orange, body.theme-waterfall) .dropdown-item:hover {
     background: rgba(0, 0, 0, 0.06);
 }
 
@@ -342,7 +353,7 @@ body {
 /* Bottom nav */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
     body.theme-sunset, body.theme-sea, body.theme-seaside,
-    body.theme-mapleavenue, body.theme-waterfall) .bottom-nav {
+    body.theme-orange, body.theme-waterfall) .bottom-nav {
     background: rgba(255, 255, 255, 0.78) !important;
     border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04) !important;
@@ -351,28 +362,28 @@ body {
 /* Form inputs */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
     body.theme-sunset, body.theme-sea, body.theme-seaside,
-    body.theme-mapleavenue, body.theme-waterfall) .glass-input {
+    body.theme-orange, body.theme-waterfall) .glass-input {
     background: rgba(0, 0, 0, 0.04);
     border-color: rgba(0, 0, 0, 0.15);
     color: #1a1a1a;
 }
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
     body.theme-sunset, body.theme-sea, body.theme-seaside,
-    body.theme-mapleavenue, body.theme-waterfall) .glass-input:focus {
+    body.theme-orange, body.theme-waterfall) .glass-input:focus {
     border-color: rgba(0, 0, 0, 0.35);
 }
 
 /* Buttons & cards */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
     body.theme-sunset, body.theme-sea, body.theme-seaside,
-    body.theme-mapleavenue, body.theme-waterfall) .glass-button {
+    body.theme-orange, body.theme-waterfall) .glass-button {
     background: rgba(0, 0, 0, 0.05);
     border-color: rgba(0, 0, 0, 0.12);
     color: #1a1a1a;
 }
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
     body.theme-sunset, body.theme-sea, body.theme-seaside,
-    body.theme-mapleavenue, body.theme-waterfall) .glass-card {
+    body.theme-orange, body.theme-waterfall) .glass-card {
     background: rgba(0, 0, 0, 0.04);
     border: 1px solid rgba(0, 0, 0, 0.12);
 }
@@ -380,7 +391,7 @@ body {
 /* Scrollbar thumb */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
     body.theme-sunset, body.theme-sea, body.theme-seaside,
-    body.theme-mapleavenue, body.theme-waterfall) ::-webkit-scrollbar-thumb {
+    body.theme-orange, body.theme-waterfall) ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.18);
 }
 
@@ -401,7 +412,7 @@ body {
     pointer-events: none;
 }
 :is(body.theme-light, body.theme-cherry, body.theme-seaside,
-    body.theme-mapleavenue, body.theme-waterfall) #lapis-theme-spinner {
+    body.theme-orange, body.theme-waterfall) #lapis-theme-spinner {
     border-color: rgba(0, 0, 0, 0.12);
     border-top-color: rgba(0, 0, 0, 0.55);
 }
