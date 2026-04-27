@@ -52,33 +52,30 @@
 
     <div id="app" v-cloak :style="themeStyle" :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode', { 'modal-active': isAnyModalOpen }]"
          style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;">
-        <!-- Foreground Content -->
-        <div class="relative z-10 flex flex-col p-6 overflow-hidden" style="flex:1;height:100dvh;">
-            <!-- Header & Navigation -->
-            <div class="shrink-0">
-                <!-- ROW 2: List tabs (scrollable, left) + manage button (fixed, right) -->
-                <div v-show="appMode === 'todo'"
-                     class="-mx-6 flex items-center border-b"
-                     :class="isDarkTheme ? 'border-white/10' : 'border-black/[0.06]'">
-                    <div id="list-tabs" class="overflow-x-auto no-scrollbar py-2 flex items-center flex-1">
-                        <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
-                            <button @click="currentListId = list.id" @touchstart="currentListId = list.id"
-                                class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none"
-                                :class="currentListId === list.id ? 'bg-blue-600 text-white' : ''" :style="glassStyle">
-                                {{ isDefaultList(list.id) ? t[list.id] : list.name }}
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Manage anchor — fixed at far right, outside Sortable scope -->
-                    <div class="shrink-0 px-3 py-2">
-                        <button @click="openManageModal"
-                                class="w-9 h-9 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity"
-                                :style="glassStyle">
-                            <i data-lucide="list-plus" class="w-4 h-4"></i>
-                        </button>
-                    </div>
+        <!-- ROW 2: List tabs (direct child of #app, no overflow clipping) -->
+        <div v-show="appMode === 'todo'"
+             class="todo-tab-row shrink-0 relative z-10 flex items-center border-b"
+             :class="isDarkTheme ? 'border-white/10' : 'border-black/[0.06]'">
+            <div id="list-tabs" class="overflow-x-auto no-scrollbar py-2 pl-4 flex items-center flex-1">
+                <div v-for="list in lists" :key="list.id" :data-id="list.id" class="list-tab-item" :class="{ 'active-tab': currentListId === list.id }">
+                    <button @click="currentListId = list.id" @touchstart="currentListId = list.id"
+                        class="px-6 py-3 rounded-full glass text-xs font-bold whitespace-nowrap transition-all shadow-lg border-none"
+                        :class="currentListId === list.id ? 'bg-blue-600 text-white' : ''" :style="glassStyle">
+                        {{ isDefaultList(list.id) ? t[list.id] : list.name }}
+                    </button>
                 </div>
             </div>
+            <!-- Manage anchor — fixed at far right, outside Sortable scope -->
+            <div class="shrink-0 pr-4 pl-2 py-2">
+                <button @click="openManageModal"
+                        class="w-9 h-9 rounded-full glass flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity"
+                        :style="glassStyle">
+                    <i data-lucide="list-plus" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Foreground Content -->
+        <div class="relative z-10 flex flex-col px-6 pt-4 overflow-hidden" style="flex:1;">
 
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto no-scrollbar" :class="{ 'pointer-events-none': isAnyModalOpen }" style="padding-bottom:var(--nav-height)">
