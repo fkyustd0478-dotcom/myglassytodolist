@@ -110,5 +110,45 @@ window.LapisStudioEngine = (() => {
         document.body.removeChild(a);
     }
 
-    return { load, applyMask, download };
+    // ── SVG shape inner content for the interactive crop overlay ─────────────
+    // Returns an SVG element string (black fill) to be placed inside a <mask>.
+    // The mask is applied to a dark rect so areas OUTSIDE the shape are dimmed.
+    // Parameters: shape key, crop-box rect (bx,by,bw,bh) in container px coords.
+    function svgShapeInner(shape, bx, by, bw, bh) {
+        const bcx = bx + bw / 2, bcy = by + bh / 2;
+        const bR  = Math.min(bw, bh) / 2;
+        const f   = v => v.toFixed(1);
+
+        if (shape === 'circle') {
+            return `<circle cx="${f(bcx)}" cy="${f(bcy)}" r="${f(bR)}" fill="black"/>`;
+        }
+        if (shape === 'ellipse') {
+            return `<ellipse cx="${f(bcx)}" cy="${f(bcy)}" rx="${f(bw/2)}" ry="${f(bh*0.38)}" fill="black"/>`;
+        }
+        if (shape === 'heart') {
+            // Normalized heart path [0,100]×[0,100] → scaled to crop box.
+            // 4 control-point cubic bezier segments; left/right lobes meet at center.
+            const p = (nx, ny) => `${f(bx + nx * bw / 100)},${f(by + ny * bh / 100)}`;
+            const d = `M${p(50,30)} C${p(50,20)} ${p(40,10)} ${p(30,10)}`
+                    + ` C${p(10,10)} ${p(10,30)} ${p(10,30)}`
+                    + ` C${p(10,55)} ${p(30,75)} ${p(50,90)}`
+                    + ` C${p(70,75)} ${p(90,55)} ${p(90,30)}`
+                    + ` C${p(90,30)} ${p(90,10)} ${p(70,10)}`
+                    + ` C${p(60,10)} ${p(50,20)} ${p(50,30)}Z`;
+            return `<path d="${d}" fill="black"/>`;
+        }
+        if (shape === 'star') {
+            const R = bR * 0.92, r = R * 0.42;
+            const pts = [];
+            for (let i = 0; i < 10; i++) {
+                const a = (i * Math.PI) / 5 - Math.PI / 2;
+                const rad = i % 2 === 0 ? R : r;
+                pts.push(`${f(bcx + rad * Math.cos(a))},${f(bcy + rad * Math.sin(a))}`);
+            }
+            return `<polygon points="${pts.join(' ')}" fill="black"/>`;
+        }
+        return '';
+    }
+
+    return { load, applyMask, download, svgShapeInner };
 })();
