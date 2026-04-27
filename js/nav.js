@@ -130,8 +130,16 @@ function useNav() {
     }
 
     function _applyTheme(theme, useCustomBg) {
-        // Update body class immediately (drives CSS variables / glass style)
-        document.body.className = 'theme-' + theme + (useCustomBg ? ' using-custom-bg' : '');
+        // Swap only theme-* and using-custom-bg classes; preserve all others (e.g.
+        // lapis-ready). Using className= would strip lapis-ready, returning body to
+        // opacity:0 and causing a black screen after every View Transition completes.
+        const keep = Array.from(document.body.classList)
+            .filter(c => !c.startsWith('theme-') && c !== 'using-custom-bg');
+        document.body.className = [
+            'theme-' + theme,
+            ...(useCustomBg ? ['using-custom-bg'] : []),
+            ...keep,
+        ].join(' ');
         if (typeof LapisCore === 'undefined') return;
         const skipAnimation = _firstApply;
         if (_firstApply) _firstApply = false;
