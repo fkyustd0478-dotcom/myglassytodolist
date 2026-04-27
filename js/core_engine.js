@@ -25,17 +25,23 @@ window.LapisCore = (() => {
 
     // ── Preset image themes ───────────────────────────────────────────────────
     // These themes load a PNG from the theme/ directory.
+    // waterfall/ferriswheel/starrynight PNGs must be uploaded to theme/ to activate.
     const _imgThemes = new Set([
         'cherry', 'sky', 'sunset', 'sea', 'seaside', 'forest', 'night', 'torii',
+        'waterfall', 'ferriswheel', 'starrynight',
     ]);
 
     // ── Preset gradient map ───────────────────────────────────────────────────
     // Pure CSS gradient themes — no image files, no network requests.
     const _themeGradients = new Map([
-        ['waterfall',   'linear-gradient(180deg, #1a6b8a 0%, #43b89c 50%, #85d8ce 100%)'],
-        ['ferriswheel', 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #533483 100%)'],
         ['orange',      'linear-gradient(135deg, #8B0000 0%, #FF4500 100%)'],
         ['purple',      'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)'],
+        ['cherrrypink', 'linear-gradient(135deg, #ffd1dc 0%, #ffafbd 100%)'],
+        ['skyblue',     'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)'],
+        ['grassgreen',  'linear-gradient(135deg, #96e6a1 0%, #d4fc79 100%)'],
+        ['beige',       'linear-gradient(135deg, #f5f5dc 0%, #fff8e1 100%)'],
+        ['lightgrey',   'linear-gradient(135deg, #bdc3c7 0%, #eeeeee 100%)'],
+        ['lavender',    'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)'],
     ]);
 
     // ── Double-buffer state ───────────────────────────────────────────────────
@@ -106,7 +112,7 @@ window.LapisCore = (() => {
     // Keeps <html> background aligned with the incoming theme before a View
     // Transition snapshot is captured.  Without this, the cross-fade reveals the
     // previous theme's html background colour between the two transition frames.
-    const _darkSet = new Set(['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel']);
+    const _darkSet = new Set(['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight']);
     function _syncHtmlBg(theme, hasCustBg) {
         document.documentElement.style.background =
             (!hasCustBg && _darkSet.has(theme)) ? '#0d1117' : '#f0f4ff';

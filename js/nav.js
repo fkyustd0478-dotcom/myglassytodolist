@@ -22,7 +22,8 @@ function useNav() {
     const _validThemes = new Set([
         'light', 'dark', 'system',
         'cherry', 'sky', 'sunset', 'sea', 'seaside', 'forest', 'night', 'torii',
-        'orange', 'purple', 'waterfall', 'ferriswheel',
+        'waterfall', 'ferriswheel', 'starrynight',
+        'orange', 'purple', 'cherrrypink', 'skyblue', 'grassgreen', 'beige', 'lightgrey', 'lavender',
     ]);
     const _savedSettings = StorageProvider.getCommonSettings();
     // Guard: invalid theme string in localStorage would boot into solid-color fallback
@@ -58,7 +59,7 @@ function useNav() {
         if (navSettings.theme === 'orange')     return false;
         if (navSettings.theme === 'waterfall')  return false;
         if (navSettings.theme === 'system')     return systemDark.value;
-        const dark = ['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel'];
+        const dark = ['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight'];
         if (navSettings.useCustomBg) return navSettings.customBgOpacity < 0.5;
         return dark.includes(navSettings.theme);
     });
@@ -70,16 +71,20 @@ function useNav() {
             cherry: '櫻花', sky: '藍天', seaside: '海濱',
             sunset: '日落', forest: '森林', sea: '大海',
             night: '夜景', torii: '鳥居',
-            orange: '火焰', waterfall: '瀑布',
-            purple: '宇宙', ferriswheel: '摩天輪'
+            waterfall: '瀑布', ferriswheel: '摩天輪', starrynight: '星空',
+            orange: '火焰', purple: '宇宙',
+            cherrrypink: '櫻花粉', skyblue: '天空藍', grassgreen: '草綠色',
+            beige: '米黃色', lightgrey: '淺灰色', lavender: '淡紫色'
         },
         en: {
             system: 'System', light: 'Light', dark: 'Dark',
             cherry: 'Cherry', sky: 'Sky', seaside: 'Seaside',
             sunset: 'Sunset', forest: 'Forest', sea: 'Sea',
             night: 'Night', torii: 'Torii',
-            orange: 'Ember', waterfall: 'Waterfall',
-            purple: 'Cosmos', ferriswheel: 'Ferris Wheel'
+            waterfall: 'Waterfall', ferriswheel: 'Ferris Wheel', starrynight: 'Starry Night',
+            orange: 'Ember', purple: 'Cosmos',
+            cherrrypink: 'Cherry Pink', skyblue: 'Sky Blue', grassgreen: 'Grass Green',
+            beige: 'Beige', lightgrey: 'Light Grey', lavender: 'Lavender'
         }
     };
 
