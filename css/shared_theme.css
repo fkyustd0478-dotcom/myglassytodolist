@@ -361,6 +361,22 @@ body {
     border-radius: 20px;
     z-index: 9999;
     overflow: hidden;
+    background: #1e1e2e;
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    color: #ffffff;
+}
+
+/* Light-theme opaque dropdown */
+:is(body.theme-light, body.theme-cherry, body.theme-sky,
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-orange, body.theme-waterfall,
+    body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
+    body.theme-beige, body.theme-lightgrey, body.theme-lavender) .dropdown-menu {
+    background: #ffffff;
+    border: 1.5px solid rgba(0, 0, 0, 0.10);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    color: #1a1a1a;
 }
 
 .dropdown-item {
@@ -430,6 +446,22 @@ body {
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) .glass-input:focus {
     border-color: rgba(0, 0, 0, 0.35);
+}
+
+/* Select elements — opaque for readability */
+select {
+    background: #1e1e2e;
+    color: #ffffff;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+}
+:is(body.theme-light, body.theme-cherry, body.theme-sky,
+    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-orange, body.theme-waterfall,
+    body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
+    body.theme-beige, body.theme-lightgrey, body.theme-lavender) select {
+    background: #ffffff;
+    color: #1a1a1a;
+    border: 1.5px solid rgba(0, 0, 0, 0.12);
 }
 
 /* Buttons & cards */
