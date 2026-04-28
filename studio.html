@@ -40,13 +40,13 @@
      :class="[isDarkTheme ? 'theme-dark-mode' : 'theme-light-mode']"
      style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;position:relative;">
 
-    <!-- ROW 1: LapisNav header injected here -->
+    <!-- ROW 1: LapisNav header injected by LapisNav.inject() -->
 
     <!-- ── Main content ───────────────────────────────────────────────────── -->
     <main class="relative z-10 flex-1 overflow-hidden flex flex-col"
           :style="{ paddingBottom: mainPaddingBottom }">
 
-        <!-- A: Upload zone (no image loaded) -->
+        <!-- A: Upload zone (no image) -->
         <div v-show="contentView === 'upload'"
              class="studio-drop-zone flex-1 flex flex-col items-center justify-center gap-6 m-4 rounded-[2.5rem]"
              :class="{ 'drag-over': dragOver }"
@@ -64,10 +64,10 @@
             </label>
         </div>
 
-        <!-- B/D: Image area (preview or effects mode share the same container) -->
-        <div v-show="contentView === 'preview' || contentView === 'effects'"
+        <!-- B: Image area — shared by main nav preview AND effects nav -->
+        <div v-show="contentView === 'preview'"
              class="flex-1 relative flex items-center justify-center p-4 overflow-hidden">
-            <!-- Delete button — top-right, red X, confirm dialog -->
+            <!-- Delete button — top-right, confirm dialog -->
             <button v-if="imageUrl"
                     @click="promptDeleteImage"
                     class="absolute top-2 right-2 z-10 w-9 h-9 rounded-full flex items-center justify-center text-white"
@@ -83,7 +83,7 @@
         <div v-show="contentView === 'crop'" class="flex-1 flex flex-col overflow-hidden min-h-0">
             <div id="crop-wrap" class="flex-1 overflow-hidden">
                 <img id="crop-image" style="max-width:100%;display:block;">
-                <!-- Shape-aware overlay: dims the area OUTSIDE the selected shape -->
+                <!-- SVG shape overlay: dims area OUTSIDE the selected shape -->
                 <div v-if="isSpecialShape && cropBoxData && containerSize.w"
                      style="position:absolute;inset:0;pointer-events:none;z-index:20;"
                      v-html="shapeOverlaySvg">
@@ -94,13 +94,13 @@
     </main>
 
     <!-- ── Floating Tool Panel (fixed above bottom nav) ──────────────────── -->
-    <!-- Visible in crop mode (shape/ratio selector) and effects mode (filters) -->
     <div v-show="showFloatingPanel"
          style="position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:0;right:0;z-index:7005;">
         <div class="glass overflow-x-auto no-scrollbar px-3 py-2 flex items-center gap-2"
              style="backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.08);"
              :style="glassStyle">
-            <!-- Crop mode: ratio + shape selector -->
+
+            <!-- ─ Crop: ratio + shape selector ───────────────────────────── -->
             <template v-if="activeNav === 'crop'">
                 <button v-for="r in cropRatios" :key="r.key"
                         @click="setRatio(r)"
@@ -120,26 +120,73 @@
                         v-html="s.svg">
                 </button>
             </template>
-            <!-- Effects mode: colour/special filter buttons -->
+
+            <!-- ─ Effects: 3-category tabs + content ─────────────────────── -->
             <template v-else>
-                <button v-for="eff in effectsList" :key="eff.key"
-                        @click="applyEffectFilter(eff.key)"
-                        class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                        :class="{ 'is-active': activeEffect === eff.key }"
-                        :style="activeEffect !== eff.key ? glassStyle : {}">
-                    {{ t[eff.key] }}
+                <!-- Category tab: Filters -->
+                <button @click="effectCategory = 'filters'"
+                        class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                        :class="{ 'is-active': effectCategory === 'filters' }"
+                        :style="effectCategory !== 'filters' ? glassStyle : {}">
+                    {{ t.filtersCat }}
                 </button>
+                <!-- Category tab: Glass -->
+                <button @click="effectCategory = 'glass'"
+                        class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                        :class="{ 'is-active': effectCategory === 'glass' }"
+                        :style="effectCategory !== 'glass' ? glassStyle : {}">
+                    {{ t.glassCat }}
+                </button>
+                <!-- Category tab: Jigsaw -->
+                <button @click="effectCategory = 'jigsaw'"
+                        class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                        :class="{ 'is-active': effectCategory === 'jigsaw' }"
+                        :style="effectCategory !== 'jigsaw' ? glassStyle : {}">
+                    {{ t.jigsawCat }}
+                </button>
+                <div class="shrink-0 w-px h-5 mx-1 opacity-20"
+                     :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
+                <!-- Colour filters -->
+                <template v-if="effectCategory === 'filters'">
+                    <button v-for="eff in effectsList" :key="eff.key"
+                            @click="applyEffectFilter(eff.key)"
+                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                            :class="{ 'is-active': activeEffect === eff.key }"
+                            :style="activeEffect !== eff.key ? glassStyle : {}">
+                        {{ t[eff.tKey] }}
+                    </button>
+                </template>
+                <!-- Glass shatter variants -->
+                <template v-else-if="effectCategory === 'glass'">
+                    <button v-for="v in glassVariants" :key="v.key"
+                            @click="applyEffectFilter(v.key)"
+                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                            :class="{ 'is-active': activeEffect === v.key }"
+                            :style="activeEffect !== v.key ? glassStyle : {}">
+                        {{ t[v.tKey] }}
+                    </button>
+                </template>
+                <!-- Jigsaw dispersal variants -->
+                <template v-else>
+                    <button v-for="v in jigsawVariants" :key="v.key"
+                            @click="applyEffectFilter(v.key)"
+                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                            :class="{ 'is-active': activeEffect === v.key }"
+                            :style="activeEffect !== v.key ? glassStyle : {}">
+                        {{ t[v.tKey] }}
+                    </button>
+                </template>
             </template>
+
         </div>
     </div>
 
-    <!-- ── Bottom Nav with drawer-swap transition ────────────────────────── -->
-    <!-- @after-enter / @after-leave ensure Lucide icons are re-created once  -->
-    <!-- the new nav element is fully visible in the DOM.                     -->
+    <!-- ── Bottom Nav — drawer-swap transition between 3 states ─────────── -->
+    <!-- @after-enter / @after-leave refresh Lucide icons inside the new nav -->
     <transition name="drawer-swap" mode="out-in"
                 @after-enter="refreshIcons" @after-leave="refreshIcons">
 
-        <!-- Main nav -->
+        <!-- ── Main nav ─────────────────────────────────────────────────── -->
         <nav v-if="activeNav === 'main'" key="nav-main"
              class="bottom-nav glass" :style="glassStyle">
             <button @click="triggerUpload" class="nav-item" :class="{ active: !imageUrl }">
@@ -151,12 +198,12 @@
                 <i data-lucide="crop" class="w-5 h-5"></i>
                 <span>{{ t.crop }}</span>
             </button>
-            <button @click="toggleEffects" class="nav-item"
-                    :class="{ active: currentTab === 'effects' }"
+            <button @click="enterEffects" class="nav-item"
                     :style="!imageUrl ? { opacity: 0.35, pointerEvents: 'none' } : {}">
                 <i data-lucide="sparkles" class="w-5 h-5"></i>
                 <span>{{ t.effects }}</span>
             </button>
+            <!-- Download is the ONLY entry point for file export -->
             <button @click="promptDownload" class="nav-item"
                     :style="!imageUrl ? { opacity: 0.35, pointerEvents: 'none' } : {}">
                 <i data-lucide="download" class="w-5 h-5"></i>
@@ -164,8 +211,35 @@
             </button>
         </nav>
 
-        <!-- Crop tool nav (4-button action row) -->
-        <!-- Apply (套用) stays in crop; Save (保存) exits after applying -->
+        <!-- ── Effects action row ────────────────────────────────────────── -->
+        <!-- Apply = commit preview, STAY in effects nav                     -->
+        <!-- Save  = commit (if pending) + EXIT to main nav (no download)    -->
+        <!-- Back  = DISCARD uncommitted preview + exit to main nav          -->
+        <nav v-else-if="activeNav === 'effects'" key="nav-effects"
+             class="bottom-nav glass" style="backdrop-filter:blur(24px);" :style="glassStyle">
+            <button @click="exitEffects" class="nav-item">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                <span>{{ t.back }}</span>
+            </button>
+            <button @click="undo" class="nav-item" :disabled="canUndoCt === 0">
+                <i data-lucide="undo-2" class="w-5 h-5"></i>
+                <span>{{ t.undo }}</span>
+            </button>
+            <button @click="applyCurrentEffect" class="nav-item"
+                    :class="{ active: activeEffect !== '' }"
+                    :style="activeEffect === '' ? { opacity: 0.35, pointerEvents: 'none' } : {}">
+                <i data-lucide="check" class="w-5 h-5"></i>
+                <span>{{ t.apply }}</span>
+            </button>
+            <button @click="saveFromEffects" class="nav-item">
+                <i data-lucide="save" class="w-5 h-5"></i>
+                <span>{{ t.save }}</span>
+            </button>
+        </nav>
+
+        <!-- ── Crop action row ───────────────────────────────────────────── -->
+        <!-- Apply = commit crop, STAY in crop nav                           -->
+        <!-- Save  = commit crop + EXIT to main nav (no download)            -->
         <nav v-else key="nav-crop"
              class="bottom-nav glass" style="backdrop-filter:blur(24px);" :style="glassStyle">
             <button @click="exitCrop" class="nav-item">
@@ -181,7 +255,7 @@
                 <span>{{ t.apply }}</span>
             </button>
             <button @click="saveFromCrop" class="nav-item">
-                <i data-lucide="download" class="w-5 h-5"></i>
+                <i data-lucide="save" class="w-5 h-5"></i>
                 <span>{{ t.save }}</span>
             </button>
         </nav>
@@ -191,7 +265,7 @@
     <!-- Hidden file input -->
     <input id="studio-file-input" type="file" accept="image/*" class="hidden" @change="handleFileInput">
 
-    <!-- Filename modal (LV2 bottom-sheet) -->
+    <!-- Filename modal (LV2 bottom-sheet) — triggered by Download in main nav only -->
     <transition name="fade">
         <div v-show="showFilenameModal"
              class="fixed inset-0 flex items-end justify-center bg-black/60 backdrop-blur-sm"
