@@ -389,7 +389,7 @@
                         canvas.height = img.naturalHeight;
                         canvas.getContext('2d').drawImage(img, 0, 0);
                     }
-                    LapisStudioEngine.download(canvas, name);
+                    await LapisStudioEngine.triggerRealDownload(canvas, name);
                 } catch (e) {
                     alert(t.value.errExport);
                 }

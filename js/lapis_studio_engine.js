@@ -402,19 +402,33 @@ window.LapisStudioEngine = (() => {
         return cvs;
     }
 
-    // ── Download (blob-based; 3 s delay before revoking prevents ERR_FILE_NOT_FOUND) ──
-    function download(canvas, filename) {
-        const raw    = (filename || '').trim() || `glassystudio_${Date.now()}`;
-        const safe   = raw.replace(/[\\/:*?"<>|]/g, '_').substring(0, 255);
-        const dlName = safe.endsWith('.png') ? safe : `${safe}.png`;
-        canvas.toBlob(blob => {
-            if (!blob) return;
-            const url = URL.createObjectURL(blob);
-            const a   = document.createElement('a');
-            a.download = dlName; a.href = url;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 3000);
-        }, 'image/png', 1.0);
+    // ── Download (mobile-optimized; octet-stream forces save dialog on mobile) ──
+    function triggerRealDownload(canvas, customName) {
+        return new Promise((resolve) => {
+            canvas.toBlob((blob) => {
+                const timestamp = Date.now();
+                let inputName = customName ? customName.trim() : `glassystudio_${timestamp}`;
+                let safeName  = inputName.replace(/[\\/:*?"<>|]/g, '_').substring(0, 255);
+                if (!safeName.toLowerCase().endsWith('.png')) safeName += '.png';
+
+                // Force octet-stream so mobile browsers trigger a save dialog
+                // instead of opening the image inline in a new tab
+                const forcedBlob = new Blob([blob], { type: 'application/octet-stream' });
+                const url  = URL.createObjectURL(forcedBlob);
+                const link = document.createElement('a');
+                link.href     = url;
+                link.download = safeName;
+                // Off-screen but still in the layout so mobile click registers
+                link.style.cssText = 'display:block;width:0;height:0;position:fixed;top:-100px;';
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    resolve();
+                }, 3000);
+            }, 'image/png');
+        });
     }
 
     // ── SVG shape inner for crop overlay ─────────────────────────────────────
@@ -450,5 +464,5 @@ window.LapisStudioEngine = (() => {
         return '';
     }
 
-    return { load, loadImageToCanvas, applyMask, applyEffect, download, svgShapeInner };
+    return { load, loadImageToCanvas, applyMask, applyEffect, triggerRealDownload, svgShapeInner };
 })();
