@@ -34,11 +34,11 @@
         body  { opacity: 0; transition: opacity 0.4s ease-in-out; }
         body.lapis-ready { opacity: 1; }
 
-        /* Horizontal nav-swap: new nav slides in from right, old exits to left */
+        /* Drawer nav-swap: new nav slides up from bottom, old exits downward */
         .nav-swap-enter-active,
         .nav-swap-leave-active { transition: transform 0.26s cubic-bezier(0.4,0,0.2,1), opacity 0.26s ease; }
-        .nav-swap-enter-from   { transform: translateX(100%); opacity: 0; }
-        .nav-swap-leave-to     { transform: translateX(-100%); opacity: 0; }
+        .nav-swap-enter-from   { transform: translateY(100%); opacity: 0; }
+        .nav-swap-leave-to     { transform: translateY(100%); opacity: 0; }
 
         /* Upload drop zone */
         .studio-drop-zone { border: 2px dashed rgba(255,255,255,0.18); transition: border-color 0.2s; }
@@ -48,7 +48,7 @@
         body.theme-sunset .studio-drop-zone, body.theme-mapleavenue .studio-drop-zone,
         body.theme-waterfall .studio-drop-zone { border-color: rgba(0,0,0,0.14); }
 
-        /* Shape selector button active state */
+        /* Shape/effect button active state */
         .shape-btn.is-active { background: #3b82f6 !important; color: #fff !important; }
 
         /* Undo button: disabled style */
@@ -73,7 +73,7 @@
 
     <!-- ── Main content ───────────────────────────────────────────────────── -->
     <main class="relative z-10 flex-1 overflow-hidden flex flex-col"
-          style="padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px))">
+          :style="{ paddingBottom: mainPaddingBottom }">
 
         <!-- A: Upload zone (no image) -->
         <div v-show="contentView === 'upload'"
@@ -93,17 +93,23 @@
             </label>
         </div>
 
-        <!-- B: Image preview -->
-        <div v-show="contentView === 'preview'"
-             class="flex-1 flex items-center justify-center p-4 overflow-hidden">
+        <!-- B/D: Image area (preview or effects mode) -->
+        <div v-show="contentView === 'preview' || contentView === 'effects'"
+             class="flex-1 relative flex items-center justify-center p-4 overflow-hidden">
+            <!-- Delete button — top-right corner of image area -->
+            <button v-if="imageUrl"
+                    @click="promptDeleteImage"
+                    class="absolute top-2 right-2 z-10 w-9 h-9 rounded-full flex items-center justify-center text-white"
+                    style="background:rgba(239,68,68,0.80);backdrop-filter:blur(4px);">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
             <img :src="resultUrl || imageUrl"
                  class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                  style="pointer-events:none;user-select:none;">
         </div>
 
-        <!-- C: Crop workspace — image at top (flex-1), shape selector at bottom (shrink-0) -->
+        <!-- C: Crop workspace -->
         <div v-show="contentView === 'crop'" class="flex-1 flex flex-col overflow-hidden min-h-0">
-
             <!-- Cropper.js container + shape overlay -->
             <div id="crop-wrap" class="flex-1 overflow-hidden">
                 <img id="crop-image" style="max-width:100%;display:block;">
@@ -113,11 +119,18 @@
                      v-html="shapeOverlaySvg">
                 </div>
             </div>
+        </div>
 
-            <!-- Shape / ratio selector (between image and nav) -->
-            <div class="shrink-0 overflow-x-auto no-scrollbar px-3 py-2 flex items-center gap-2"
-                 style="border-top:1px solid rgba(255,255,255,0.08)">
-                <!-- Standard ratios -->
+    </main>
+
+    <!-- ── Floating Tool Panel (sits above bottom nav) ───────────────────── -->
+    <div v-show="showFloatingPanel"
+         style="position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:0;right:0;z-index:7005;">
+        <div class="glass overflow-x-auto no-scrollbar px-3 py-2 flex items-center gap-2"
+             style="backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.08);"
+             :style="glassStyle">
+            <!-- Crop mode: shape / ratio selector -->
+            <template v-if="activeNav === 'crop'">
                 <button v-for="r in cropRatios" :key="r.key"
                         @click="setRatio(r)"
                         class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
@@ -125,10 +138,8 @@
                         :style="cropShape !== r.key ? glassStyle : {}">
                     {{ r.label }}
                 </button>
-                <!-- Divider -->
                 <div class="shrink-0 w-px h-5 mx-1 opacity-20"
                      :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
-                <!-- Special shape masks -->
                 <button v-for="s in specialShapes" :key="s.key"
                         @click="setSpecialShape(s)"
                         class="shape-btn shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center transition-all"
@@ -137,20 +148,19 @@
                         :title="t[s.key]"
                         v-html="s.svg">
                 </button>
-            </div>
+            </template>
+            <!-- Effects mode: colour filter buttons -->
+            <template v-else>
+                <button v-for="eff in effectsList" :key="eff.key"
+                        @click="applyEffectFilter(eff.key)"
+                        class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                        :class="{ 'is-active': activeEffect === eff.key }"
+                        :style="activeEffect !== eff.key ? glassStyle : {}">
+                    {{ t[eff.key] }}
+                </button>
+            </template>
         </div>
-
-        <!-- D: Effects placeholder -->
-        <div v-show="contentView === 'effects'"
-             class="flex-1 flex items-center justify-center p-8">
-            <div class="glass rounded-[2.5rem] p-10 flex flex-col items-center gap-4 max-w-sm w-full" :style="glassStyle">
-                <i data-lucide="sparkles" class="w-12 h-12 opacity-40"></i>
-                <h2 class="text-xl font-black tracking-tight">{{ t.effects }}</h2>
-                <p class="text-sm opacity-40 text-center">{{ t.comingSoon }}</p>
-            </div>
-        </div>
-
-    </main>
+    </div>
 
     <!-- ── Bottom Nav: main ───────────────────────────────────────────────── -->
     <transition name="nav-swap" mode="out-in">
@@ -165,7 +175,9 @@
                 <i data-lucide="crop" class="w-5 h-5"></i>
                 <span>{{ t.crop }}</span>
             </button>
-            <button @click="toggleEffects" class="nav-item" :class="{ active: currentTab === 'effects' }">
+            <button @click="toggleEffects" class="nav-item"
+                    :class="{ active: currentTab === 'effects' }"
+                    :style="!imageUrl ? { opacity: 0.35, pointerEvents: 'none' } : {}">
                 <i data-lucide="sparkles" class="w-5 h-5"></i>
                 <span>{{ t.effects }}</span>
             </button>
@@ -252,18 +264,19 @@
             const cropShape         = ref('free');
             const showFilenameModal = ref(false);
             const downloadFilename  = ref('');
+            const activeEffect      = ref('');       // key of last applied effect
 
             // Crop overlay state
-            const cropBoxData   = ref(null);  // {left,top,width,height} from Cropper.js
-            const containerSize = ref({ w: 0, h: 0 }); // #crop-wrap dimensions
+            const cropBoxData   = ref(null);         // {left,top,width,height} from Cropper.js
+            const containerSize = ref({ w: 0, h: 0 });
 
             // History
-            const canUndoCt = ref(0);    // reactive count, drives Undo button state
-            let _undoStack  = [];        // string[] of data URLs (max 10)
-            let _cropper    = null;
+            const canUndoCt = ref(0);
+            let _undoStack    = [];
+            let _cropper      = null;
             let _resultCanvas = null;
 
-            // Drives content panel visibility
+            // ── Content visibility ────────────────────────────────────────────
             const contentView = computed(() => {
                 if (activeNav.value === 'crop') return 'crop';
                 if (!imageUrl.value)            return 'upload';
@@ -272,6 +285,19 @@
 
             const isSpecialShape = computed(() =>
                 ['circle', 'ellipse', 'heart', 'star'].includes(cropShape.value)
+            );
+
+            // Floating panel visible during crop (shape selector) or effects (filter row)
+            const showFloatingPanel = computed(() =>
+                activeNav.value === 'crop' ||
+                (currentTab.value === 'effects' && !!imageUrl.value)
+            );
+
+            // Extra 54px for the floating panel when visible
+            const mainPaddingBottom = computed(() =>
+                showFloatingPanel.value
+                    ? 'calc(134px + env(safe-area-inset-bottom, 0px))'
+                    : 'calc(80px + env(safe-area-inset-bottom, 0px))'
             );
 
             // ── Shape-aware crop overlay SVG ──────────────────────────────────
@@ -309,6 +335,9 @@
                     errSize: '圖片超過 10 MB，請選擇較小的檔案。',
                     errLoad: '圖片載入失敗，請重試。',
                     noImage: '請先上傳一張圖片。',
+                    confirmDelete: '確定要刪除此圖片嗎？',
+                    grayscale: '黑白', sepia: '復古', vivid: '鮮豔',
+                    dim: '暗調', warm: '暖色', cool: '冷色',
                 },
                 en: {
                     upload: 'Upload', crop: 'Crop', effects: 'Effects', save: 'Save',
@@ -322,6 +351,9 @@
                     errSize: 'Image exceeds 10 MB.',
                     errLoad: 'Failed to load image.',
                     noImage: 'Please upload an image first.',
+                    confirmDelete: 'Delete this image?',
+                    grayscale: 'B&W', sepia: 'Sepia', vivid: 'Vivid',
+                    dim: 'Dim', warm: 'Warm', cool: 'Cool',
                 },
             };
             const t = computed(() => translations[navSettings.lang] || translations.zh);
@@ -341,19 +373,29 @@
                 { key: 'star',    svg: '<svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor"><polygon points="10,1 12.9,7 19.5,7.6 14.5,12 16.2,18.5 10,15 3.8,18.5 5.5,12 0.5,7.6 7.1,7"/></svg>' },
             ];
 
+            const effectsList = [
+                { key: 'grayscale' },
+                { key: 'sepia' },
+                { key: 'vivid' },
+                { key: 'dim' },
+                { key: 'warm' },
+                { key: 'cool' },
+            ];
+
             // ── File upload ───────────────────────────────────────────────────
             async function _loadFile(file) {
                 if (!file || !file.type.startsWith('image/')) return;
                 try {
                     const url = await LapisStudioEngine.load(file);
                     if (imageUrl.value) URL.revokeObjectURL(imageUrl.value);
-                    imageUrl.value    = url;
-                    resultUrl.value   = '';
-                    _resultCanvas     = null;
-                    _undoStack        = [];
-                    canUndoCt.value   = 0;
-                    currentTab.value  = 'preview';
-                    activeNav.value   = 'main';
+                    imageUrl.value     = url;
+                    resultUrl.value    = '';
+                    _resultCanvas      = null;
+                    _undoStack         = [];
+                    canUndoCt.value    = 0;
+                    activeEffect.value = '';
+                    currentTab.value   = 'preview';
+                    activeNav.value    = 'main';
                 } catch (e) {
                     alert(e.message === 'SIZE_EXCEEDED' ? t.value.errSize : t.value.errLoad);
                 }
@@ -363,12 +405,47 @@
             function triggerUpload()     { document.getElementById('studio-file-input').click(); }
             function onDrop(e)           { dragOver.value = false; _loadFile(e.dataTransfer.files[0]); }
 
-            // ── Effects tab ───────────────────────────────────────────────────
+            // ── Image delete ──────────────────────────────────────────────────
+            function promptDeleteImage() {
+                if (!confirm(t.value.confirmDelete)) return;
+                if (_cropper)       { _cropper.destroy(); _cropper = null; }
+                if (imageUrl.value) URL.revokeObjectURL(imageUrl.value);
+                imageUrl.value     = '';
+                resultUrl.value    = '';
+                _resultCanvas      = null;
+                _undoStack         = [];
+                canUndoCt.value    = 0;
+                activeEffect.value = '';
+                activeNav.value    = 'main';
+                currentTab.value   = 'preview';
+                cropBoxData.value  = null;
+            }
+
+            // ── Effects ───────────────────────────────────────────────────────
             function toggleEffects() {
+                if (!imageUrl.value) return;
                 currentTab.value = currentTab.value === 'effects' ? 'preview' : 'effects';
             }
 
-            // ── History management ────────────────────────────────────────────
+            function applyEffectFilter(effectKey) {
+                if (!imageUrl.value) return;
+                const src = resultUrl.value || imageUrl.value;
+                const img = new Image();
+                img.onload = () => {
+                    const srcCanvas = document.createElement('canvas');
+                    srcCanvas.width  = img.naturalWidth;
+                    srcCanvas.height = img.naturalHeight;
+                    srcCanvas.getContext('2d').drawImage(img, 0, 0);
+                    _pushHistory();
+                    const output = LapisStudioEngine.applyEffect(srcCanvas, effectKey);
+                    _resultCanvas      = output;
+                    resultUrl.value    = output.toDataURL('image/png');
+                    activeEffect.value = effectKey;
+                };
+                img.src = src;
+            }
+
+            // ── History ───────────────────────────────────────────────────────
             function _pushHistory() {
                 _undoStack.push(resultUrl.value);   // '' = original state
                 if (_undoStack.length > 10) _undoStack.shift();
@@ -377,9 +454,10 @@
 
             function undo() {
                 if (_undoStack.length === 0) return;
-                resultUrl.value = _undoStack.pop();  // '' restores to original
-                _resultCanvas   = null;
-                canUndoCt.value = _undoStack.length;
+                resultUrl.value    = _undoStack.pop();  // '' restores to original
+                _resultCanvas      = null;
+                activeEffect.value = '';
+                canUndoCt.value    = _undoStack.length;
                 if (activeNav.value === 'crop') {
                     if (_cropper) { _cropper.destroy(); _cropper = null; }
                     cropBoxData.value = null;
@@ -435,7 +513,7 @@
                 if (_cropper) _cropper.setAspectRatio(1);  // square base for all masks
             }
 
-            // Apply: crop + push history + exit to preview (re-enter crop for more edits)
+            // Apply: crop + push history + exit to preview
             function confirmCrop() {
                 if (!_cropper) return;
                 _pushHistory();
@@ -457,7 +535,6 @@
                 activeNav.value   = 'main';
             }
 
-            // Save from crop: apply current crop + open download modal
             async function saveFromCrop() {
                 confirmCrop();
                 await nextTick();
@@ -506,11 +583,14 @@
                 dragOver, cropShape, cropBoxData, containerSize,
                 isSpecialShape, shapeOverlaySvg,
                 canUndoCt, showFilenameModal, downloadFilename,
+                showFloatingPanel, mainPaddingBottom,
+                activeEffect, effectsList,
                 t, cropRatios, specialShapes,
-                handleFileInput, triggerUpload, onDrop, toggleEffects,
+                handleFileInput, triggerUpload, onDrop,
+                toggleEffects, applyEffectFilter,
                 enterCrop, exitCrop, confirmCrop, saveFromCrop,
                 setRatio, setSpecialShape, undo,
-                promptDownload, doDownload,
+                promptDownload, doDownload, promptDeleteImage,
             };
         }
     }).mount('#app');

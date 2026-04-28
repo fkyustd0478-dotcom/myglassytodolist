@@ -4,6 +4,15 @@ window.LapisStudioEngine = (() => {
     const COMPRESS_THRESHOLD =  2 * 1024 * 1024;
     const MAX_DIM            = 2500;
 
+    const EFFECTS = {
+        grayscale: 'grayscale(100%)',
+        sepia:     'sepia(80%)',
+        vivid:     'saturate(160%) contrast(108%)',
+        dim:       'brightness(65%)',
+        warm:      'sepia(25%) saturate(130%) brightness(102%)',
+        cool:      'hue-rotate(190deg) saturate(80%)',
+    };
+
     // ── Compression ──────────────────────────────────────────────────────────
     function _compress(file) {
         return new Promise((resolve, reject) => {
@@ -99,15 +108,35 @@ window.LapisStudioEngine = (() => {
         return cvs;
     }
 
-    // ── Download ──────────────────────────────────────────────────────────────
+    // ── Apply colour effect filter ────────────────────────────────────────────
+    function applyEffect(src, effectKey) {
+        const filter = EFFECTS[effectKey];
+        if (!filter) return src;
+        const { width: w, height: h } = src;
+        const cvs = document.createElement('canvas');
+        cvs.width = w; cvs.height = h;
+        const ctx = cvs.getContext('2d');
+        ctx.filter = filter;
+        ctx.drawImage(src, 0, 0);
+        ctx.filter = 'none';
+        return cvs;
+    }
+
+    // ── Download (blob-based to avoid data-URL navigation security errors) ────
     function download(canvas, filename) {
         const name = (filename || '').trim() || `glassystudio_${Date.now()}`;
-        const a = document.createElement('a');
-        a.download = name.endsWith('.png') ? name : `${name}.png`;
-        a.href = canvas.toDataURL('image/png');
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const dlName = name.endsWith('.png') ? name : `${name}.png`;
+        canvas.toBlob(blob => {
+            if (!blob) return;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.download = dlName;
+            a.href = url;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 'image/png');
     }
 
     // ── SVG shape inner content for the interactive crop overlay ─────────────
@@ -150,5 +179,5 @@ window.LapisStudioEngine = (() => {
         return '';
     }
 
-    return { load, applyMask, download, svgShapeInner };
+    return { load, applyMask, applyEffect, download, svgShapeInner };
 })();
