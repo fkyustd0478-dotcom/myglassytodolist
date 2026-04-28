@@ -17,6 +17,7 @@ window.LapisStudioEngine = (() => {
     function _compress(file) {
         return new Promise((resolve, reject) => {
             const img = new Image();
+            img.crossOrigin = 'anonymous';
             const url = URL.createObjectURL(file);
             img.onload = () => {
                 URL.revokeObjectURL(url);
@@ -40,6 +41,16 @@ window.LapisStudioEngine = (() => {
         if (file.size > MAX_BYTES)   throw new Error('SIZE_EXCEEDED');
         const blob = file.size > COMPRESS_THRESHOLD ? await _compress(file) : file;
         return URL.createObjectURL(blob);
+    }
+
+    function loadImageToCanvas(url) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload  = () => resolve(img);
+            img.onerror = () => reject(new Error('LOAD_FAIL'));
+            img.src = url;
+        });
     }
 
     // ── Shape mask painters ───────────────────────────────────────────────────
@@ -391,18 +402,19 @@ window.LapisStudioEngine = (() => {
         return cvs;
     }
 
-    // ── Download (blob-based; 1 s delay before revoking prevents ERR_FILE_NOT_FOUND) ──
+    // ── Download (blob-based; 3 s delay before revoking prevents ERR_FILE_NOT_FOUND) ──
     function download(canvas, filename) {
-        const name   = (filename || '').trim() || `glassystudio_${Date.now()}`;
-        const dlName = name.endsWith('.png') ? name : `${name}.png`;
+        const raw    = (filename || '').trim() || `glassystudio_${Date.now()}`;
+        const safe   = raw.replace(/[\\/:*?"<>|]/g, '_').substring(0, 255);
+        const dlName = safe.endsWith('.png') ? safe : `${safe}.png`;
         canvas.toBlob(blob => {
             if (!blob) return;
             const url = URL.createObjectURL(blob);
             const a   = document.createElement('a');
             a.download = dlName; a.href = url;
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-        }, 'image/png');
+            setTimeout(() => URL.revokeObjectURL(url), 3000);
+        }, 'image/png', 1.0);
     }
 
     // ── SVG shape inner for crop overlay ─────────────────────────────────────
@@ -438,5 +450,5 @@ window.LapisStudioEngine = (() => {
         return '';
     }
 
-    return { load, applyMask, applyEffect, download, svgShapeInner };
+    return { load, loadImageToCanvas, applyMask, applyEffect, download, svgShapeInner };
 })();

@@ -21,8 +21,6 @@
             const activeNav         = ref('main');
             const dragOver          = ref(false);
             const cropShape         = ref('free');
-            const showFilenameModal = ref(false);
-            const downloadFilename  = ref('');
             // Key of the PENDING (previewed but not yet committed) effect
             const activeEffect      = ref('');
             // Which effects sub-category is shown in the floating panel
@@ -97,6 +95,7 @@
                     circle: '圓形', ellipse: '橢圓', heart: '愛心', star: '星形',
                     errSize: '圖片超過 10 MB，請選擇較小的檔案。',
                     errLoad: '圖片載入失敗，請重試。',
+                    errExport: '匯出失敗，請重試。',
                     noImage: '請先上傳一張圖片。',
                     confirmDelete: '確定要刪除此圖片嗎？',
                     // Effects categories
@@ -121,6 +120,7 @@
                     circle: 'Circle', ellipse: 'Ellipse', heart: 'Heart', star: 'Star',
                     errSize: 'Image exceeds 10 MB.',
                     errLoad: 'Failed to load image.',
+                    errExport: 'Export failed. Please try again.',
                     noImage: 'Please upload an image first.',
                     confirmDelete: 'Delete this image?',
                     filtersCat: 'Filters', glassCat: 'Glass', jigsawCat: 'Jigsaw',
@@ -375,27 +375,24 @@
             }
 
             // ── Download (main nav only) ───────────────────────────────────────
-            function promptDownload() {
+            async function promptDownload() {
                 if (!imageUrl.value) { alert(t.value.noImage); return; }
-                downloadFilename.value  = `glassystudio_${Date.now()}`;
-                showFilenameModal.value = true;
-            }
-
-            function doDownload() {
-                showFilenameModal.value = false;
-                if (_resultCanvas) {
-                    LapisStudioEngine.download(_resultCanvas, downloadFilename.value);
-                    return;
+                const name = window.prompt(t.value.saveAs, `glassystudio_${Date.now()}`);
+                if (name === null) return;
+                try {
+                    let canvas = _resultCanvas;
+                    if (!canvas) {
+                        const src = resultUrl.value || imageUrl.value;
+                        const img = await LapisStudioEngine.loadImageToCanvas(src);
+                        canvas = document.createElement('canvas');
+                        canvas.width  = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        canvas.getContext('2d').drawImage(img, 0, 0);
+                    }
+                    LapisStudioEngine.download(canvas, name);
+                } catch (e) {
+                    alert(t.value.errExport);
                 }
-                const src = resultUrl.value || imageUrl.value;
-                const img = new Image();
-                img.onload = () => {
-                    const c = document.createElement('canvas');
-                    c.width = img.naturalWidth; c.height = img.naturalHeight;
-                    c.getContext('2d').drawImage(img, 0, 0);
-                    LapisStudioEngine.download(c, downloadFilename.value);
-                };
-                img.src = src;
             }
 
             // ── Icon refresh ──────────────────────────────────────────────────
@@ -422,7 +419,7 @@
                 imageUrl, resultUrl, activeNav, contentView,
                 dragOver, cropShape, cropBoxData, containerSize,
                 isSpecialShape, shapeOverlaySvg,
-                canUndoCt, showFilenameModal, downloadFilename,
+                canUndoCt,
                 showFloatingPanel, mainPaddingBottom,
                 activeEffect, effectCategory,
                 effectsList, glassVariants, jigsawVariants,
@@ -432,7 +429,7 @@
                 applyCurrentEffect, saveFromEffects,
                 enterCrop, exitCrop, confirmCrop, saveFromCrop,
                 setRatio, setSpecialShape, undo,
-                promptDownload, doDownload, promptDeleteImage,
+                promptDownload, promptDeleteImage,
                 refreshIcons,
             };
         },
