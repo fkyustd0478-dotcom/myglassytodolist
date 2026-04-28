@@ -1,0 +1,42 @@
+/* ── Studio page base ────────────────────────────────────────────────────── */
+[v-cloak] { display: none !important; }
+html  { background: #0d0d0d; }
+body  { opacity: 0; transition: opacity 0.4s ease-in-out; }
+body.lapis-ready { opacity: 1; }
+
+/* ── Drawer-swap nav transition ──────────────────────────────────────────── */
+/* Both navs enter from below (up) and exit downward — drawer metaphor.      */
+.drawer-swap-enter-active,
+.drawer-swap-leave-active {
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+}
+.drawer-swap-enter-from { transform: translateY(100%); opacity: 0; }
+.drawer-swap-leave-to   { transform: translateY(100%); opacity: 0; }
+
+/* ── Upload drop zone ────────────────────────────────────────────────────── */
+.studio-drop-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.18);
+    transition: border-color 0.2s;
+}
+.studio-drop-zone.drag-over { border-color: #3b82f6; }
+
+/* Light-theme border overrides */
+body.theme-light      .studio-drop-zone,
+body.theme-cherry     .studio-drop-zone,
+body.theme-sky        .studio-drop-zone,
+body.theme-seaside    .studio-drop-zone,
+body.theme-sunset     .studio-drop-zone,
+body.theme-mapleavenue .studio-drop-zone,
+body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
+
+/* ── Shape / effect button active state ──────────────────────────────────── */
+.shape-btn.is-active { background: #3b82f6 !important; color: #fff !important; }
+
+/* ── Disabled nav items ──────────────────────────────────────────────────── */
+.nav-item[disabled] { opacity: 0.3; pointer-events: none; }
+
+/* ── Crop workspace ──────────────────────────────────────────────────────── */
+/* min-height:0 prevents flex children from overflowing; position:relative   */
+/* gives the SVG overlay its stacking context.                               */
+#crop-wrap                  { min-height: 0; position: relative; }
+#crop-wrap .cropper-container { display: block; }
