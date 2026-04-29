@@ -1,15 +1,16 @@
 'use strict';
 window.LapisFXShatter = (() => {
 
-    // ── Impact: radial cracks + secondary burst zone ──────────────────────────
-    function _drawImpact(ctx, w, h) {
+    // ── Impact: radial cracks + dense burst zone near impact ──────────────────
+    function _drawImpact(ctx, w, h, intensity) {
         const ix    = w * (0.35 + Math.random() * 0.3);
         const iy    = h * (0.30 + Math.random() * 0.3);
         const base  = Math.min(w, h);
+        const scale = Math.max(0.15, intensity);
         ctx.lineCap = 'round';
 
-        // Primary radial cracks
-        const count = 14 + Math.floor(Math.random() * 10);
+        // Primary radial cracks — count scales with intensity
+        const count = Math.max(3, Math.round(24 * scale));
         for (let i = 0; i < count; i++) {
             const angle  = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
             const len    = base * (0.4 + Math.random() * 0.55);
@@ -34,8 +35,8 @@ window.LapisFXShatter = (() => {
             ctx.strokeStyle = 'rgba(0,0,0,0.60)'; ctx.lineWidth = 1.2; ctx.stroke();
         }
 
-        // Secondary burst zone — dense short cracks near impact point
-        const burst = 20 + Math.floor(Math.random() * 12);
+        // Secondary burst zone — dense short cracks near impact
+        const burst = Math.max(4, Math.round(32 * scale));
         for (let i = 0; i < burst; i++) {
             const ang = Math.random() * Math.PI * 2;
             const r0  = base * 0.012;
@@ -50,7 +51,6 @@ window.LapisFXShatter = (() => {
             ctx.strokeStyle = 'rgba(0,0,0,0.50)'; ctx.lineWidth = 0.8; ctx.stroke();
         }
 
-        // Glare at impact centre
         const g = ctx.createRadialGradient(ix, iy, 0, ix, iy, base * 0.025);
         g.addColorStop(0,   'rgba(255,255,255,1.0)');
         g.addColorStop(0.5, 'rgba(255,255,255,0.6)');
@@ -60,21 +60,24 @@ window.LapisFXShatter = (() => {
         ctx.fillStyle = g; ctx.fill();
     }
 
-    // ── Spiderweb: concentric jittered rings + radial spokes ──────────────────
-    function _drawSpiderweb(ctx, w, h) {
-        const ix   = w * (0.35 + Math.random() * 0.3);
-        const iy   = h * (0.30 + Math.random() * 0.3);
-        const maxR = Math.sqrt(w * w + h * h);
+    // ── Spiderweb: rings + spokes, count scales with intensity ────────────────
+    function _drawSpiderweb(ctx, w, h, intensity) {
+        const ix    = w * (0.35 + Math.random() * 0.3);
+        const iy    = h * (0.30 + Math.random() * 0.3);
+        const maxR  = Math.sqrt(w * w + h * h);
+        const scale = Math.max(0.15, intensity);
         ctx.lineCap = 'round';
-        for (let i = 1; i <= 6; i++) {
-            const r   = (i / 6) * maxR * 0.52;
+        const rings  = Math.max(2, Math.round(6  * scale));
+        const spokes = Math.max(4, Math.round(20 * scale));
+        for (let i = 1; i <= rings; i++) {
+            const r   = (i / rings) * maxR * 0.52;
             const pts = 36;
             ctx.beginPath();
             for (let j = 0; j <= pts; j++) {
-                const a      = (j / pts) * Math.PI * 2;
+                const a = (j / pts) * Math.PI * 2;
                 const jitter = r * 0.03 * (Math.random() - 0.5);
-                const x      = ix + (r + jitter) * Math.cos(a);
-                const y      = iy + (r + jitter) * Math.sin(a);
+                const x = ix + (r + jitter) * Math.cos(a);
+                const y = iy + (r + jitter) * Math.sin(a);
                 j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
             }
             ctx.strokeStyle = 'rgba(255,255,255,0.72)'; ctx.lineWidth = 1.8; ctx.stroke();
@@ -88,8 +91,8 @@ window.LapisFXShatter = (() => {
             }
             ctx.strokeStyle = 'rgba(0,0,0,0.38)'; ctx.lineWidth = 0.8; ctx.stroke();
         }
-        for (let i = 0; i < 20; i++) {
-            const angle = (i / 20) * Math.PI * 2 + (Math.random() - 0.5) * 0.12;
+        for (let i = 0; i < spokes; i++) {
+            const angle = (i / spokes) * Math.PI * 2 + (Math.random() - 0.5) * 0.12;
             const ex    = ix + Math.cos(angle) * maxR * 0.65;
             const ey    = iy + Math.sin(angle) * maxR * 0.65;
             const mx    = ix + Math.cos(angle) * maxR * 0.32 + (Math.random() - 0.5) * 10;
@@ -106,9 +109,10 @@ window.LapisFXShatter = (() => {
         ctx.fillStyle = g; ctx.fill();
     }
 
-    // ── Fractured: random short double-layered crack segments ─────────────────
-    function _drawFractured(ctx, w, h) {
-        const count = 38 + Math.floor(Math.random() * 14);
+    // ── Fractured: short random crack segments, count scales with intensity ───
+    function _drawFractured(ctx, w, h, intensity) {
+        const scale = Math.max(0.15, intensity);
+        const count = Math.max(6, Math.round(52 * scale));
         ctx.lineCap = 'round';
         for (let i = 0; i < count; i++) {
             let cx = Math.random() * w;
@@ -135,17 +139,18 @@ window.LapisFXShatter = (() => {
         }
     }
 
-    // ── Public dispatcher ─────────────────────────────────────────────────────
-    function render(src, variant) {
+    // ── Public dispatcher — config.intensity (0‥1) scales crack density ───────
+    function render(src, variant, config = {}) {
+        const intensity = config.intensity !== undefined ? config.intensity : 1.0;
         const { width: w, height: h } = src;
         const cvs = document.createElement('canvas');
         cvs.width = w; cvs.height = h;
         const ctx = cvs.getContext('2d');
         ctx.drawImage(src, 0, 0);
         switch (variant) {
-            case 'spiderweb': _drawSpiderweb(ctx, w, h); break;
-            case 'fractured': _drawFractured(ctx, w, h); break;
-            default:          _drawImpact(ctx, w, h);
+            case 'spiderweb': _drawSpiderweb(ctx, w, h, intensity); break;
+            case 'fractured': _drawFractured(ctx, w, h, intensity); break;
+            default:          _drawImpact(ctx, w, h, intensity);
         }
         return cvs;
     }

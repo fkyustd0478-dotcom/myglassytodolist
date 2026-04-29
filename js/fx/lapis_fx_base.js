@@ -117,22 +117,35 @@ window.LapisStudioEngine = (() => {
     }
 
     // ── Effect router (delegates to FX modules) ───────────────────────────────
-    function applyEffect(src, effectKey) {
-        if (effectKey.startsWith('glass-'))  return LapisFXShatter.render(src, effectKey.slice(6));
-        if (effectKey.startsWith('jigsaw-')) return LapisFXJigsaw.render(src, effectKey.slice(7));
+    function applyEffect(src, effectKey, config = {}) {
+        if (effectKey.startsWith('glass-'))  return LapisFXShatter.render(src, effectKey.slice(6), config);
+        if (effectKey.startsWith('jigsaw-')) return LapisFXJigsaw.render(src, effectKey.slice(7), config);
         const filter = EFFECTS[effectKey];
         if (!filter) return src;
+        const { intensity = 1.0 } = config;
         const { width: w, height: h } = src;
         const cvs = document.createElement('canvas');
         cvs.width = w; cvs.height = h;
         const ctx = cvs.getContext('2d');
-        ctx.filter = filter;
-        ctx.drawImage(src, 0, 0);
-        ctx.filter = 'none';
+        if (intensity < 1.0) {
+            // Blend original + filtered at intensity ratio
+            ctx.drawImage(src, 0, 0);
+            const tmp = document.createElement('canvas');
+            tmp.width = w; tmp.height = h;
+            const tc = tmp.getContext('2d');
+            tc.filter = filter; tc.drawImage(src, 0, 0);
+            ctx.globalAlpha = intensity;
+            ctx.drawImage(tmp, 0, 0);
+            ctx.globalAlpha = 1.0;
+        } else {
+            ctx.filter = filter;
+            ctx.drawImage(src, 0, 0);
+            ctx.filter = 'none';
+        }
         return cvs;
     }
 
-    // ── Download (mobile-optimized; octet-stream forces save dialog) ──────────
+    // ── Download (mobile-optimized; 5 s revoke; DataURL fallback on mobile) ────
     function triggerRealDownload(canvas, customName) {
         return new Promise((resolve) => {
             canvas.toBlob((blob) => {
@@ -140,19 +153,32 @@ window.LapisStudioEngine = (() => {
                 let inputName = customName ? customName.trim() : `glassystudio_${timestamp}`;
                 let safeName  = inputName.replace(/[\\/:*?"<>|]/g, '_').substring(0, 255);
                 if (!safeName.toLowerCase().endsWith('.png')) safeName += '.png';
+
+                const _trigger = (href) => {
+                    const link = document.createElement('a');
+                    link.setAttribute('download', safeName);  // must precede href
+                    link.href = href;
+                    link.style.cssText = 'display:block;width:0;height:0;position:fixed;top:-100px;';
+                    document.body.appendChild(link);
+                    link.click();
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                        if (href.startsWith('blob:')) URL.revokeObjectURL(href);
+                        resolve();
+                    }, 5000);
+                };
+
                 const forcedBlob = new Blob([blob], { type: 'application/octet-stream' });
-                const url  = URL.createObjectURL(forcedBlob);
-                const link = document.createElement('a');
-                link.download = safeName;
-                link.href     = url;
-                link.style.cssText = 'display:block;width:0;height:0;position:fixed;top:-100px;';
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    resolve();
-                }, 3000);
+                const isMobile   = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (isMobile) {
+                    // DataURL is more reliably recognized for custom filenames on mobile
+                    const reader   = new FileReader();
+                    reader.onload  = () => _trigger(reader.result);
+                    reader.onerror = () => _trigger(URL.createObjectURL(forcedBlob));
+                    reader.readAsDataURL(forcedBlob);
+                } else {
+                    _trigger(URL.createObjectURL(forcedBlob));
+                }
             }, 'image/png');
         });
     }

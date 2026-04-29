@@ -1,7 +1,7 @@
 'use strict';
 window.LapisFXJigsaw = (() => {
 
-    // ── Static: full image + bezier puzzle-line grid ──────────────────────────
+    // ── Static: puzzle-line grid overlay ─────────────────────────────────────
     function _jigsawStatic(src) {
         const { width: w, height: h } = src;
         const cvs = document.createElement('canvas');
@@ -46,8 +46,8 @@ window.LapisFXJigsaw = (() => {
         return cvs;
     }
 
-    // ── Explode: pieces pushed outward from centre ────────────────────────────
-    function _jigsawExplode(src) {
+    // ── Explode: pieces pushed outward, distance scales with intensity ────────
+    function _jigsawExplode(src, intensity) {
         const { width: w, height: h } = src;
         const cvs = document.createElement('canvas');
         cvs.width = w; cvs.height = h;
@@ -55,7 +55,7 @@ window.LapisFXJigsaw = (() => {
         const cols = 4, rows = 4;
         const pw = w / cols, ph = h / rows;
         const cx = w / 2, cy = h / 2;
-        const maxOut = Math.min(pw, ph) * 0.18;
+        const maxOut = Math.min(pw, ph) * 0.18 * intensity;
         const gap = 2.5;
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
@@ -80,16 +80,16 @@ window.LapisFXJigsaw = (() => {
         return cvs;
     }
 
-    // ── Drift: slight random translation + rotation per piece ─────────────────
-    function _jigsawDrift(src) {
+    // ── Drift: slight random translation + rotation, magnitude scales ─────────
+    function _jigsawDrift(src, intensity) {
         const { width: w, height: h } = src;
         const cvs = document.createElement('canvas');
         cvs.width = w; cvs.height = h;
         const ctx = cvs.getContext('2d');
         const cols = 4, rows = 4;
         const pw = w / cols, ph = h / rows;
-        const maxDrift = Math.min(pw, ph) * 0.13;
-        const maxRot   = 0.09;
+        const maxDrift = Math.min(pw, ph) * 0.13 * intensity;
+        const maxRot   = 0.09 * intensity;
         const gap = 2.5;
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
@@ -117,15 +117,15 @@ window.LapisFXJigsaw = (() => {
         return cvs;
     }
 
-    // ── Gravity: each row falls progressively further ─────────────────────────
-    function _jigsawGravity(src) {
+    // ── Gravity: rows fall progressively, fall distance scales with intensity ─
+    function _jigsawGravity(src, intensity) {
         const { width: w, height: h } = src;
         const cvs = document.createElement('canvas');
         cvs.width = w; cvs.height = h;
         const ctx = cvs.getContext('2d');
         const cols = 4, rows = 4;
         const pw = w / cols, ph = h / rows;
-        const maxFall = ph * 0.4;
+        const maxFall = ph * 0.4 * intensity;
         const gap = 2.5;
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
@@ -146,19 +146,18 @@ window.LapisFXJigsaw = (() => {
         return cvs;
     }
 
-    // ── Scattered: physical photo-on-table effect with drop shadows ───────────
-    function _jigsawScattered(src) {
+    // ── Scattered: physical photo-on-table, scatter range scales with intensity
+    function _jigsawScattered(src, intensity) {
         const { width: w, height: h } = src;
         const cvs = document.createElement('canvas');
         cvs.width = w; cvs.height = h;
         const ctx = cvs.getContext('2d');
-        // Dark table surface
         ctx.fillStyle = 'rgba(18,18,18,0.90)';
         ctx.fillRect(0, 0, w, h);
         const cols = 4, rows = 4;
         const pw   = w / cols, ph = h / rows;
-        const maxDrift = Math.min(pw, ph) * 0.55;
-        const maxRot   = 0.32; // ~18 degrees
+        const maxDrift = Math.min(pw, ph) * 0.55 * intensity;
+        const maxRot   = 0.32 * intensity;
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 const px  = c * pw,  py  = r * ph;
@@ -169,8 +168,6 @@ window.LapisFXJigsaw = (() => {
                 ctx.save();
                 ctx.translate(pcx + ox, pcy + oy);
                 ctx.rotate(angle);
-                // Step 1: draw opaque white rect with shadow → only shadow is visible
-                // once the image paints over the white fill
                 ctx.save();
                 ctx.shadowBlur    = 12;
                 ctx.shadowColor   = 'rgba(0,0,0,0.40)';
@@ -179,14 +176,12 @@ window.LapisFXJigsaw = (() => {
                 ctx.fillStyle     = '#ffffff';
                 ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
                 ctx.restore();
-                // Step 2: clip & draw image (covers the white fill)
                 ctx.save();
                 ctx.beginPath();
                 ctx.rect(-pw / 2, -ph / 2, pw, ph);
                 ctx.clip();
                 ctx.drawImage(src, -pcx, -pcy);
                 ctx.restore();
-                // Step 3: 1 px white inner stroke simulating paper core edge
                 ctx.beginPath();
                 ctx.rect(-pw / 2 + 0.5, -ph / 2 + 0.5, pw - 1, ph - 1);
                 ctx.strokeStyle = 'rgba(255,255,255,0.70)';
@@ -198,13 +193,14 @@ window.LapisFXJigsaw = (() => {
         return cvs;
     }
 
-    // ── Public dispatcher ─────────────────────────────────────────────────────
-    function render(src, variant) {
+    // ── Public dispatcher — config.intensity (0‥1) scales dispersal amount ───
+    function render(src, variant, config = {}) {
+        const intensity = config.intensity !== undefined ? config.intensity : 1.0;
         switch (variant) {
-            case 'explode':   return _jigsawExplode(src);
-            case 'drift':     return _jigsawDrift(src);
-            case 'gravity':   return _jigsawGravity(src);
-            case 'scattered': return _jigsawScattered(src);
+            case 'explode':   return _jigsawExplode(src, intensity);
+            case 'drift':     return _jigsawDrift(src, intensity);
+            case 'gravity':   return _jigsawGravity(src, intensity);
+            case 'scattered': return _jigsawScattered(src, intensity);
             default:          return _jigsawStatic(src);
         }
     }
