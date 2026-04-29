@@ -84,8 +84,13 @@ window.LapisStudioEngine = (() => {
         ctx.fill();
     }
 
-    function applyMask(src, shape) {
-        const { width: w, height: h } = src;
+    function applyMask(src, shape, data) {
+        // data: { x, y, width, height } from getData(true) — full-image pixel coords.
+        // When provided, src is the full-size canvas and we offset into it.
+        const x = data ? (data.x      || 0) : 0;
+        const y = data ? (data.y      || 0) : 0;
+        const w = data ? (data.width  || src.width)  : src.width;
+        const h = data ? (data.height || src.height) : src.height;
         const cvs = document.createElement('canvas');
         cvs.width = w; cvs.height = h;
         const ctx = cvs.getContext('2d');
@@ -103,8 +108,14 @@ window.LapisStudioEngine = (() => {
             case 'star':  _star(ctx, w, h);  break;
             default: return src;
         }
+        // source-in: only pixels where mask is opaque are kept.
+        // translate(-x, -y) shifts the full-size image so the crop region
+        // aligns with (0,0) of this output canvas.
         ctx.globalCompositeOperation = 'source-in';
+        ctx.save();
+        ctx.translate(-x, -y);
         ctx.drawImage(src, 0, 0);
+        ctx.restore();
         return cvs;
     }
 
@@ -416,8 +427,8 @@ window.LapisStudioEngine = (() => {
                 const forcedBlob = new Blob([blob], { type: 'application/octet-stream' });
                 const url  = URL.createObjectURL(forcedBlob);
                 const link = document.createElement('a');
+                link.download = safeName;  // filename must be set before href
                 link.href     = url;
-                link.download = safeName;
                 // Off-screen but still in the layout so mobile click registers
                 link.style.cssText = 'display:block;width:0;height:0;position:fixed;top:-100px;';
                 document.body.appendChild(link);
