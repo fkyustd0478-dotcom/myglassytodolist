@@ -318,7 +318,7 @@
                 img.src = resultUrl.value || imageUrl.value;
                 _cropper = new Cropper(img, {
                     aspectRatio,
-                    viewMode: 1, autoCropArea: 0.85,
+                    viewMode: 1, autoCropArea: 0.85, dragMode: 'move',
                     background: false, movable: true, zoomable: true,
                     ready() {
                         _syncContainerSize();
@@ -346,10 +346,21 @@
             function confirmCrop(stayInCrop = false) {
                 if (!_cropper) return;
                 _pushHistory();
-                const raw      = _cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' });
+                const data     = _cropper.getData(true); // pixel-accurate selection coords
                 const specials = ['circle', 'ellipse', 'heart', 'star'];
-                const output   = specials.includes(cropShape.value)
-                    ? LapisStudioEngine.applyMask(raw, cropShape.value) : raw;
+                let output;
+                if (specials.includes(cropShape.value)) {
+                    // Build full-size source canvas so applyMask can translate(-x,-y)
+                    // and align the crop region to (0,0) without getCroppedCanvas rounding
+                    const srcImg = document.getElementById('crop-image');
+                    const srcCvs = document.createElement('canvas');
+                    srcCvs.width  = srcImg.naturalWidth;
+                    srcCvs.height = srcImg.naturalHeight;
+                    srcCvs.getContext('2d').drawImage(srcImg, 0, 0);
+                    output = LapisStudioEngine.applyMask(srcCvs, cropShape.value, data);
+                } else {
+                    output = _cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' });
+                }
                 _resultCanvas   = output;
                 resultUrl.value = output.toDataURL('image/png');
                 _cropper.destroy(); _cropper = null;
