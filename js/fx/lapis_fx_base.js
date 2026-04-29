@@ -145,7 +145,7 @@ window.LapisStudioEngine = (() => {
         return cvs;
     }
 
-    // ── Download (mobile-optimized; 5 s revoke; DataURL fallback on mobile) ────
+    // ── Download (clean blob URL; window.location.assign fallback if click blocked) ─
     function triggerRealDownload(canvas, customName) {
         return new Promise((resolve) => {
             canvas.toBlob((blob) => {
@@ -154,31 +154,25 @@ window.LapisStudioEngine = (() => {
                 let safeName  = inputName.replace(/[\\/:*?"<>|]/g, '_').substring(0, 255);
                 if (!safeName.toLowerCase().endsWith('.png')) safeName += '.png';
 
-                const _trigger = (href) => {
-                    const link = document.createElement('a');
-                    link.setAttribute('download', safeName);  // must precede href
-                    link.href = href;
-                    link.style.cssText = 'display:block;width:0;height:0;position:fixed;top:-100px;';
-                    document.body.appendChild(link);
-                    link.click();
-                    setTimeout(() => {
-                        document.body.removeChild(link);
-                        if (href.startsWith('blob:')) URL.revokeObjectURL(href);
-                        resolve();
-                    }, 5000);
-                };
+                const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'application/octet-stream' }));
+                const link    = document.createElement('a');
+                link.setAttribute('download', safeName);
+                link.href = blobUrl;
+                link.style.cssText = 'position:fixed;top:-100px;left:0;width:0;height:0;display:block;';
+                document.body.appendChild(link);
 
-                const forcedBlob = new Blob([blob], { type: 'application/octet-stream' });
-                const isMobile   = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (isMobile) {
-                    // DataURL is more reliably recognized for custom filenames on mobile
-                    const reader   = new FileReader();
-                    reader.onload  = () => _trigger(reader.result);
-                    reader.onerror = () => _trigger(URL.createObjectURL(forcedBlob));
-                    reader.readAsDataURL(forcedBlob);
-                } else {
-                    _trigger(URL.createObjectURL(forcedBlob));
+                // If click() throws (sandboxed iframe), fall back to page navigation.
+                let clicked = false;
+                try { link.click(); clicked = true; } catch (_) {}
+                if (!clicked) {
+                    try { window.location.assign(blobUrl); } catch (_) {}
                 }
+
+                setTimeout(() => {
+                    if (document.body.contains(link)) document.body.removeChild(link);
+                    URL.revokeObjectURL(blobUrl);
+                    resolve();
+                }, 5000);
             }, 'image/png');
         });
     }

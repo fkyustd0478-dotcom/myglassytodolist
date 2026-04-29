@@ -30,6 +30,8 @@
     <script src="./js/fx/lapis_fx_shatter.js" defer></script>
     <script src="./js/fx/lapis_fx_jigsaw.js" defer></script>
     <script src="./js/fx/lapis_fx_collage.js" defer></script>
+    <script src="./js/fx/lapis_fx_text.js" defer></script>
+    <script src="./js/fx/lapis_fx_sticker.js" defer></script>
     <script src="./js/fx/lapis_fx_base.js" defer></script>
     <script src="./js/lapis_studio_ui.js" defer></script>
 </head>
@@ -94,148 +96,205 @@
             </div>
         </div>
 
-        <!-- D: Collage workspace (collage mode) -->
+        <!-- D: Pro-Collage workspace — 6-layout grid with per-cell tap-to-fill -->
         <div v-show="contentView === 'collage'"
-             class="flex-1 flex flex-col items-center justify-center gap-4 p-4 overflow-hidden">
-            <img v-if="resultUrl || imageUrl"
-                 :src="resultUrl || imageUrl"
-                 class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
-                 style="pointer-events:none;user-select:none;">
-            <p class="text-xs opacity-40">{{ t.addImagesHint }}</p>
+             class="flex-1 flex flex-col overflow-hidden">
+            <!-- Layout selector strip -->
+            <div class="shrink-0 flex gap-2 px-3 py-2 overflow-x-auto"
+                 style="scrollbar-width:none;">
+                <button v-for="(lyt, key) in collageLayouts" :key="key"
+                        @click="setCollageLayout(key)"
+                        class="collage-layout-btn"
+                        :class="{ 'is-active': collageLayout === key }">
+                    {{ lyt.label }}
+                </button>
+            </div>
+            <!-- Per-cell grid -->
+            <div class="flex-1 flex items-center justify-center p-3 overflow-hidden">
+                <div :style="{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(' + (collageLayouts[collageLayout] || { cols:2 }).cols + ', 1fr)',
+                        gap: '6px',
+                        width: '100%',
+                        maxWidth: ((collageLayouts[collageLayout] || { cols:2 }).cols * 130) + 'px',
+                        aspectRatio: (collageLayouts[collageLayout] || { cols:2, rows:2 }).cols + ' / ' + (collageLayouts[collageLayout] || { cols:2, rows:2 }).rows
+                     }">
+                    <div v-for="(cellUrl, ci) in collageCells" :key="ci"
+                         class="collage-cell"
+                         @click="triggerCellInput(ci)">
+                        <img v-if="cellUrl" :src="cellUrl"
+                             class="absolute inset-0 w-full h-full object-cover pointer-events-none">
+                        <div v-else class="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                            <i data-lucide="plus-circle" class="w-7 h-7 opacity-35"></i>
+                            <span class="text-xs opacity-35">{{ ci + 1 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Build button -->
+            <div class="shrink-0 flex justify-center pb-2">
+                <button @click="buildCollage"
+                        class="px-8 py-2.5 rounded-full bg-blue-600 text-white text-sm font-bold active:scale-95 transition-transform">
+                    {{ t.buildGrid }}
+                </button>
+            </div>
         </div>
 
     </main>
 
-    <!-- ── Floating Tool Panel (fixed above bottom nav) ──────────────────── -->
+    <!-- ── Crop floating panel (manual crop controls) ──────────────────────── -->
     <div v-show="showFloatingPanel"
          style="position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:0;right:0;z-index:7005;">
         <div class="glass overflow-x-auto no-scrollbar px-3 py-2 flex items-center gap-2"
              style="backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.08);"
              :style="glassStyle">
-
-            <!-- ─ Crop: mode tabs + conditional sub-panel ────────────────── -->
-            <template v-if="activeNav === 'crop'">
-                <!-- Mode toggle -->
-                <button @click="setCropMode('manual')"
-                        class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                        :class="{ 'is-active': cropMode === 'manual' }"
-                        :style="cropMode !== 'manual' ? glassStyle : {}">
-                    {{ t.manualCrop }}
-                </button>
-                <button @click="setCropMode('collage')"
-                        class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                        :class="{ 'is-active': cropMode === 'collage' }"
-                        :style="cropMode !== 'collage' ? glassStyle : {}">
-                    {{ t.autoCollage }}
+            <!-- Mode toggle -->
+            <button @click="setCropMode('manual')"
+                    class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                    :class="{ 'is-active': cropMode === 'manual' }"
+                    :style="cropMode !== 'manual' ? glassStyle : {}">
+                {{ t.manualCrop }}
+            </button>
+            <button @click="setCropMode('collage')"
+                    class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                    :class="{ 'is-active': cropMode === 'collage' }"
+                    :style="cropMode !== 'collage' ? glassStyle : {}">
+                {{ t.autoCollage }}
+            </button>
+            <!-- Manual: ratio + special shapes -->
+            <template v-if="cropMode === 'manual'">
+                <div class="shrink-0 w-px h-5 mx-1 opacity-20"
+                     :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
+                <button v-for="r in cropRatios" :key="r.key"
+                        @click="setRatio(r)"
+                        class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                        :class="{ 'is-active': cropShape === r.key }"
+                        :style="cropShape !== r.key ? glassStyle : {}">
+                    {{ r.label }}
                 </button>
                 <div class="shrink-0 w-px h-5 mx-1 opacity-20"
                      :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
-                <!-- Manual crop sub-panel: ratio + shape buttons -->
-                <template v-if="cropMode === 'manual'">
-                    <button v-for="r in cropRatios" :key="r.key"
-                            @click="setRatio(r)"
-                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                            :class="{ 'is-active': cropShape === r.key }"
-                            :style="cropShape !== r.key ? glassStyle : {}">
-                        {{ r.label }}
-                    </button>
-                    <div class="shrink-0 w-px h-5 mx-1 opacity-20"
-                         :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
-                    <button v-for="s in specialShapes" :key="s.key"
-                            @click="setSpecialShape(s)"
-                            class="shape-btn shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center transition-all"
-                            :class="{ 'is-active': cropShape === s.key }"
-                            :style="cropShape !== s.key ? glassStyle : {}"
-                            :title="t[s.key]"
-                            v-html="s.svg">
-                    </button>
-                </template>
-                <!-- Collage sub-panel: add image + layout picker -->
-                <template v-else>
-                    <label class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap cursor-pointer transition-all"
-                           :style="glassStyle">
-                        {{ t.addImage }}
-                        <input type="file" accept="image/*" multiple class="hidden" @change="addCollageImages">
-                    </label>
-                    <button @click="buildCollage(2)"
-                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                            :style="glassStyle">2×2</button>
-                    <button @click="buildCollage(3)"
-                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                            :style="glassStyle">3×3</button>
-                    <button @click="buildCollage(4)"
-                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                            :style="glassStyle">4×4</button>
-                </template>
+                <button v-for="s in specialShapes" :key="s.key"
+                        @click="setSpecialShape(s)"
+                        class="shape-btn shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center transition-all"
+                        :class="{ 'is-active': cropShape === s.key }"
+                        :style="cropShape !== s.key ? glassStyle : {}"
+                        :title="t[s.key]"
+                        v-html="s.svg">
+                </button>
             </template>
+        </div>
+    </div>
 
-            <!-- ─ Effects: intensity slider + 3-category tabs + content ─── -->
-            <template v-else>
-                <!-- Universal intensity slider -->
-                <div class="shrink-0 flex items-center gap-1.5">
-                    <span class="text-xs opacity-55 font-medium whitespace-nowrap">{{ t.intensity }}</span>
-                    <input type="range" min="0" max="1" step="0.01"
-                           v-model.number="fxIntensity"
-                           @input="onSliderInput"
-                           class="w-24 accent-blue-500 cursor-pointer">
-                </div>
-                <div class="shrink-0 w-px h-5 mx-1 opacity-20"
-                     :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
-                <!-- Category tab: Filters -->
-                <button @click="effectCategory = 'filters'"
-                        class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                        :class="{ 'is-active': effectCategory === 'filters' }"
-                        :style="effectCategory !== 'filters' ? glassStyle : {}">
-                    {{ t.filtersCat }}
-                </button>
-                <!-- Category tab: Glass -->
-                <button @click="effectCategory = 'glass'"
-                        class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                        :class="{ 'is-active': effectCategory === 'glass' }"
-                        :style="effectCategory !== 'glass' ? glassStyle : {}">
-                    {{ t.glassCat }}
-                </button>
-                <!-- Category tab: Jigsaw -->
-                <button @click="effectCategory = 'jigsaw'"
-                        class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                        :class="{ 'is-active': effectCategory === 'jigsaw' }"
-                        :style="effectCategory !== 'jigsaw' ? glassStyle : {}">
-                    {{ t.jigsawCat }}
-                </button>
-                <div class="shrink-0 w-px h-5 mx-1 opacity-20"
-                     :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
+    <!-- ── FX Drawer — 3-layer vertical panel (effects nav only) ────────────── -->
+    <div v-if="activeNav === 'effects'"
+         class="fx-drawer glass" :style="glassStyle"
+         style="backdrop-filter:blur(24px);">
+
+        <!-- Layer 1: Intensity slider (always visible) -->
+        <div class="fx-drawer-slider">
+            <span class="fx-label">{{ t.intensity }}</span>
+            <input type="range" min="0" max="1" step="0.01"
+                   v-model.number="fxIntensity"
+                   @input="onSliderInput">
+            <span class="fx-intensity-pct">{{ Math.round(fxIntensity * 100) }}%</span>
+        </div>
+
+        <!-- Layer 2: Category content, slide-up on category switch -->
+        <transition name="fx-slide" mode="out-in">
+            <div :key="effectCategory" class="fx-drawer-content">
+
                 <!-- Colour filters -->
                 <template v-if="effectCategory === 'filters'">
                     <button v-for="eff in effectsList" :key="eff.key"
                             @click="applyEffectFilter(eff.key)"
-                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                            :class="{ 'is-active': activeEffect === eff.key }"
-                            :style="activeEffect !== eff.key ? glassStyle : {}">
+                            class="fx-chip"
+                            :class="{ 'is-active': activeEffect === eff.key }">
                         {{ t[eff.tKey] }}
                     </button>
                 </template>
-                <!-- Glass shatter variants -->
+
+                <!-- Glass shatter -->
                 <template v-else-if="effectCategory === 'glass'">
                     <button v-for="v in glassVariants" :key="v.key"
                             @click="applyEffectFilter(v.key)"
-                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                            :class="{ 'is-active': activeEffect === v.key }"
-                            :style="activeEffect !== v.key ? glassStyle : {}">
+                            class="fx-chip"
+                            :class="{ 'is-active': activeEffect === v.key }">
                         {{ t[v.tKey] }}
                     </button>
                 </template>
-                <!-- Jigsaw dispersal variants -->
-                <template v-else>
+
+                <!-- Jigsaw -->
+                <template v-else-if="effectCategory === 'jigsaw'">
                     <button v-for="v in jigsawVariants" :key="v.key"
                             @click="applyEffectFilter(v.key)"
-                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                            :class="{ 'is-active': activeEffect === v.key }"
-                            :style="activeEffect !== v.key ? glassStyle : {}">
+                            class="fx-chip"
+                            :class="{ 'is-active': activeEffect === v.key }">
                         {{ t[v.tKey] }}
                     </button>
                 </template>
-            </template>
 
+                <!-- Text overlay -->
+                <template v-else-if="effectCategory === 'text'">
+                    <input type="text"
+                           v-model="textConfig.text"
+                           :placeholder="t.enterText"
+                           class="fx-text-input">
+                    <select v-model="textConfig.fontFamily" class="fx-select">
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="'Courier New', monospace">Courier</option>
+                        <option value="Impact, fantasy">Impact</option>
+                    </select>
+                    <input type="color" v-model="textConfig.color"
+                           class="fx-color-swatch" title="文字顏色">
+                    <button @click="applyText"
+                            class="fx-chip"
+                            :class="{ 'is-active': activeEffect === '__text__' }">
+                        {{ t.apply }}
+                    </button>
+                </template>
+
+                <!-- Stickers -->
+                <template v-else>
+                    <button v-for="emoji in stickerList" :key="emoji"
+                            @click="applySticker(emoji)"
+                            class="fx-sticker-btn"
+                            :class="{ 'is-active': stickerActive === emoji }">
+                        {{ emoji }}
+                    </button>
+                </template>
+
+            </div>
+        </transition>
+
+        <!-- Layer 3: Category tab bar -->
+        <div class="fx-drawer-tabs">
+            <button @click="effectCategory = 'filters'"
+                    class="fx-tab" :class="{ 'is-active': effectCategory === 'filters' }">
+                <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                <span>{{ t.filtersCat }}</span>
+            </button>
+            <button @click="effectCategory = 'glass'"
+                    class="fx-tab" :class="{ 'is-active': effectCategory === 'glass' }">
+                <i data-lucide="gem" class="w-4 h-4"></i>
+                <span>{{ t.glassCat }}</span>
+            </button>
+            <button @click="effectCategory = 'jigsaw'"
+                    class="fx-tab" :class="{ 'is-active': effectCategory === 'jigsaw' }">
+                <i data-lucide="puzzle" class="w-4 h-4"></i>
+                <span>{{ t.jigsawCat }}</span>
+            </button>
+            <button @click="effectCategory = 'text'"
+                    class="fx-tab" :class="{ 'is-active': effectCategory === 'text' }">
+                <i data-lucide="type" class="w-4 h-4"></i>
+                <span>{{ t.textCat }}</span>
+            </button>
+            <button @click="effectCategory = 'stickers'"
+                    class="fx-tab" :class="{ 'is-active': effectCategory === 'stickers' }">
+                <i data-lucide="smile" class="w-4 h-4"></i>
+                <span>{{ t.stickerCat }}</span>
+            </button>
         </div>
     </div>
 
@@ -322,8 +381,9 @@
 
     </transition>
 
-    <!-- Hidden file input -->
-    <input id="studio-file-input" type="file" accept="image/*" class="hidden" @change="handleFileInput">
+    <!-- Hidden file inputs -->
+    <input id="studio-file-input"  type="file" accept="image/*" class="hidden" @change="handleFileInput">
+    <input id="collage-cell-input" type="file" accept="image/*" class="hidden" @change="onCellFileInput">
 
 </div>
 </body>
