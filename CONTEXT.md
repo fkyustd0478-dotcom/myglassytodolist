@@ -357,3 +357,13 @@ The dark-theme array in the anti-flash `<script>` inline block:
 var dk = ['dark','forest','night','torii','purple','ferriswheel','starrynight'];
 ```
 `plum-blossom` is a **light** theme — no changes to `dk` are needed.
+
+---
+
+## Stable Version Reference
+
+| Milestone | Commit | Branch | Date |
+|---|---|---|---|
+| Phase 15.0 — Studio docs + plum-blossom theme | `6462210` | `claude/fix-workout-ui-navigation-W3fso` | 2026-04-29 |
+| Phase 14.0 — FX drawer, pro-collage, text/sticker | `ac0ed51` | `claude/fix-workout-ui-navigation-W3fso` | 2026-04-29 |
+| Phase 13.9 — Collage module, intensity slider, download | `5ea9bb2` | `claude/fix-workout-ui-navigation-W3fso` | 2026-04-29 |
