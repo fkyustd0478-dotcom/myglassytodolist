@@ -5,6 +5,8 @@
         typeof LapisFXShatter    === 'undefined' ||
         typeof LapisFXJigsaw     === 'undefined' ||
         typeof LapisFXCollage    === 'undefined' ||
+        typeof LapisFXText       === 'undefined' ||
+        typeof LapisFXSticker    === 'undefined' ||
         typeof LapisStudioEngine === 'undefined' ||
         typeof Cropper           === 'undefined') {
         return setTimeout(waitForDeps, 20);
@@ -21,13 +23,20 @@
             const imageUrl       = ref('');       // blob URL (original upload)
             const resultUrl      = ref('');       // data URL (after crop/effect)
             const activeNav      = ref('main');   // 'main' | 'crop' | 'effects'
-            const dragOver       = ref(false);
-            const cropShape      = ref('free');
-            const cropMode       = ref('manual'); // 'manual' | 'collage'
-            const collageImages  = ref([]);        // extra blob URLs added for collage
-            const fxIntensity    = ref(1.0);       // 0‥1 slider value for effects
-            const activeEffect   = ref('');        // pending (previewed but uncommitted) effect
-            const effectCategory = ref('filters'); // 'filters' | 'glass' | 'jigsaw'
+            const dragOver        = ref(false);
+            const cropShape       = ref('free');
+            const cropMode        = ref('manual');   // 'manual' | 'collage'
+            const collageLayout   = ref('2x2');      // active layout key
+            const collageCells    = ref([]);         // per-cell URLs (blob/data), null = empty
+            const fxIntensity     = ref(1.0);        // 0‥1 slider for effects
+            const activeEffect    = ref('');         // pending (previewed) effect key
+            const effectCategory  = ref('filters'); // 'filters'|'glass'|'jigsaw'|'text'|'stickers'
+            const textConfig      = ref({
+                text: '', fontFamily: 'Arial, sans-serif', fontSize: 80,
+                color: '#ffffff', strokeColor: 'rgba(0,0,0,0.65)', strokeWidth: 2,
+                x: 0.5, y: 0.5,
+            });
+            const stickerActive   = ref(''); // last-applied sticker emoji
 
             // Crop overlay
             const cropBoxData   = ref(null);
@@ -35,11 +44,12 @@
 
             // History
             const canUndoCt   = ref(0);
-            let _undoStack    = [];
-            let _cropper      = null;
-            let _resultCanvas = null;
-            let _effectsBase  = null;  // snapshot at effects-session start
-            let _sliderTimer  = null;  // debounce handle for intensity slider
+            let _undoStack         = [];
+            let _cropper           = null;
+            let _resultCanvas      = null;
+            let _effectsBase       = null;  // snapshot at effects-session start
+            let _sliderTimer       = null;  // debounce handle for intensity slider
+            let _collageActiveCell = 0;     // which cell is receiving a new file
 
             // ── Content panel ─────────────────────────────────────────────────
             const contentView = computed(() => {
@@ -54,15 +64,16 @@
                 ['circle', 'ellipse', 'heart', 'star'].includes(cropShape.value)
             );
 
-            const showFloatingPanel = computed(() =>
-                activeNav.value === 'crop' || activeNav.value === 'effects'
-            );
+            // Crop controls use the floating panel; effects has its own FX drawer.
+            const showFloatingPanel = computed(() => activeNav.value === 'crop');
 
-            const mainPaddingBottom = computed(() =>
-                showFloatingPanel.value
-                    ? 'calc(134px + env(safe-area-inset-bottom, 0px))'
-                    : 'calc(80px + env(safe-area-inset-bottom, 0px))'
-            );
+            const mainPaddingBottom = computed(() => {
+                if (activeNav.value === 'effects')
+                    return 'calc(246px + env(safe-area-inset-bottom, 0px))';
+                if (activeNav.value === 'crop')
+                    return 'calc(134px + env(safe-area-inset-bottom, 0px))';
+                return 'calc(80px + env(safe-area-inset-bottom, 0px))';
+            });
 
             // ── Shape-aware SVG crop overlay ──────────────────────────────────
             const shapeOverlaySvg = computed(() => {
@@ -104,7 +115,9 @@
                     addImage: '加入圖片', addImagesHint: '選擇多張圖片後按格式鈕建立拼貼',
                     // Effects
                     filtersCat: '濾鏡', glassCat: '碎玻璃', jigsawCat: '拼圖',
+                    textCat: '文字', stickerCat: '貼圖',
                     intensity: '強度',
+                    enterText: '輸入文字…', buildGrid: '建立',
                     // Colour filters
                     grayscale: '黑白', sepia: '復古', vivid: '鮮豔',
                     dim: '暗調', warm: '暖色', cool: '冷色',
@@ -131,7 +144,9 @@
                     manualCrop: 'Manual Crop', autoCollage: 'Auto Collage',
                     addImage: 'Add Image', addImagesHint: 'Add images then pick a grid layout',
                     filtersCat: 'Filters', glassCat: 'Glass', jigsawCat: 'Jigsaw',
+                    textCat: 'Text', stickerCat: 'Stickers',
                     intensity: 'Intensity',
+                    enterText: 'Enter text…', buildGrid: 'Build',
                     grayscale: 'B&W', sepia: 'Sepia', vivid: 'Vivid',
                     dim: 'Dim', warm: 'Warm', cool: 'Cool',
                     glassImpact: 'Impact', glassSpiderweb: 'Spiderweb', glassFractured: 'Fractured',
@@ -165,6 +180,9 @@
                 { key: 'cool',      tKey: 'cool'      },
             ];
 
+            const stickerList    = LapisFXSticker.BUILT_IN;
+            const collageLayouts = LapisFXCollage.LAYOUTS;  // static, for template iteration
+
             const glassVariants = [
                 { key: 'glass-impact',    tKey: 'glassImpact'    },
                 { key: 'glass-spiderweb', tKey: 'glassSpiderweb' },
@@ -181,13 +199,19 @@
 
             // ── File upload ───────────────────────────────────────────────────
             function _resetState() {
-                _resultCanvas        = null;
-                _undoStack           = [];
-                canUndoCt.value      = 0;
-                activeEffect.value   = '';
-                _effectsBase         = null;
-                effectCategory.value = 'filters';
-                fxIntensity.value    = 1.0;
+                _resultCanvas          = null;
+                _undoStack             = [];
+                canUndoCt.value        = 0;
+                activeEffect.value     = '';
+                _effectsBase           = null;
+                effectCategory.value   = 'filters';
+                fxIntensity.value      = 1.0;
+                textConfig.value       = {
+                    text: '', fontFamily: 'Arial, sans-serif', fontSize: 80,
+                    color: '#ffffff', strokeColor: 'rgba(0,0,0,0.65)', strokeWidth: 2,
+                    x: 0.5, y: 0.5,
+                };
+                stickerActive.value    = '';
             }
 
             async function _loadFile(file) {
@@ -306,16 +330,58 @@
                 activeNav.value    = 'main';
             }
 
+            // ── Text overlay ─────────────────────────────────────────────────
+            function applyText() {
+                if (!imageUrl.value || !textConfig.value.text.trim()) return;
+                const src = (_effectsBase !== null ? _effectsBase : resultUrl.value) || imageUrl.value;
+                const img = new Image();
+                img.onload = () => {
+                    const sc = document.createElement('canvas');
+                    sc.width = img.naturalWidth; sc.height = img.naturalHeight;
+                    sc.getContext('2d').drawImage(img, 0, 0);
+                    const out   = LapisFXText.render(sc, textConfig.value);
+                    _resultCanvas      = out;
+                    resultUrl.value    = out.toDataURL('image/png');
+                    activeEffect.value = '__text__';
+                };
+                img.src = src;
+            }
+
+            // ── Sticker overlay ───────────────────────────────────────────────
+            function applySticker(emoji) {
+                if (!imageUrl.value) return;
+                stickerActive.value = emoji;
+                const src = (_effectsBase !== null ? _effectsBase : resultUrl.value) || imageUrl.value;
+                const img = new Image();
+                img.onload = () => {
+                    const sc = document.createElement('canvas');
+                    sc.width = img.naturalWidth; sc.height = img.naturalHeight;
+                    sc.getContext('2d').drawImage(img, 0, 0);
+                    const out   = LapisFXSticker.render(sc, { sticker: emoji, x: 0.5, y: 0.5, scale: 0.18 });
+                    _resultCanvas      = out;
+                    resultUrl.value    = out.toDataURL('image/png');
+                    activeEffect.value = '__sticker__';
+                };
+                img.src = src;
+            }
+
             // ── Crop ─────────────────────────────────────────────────────────
+            function _initCollageCells() {
+                const layout = LapisFXCollage.LAYOUTS[collageLayout.value] || { cols: 2, rows: 2 };
+                const count  = layout.cols * layout.rows;
+                const base   = resultUrl.value || imageUrl.value;
+                collageCells.value = Array.from({ length: count }, (_, i) => (i === 0 ? base : null));
+            }
+
             async function enterCrop() {
                 if (!imageUrl.value) { alert(t.value.noImage); return; }
-                _effectsBase         = null;
-                activeEffect.value   = '';
-                cropShape.value      = 'free';
-                cropMode.value       = 'manual';
-                collageImages.value  = [];
-                cropBoxData.value    = null;
-                activeNav.value      = 'crop';
+                _effectsBase       = null;
+                activeEffect.value = '';
+                cropShape.value    = 'free';
+                cropMode.value     = 'manual';
+                cropBoxData.value  = null;
+                _initCollageCells();
+                activeNav.value    = 'crop';
                 await nextTick();
                 _initCropper(NaN);
             }
@@ -326,28 +392,53 @@
                 if (mode === 'collage') {
                     if (_cropper) { _cropper.destroy(); _cropper = null; }
                     cropBoxData.value = null;
+                    _initCollageCells();
                 } else {
                     nextTick(() => _initCropper(NaN));
                 }
             }
 
-            function addCollageImages(e) {
-                [...e.target.files].forEach(file => {
-                    if (file.type.startsWith('image/'))
-                        collageImages.value.push(URL.createObjectURL(file));
+            function setCollageLayout(key) {
+                if (!LapisFXCollage.LAYOUTS[key]) return;
+                collageLayout.value = key;
+                const layout = LapisFXCollage.LAYOUTS[key];
+                const count  = layout.cols * layout.rows;
+                const base   = resultUrl.value || imageUrl.value;
+                const prev   = collageCells.value;
+                collageCells.value = Array.from({ length: count }, (_, i) => {
+                    if (i === 0) return base || null;
+                    return prev[i] || null;
                 });
-                e.target.value = '';
             }
 
-            async function buildCollage(cols) {
-                const urls = [resultUrl.value || imageUrl.value, ...collageImages.value];
+            function triggerCellInput(ci) {
+                _collageActiveCell = ci;
+                document.getElementById('collage-cell-input').click();
+            }
+
+            function onCellFileInput(e) {
+                const file = e.target.files[0];
+                e.target.value = '';
+                if (!file || !file.type.startsWith('image/')) return;
+                const url = URL.createObjectURL(file);
+                const old = collageCells.value[_collageActiveCell];
+                const base = resultUrl.value || imageUrl.value;
+                if (old && old !== base && old !== imageUrl.value) URL.revokeObjectURL(old);
+                const next = [...collageCells.value];
+                next[_collageActiveCell] = url;
+                collageCells.value = next;
+            }
+
+            async function buildCollage() {
                 try {
-                    const canvas = await LapisFXCollage.createGrid(urls, cols);
+                    const canvas = await LapisFXCollage.createFromLayout(
+                        collageLayout.value, collageCells.value
+                    );
                     if (!canvas) return;
                     _pushHistory();
                     _resultCanvas   = canvas;
                     resultUrl.value = canvas.toDataURL('image/png');
-                } catch (e) {
+                } catch (_) {
                     alert(t.value.errLoad);
                 }
             }
@@ -421,23 +512,30 @@
                 }
             }
 
+            function _revokeCollageCells() {
+                const base = resultUrl.value || imageUrl.value;
+                collageCells.value.forEach(u => {
+                    if (u && u !== base && u !== imageUrl.value) URL.revokeObjectURL(u);
+                });
+                collageCells.value = [];
+            }
+
             function exitCrop() {
-                collageImages.value.forEach(u => URL.revokeObjectURL(u));
-                collageImages.value = [];
+                _revokeCollageCells();
                 if (_cropper) { _cropper.destroy(); _cropper = null; }
                 cropBoxData.value = null;
                 activeNav.value   = 'main';
             }
 
             function saveFromCrop() {
-                collageImages.value.forEach(u => URL.revokeObjectURL(u));
-                collageImages.value = [];
                 if (cropMode.value === 'collage') {
+                    _revokeCollageCells();
                     activeNav.value = 'main';
                     return;
                 }
                 if (_cropper) confirmCrop(false);
                 else activeNav.value = 'main';
+                _revokeCollageCells();
             }
 
             // ── Download (main nav only) ──────────────────────────────────────
@@ -477,25 +575,30 @@
             onUnmounted(() => {
                 if (_cropper)       _cropper.destroy();
                 if (imageUrl.value) URL.revokeObjectURL(imageUrl.value);
-                collageImages.value.forEach(u => URL.revokeObjectURL(u));
+                _revokeCollageCells();
             });
 
             return {
                 navSettings, isDarkTheme, glassStyle, themeClasses,
                 customBgStyle, systemDark, resolvedTheme,
                 imageUrl, resultUrl, activeNav, contentView,
-                dragOver, cropShape, cropMode, collageImages,
+                dragOver, cropShape, cropMode,
+                collageLayout, collageCells,
                 fxIntensity, cropBoxData, containerSize,
                 isSpecialShape, shapeOverlaySvg,
                 canUndoCt, showFloatingPanel, mainPaddingBottom,
                 activeEffect, effectCategory,
-                effectsList, glassVariants, jigsawVariants,
+                effectsList, glassVariants, jigsawVariants, stickerList, collageLayouts,
+                textConfig, stickerActive,
                 t, cropRatios, specialShapes,
                 handleFileInput, triggerUpload, onDrop,
                 enterEffects, exitEffects, applyEffectFilter,
                 applyCurrentEffect, saveFromEffects, onSliderInput,
+                applyText, applySticker,
                 enterCrop, exitCrop, confirmCrop, saveFromCrop,
-                setCropMode, addCollageImages, buildCollage, cropApply,
+                setCropMode, setCollageLayout,
+                triggerCellInput, onCellFileInput,
+                buildCollage, cropApply,
                 setRatio, setSpecialShape, undo,
                 promptDownload, promptDeleteImage,
                 refreshIcons,

@@ -36,7 +36,159 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
 .nav-item[disabled] { opacity: 0.3; pointer-events: none; }
 
 /* ── Crop workspace ──────────────────────────────────────────────────────── */
-/* min-height:0 prevents flex children from overflowing; position:relative   */
-/* gives the SVG overlay its stacking context.                               */
 #crop-wrap                  { min-height: 0; position: relative; }
 #crop-wrap .cropper-container { display: block; }
+
+/* ── FX Drawer (3-layer vertical panel for effects nav) ─────────────────── */
+.fx-drawer {
+    position: fixed;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    left: 0; right: 0;
+    z-index: 7005;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Layer 1: intensity slider */
+.fx-drawer-slider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    height: 38px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+}
+.fx-drawer-slider .fx-label { font-size: 0.68rem; opacity: 0.55; font-weight: 600; white-space: nowrap; }
+.fx-drawer-slider input[type="range"] { flex: 1; accent-color: #3b82f6; cursor: pointer; }
+.fx-intensity-pct { min-width: 2.4em; text-align: right; font-size: 0.68rem; opacity: 0.55; }
+
+/* Layer 2: scrollable effect chips */
+.fx-drawer-content {
+    height: 68px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-shrink: 0;
+    scrollbar-width: none;
+}
+.fx-drawer-content::-webkit-scrollbar { display: none; }
+
+/* FX slide transition when switching category */
+.fx-slide-enter-active,
+.fx-slide-leave-active {
+    transition: transform 0.2s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease;
+    overflow: hidden;
+}
+.fx-slide-enter-from { transform: translateY(100%); opacity: 0; }
+.fx-slide-leave-to   { transform: translateY(-30%); opacity: 0; }
+
+/* Layer 3: category tab bar */
+.fx-drawer-tabs {
+    display: flex;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+}
+.fx-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 2px 8px;
+    font-size: 0.58rem;
+    opacity: 0.45;
+    cursor: pointer;
+    transition: opacity 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+.fx-tab.is-active { opacity: 1; color: #3b82f6; }
+
+/* Effect chip pills */
+.fx-chip {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    background: rgba(255,255,255,0.08);
+}
+.fx-chip.is-active { background: #3b82f6 !important; color: #fff !important; }
+
+/* Text panel controls */
+.fx-text-input {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    color: inherit;
+    min-width: 110px;
+    max-width: 160px;
+    flex-shrink: 0;
+    outline: none;
+}
+.fx-select {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 5px 6px;
+    font-size: 0.72rem;
+    color: inherit;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.fx-color-swatch {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    border: 2px solid rgba(255,255,255,0.25);
+    flex-shrink: 0;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* Sticker emoji buttons */
+.fx-sticker-btn {
+    font-size: 1.7rem;
+    width: 48px; height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    flex-shrink: 0;
+    transition: transform 0.1s;
+}
+.fx-sticker-btn:active { transform: scale(0.85); }
+.fx-sticker-btn.is-active { outline: 2px solid #3b82f6; }
+
+/* ── Pro-Collage grid workspace ───────────────────────────────────────────── */
+.collage-layout-btn {
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.08);
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+.collage-layout-btn.is-active { background: #3b82f6; color: #fff; }
+
+.collage-cell {
+    background: rgba(255,255,255,0.05);
+    border: 1.5px dashed rgba(255,255,255,0.15);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    aspect-ratio: 1;
+    transition: border-color 0.15s;
+}
+.collage-cell:active { border-color: #3b82f6; }
