@@ -4,6 +4,7 @@
         typeof useNav            === 'undefined' ||
         typeof LapisFXShatter    === 'undefined' ||
         typeof LapisFXJigsaw     === 'undefined' ||
+        typeof LapisFXCollage    === 'undefined' ||
         typeof LapisStudioEngine === 'undefined' ||
         typeof Cropper           === 'undefined') {
         return setTimeout(waitForDeps, 20);
@@ -17,16 +18,16 @@
                     customBgStyle, systemDark, resolvedTheme } = useNav();
 
             // ── Core state ───────────────────────────────────────────────────
-            const imageUrl          = ref('');       // blob URL (original upload)
-            const resultUrl         = ref('');       // data URL (after crop/effect)
-            // 'main' | 'crop' | 'effects'
-            const activeNav         = ref('main');
-            const dragOver          = ref(false);
-            const cropShape         = ref('free');
-            // Key of the PENDING (previewed but not yet committed) effect
-            const activeEffect      = ref('');
-            // Which effects sub-category is shown in the floating panel
-            const effectCategory    = ref('filters'); // 'filters' | 'glass' | 'jigsaw'
+            const imageUrl       = ref('');       // blob URL (original upload)
+            const resultUrl      = ref('');       // data URL (after crop/effect)
+            const activeNav      = ref('main');   // 'main' | 'crop' | 'effects'
+            const dragOver       = ref(false);
+            const cropShape      = ref('free');
+            const cropMode       = ref('manual'); // 'manual' | 'collage'
+            const collageImages  = ref([]);        // extra blob URLs added for collage
+            const fxIntensity    = ref(1.0);       // 0‥1 slider value for effects
+            const activeEffect   = ref('');        // pending (previewed but uncommitted) effect
+            const effectCategory = ref('filters'); // 'filters' | 'glass' | 'jigsaw'
 
             // Crop overlay
             const cropBoxData   = ref(null);
@@ -37,28 +38,26 @@
             let _undoStack    = [];
             let _cropper      = null;
             let _resultCanvas = null;
-            // Snapshot of resultUrl at the START of the current effects session.
-            // Every filter is previewed by applying to this base (replace, not stack).
-            // Cleared on commit (Apply / Save) or discard (Back).
-            let _effectsBase  = null;
+            let _effectsBase  = null;  // snapshot at effects-session start
+            let _sliderTimer  = null;  // debounce handle for intensity slider
 
             // ── Content panel ─────────────────────────────────────────────────
             const contentView = computed(() => {
-                if (activeNav.value === 'crop') return 'crop';
-                if (!imageUrl.value)            return 'upload';
-                return 'preview';  // both 'main' and 'effects' show the image
+                if (activeNav.value === 'crop') {
+                    return cropMode.value === 'collage' ? 'collage' : 'crop';
+                }
+                if (!imageUrl.value) return 'upload';
+                return 'preview';  // 'main' and 'effects' both show the image
             });
 
             const isSpecialShape = computed(() =>
                 ['circle', 'ellipse', 'heart', 'star'].includes(cropShape.value)
             );
 
-            // Floating panel appears for crop (shape row) and effects (filter categories)
             const showFloatingPanel = computed(() =>
                 activeNav.value === 'crop' || activeNav.value === 'effects'
             );
 
-            // Extra ~54 px for floating panel when visible
             const mainPaddingBottom = computed(() =>
                 showFloatingPanel.value
                     ? 'calc(134px + env(safe-area-inset-bottom, 0px))'
@@ -87,7 +86,7 @@
             // ── i18n ─────────────────────────────────────────────────────────
             const translations = {
                 zh: {
-                    upload: '上傳', crop: '剪裁', effects: '特效', save: '保存',
+                    upload: '上傳', cropCollage: '剪貼', effects: '特效', save: '保存',
                     back: '返回', undo: '復原', apply: '套用',
                     tapToUpload: '點擊或拖曳圖片至此',
                     uploadHint: '支援 JPG、PNG、WebP，最大 10 MB',
@@ -100,8 +99,12 @@
                     errExport: '匯出失敗，請重試。',
                     noImage: '請先上傳一張圖片。',
                     confirmDelete: '確定要刪除此圖片嗎？',
-                    // Effects categories
+                    // Crop/Collage mode
+                    manualCrop: '手動剪裁', autoCollage: '自動拼貼',
+                    addImage: '加入圖片', addImagesHint: '選擇多張圖片後按格式鈕建立拼貼',
+                    // Effects
                     filtersCat: '濾鏡', glassCat: '碎玻璃', jigsawCat: '拼圖',
+                    intensity: '強度',
                     // Colour filters
                     grayscale: '黑白', sepia: '復古', vivid: '鮮豔',
                     dim: '暗調', warm: '暖色', cool: '冷色',
@@ -112,7 +115,7 @@
                     jigsawDrift: '漂移', jigsawGravity: '重力', jigsawScattered: '散落',
                 },
                 en: {
-                    upload: 'Upload', crop: 'Crop', effects: 'Effects', save: 'Save',
+                    upload: 'Upload', cropCollage: 'Collage', effects: 'Effects', save: 'Save',
                     back: 'Back', undo: 'Undo', apply: 'Apply',
                     tapToUpload: 'Tap or drag an image here',
                     uploadHint: 'JPG, PNG, WebP — max 10 MB',
@@ -125,7 +128,10 @@
                     errExport: 'Export failed. Please try again.',
                     noImage: 'Please upload an image first.',
                     confirmDelete: 'Delete this image?',
+                    manualCrop: 'Manual Crop', autoCollage: 'Auto Collage',
+                    addImage: 'Add Image', addImagesHint: 'Add images then pick a grid layout',
                     filtersCat: 'Filters', glassCat: 'Glass', jigsawCat: 'Jigsaw',
+                    intensity: 'Intensity',
                     grayscale: 'B&W', sepia: 'Sepia', vivid: 'Vivid',
                     dim: 'Dim', warm: 'Warm', cool: 'Cool',
                     glassImpact: 'Impact', glassSpiderweb: 'Spiderweb', glassFractured: 'Fractured',
@@ -175,12 +181,13 @@
 
             // ── File upload ───────────────────────────────────────────────────
             function _resetState() {
-                _resultCanvas      = null;
-                _undoStack         = [];
-                canUndoCt.value    = 0;
-                activeEffect.value = '';
-                _effectsBase       = null;
+                _resultCanvas        = null;
+                _undoStack           = [];
+                canUndoCt.value      = 0;
+                activeEffect.value   = '';
+                _effectsBase         = null;
                 effectCategory.value = 'filters';
+                fxIntensity.value    = 1.0;
             }
 
             async function _loadFile(file) {
@@ -188,9 +195,9 @@
                 try {
                     const url = await LapisStudioEngine.load(file);
                     if (imageUrl.value) URL.revokeObjectURL(imageUrl.value);
-                    imageUrl.value   = url;
-                    resultUrl.value  = '';
-                    activeNav.value  = 'main';
+                    imageUrl.value  = url;
+                    resultUrl.value = '';
+                    activeNav.value = 'main';
                     _resetState();
                 } catch (e) {
                     alert(e.message === 'SIZE_EXCEEDED' ? t.value.errSize : t.value.errLoad);
@@ -222,20 +229,17 @@
 
             function undo() {
                 if (_undoStack.length === 0) return;
-                // Discard any uncommitted (pending) preview first
                 activeEffect.value = '';
                 const prev = _undoStack.pop();
-                resultUrl.value  = prev;
-                _resultCanvas    = null;
-                canUndoCt.value  = _undoStack.length;
+                resultUrl.value = prev;
+                _resultCanvas   = null;
+                canUndoCt.value = _undoStack.length;
                 if (activeNav.value === 'crop') {
-                    // Stay in crop — re-init cropper with the restored image
                     if (_cropper) { _cropper.destroy(); _cropper = null; }
                     cropBoxData.value = null;
                     cropShape.value   = 'free';
                     nextTick(() => _initCropper(NaN));
                 } else if (activeNav.value === 'effects') {
-                    // Update base to match restored state (next preview applies from here)
                     _effectsBase = prev;
                 } else {
                     _effectsBase = null;
@@ -245,13 +249,12 @@
             // ── Effects nav ───────────────────────────────────────────────────
             function enterEffects() {
                 if (!imageUrl.value) return;
-                _effectsBase       = resultUrl.value; // snapshot pre-effects state
-                activeEffect.value = '';
+                _effectsBase         = resultUrl.value;
+                activeEffect.value   = '';
                 effectCategory.value = 'filters';
-                activeNav.value    = 'effects';
+                activeNav.value      = 'effects';
             }
 
-            // Preview a filter (live, no history push — replace mode)
             function applyEffectFilter(effectKey) {
                 if (!imageUrl.value) return;
                 const src = (_effectsBase !== null ? _effectsBase : resultUrl.value) || imageUrl.value;
@@ -261,7 +264,7 @@
                     sc.width  = img.naturalWidth;
                     sc.height = img.naturalHeight;
                     sc.getContext('2d').drawImage(img, 0, 0);
-                    const output = LapisStudioEngine.applyEffect(sc, effectKey);
+                    const output = LapisStudioEngine.applyEffect(sc, effectKey, { intensity: fxIntensity.value });
                     _resultCanvas      = output;
                     resultUrl.value    = output.toDataURL('image/png');
                     activeEffect.value = effectKey;
@@ -269,15 +272,21 @@
                 img.src = src;
             }
 
-            // Commit the pending preview → push _effectsBase to history, advance base
+            // 100 ms debounce: re-preview current effect when slider moves
+            function onSliderInput() {
+                if (_sliderTimer) clearTimeout(_sliderTimer);
+                _sliderTimer = setTimeout(() => {
+                    if (activeEffect.value) applyEffectFilter(activeEffect.value);
+                }, 100);
+            }
+
             function applyCurrentEffect() {
                 if (activeEffect.value === '') return;
                 _pushHistory(_effectsBase !== null ? _effectsBase : '');
-                _effectsBase       = resultUrl.value; // committed result is new base
+                _effectsBase       = resultUrl.value;
                 activeEffect.value = '';
             }
 
-            // Commit (if pending) + exit to main nav — NO download
             function saveFromEffects() {
                 if (activeEffect.value !== '') {
                     _pushHistory(_effectsBase !== null ? _effectsBase : '');
@@ -287,7 +296,6 @@
                 activeNav.value = 'main';
             }
 
-            // Discard uncommitted preview + exit to main nav
             function exitEffects() {
                 if (activeEffect.value !== '' && _effectsBase !== null) {
                     resultUrl.value = _effectsBase;
@@ -301,13 +309,54 @@
             // ── Crop ─────────────────────────────────────────────────────────
             async function enterCrop() {
                 if (!imageUrl.value) { alert(t.value.noImage); return; }
-                _effectsBase       = null;
-                activeEffect.value = '';
-                cropShape.value    = 'free';
-                cropBoxData.value  = null;
-                activeNav.value    = 'crop';
+                _effectsBase         = null;
+                activeEffect.value   = '';
+                cropShape.value      = 'free';
+                cropMode.value       = 'manual';
+                collageImages.value  = [];
+                cropBoxData.value    = null;
+                activeNav.value      = 'crop';
                 await nextTick();
                 _initCropper(NaN);
+            }
+
+            function setCropMode(mode) {
+                if (cropMode.value === mode) return;
+                cropMode.value = mode;
+                if (mode === 'collage') {
+                    if (_cropper) { _cropper.destroy(); _cropper = null; }
+                    cropBoxData.value = null;
+                } else {
+                    nextTick(() => _initCropper(NaN));
+                }
+            }
+
+            function addCollageImages(e) {
+                [...e.target.files].forEach(file => {
+                    if (file.type.startsWith('image/'))
+                        collageImages.value.push(URL.createObjectURL(file));
+                });
+                e.target.value = '';
+            }
+
+            async function buildCollage(cols) {
+                const urls = [resultUrl.value || imageUrl.value, ...collageImages.value];
+                try {
+                    const canvas = await LapisFXCollage.createGrid(urls, cols);
+                    if (!canvas) return;
+                    _pushHistory();
+                    _resultCanvas   = canvas;
+                    resultUrl.value = canvas.toDataURL('image/png');
+                } catch (e) {
+                    alert(t.value.errLoad);
+                }
+            }
+
+            // Apply in crop nav — manual mode commits crop; collage mode is no-op
+            // (collage is committed immediately by buildCollage panel buttons)
+            function cropApply() {
+                if (cropMode.value === 'collage') return;
+                confirmCrop(true);
             }
 
             function _syncContainerSize() {
@@ -344,17 +393,13 @@
                 if (_cropper) _cropper.setAspectRatio(1);
             }
 
-            // stayInCrop=true  → Apply button: commit crop, STAY in crop, re-init cropper
-            // stayInCrop=false → Save button:  commit crop, EXIT to main nav (no download)
             function confirmCrop(stayInCrop = false) {
                 if (!_cropper) return;
                 _pushHistory();
-                const data     = _cropper.getData(true); // pixel-accurate selection coords
+                const data     = _cropper.getData(true);
                 const specials = ['circle', 'ellipse', 'heart', 'star'];
                 let output;
                 if (specials.includes(cropShape.value)) {
-                    // Build full-size source canvas so applyMask can translate(-x,-y)
-                    // and align the crop region to (0,0) without getCroppedCanvas rounding
                     const srcImg = document.getElementById('crop-image');
                     const srcCvs = document.createElement('canvas');
                     srcCvs.width  = srcImg.naturalWidth;
@@ -377,18 +422,25 @@
             }
 
             function exitCrop() {
+                collageImages.value.forEach(u => URL.revokeObjectURL(u));
+                collageImages.value = [];
                 if (_cropper) { _cropper.destroy(); _cropper = null; }
                 cropBoxData.value = null;
                 activeNav.value   = 'main';
             }
 
-            // Save from crop = apply + exit to main nav (no download)
             function saveFromCrop() {
+                collageImages.value.forEach(u => URL.revokeObjectURL(u));
+                collageImages.value = [];
+                if (cropMode.value === 'collage') {
+                    activeNav.value = 'main';
+                    return;
+                }
                 if (_cropper) confirmCrop(false);
                 else activeNav.value = 'main';
             }
 
-            // ── Download (main nav only) ───────────────────────────────────────
+            // ── Download (main nav only) ──────────────────────────────────────
             async function promptDownload() {
                 if (!imageUrl.value) { alert(t.value.noImage); return; }
                 const name = window.prompt(t.value.saveAs, `glassystudio_${Date.now()}`);
@@ -425,23 +477,25 @@
             onUnmounted(() => {
                 if (_cropper)       _cropper.destroy();
                 if (imageUrl.value) URL.revokeObjectURL(imageUrl.value);
+                collageImages.value.forEach(u => URL.revokeObjectURL(u));
             });
 
             return {
                 navSettings, isDarkTheme, glassStyle, themeClasses,
                 customBgStyle, systemDark, resolvedTheme,
                 imageUrl, resultUrl, activeNav, contentView,
-                dragOver, cropShape, cropBoxData, containerSize,
+                dragOver, cropShape, cropMode, collageImages,
+                fxIntensity, cropBoxData, containerSize,
                 isSpecialShape, shapeOverlaySvg,
-                canUndoCt,
-                showFloatingPanel, mainPaddingBottom,
+                canUndoCt, showFloatingPanel, mainPaddingBottom,
                 activeEffect, effectCategory,
                 effectsList, glassVariants, jigsawVariants,
                 t, cropRatios, specialShapes,
                 handleFileInput, triggerUpload, onDrop,
                 enterEffects, exitEffects, applyEffectFilter,
-                applyCurrentEffect, saveFromEffects,
+                applyCurrentEffect, saveFromEffects, onSliderInput,
                 enterCrop, exitCrop, confirmCrop, saveFromCrop,
+                setCropMode, addCollageImages, buildCollage, cropApply,
                 setRatio, setSpecialShape, undo,
                 promptDownload, promptDeleteImage,
                 refreshIcons,

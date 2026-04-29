@@ -29,6 +29,7 @@
     <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js" defer></script>
     <script src="./js/fx/lapis_fx_shatter.js" defer></script>
     <script src="./js/fx/lapis_fx_jigsaw.js" defer></script>
+    <script src="./js/fx/lapis_fx_collage.js" defer></script>
     <script src="./js/fx/lapis_fx_base.js" defer></script>
     <script src="./js/lapis_studio_ui.js" defer></script>
 </head>
@@ -81,7 +82,7 @@
                  style="pointer-events:none;user-select:none;">
         </div>
 
-        <!-- C: Crop workspace -->
+        <!-- C: Crop workspace (manual crop mode) -->
         <div v-show="contentView === 'crop'" class="flex-1 flex flex-col overflow-hidden min-h-0">
             <div id="crop-wrap" class="flex-1 overflow-hidden">
                 <img id="crop-image" style="max-width:100%;display:block;">
@@ -93,6 +94,16 @@
             </div>
         </div>
 
+        <!-- D: Collage workspace (collage mode) -->
+        <div v-show="contentView === 'collage'"
+             class="flex-1 flex flex-col items-center justify-center gap-4 p-4 overflow-hidden">
+            <img v-if="resultUrl || imageUrl"
+                 :src="resultUrl || imageUrl"
+                 class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                 style="pointer-events:none;user-select:none;">
+            <p class="text-xs opacity-40">{{ t.addImagesHint }}</p>
+        </div>
+
     </main>
 
     <!-- ── Floating Tool Panel (fixed above bottom nav) ──────────────────── -->
@@ -102,29 +113,74 @@
              style="backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.08);"
              :style="glassStyle">
 
-            <!-- ─ Crop: ratio + shape selector ───────────────────────────── -->
+            <!-- ─ Crop: mode tabs + conditional sub-panel ────────────────── -->
             <template v-if="activeNav === 'crop'">
-                <button v-for="r in cropRatios" :key="r.key"
-                        @click="setRatio(r)"
-                        class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                        :class="{ 'is-active': cropShape === r.key }"
-                        :style="cropShape !== r.key ? glassStyle : {}">
-                    {{ r.label }}
+                <!-- Mode toggle -->
+                <button @click="setCropMode('manual')"
+                        class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                        :class="{ 'is-active': cropMode === 'manual' }"
+                        :style="cropMode !== 'manual' ? glassStyle : {}">
+                    {{ t.manualCrop }}
+                </button>
+                <button @click="setCropMode('collage')"
+                        class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                        :class="{ 'is-active': cropMode === 'collage' }"
+                        :style="cropMode !== 'collage' ? glassStyle : {}">
+                    {{ t.autoCollage }}
                 </button>
                 <div class="shrink-0 w-px h-5 mx-1 opacity-20"
                      :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
-                <button v-for="s in specialShapes" :key="s.key"
-                        @click="setSpecialShape(s)"
-                        class="shape-btn shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center transition-all"
-                        :class="{ 'is-active': cropShape === s.key }"
-                        :style="cropShape !== s.key ? glassStyle : {}"
-                        :title="t[s.key]"
-                        v-html="s.svg">
-                </button>
+                <!-- Manual crop sub-panel: ratio + shape buttons -->
+                <template v-if="cropMode === 'manual'">
+                    <button v-for="r in cropRatios" :key="r.key"
+                            @click="setRatio(r)"
+                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                            :class="{ 'is-active': cropShape === r.key }"
+                            :style="cropShape !== r.key ? glassStyle : {}">
+                        {{ r.label }}
+                    </button>
+                    <div class="shrink-0 w-px h-5 mx-1 opacity-20"
+                         :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
+                    <button v-for="s in specialShapes" :key="s.key"
+                            @click="setSpecialShape(s)"
+                            class="shape-btn shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center transition-all"
+                            :class="{ 'is-active': cropShape === s.key }"
+                            :style="cropShape !== s.key ? glassStyle : {}"
+                            :title="t[s.key]"
+                            v-html="s.svg">
+                    </button>
+                </template>
+                <!-- Collage sub-panel: add image + layout picker -->
+                <template v-else>
+                    <label class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap cursor-pointer transition-all"
+                           :style="glassStyle">
+                        {{ t.addImage }}
+                        <input type="file" accept="image/*" multiple class="hidden" @change="addCollageImages">
+                    </label>
+                    <button @click="buildCollage(2)"
+                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                            :style="glassStyle">2×2</button>
+                    <button @click="buildCollage(3)"
+                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                            :style="glassStyle">3×3</button>
+                    <button @click="buildCollage(4)"
+                            class="shape-btn shrink-0 px-4 py-2 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
+                            :style="glassStyle">4×4</button>
+                </template>
             </template>
 
-            <!-- ─ Effects: 3-category tabs + content ─────────────────────── -->
+            <!-- ─ Effects: intensity slider + 3-category tabs + content ─── -->
             <template v-else>
+                <!-- Universal intensity slider -->
+                <div class="shrink-0 flex items-center gap-1.5">
+                    <span class="text-xs opacity-55 font-medium whitespace-nowrap">{{ t.intensity }}</span>
+                    <input type="range" min="0" max="1" step="0.01"
+                           v-model.number="fxIntensity"
+                           @input="onSliderInput"
+                           class="w-24 accent-blue-500 cursor-pointer">
+                </div>
+                <div class="shrink-0 w-px h-5 mx-1 opacity-20"
+                     :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
                 <!-- Category tab: Filters -->
                 <button @click="effectCategory = 'filters'"
                         class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
@@ -197,8 +253,8 @@
             </button>
             <button @click="enterCrop" class="nav-item"
                     :style="!imageUrl ? { opacity: 0.35, pointerEvents: 'none' } : {}">
-                <i data-lucide="crop" class="w-5 h-5"></i>
-                <span>{{ t.crop }}</span>
+                <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                <span>{{ t.cropCollage }}</span>
             </button>
             <button @click="enterEffects" class="nav-item"
                     :style="!imageUrl ? { opacity: 0.35, pointerEvents: 'none' } : {}">
@@ -239,9 +295,9 @@
             </button>
         </nav>
 
-        <!-- ── Crop action row ───────────────────────────────────────────── -->
-        <!-- Apply = commit crop, STAY in crop nav                           -->
-        <!-- Save  = commit crop + EXIT to main nav (no download)            -->
+        <!-- ── Crop/Collage action row ──────────────────────────────────── -->
+        <!-- Apply (manual) = commit crop + stay; Apply (collage) = no-op   -->
+        <!-- Save  = commit + EXIT to main nav (no download)                -->
         <nav v-else key="nav-crop"
              class="bottom-nav glass" style="backdrop-filter:blur(24px);" :style="glassStyle">
             <button @click="exitCrop" class="nav-item">
@@ -252,7 +308,9 @@
                 <i data-lucide="undo-2" class="w-5 h-5"></i>
                 <span>{{ t.undo }}</span>
             </button>
-            <button @click="confirmCrop(true)" class="nav-item active">
+            <button @click="cropApply" class="nav-item"
+                    :class="{ active: cropMode === 'manual' }"
+                    :style="cropMode === 'collage' ? { opacity: 0.35, pointerEvents: 'none' } : {}">
                 <i data-lucide="check" class="w-5 h-5"></i>
                 <span>{{ t.apply }}</span>
             </button>
@@ -266,7 +324,6 @@
 
     <!-- Hidden file input -->
     <input id="studio-file-input" type="file" accept="image/*" class="hidden" @change="handleFileInput">
-
 
 </div>
 </body>
