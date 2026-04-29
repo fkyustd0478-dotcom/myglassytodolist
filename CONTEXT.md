@@ -48,6 +48,13 @@ myglassytodolist/
 ├── shift.html          → Shift scheduling (calendar grid, job earnings)
 ├── stats.html          → Workout read-only stats snapshot
 ├── setting.html        → App settings (theme, calendar, user profile)
+├── studio.html         → 琉璃工坊 image editor (Vue 3 Composition API; see §5)
+│
+├── theme/              → Preset background PNGs (loaded by LapisCore._imgThemes)
+│   ├── cherry.png, sky.png, sunset.png, sea.png, seaside.png
+│   ├── forest.png, night.png, torii.png, waterfall.png
+│   ├── ferriswheel.png, starrynight.png
+│   └── plum-blossom.png    ← 梅花主題 (light theme; asset pending upload)
 │
 ├── docs/               → Documentation hub (sub-documents)
 │   ├── DATA_SCHEMAS.md       → localStorage keys, JSON schemas
@@ -74,7 +81,17 @@ myglassytodolist/
 │   ├── lapis_core_ui.js    → LapisNav (top capsule dropdown), LapisModal (open/close/ESC)
 │   ├── lapis_picker.js     → LapisDatePicker + LapisTimePicker (drum-roll wheel)
 │   ├── lapis_confirm.js    → Vue confirm dialog (LV3)
-│   └── holidays.js         → Holiday data for shift calendar
+│   ├── holidays.js         → Holiday data for shift calendar
+│   ├── lapis_studio_ui.js  → Studio Vue setup(): state, nav flows, history, download (see §5)
+│   ├── lapis_studio_engine.js  → LEGACY canvas engine (pre-Phase 13.8.2; NOT loaded by studio.html)
+│   └── fx/                 → Modular canvas FX (all loaded by studio.html; see §5)
+│       ├── lapis_fx_base.js      → Exports window.LapisStudioEngine: colour filters, applyMask,
+│       │                            triggerRealDownload, svgShapeInner; routes glass-/jigsaw- keys
+│       ├── lapis_fx_shatter.js   → window.LapisFXShatter: impact / spiderweb / fractured variants
+│       ├── lapis_fx_jigsaw.js    → window.LapisFXJigsaw: static / explode / drift / gravity / scattered
+│       ├── lapis_fx_collage.js   → window.LapisFXCollage: 6 layouts + per-cell createFromLayout()
+│       ├── lapis_fx_text.js      → window.LapisFXText: bold text overlay at normalised (x,y)
+│       └── lapis_fx_sticker.js   → window.LapisFXSticker: 12 built-in emoji stickers
 │
 └── modules/
     ├── index.js         → Home app
@@ -136,7 +153,7 @@ Standard: `effects.js` → `storage.js` → `core_engine.js` → `nav.js` → `l
 ### Theme System
 
 **Dark themes** (dark glass, light text): `dark`, `forest`, `night`, `torii`, `starrysky`, `ferriswheel`
-**Light themes** (frosted white glass, dark text): `light`, `cherry`, `sky`, `seaside`, `sunset`, `mapleavenue`, `waterfall`
+**Light themes** (frosted white glass, dark text): `light`, `cherry`, `sky`, `seaside`, `sunset`, `mapleavenue`, `waterfall`, `plum-blossom`
 
 **Anti-flash script** (required in `<head>` of every HTML page):
 ```html
@@ -206,3 +223,137 @@ ParticleEngine.setEffect('cherry')   // 'none'|'cherry'|'rain'|'snow'
 - Safe area insets: apply `padding-bottom: env(safe-area-inset-bottom, 0)` to `.bottom-nav` and fixed-bottom elements.
 - `manifest.json` referenced as a CSS `<link>` in todo.html — known bug, do not replicate.
 - No active service worker in current build (`old/sw.js` exists but is not registered).
+
+---
+
+## 5. STUDIO MODULE — 琉璃工坊 (`studio.html`)
+
+### Overview
+
+`studio.html` is a standalone image editor built with **Vue 3 Composition API** (`setup()`).
+It does NOT use Options API. It shares the global `useNav()` composable and the standard
+`#lapis-bg-system` double-buffer background, but has its own bottom-nav state machine.
+
+### Script Load Order
+
+```
+effects.js → storage.js → core_engine.js → nav.js → lapis_core_ui.js
+  → cropperjs (CDN)
+  → js/fx/lapis_fx_shatter.js
+  → js/fx/lapis_fx_jigsaw.js
+  → js/fx/lapis_fx_collage.js
+  → js/fx/lapis_fx_text.js
+  → js/fx/lapis_fx_sticker.js
+  → js/fx/lapis_fx_base.js        ← exports window.LapisStudioEngine
+  → js/lapis_studio_ui.js         ← mounts Vue after waitForDeps() polling
+```
+
+`waitForDeps()` polls every 20 ms and only mounts once all 7 globals
+(`Vue`, `useNav`, `LapisFXShatter`, `LapisFXJigsaw`, `LapisFXCollage`,
+`LapisFXText`, `LapisFXSticker`, `LapisStudioEngine`, `Cropper`) are defined.
+
+> ⚠ `js/lapis_studio_engine.js` is a **legacy file** from before Phase 13.8.2 and is
+> **not loaded** in `studio.html`. The active engine is `js/fx/lapis_fx_base.js`.
+
+---
+
+### Nav State Machine
+
+| `activeNav` | Floating panel | Bottom nav |
+|---|---|---|
+| `'main'`    | hidden | Upload / Collage / Effects / Save |
+| `'crop'`    | Crop controls (horizontal scroll) | Back / Undo / Apply / Save |
+| `'effects'` | **FX Drawer** (3-layer vertical) | Back / Undo / Apply / Save |
+
+`contentView` computed maps nav + cropMode to content sections:
+- `'upload'` — drop zone (no image loaded)
+- `'preview'` — image preview (main + effects)
+- `'crop'` — Cropper.js workspace (manual)
+- `'collage'` — per-cell grid (collage mode)
+
+---
+
+### FX Drawer — 3-Layer Architecture
+
+The FX Drawer is a fixed `position:fixed` element shown only when `activeNav === 'effects'`.
+It replaces the horizontal-scroll panel used in crop mode.
+
+```
+┌─────────────────────────────────────────┐  ← 38px
+│  Intensity Slider  ███████████  100%    │  Layer 1 (always visible)
+├─────────────────────────────────────────┤  ← 68px
+│  [chip] [chip] [chip] [chip] …          │  Layer 2 (slides on category change)
+├─────────────────────────────────────────┤  ← ~48px
+│  濾鏡  碎玻璃  拼圖  文字  貼圖         │  Layer 3 (category tabs)
+└─────────────────────────────────────────┘
+```
+
+Layer 2 uses `<transition name="fx-slide" mode="out-in">` with `:key="effectCategory"`.
+CSS: `.fx-slide-enter-from { transform: translateY(100%); opacity: 0 }`.
+Main content `paddingBottom` = `246px` in effects mode, `134px` in crop, `80px` in main.
+
+**Effect categories**: `'filters'` | `'glass'` | `'jigsaw'` | `'text'` | `'stickers'`
+
+---
+
+### FX Module API
+
+| Global | Entry point | Accepts |
+|---|---|---|
+| `LapisStudioEngine` | `applyEffect(srcCanvas, key, { intensity })` | All effect keys |
+| `LapisFXShatter` | `render(srcCanvas, variant, { intensity })` | `'impact'` \| `'spiderweb'` \| `'fractured'` |
+| `LapisFXJigsaw` | `render(srcCanvas, variant, { intensity })` | `'static'` \| `'explode'` \| `'drift'` \| `'gravity'` \| `'scattered'` |
+| `LapisFXCollage` | `createFromLayout(layoutKey, cellUrls[])` | `'1x2'` \| `'2x1'` \| `'2x2'` \| `'2x3'` \| `'3x2'` \| `'3x3'` |
+| `LapisFXText` | `render(srcCanvas, { text, fontFamily, fontSize, color, strokeColor, x, y })` | normalised `x/y` 0‥1 |
+| `LapisFXSticker` | `render(srcCanvas, { sticker, x, y, scale })` | emoji string |
+
+`applyEffect` key routing:
+- `'glass-*'` → `LapisFXShatter.render(src, key.slice(6), config)`
+- `'jigsaw-*'` → `LapisFXJigsaw.render(src, key.slice(7), config)`
+- Other keys → CSS `ctx.filter` (colour filters); `intensity < 1` blends via `globalAlpha`
+
+---
+
+### Key Logic Details
+
+#### Crop Coordinate Precision
+- Use `_cropper.getData(true)` to get **full-image pixel coords** (not display coords).
+- `applyMask(srcCanvas, shape, data)` draws the shape at `(0,0)‥(w,h)`,
+  then `ctx.translate(-data.x, -data.y)` before `drawImage(src)` so the
+  crop region aligns with the output canvas origin.
+
+#### Intensity Slider Debounce
+- `fxIntensity` ref drives a 100 ms debounce via `_sliderTimer`.
+- On fire: re-calls `applyEffectFilter(activeEffect.value)` from `_effectsBase`.
+- Prevents mobile GPU thrashing during continuous drag.
+
+#### Effects Base (`_effectsBase`)
+- Snapshot of `resultUrl` taken when entering effects mode.
+- Every `applyEffectFilter()` call re-renders FROM `_effectsBase` (not from
+  the last preview), preventing filter stacking.
+- `applyCurrentEffect()` (Apply button) commits preview → advances `_effectsBase`.
+
+#### Download (`triggerRealDownload`)
+1. `canvas.toBlob()` → `new Blob([blob], { type: 'application/octet-stream' })`
+2. Create off-screen `<a download="...">` with blob URL; call `link.click()`.
+3. If `link.click()` throws (sandboxed iframe), fallback: `window.location.assign(blobUrl)`.
+4. Revoke blob URL after 5 000 ms.
+
+#### Pro-Collage
+- `LapisFXCollage.LAYOUTS` — 6 static presets (`{ cols, rows, label }`).
+- `collageCells` ref — per-cell URL array; cell 0 defaults to current image.
+- `triggerCellInput(ci)` stores index → triggers `#collage-cell-input` click.
+- `onCellFileInput` creates a new blob URL, revokes the previous one (if not base image).
+- `buildCollage()` calls `createFromLayout(layout, cells)` → cover-fit renders all cells
+  at full resolution → bakes to `resultUrl` data URL.
+
+---
+
+### Theme System Integration
+
+`studio.html` shares the same anti-flash script and `#lapis-bg-system` as all other pages.
+The dark-theme array in the anti-flash `<script>` inline block:
+```javascript
+var dk = ['dark','forest','night','torii','purple','ferriswheel','starrynight'];
+```
+`plum-blossom` is a **light** theme — no changes to `dk` are needed.
