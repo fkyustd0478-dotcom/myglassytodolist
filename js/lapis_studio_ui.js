@@ -2,6 +2,8 @@
 (function waitForDeps() {
     if (typeof Vue               === 'undefined' ||
         typeof useNav            === 'undefined' ||
+        typeof LapisFXShatter    === 'undefined' ||
+        typeof LapisFXJigsaw     === 'undefined' ||
         typeof LapisStudioEngine === 'undefined' ||
         typeof Cropper           === 'undefined') {
         return setTimeout(waitForDeps, 20);
@@ -107,7 +109,7 @@
                     glassImpact: '衝擊', glassSpiderweb: '蜘蛛網', glassFractured: '碎裂',
                     // Jigsaw variants
                     jigsawStatic: '靜止', jigsawExplode: '爆炸',
-                    jigsawDrift: '漂移', jigsawGravity: '重力',
+                    jigsawDrift: '漂移', jigsawGravity: '重力', jigsawScattered: '散落',
                 },
                 en: {
                     upload: 'Upload', crop: 'Crop', effects: 'Effects', save: 'Save',
@@ -128,7 +130,7 @@
                     dim: 'Dim', warm: 'Warm', cool: 'Cool',
                     glassImpact: 'Impact', glassSpiderweb: 'Spiderweb', glassFractured: 'Fractured',
                     jigsawStatic: 'Static', jigsawExplode: 'Explode',
-                    jigsawDrift: 'Drift', jigsawGravity: 'Gravity',
+                    jigsawDrift: 'Drift', jigsawGravity: 'Gravity', jigsawScattered: 'Scattered',
                 },
             };
             const t = computed(() => translations[navSettings.lang] || translations.zh);
@@ -164,10 +166,11 @@
             ];
 
             const jigsawVariants = [
-                { key: 'jigsaw-static',  tKey: 'jigsawStatic'  },
-                { key: 'jigsaw-explode', tKey: 'jigsawExplode' },
-                { key: 'jigsaw-drift',   tKey: 'jigsawDrift'   },
-                { key: 'jigsaw-gravity', tKey: 'jigsawGravity' },
+                { key: 'jigsaw-static',    tKey: 'jigsawStatic'    },
+                { key: 'jigsaw-explode',   tKey: 'jigsawExplode'   },
+                { key: 'jigsaw-drift',     tKey: 'jigsawDrift'     },
+                { key: 'jigsaw-gravity',   tKey: 'jigsawGravity'   },
+                { key: 'jigsaw-scattered', tKey: 'jigsawScattered' },
             ];
 
             // ── File upload ───────────────────────────────────────────────────
