@@ -28,7 +28,7 @@ window.LapisCore = (() => {
     // waterfall/ferriswheel/starrynight PNGs must be uploaded to theme/ to activate.
     const _imgThemes = new Set([
         'cherry', 'sky', 'sunset', 'sea', 'seaside', 'forest', 'night', 'torii',
-        'waterfall', 'ferriswheel', 'starrynight',
+        'waterfall', 'ferriswheel', 'starrynight', 'plum-blossom',
     ]);
 
     // ── Preset gradient map ───────────────────────────────────────────────────

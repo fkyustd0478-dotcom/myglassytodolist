@@ -22,7 +22,7 @@ function useNav() {
     const _validThemes = new Set([
         'light', 'dark', 'system',
         'cherry', 'sky', 'sunset', 'sea', 'seaside', 'forest', 'night', 'torii',
-        'waterfall', 'ferriswheel', 'starrynight',
+        'waterfall', 'ferriswheel', 'starrynight', 'plum-blossom',
         'orange', 'purple', 'cherrrypink', 'skyblue', 'grassgreen', 'beige', 'lightgrey', 'lavender',
     ]);
     const _savedSettings = StorageProvider.getCommonSettings();
@@ -72,6 +72,7 @@ function useNav() {
             sunset: '日落', forest: '森林', sea: '大海',
             night: '夜景', torii: '鳥居',
             waterfall: '瀑布', ferriswheel: '摩天輪', starrynight: '星空',
+            'plum-blossom': '梅花',
             orange: '火焰', purple: '宇宙',
             cherrrypink: '櫻花粉', skyblue: '天空藍', grassgreen: '草綠色',
             beige: '米黃色', lightgrey: '淺灰色', lavender: '淡紫色'
@@ -82,6 +83,7 @@ function useNav() {
             sunset: 'Sunset', forest: 'Forest', sea: 'Sea',
             night: 'Night', torii: 'Torii',
             waterfall: 'Waterfall', ferriswheel: 'Ferris Wheel', starrynight: 'Starry Night',
+            'plum-blossom': 'Plum Blossom',
             orange: 'Ember', purple: 'Cosmos',
             cherrrypink: 'Cherry Pink', skyblue: 'Sky Blue', grassgreen: 'Grass Green',
             beige: 'Beige', lightgrey: 'Light Grey', lavender: 'Lavender'
