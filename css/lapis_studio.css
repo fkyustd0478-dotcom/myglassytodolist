@@ -8,7 +8,9 @@ body.lapis-ready { opacity: 1; }
 /* Both navs enter from below (up) and exit downward — drawer metaphor.      */
 .drawer-swap-enter-active,
 .drawer-swap-leave-active {
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.28s ease;
+    will-change: transform, opacity;
 }
 .drawer-swap-enter-from { transform: translateY(100%); opacity: 0; }
 .drawer-swap-leave-to   { transform: translateY(100%); opacity: 0; }
@@ -48,14 +50,20 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     display: flex;
     flex-direction: column;
     border-top: 1px solid rgba(255,255,255,0.08);
+    animation: fxDrawerIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: transform, opacity;
+}
+@keyframes fxDrawerIn {
+    from { transform: translateY(18px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
 }
 
 /* Layer 1: intensity slider */
 .fx-drawer-slider {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
+    gap: 10px;
+    padding: 6px 14px;
     height: 38px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
     flex-shrink: 0;
@@ -69,8 +77,8 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     height: 68px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 12px;
+    gap: 10px;
+    padding: 0 14px;
     overflow-x: auto;
     overflow-y: hidden;
     flex-shrink: 0;
@@ -81,11 +89,12 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
 /* FX slide transition when switching category */
 .fx-slide-enter-active,
 .fx-slide-leave-active {
-    transition: transform 0.2s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease;
+    transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.2s ease;
     overflow: hidden;
 }
-.fx-slide-enter-from { transform: translateY(100%); opacity: 0; }
-.fx-slide-leave-to   { transform: translateY(-30%); opacity: 0; }
+.fx-slide-enter-from { transform: translateY(18px); opacity: 0; }
+.fx-slide-leave-to   { transform: translateY(-12px); opacity: 0; }
 
 /* Layer 3: category tab bar */
 .fx-drawer-tabs {
@@ -99,28 +108,34 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    padding: 6px 2px 8px;
+    gap: 3px;
+    padding: 7px 2px 9px;
     font-size: 0.58rem;
     opacity: 0.45;
     cursor: pointer;
-    transition: opacity 0.15s, color 0.15s;
+    transition: opacity 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
 }
 .fx-tab.is-active { opacity: 1; color: #3b82f6; }
+.fx-tab:active { transform: scale(0.96); }
 
 /* Effect chip pills */
 .fx-chip {
     flex-shrink: 0;
-    padding: 6px 14px;
+    padding: 7px 14px;
     border-radius: 9999px;
     font-size: 0.72rem;
     font-weight: 700;
     white-space: nowrap;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     background: rgba(255,255,255,0.08);
 }
 .fx-chip.is-active { background: #3b82f6 !important; color: #fff !important; }
+.fx-chip:active { transform: scale(0.96); }
 
 /* Text panel controls */
 .fx-text-input {

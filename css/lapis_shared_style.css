@@ -48,6 +48,11 @@
     backdrop-filter: blur(20px) brightness(1.03);
     -webkit-backdrop-filter: blur(20px) brightness(1.03);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    transition: background 0.24s ease,
+                border-color 0.24s ease,
+                box-shadow 0.24s ease,
+                transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
 }
 
 /* Dark-theme capsule surface */
@@ -72,7 +77,9 @@ body.theme-ferriswheel .lapis-nav-capsule {
     padding: 10px 20px;
     border-radius: 999px;
     cursor: pointer;
-    transition: transform 0.18s ease, opacity 0.18s ease;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.22s ease,
+                color 0.22s ease;
     background: transparent;
     border: none;
     color: inherit;
@@ -198,6 +205,9 @@ body.theme-waterfall   .lapis-dropdown-item:not(.active):active { background: rg
     visibility: visible !important;
     transform: none !important;
     pointer-events: none;
+    transition: background 0.28s ease,
+                border-color 0.28s ease,
+                box-shadow 0.28s ease;
 }
 .bottom-nav > * { pointer-events: auto; }
 
@@ -219,9 +229,9 @@ body.theme-waterfall   .bottom-nav {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     min-width: 64px;
-    padding: 6px 10px;
+    padding: 8px 10px;
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.025em;
@@ -233,9 +243,11 @@ body.theme-waterfall   .bottom-nav {
     background: none;
     border: none;
     font-family: inherit;
-    transition: opacity 0.26s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.26s cubic-bezier(0.4, 0, 0.2, 1),
-                color    0.26s ease;
+    transition: opacity 0.24s ease,
+                transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.24s ease,
+                filter 0.24s ease;
+    will-change: transform, opacity;
 }
 
 .nav-item svg,
@@ -243,7 +255,7 @@ body.theme-waterfall   .bottom-nav {
     width: 24px;
     height: 24px;
     flex-shrink: 0;
-    transition: transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-item.active {
@@ -289,11 +301,19 @@ body.theme-waterfall   .bottom-nav {
     backdrop-filter: blur(7px);
     -webkit-backdrop-filter: blur(7px);
     /* Fade-in for backdrop itself */
-    animation: lapisBackdropIn 0.22s ease both;
+    animation: lapisBackdropIn 0.24s ease both;
+}
+.lapis-modal-backdrop.is-closing {
+    animation: lapisBackdropOut 0.2s ease both;
+    pointer-events: none;
 }
 @keyframes lapisBackdropIn {
     from { opacity: 0; }
     to   { opacity: 1; }
+}
+@keyframes lapisBackdropOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
 }
 
 /* Shell — slides up from the bottom edge */
@@ -307,18 +327,26 @@ body.theme-waterfall   .bottom-nav {
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none;
-    padding: 28px 24px 44px;
+    padding: 28px 24px 40px;
     /* Glassmorphism surface — inherits color from body theme */
     backdrop-filter: blur(28px) brightness(1.1) saturate(1.5);
     -webkit-backdrop-filter: blur(28px) brightness(1.1) saturate(1.5);
     /* Slide-up + scale entry animation */
-    animation: lapisShellUp 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: lapisShellUp 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: transform, opacity;
 }
 .lapis-modal-shell::-webkit-scrollbar { display: none; }
 
 @keyframes lapisShellUp {
-    from { transform: translateY(56px) scale(0.96); opacity: 0; }
+    from { transform: translateY(48px) scale(0.97); opacity: 0; }
     to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+.lapis-modal-backdrop.is-closing .lapis-modal-shell {
+    animation: lapisShellDown 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+}
+@keyframes lapisShellDown {
+    from { transform: translateY(0) scale(1); opacity: 1; }
+    to   { transform: translateY(28px) scale(0.98); opacity: 0; }
 }
 
 /* ── Centred dialog variant ────────────────────────────────────────────────
@@ -329,11 +357,18 @@ body.theme-waterfall   .bottom-nav {
 }
 .lapis-modal-backdrop.centered .lapis-modal-shell {
     border-radius: 2.5rem;
-    animation: lapisShellScale 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: lapisShellScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes lapisShellScale {
-    from { transform: scale(0.85); opacity: 0; }
+    from { transform: scale(0.92); opacity: 0; }
     to   { transform: scale(1);    opacity: 1; }
+}
+.lapis-modal-backdrop.centered.is-closing .lapis-modal-shell {
+    animation: lapisShellFadeScale 0.18s ease both;
+}
+@keyframes lapisShellFadeScale {
+    from { transform: scale(1); opacity: 1; }
+    to   { transform: scale(0.96); opacity: 0; }
 }
 
 /* Shell background — dark themes default */
@@ -378,12 +413,13 @@ body.theme-waterfall   .lapis-modal-shell::before {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 .lapis-modal-title {
     font-size: 18px;
     font-weight: 900;
     letter-spacing: -0.02em;
+    line-height: 1.2;
 }
 .lapis-modal-close {
     display: flex;
@@ -406,12 +442,12 @@ body.theme-waterfall   .lapis-modal-shell::before {
 .lapis-modal-body {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
 }
 
 .lapis-modal-footer {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     margin-top: 24px;
 }
 .lapis-modal-footer button {
@@ -422,7 +458,9 @@ body.theme-waterfall   .lapis-modal-shell::before {
     font-weight: 900;
     font-family: inherit;
     cursor: pointer;
-    transition: transform 0.18s, opacity 0.18s;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.2s ease,
+                box-shadow 0.2s ease;
     border: none;
 }
 .lapis-modal-footer button:active { transform: scale(0.96); }

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "echo 'No linting needed for single HTML file'"
+    "lint": "echo 'No linting needed for single HTML file'",
+    "test": "vitest run"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
@@ -20,6 +21,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
+    "vitest": "^3.2.4",
     "vue-tsc": "^2.1.10"
   }
 }

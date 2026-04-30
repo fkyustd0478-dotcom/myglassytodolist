@@ -186,6 +186,7 @@
             const el = document.getElementById(id);
             if (!el) return;
             this._wire(el);
+            el.classList.remove('is-closing');
             el.style.display = 'flex';
             // Re-trigger entry animation on the shell
             const shell = el.querySelector('.lapis-modal-shell');
@@ -201,7 +202,12 @@
         close(id) {
             const el = document.getElementById(id);
             if (!el) return;
-            el.style.display = 'none';
+            el.classList.add('is-closing');
+            window.setTimeout(() => {
+                if (!el.classList.contains('is-closing')) return;
+                el.style.display = 'none';
+                el.classList.remove('is-closing');
+            }, 220);
             this._stack = this._stack.filter(i => i !== id);
         },
 

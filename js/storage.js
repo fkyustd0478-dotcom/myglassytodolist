@@ -1,24 +1,43 @@
 // storage.js — Unified storage layer (global, no ES modules)
 // Loaded before page-specific scripts on all pages.
 
+const LapisStorage = {
+    get(key, fallback = null) {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+    },
+
+    set(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+    },
+
+    async sync() {
+        return { mode: 'local-first', status: 'noop' };
+    }
+};
+
+if (typeof window !== 'undefined') {
+    window.LapisStorage = LapisStorage;
+}
+
 const StorageProvider = {
     // Todo page
-    saveSettings: (s) => localStorage.setItem('todo_settings', JSON.stringify(s)),
-    loadSettings: () => JSON.parse(localStorage.getItem('todo_settings') || 'null'),
-    saveData: (d) => localStorage.setItem('todo_data', JSON.stringify(d)),
-    loadData: () => JSON.parse(localStorage.getItem('todo_data') || 'null'),
-    getTodoData: () => JSON.parse(localStorage.getItem('todo_data') || '{"todos":[]}'),
+    saveSettings: (s) => LapisStorage.set('todo_settings', s),
+    loadSettings: () => LapisStorage.get('todo_settings', null),
+    saveData: (d) => LapisStorage.set('todo_data', d),
+    loadData: () => LapisStorage.get('todo_data', null),
+    getTodoData: () => LapisStorage.get('todo_data', { todos: [] }),
 
     // Shift page
-    saveShiftData: (d) => localStorage.setItem('glassy_shift_data', JSON.stringify(d)),
-    loadShiftData: () => JSON.parse(localStorage.getItem('glassy_shift_data') || 'null'),
-    getShiftData: () => JSON.parse(localStorage.getItem('glassy_shift_data') || '{}'),
-    saveShiftSettings: (s) => localStorage.setItem('glassy_shift_settings', JSON.stringify(s)),
-    getShiftSettings: () => JSON.parse(localStorage.getItem('glassy_shift_settings') || '{}'),
+    saveShiftData: (d) => LapisStorage.set('glassy_shift_data', d),
+    loadShiftData: () => LapisStorage.get('glassy_shift_data', null),
+    getShiftData: () => LapisStorage.get('glassy_shift_data', {}),
+    saveShiftSettings: (s) => LapisStorage.set('glassy_shift_settings', s),
+    getShiftSettings: () => LapisStorage.get('glassy_shift_settings', {}),
 
     // Common settings (shared key between todo and shift)
-    saveCommonSettings: (s) => localStorage.setItem('todo_settings', JSON.stringify(s)),
-    getCommonSettings: () => JSON.parse(localStorage.getItem('todo_settings') || '{}'),
+    saveCommonSettings: (s) => LapisStorage.set('todo_settings', s),
+    getCommonSettings: () => LapisStorage.get('todo_settings', {}),
 };
 
 // IndexedDB provider for blob storage (custom background images)
