@@ -24,7 +24,7 @@ Studio is a local image editor. It lets users upload an image, crop it, build co
 2. `LapisStudioEngine.load()` creates a browser image resource.
 3. Crop/collage/FX actions render to canvas.
 4. The result is stored in Vue state as a URL/data URL.
-5. Download uses `LapisStudioEngine.triggerRealDownload()`.
+5. Download uses `LapisStudioEngine.triggerRealDownload()` to create an in-memory PNG blob with a sanitized filename.
 
 ## Collage
 
@@ -52,7 +52,7 @@ Recent improvements add depth, shadow, and light/reflection rendering while keep
 
 ## Export
 
-Output is PNG. Existing fallback mechanisms are preserved by the FX base download helper.
+Output is PNG. The active download path uses a memory-resident blob URL and a virtual anchor with `download` set before `href`, avoiding page redirects.
 
 ## Limitations
 
@@ -60,4 +60,3 @@ Output is PNG. Existing fallback mechanisms are preserved by the FX base downloa
 - Browser memory limits apply.
 - Auth does not affect export.
 - Very large images may be slow on mobile devices.
-

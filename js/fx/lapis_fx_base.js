@@ -145,34 +145,42 @@ window.LapisStudioEngine = (() => {
         return cvs;
     }
 
-    // ── Download (clean blob URL; window.location.assign fallback if click blocked) ─
-    function triggerRealDownload(canvas, customName) {
-        return new Promise((resolve) => {
-            canvas.toBlob((blob) => {
-                const timestamp = Date.now();
-                let inputName = customName ? customName.trim() : `glassystudio_${timestamp}`;
-                let safeName  = inputName.replace(/[\\/:*?"<>|]/g, '_').substring(0, 255);
-                if (!safeName.toLowerCase().endsWith('.png')) safeName += '.png';
+    function sanitizeDownloadName(customName) {
+        const timestamp = Date.now();
+        const inputName = customName ? String(customName).trim() : `glassystudio_${timestamp}`;
+        const stripped = inputName.replace(/[\\/:*?"<>|]/g, '').trim();
+        const baseName = (stripped || `glassystudio_${timestamp}`).replace(/\.png$/i, '');
+        return `${baseName.substring(0, 251)}.png`;
+    }
 
-                const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'application/octet-stream' }));
+    // ── Download (zero-redirect PNG blob link with stable custom filename) ─
+    function triggerRealDownload(canvas, customName) {
+        return new Promise((resolve, reject) => {
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    reject(new Error('EXPORT_BLOB_FAILED'));
+                    return;
+                }
+
+                const safeName = sanitizeDownloadName(customName);
                 const link    = document.createElement('a');
-                link.setAttribute('download', safeName);
+                link.download = safeName;
+                const blobUrl = URL.createObjectURL(blob);
                 link.href = blobUrl;
                 link.style.cssText = 'position:fixed;top:-100px;left:0;width:0;height:0;display:block;';
                 document.body.appendChild(link);
-
-                // If click() throws (sandboxed iframe), fall back to page navigation.
-                let clicked = false;
-                try { link.click(); clicked = true; } catch (_) {}
-                if (!clicked) {
-                    try { window.location.assign(blobUrl); } catch (_) {}
+                let clickError = null;
+                try {
+                    link.click();
+                } catch (error) {
+                    clickError = error;
                 }
+                if (document.body.contains(link)) document.body.removeChild(link);
 
                 setTimeout(() => {
-                    if (document.body.contains(link)) document.body.removeChild(link);
                     URL.revokeObjectURL(blobUrl);
-                    resolve();
-                }, 5000);
+                    clickError ? reject(clickError) : resolve();
+                }, 200);
             }, 'image/png');
         });
     }
@@ -210,5 +218,5 @@ window.LapisStudioEngine = (() => {
         return '';
     }
 
-    return { load, loadImageToCanvas, applyMask, applyEffect, triggerRealDownload, svgShapeInner };
+    return { load, loadImageToCanvas, applyMask, applyEffect, triggerRealDownload, sanitizeDownloadName, svgShapeInner };
 })();
