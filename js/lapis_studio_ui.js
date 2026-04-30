@@ -559,6 +559,22 @@
                 if (!imageUrl.value) { alert(t.value.noImage); return; }
                 const name = window.prompt(t.value.saveAs, `glassystudio_${Date.now()}`);
                 if (name === null) return;
+
+                let fileHandle = null;
+                if (window.showSaveFilePicker && LapisStudioEngine.sanitizeDownloadName) {
+                    try {
+                        fileHandle = await window.showSaveFilePicker({
+                            suggestedName: LapisStudioEngine.sanitizeDownloadName(name),
+                            types: [{
+                                description: 'PNG image',
+                                accept: { 'image/png': ['.png'] }
+                            }]
+                        });
+                    } catch (e) {
+                        if (e && e.name === 'AbortError') return;
+                    }
+                }
+
                 try {
                     let canvas = _resultCanvas;
                     if (!canvas) {
@@ -569,7 +585,7 @@
                         canvas.height = img.naturalHeight;
                         canvas.getContext('2d').drawImage(img, 0, 0);
                     }
-                    await LapisStudioEngine.triggerRealDownload(canvas, name);
+                    await LapisStudioEngine.triggerRealDownload(canvas, name, fileHandle);
                 } catch (e) {
                     alert(t.value.errExport);
                 }

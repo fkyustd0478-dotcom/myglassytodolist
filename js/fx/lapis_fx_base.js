@@ -148,40 +148,60 @@ window.LapisStudioEngine = (() => {
     function sanitizeDownloadName(customName) {
         const timestamp = Date.now();
         const inputName = customName ? String(customName).trim() : `glassystudio_${timestamp}`;
-        const stripped = inputName.replace(/[\\/:*?"<>|]/g, '').trim();
-        const baseName = (stripped || `glassystudio_${timestamp}`).replace(/\.png$/i, '');
-        return `${baseName.substring(0, 251)}.png`;
+        let safeName = inputName.replace(/[\\/:*?"<>|]/g, '_').trim().substring(0, 251);
+        if (!safeName) safeName = `glassystudio_${timestamp}`;
+        if (!safeName.toLowerCase().endsWith('.png')) safeName += '.png';
+        return safeName;
     }
 
-    // ── Download (zero-redirect PNG blob link with stable custom filename) ─
-    function triggerRealDownload(canvas, customName) {
+    function canvasToPngBlob(canvas) {
         return new Promise((resolve, reject) => {
             canvas.toBlob((blob) => {
-                if (!blob) {
-                    reject(new Error('EXPORT_BLOB_FAILED'));
-                    return;
-                }
+                blob ? resolve(blob) : reject(new Error('EXPORT_BLOB_FAILED'));
+            }, 'image/png');
+        });
+    }
 
-                const safeName = sanitizeDownloadName(customName);
+    async function writeBlobToFile(fileHandle, blob) {
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+    }
+
+    // ── Download (clean blob URL; window.location.assign fallback if click blocked) ─
+    async function triggerRealDownload(canvas, customName, fileHandle) {
+        const safeName = sanitizeDownloadName(customName);
+        const blob = await canvasToPngBlob(canvas);
+
+        if (fileHandle) {
+            try {
+                await writeBlobToFile(fileHandle, blob);
+                return;
+            } catch (_) {
+                // Fall through to legacy download path if the file handle write fails.
+            }
+        }
+
+        return new Promise((resolve) => {
+                const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'application/octet-stream' }));
                 const link    = document.createElement('a');
-                link.download = safeName;
-                const blobUrl = URL.createObjectURL(blob);
+                link.setAttribute('download', safeName);
                 link.href = blobUrl;
                 link.style.cssText = 'position:fixed;top:-100px;left:0;width:0;height:0;display:block;';
                 document.body.appendChild(link);
-                let clickError = null;
-                try {
-                    link.click();
-                } catch (error) {
-                    clickError = error;
+
+                // If click() throws (sandboxed iframe), fall back to page navigation.
+                let clicked = false;
+                try { link.click(); clicked = true; } catch (_) {}
+                if (!clicked) {
+                    try { window.location.assign(blobUrl); } catch (_) {}
                 }
-                if (document.body.contains(link)) document.body.removeChild(link);
 
                 setTimeout(() => {
+                    if (document.body.contains(link)) document.body.removeChild(link);
                     URL.revokeObjectURL(blobUrl);
-                    clickError ? reject(clickError) : resolve();
-                }, 200);
-            }, 'image/png');
+                    resolve();
+                }, 5000);
         });
     }
 

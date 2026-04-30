@@ -123,17 +123,13 @@ Flow:
 2. Studio stores an object URL/data URL in Vue state.
 3. Crop/collage/effects render to canvas.
 4. Export produces PNG output.
-5. `triggerRealDownload()` converts the canvas to an in-memory `image/png` blob and assigns the sanitized user filename before creating the blob URL.
+5. Download uses the File System Access API when available, then falls back to the FX base helper's blob download path.
 
 Known Studio limitations:
 
 - Firebase Auth is unrelated to Studio export.
 - Export is local browser download only.
 - Large images may still be limited by browser memory.
-
-Technical highlight:
-
-- In-Memory Rename & Export: intercepts canvas data, assigns user-defined metadata in-memory, and triggers a direct filesystem save-as event without leaving the current page context.
 
 ## Import / Export System
 
