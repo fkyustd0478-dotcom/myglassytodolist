@@ -37,6 +37,25 @@ window.addEventListener('DOMContentLoaded', () => {
         },
     };
 
+    if (typeof LapisI18n !== 'undefined') {
+        LapisI18n.register('zh', { dashboard: _strings.zh });
+        LapisI18n.register('en', { dashboard: _strings.en });
+    }
+
+    const DASHBOARD_TRANSLATION_KEYS = Object.keys(_strings.zh);
+
+    function getDashboardTranslations(lang) {
+        const fallback = _strings[lang] || _strings.zh;
+        if (typeof LapisI18n === 'undefined') return fallback;
+
+        return DASHBOARD_TRANSLATION_KEYS.reduce((dict, key) => {
+            const i18nKey = `dashboard.${key}`;
+            const value = LapisI18n.t(i18nKey, null, lang);
+            dict[key] = value === i18nKey ? fallback[key] : value;
+            return dict;
+        }, {});
+    }
+
     const _uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
     const _dateStr = (offset = 0) => {
@@ -98,7 +117,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 textShadow: 'var(--text-shadow)',
             }));
 
-            const t = computed(() => _strings[navSettings.lang] || _strings.zh);
+            const t = computed(() => getDashboardTranslations(navSettings.lang));
 
             const todayLabel = computed(() => {
                 const d   = new Date();

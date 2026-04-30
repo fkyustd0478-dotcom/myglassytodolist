@@ -137,6 +137,24 @@ try {
                 }
             };
 
+            if (typeof LapisI18n !== 'undefined') {
+                LapisI18n.register('zh', { todo: translations.zh });
+                LapisI18n.register('en', { todo: translations.en });
+            }
+
+            const todoTranslationKeys = Object.keys(translations.zh);
+            const getTodoTranslations = (lang) => {
+                const fallback = translations[lang] || translations.zh;
+                if (typeof LapisI18n === 'undefined') return fallback;
+
+                return todoTranslationKeys.reduce((dict, key) => {
+                    const i18nKey = `todo.${key}`;
+                    const value = LapisI18n.t(i18nKey, null, lang);
+                    dict[key] = value === i18nKey ? fallback[key] : value;
+                    return dict;
+                }, {});
+            };
+
             const categories = ['urgent', 'important', 'normal', 'daily', 'memo'];
             const recurringTypes = ['none', 'daily', 'weekly', 'monthly'];
             const otherThemes = [
@@ -154,7 +172,7 @@ try {
                 transition: 'background-image 0.5s ease'
             });
 
-            const t = computed(() => translations[navSettings.lang] || translations.zh);
+            const t = computed(() => getTodoTranslations(navSettings.lang));
 
             const modeTitle = computed(() => {
                 if (navSettings.lang === 'zh') {

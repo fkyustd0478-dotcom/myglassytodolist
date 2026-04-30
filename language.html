@@ -22,6 +22,7 @@
     <script src="./js/effects.js" defer></script>
     <script src="./js/storage.js" defer></script>
     <script src="./js/core_engine.js" defer></script>
+    <script src="./js/i18n.js" defer></script>
     <script src="./js/nav.js" defer></script>
     <script src="./js/lapis_core_ui.js" defer></script>
 
@@ -125,7 +126,23 @@
                 zh: { learn: '學習', vocab: '單字庫', notes: '筆記', achievements: '成就', comingSoon: '即將推出' },
                 en: { learn: 'Learn', vocab: 'Vocabulary', notes: 'Notes', achievements: 'Achievements', comingSoon: 'Coming Soon' },
             };
-            const t = computed(() => translations[navSettings.lang] || translations.zh);
+            if (typeof LapisI18n !== 'undefined') {
+                LapisI18n.register('zh', { languagePage: translations.zh });
+                LapisI18n.register('en', { languagePage: translations.en });
+            }
+            const languageTranslationKeys = Object.keys(translations.zh);
+            const getLanguageTranslations = (lang) => {
+                const fallback = translations[lang] || translations.zh;
+                if (typeof LapisI18n === 'undefined') return fallback;
+
+                return languageTranslationKeys.reduce((dict, key) => {
+                    const i18nKey = `languagePage.${key}`;
+                    const value = LapisI18n.t(i18nKey, null, lang);
+                    dict[key] = value === i18nKey ? fallback[key] : value;
+                    return dict;
+                }, {});
+            };
+            const t = computed(() => getLanguageTranslations(navSettings.lang));
 
             onMounted(() => {
                 if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });

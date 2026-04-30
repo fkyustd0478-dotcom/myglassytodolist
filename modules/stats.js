@@ -57,6 +57,25 @@ window.addEventListener('DOMContentLoaded', () => {
         },
     };
 
+    if (typeof LapisI18n !== 'undefined') {
+        LapisI18n.register('zh', { stats: _strings.zh });
+        LapisI18n.register('en', { stats: _strings.en });
+    }
+
+    const STATS_TRANSLATION_KEYS = Object.keys(_strings.zh);
+
+    function getStatsTranslations(lang) {
+        const fallback = _strings[lang] || _strings.zh;
+        if (typeof LapisI18n === 'undefined') return fallback;
+
+        return STATS_TRANSLATION_KEYS.reduce((dict, key) => {
+            const i18nKey = `stats.${key}`;
+            const value = LapisI18n.t(i18nKey, null, lang);
+            dict[key] = value === i18nKey ? fallback[key] : value;
+            return dict;
+        }, {});
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
     const _uid     = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
     const _dateStr = (d = 0) => { const dt = new Date(); dt.setDate(dt.getDate() + d); return toLocalISO(dt); };
@@ -260,7 +279,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 textShadow: 'var(--text-shadow)',
             }));
 
-            const t = computed(() => _strings[navSettings.lang] || _strings.zh);
+            const t = computed(() => getStatsTranslations(navSettings.lang));
 
             // ── Stats snapshot ────────────────────────────────────────────────
             const { total, thisWk, latest, exerciseCount, logs, weights } = _readData();

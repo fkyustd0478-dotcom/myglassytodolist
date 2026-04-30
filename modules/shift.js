@@ -102,6 +102,25 @@ const shiftTranslations = {
     }
 };
 
+if (typeof LapisI18n !== 'undefined') {
+    LapisI18n.register('zh', { shift: shiftTranslations.zh });
+    LapisI18n.register('en', { shift: shiftTranslations.en });
+}
+
+const SHIFT_TRANSLATION_KEYS = Object.keys(shiftTranslations.zh);
+
+function getShiftTranslations(lang) {
+    const fallback = shiftTranslations[lang] || shiftTranslations.zh;
+    if (typeof LapisI18n === 'undefined') return fallback;
+
+    return SHIFT_TRANSLATION_KEYS.reduce((dict, key) => {
+        const i18nKey = `shift.${key}`;
+        const value = LapisI18n.t(i18nKey, null, lang);
+        dict[key] = value === i18nKey ? fallback[key] : value;
+        return dict;
+    }, {});
+}
+
 // ── Other-tag icon catalogue ───────────────────────────────────────────────
 // id: Lucide icon name used in the settings picker
 // emoji: compact character used in calendar grid cells
@@ -171,11 +190,11 @@ const app = createApp({
         } = useNav();
 
         // ── Language / translations ──────────────────────────────────────────
-        const t = computed(() => shiftTranslations[navSettings.lang] || shiftTranslations.zh);
+        const t = computed(() => getShiftTranslations(navSettings.lang));
 
         // ── Shift settings with migration ────────────────────────────────────
         const rawSettings = StorageProvider.getShiftSettings();
-        const _td = shiftTranslations[navSettings.lang] || shiftTranslations.zh;
+        const _td = getShiftTranslations(navSettings.lang);
 
         // Migrate old payTags + payroll → jobs array (backwards compat)
         if ((rawSettings.payTags || rawSettings.payroll) && !rawSettings.jobs) {

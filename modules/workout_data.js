@@ -174,6 +174,25 @@ const _wT = {
     }
 };
 
+if (typeof LapisI18n !== 'undefined') {
+    LapisI18n.register('zh', { workout: _wT.zh });
+    LapisI18n.register('en', { workout: _wT.en });
+}
+
+const WORKOUT_TRANSLATION_KEYS = Object.keys(_wT.zh);
+
+function getWorkoutTranslations(lang) {
+    const fallback = _wT[lang] || _wT.zh;
+    if (typeof LapisI18n === 'undefined') return fallback;
+
+    return WORKOUT_TRANSLATION_KEYS.reduce((dict, key) => {
+        const i18nKey = `workout.${key}`;
+        const value = LapisI18n.t(i18nKey, null, lang);
+        dict[key] = value === i18nKey ? fallback[key] : value;
+        return dict;
+    }, {});
+}
+
 // ── Static SVG icon constants (no Lucide runtime dependency) ─────────────────
 const ICON_CHECK       = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 const ICON_EDIT        = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`;

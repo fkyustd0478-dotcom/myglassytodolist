@@ -154,7 +154,23 @@
                     jigsawDrift: 'Drift', jigsawGravity: 'Gravity', jigsawScattered: 'Scattered',
                 },
             };
-            const t = computed(() => translations[navSettings.lang] || translations.zh);
+            if (typeof LapisI18n !== 'undefined') {
+                LapisI18n.register('zh', { studio: translations.zh });
+                LapisI18n.register('en', { studio: translations.en });
+            }
+            const studioTranslationKeys = Object.keys(translations.zh);
+            const getStudioTranslations = (lang) => {
+                const fallback = translations[lang] || translations.zh;
+                if (typeof LapisI18n === 'undefined') return fallback;
+
+                return studioTranslationKeys.reduce((dict, key) => {
+                    const i18nKey = `studio.${key}`;
+                    const value = LapisI18n.t(i18nKey, null, lang);
+                    dict[key] = value === i18nKey ? fallback[key] : value;
+                    return dict;
+                }, {});
+            };
+            const t = computed(() => getStudioTranslations(navSettings.lang));
 
             // ── Data lists ────────────────────────────────────────────────────
             const cropRatios = computed(() => [

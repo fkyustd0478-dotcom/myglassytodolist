@@ -1,6 +1,53 @@
 'use strict';
 window.LapisFXShatter = (() => {
 
+    function _drawGlassDepth(ctx, w, h, intensity) {
+        const scale = Math.max(0.2, Math.min(1, intensity));
+        ctx.save();
+        const glow = ctx.createLinearGradient(0, 0, w, h);
+        glow.addColorStop(0, 'rgba(255,255,255,0.10)');
+        glow.addColorStop(0.45, `rgba(180,220,255,${0.08 * scale})`);
+        glow.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = 'source-over';
+        const shade = ctx.createLinearGradient(0, 0, w, h);
+        shade.addColorStop(0, 'rgba(255,255,255,0)');
+        shade.addColorStop(1, `rgba(0,0,0,${0.12 * scale})`);
+        ctx.fillStyle = shade;
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+    }
+
+    function _drawGlassReflection(ctx, w, h, intensity) {
+        const scale = Math.max(0.2, Math.min(1, intensity));
+        const base = Math.min(w, h);
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.lineCap = 'round';
+        const band = ctx.createLinearGradient(w * 0.1, h * 0.1, w * 0.7, h * 0.45);
+        band.addColorStop(0, 'rgba(255,255,255,0)');
+        band.addColorStop(0.5, `rgba(255,255,255,${0.20 * scale})`);
+        band.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.beginPath();
+        ctx.moveTo(w * 0.08, h * 0.18);
+        ctx.quadraticCurveTo(w * 0.36, h * 0.06, w * 0.72, h * 0.26);
+        ctx.strokeStyle = band;
+        ctx.lineWidth = Math.max(3, base * 0.018);
+        ctx.stroke();
+        for (let i = 0; i < 3; i++) {
+            const y = h * (0.22 + i * 0.13);
+            ctx.beginPath();
+            ctx.moveTo(w * (0.12 + i * 0.08), y);
+            ctx.lineTo(w * (0.34 + i * 0.10), y - base * 0.05);
+            ctx.strokeStyle = `rgba(255,255,255,${0.08 * scale})`;
+            ctx.lineWidth = Math.max(1, base * 0.004);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
     // ── Impact: radial cracks + dense burst zone near impact ──────────────────
     function _drawImpact(ctx, w, h, intensity) {
         const ix    = w * (0.35 + Math.random() * 0.3);
@@ -147,11 +194,13 @@ window.LapisFXShatter = (() => {
         cvs.width = w; cvs.height = h;
         const ctx = cvs.getContext('2d');
         ctx.drawImage(src, 0, 0);
+        _drawGlassDepth(ctx, w, h, intensity);
         switch (variant) {
             case 'spiderweb': _drawSpiderweb(ctx, w, h, intensity); break;
             case 'fractured': _drawFractured(ctx, w, h, intensity); break;
             default:          _drawImpact(ctx, w, h, intensity);
         }
+        _drawGlassReflection(ctx, w, h, intensity);
         return cvs;
     }
 

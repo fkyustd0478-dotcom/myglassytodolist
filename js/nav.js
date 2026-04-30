@@ -45,6 +45,8 @@ function useNav() {
         showLunarDates: true,
         ..._savedSettings
     });
+    const i18n = typeof LapisI18n !== 'undefined' ? LapisI18n.use(navSettings) : null;
+    const _tr = (key, fallback) => i18n ? i18n(key) : fallback;
 
     // ── Theme resolution ───────────────────────────────────────────────────
     const resolvedTheme = computed(() => {
@@ -110,11 +112,14 @@ function useNav() {
 
     const _updateTitle = () => {
         const file   = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
-        const titles = _pageTitles[navSettings.lang] || _pageTitles.zh;
-        if      (file.includes('shift'))   currentPageTitle.value = titles.shift;
-        else if (file.includes('setting')) currentPageTitle.value = titles.setting;
-        else if (file.includes('workout')) currentPageTitle.value = titles.workout;
-        else                               currentPageTitle.value = titles.index;
+        let key = 'nav.index';
+        if      (file.includes('shift'))    key = 'nav.shift';
+        else if (file.includes('setting'))  key = 'nav.setting';
+        else if (file.includes('workout'))  key = 'nav.workout';
+        else if (file.includes('studio'))   key = 'nav.studio';
+        else if (file.includes('language')) key = 'nav.language';
+        else if (file.includes('todo'))     key = 'nav.todo';
+        currentPageTitle.value = _tr(key, key);
     };
 
     // ── Navigation close handler ───────────────────────────────────────────
@@ -240,7 +245,10 @@ function useNav() {
     });
 
     // Re-compute title when language is changed at runtime
-    watch(() => navSettings.lang, _updateTitle);
+    watch(() => navSettings.lang, (lang) => {
+        if (typeof LapisI18n !== 'undefined') LapisI18n.setLang(lang);
+        _updateTitle();
+    });
 
     const toggleNavDropdown = () => { navDropdownOpen.value = !navDropdownOpen.value; };
 

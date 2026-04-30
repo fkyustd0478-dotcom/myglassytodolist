@@ -103,7 +103,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle
             } = useNav();
 
-            const t = computed(() => _wT[navSettings.lang] || _wT.zh);
+            const t = computed(() =>
+                typeof getWorkoutTranslations === 'function'
+                    ? getWorkoutTranslations(navSettings.lang)
+                    : (_wT[navSettings.lang] || _wT.zh)
+            );
 
             const themeStyle = computed(() => ({
                 color: 'var(--text-primary)',

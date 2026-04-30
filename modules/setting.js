@@ -35,6 +35,54 @@ createApp({
 
         const fileInput = ref(null);
         const showImportGuide = ref(false);
+        const i18nT = (key, params) =>
+            typeof LapisI18n !== 'undefined'
+                ? LapisI18n.t(key, params, settings.value.lang)
+                : key;
+        const dataIoInput = ref(null);
+        const dataIoType = ref('todo');
+        const dataIoExportFormat = ref('csv');
+        const dataIoMessage = ref('');
+        const dataIoError = ref('');
+        const dataIoTypes = [
+            {
+                id: 'todo', label: 'Todo 事項', short: '任務與日期',
+                csv: 'CSV: text,dueDate,dueTime,category,listName,completed',
+                txt: 'TXT: Task A,2026-04-29',
+            },
+            {
+                id: 'weight', label: '體重記錄', short: '日期與體重',
+                csv: 'CSV: date,weight,unit',
+                txt: 'TXT: 2026-04-29,70.5,kg',
+            },
+            {
+                id: 'workoutLibrary', label: '運動庫', short: '動作資料',
+                csv: 'CSV: name,nameZh,categories,type,preferredUnit,description,targetMuscles',
+                txt: 'TXT: Bench Press,Chest;Triceps,sets,kg',
+            },
+            {
+                id: 'shift', label: '輪班表', short: '班別與標籤',
+                csv: 'CSV: date,shifts,pays,others,note',
+                txt: 'TXT: 2026-04-29 | shifts=Early | pays=Salary | others=Holiday | note=Morning',
+            },
+        ];
+
+        const dataIoLocalizedTypes = computed(() => dataIoTypes.map(type => ({
+            ...type,
+            label: i18nT(`settings.dataIo.types.${type.id}.label`),
+            short: i18nT(`settings.dataIo.types.${type.id}.short`),
+            csv: i18nT(`settings.dataIo.types.${type.id}.csv`),
+            txt: i18nT(`settings.dataIo.types.${type.id}.txt`),
+        })));
+
+        const dataIoCurrentInfo = computed(() =>
+            dataIoLocalizedTypes.value.find(type => type.id === dataIoType.value) || dataIoLocalizedTypes.value[0]
+        );
+
+        function _clearDataIoStatus() {
+            dataIoMessage.value = '';
+            dataIoError.value = '';
+        }
 
         // ── Dynamic exercise categories (from Action Library) ──────────────
         const availableCategories = ref(
@@ -276,6 +324,59 @@ createApp({
             settings.value.useCustomBg = false;
         };
 
+        const triggerDataImport = () => {
+            _clearDataIoStatus();
+            if (typeof LapisDataPortability === 'undefined') {
+                dataIoError.value = '匯入工具尚未載入，請重新整理頁面。';
+                return;
+            }
+            dataIoInput.value && dataIoInput.value.click();
+        };
+
+        const handleDataImport = (e) => {
+            const file = e.target.files[0];
+            e.target.value = '';
+            if (!file) return;
+            _clearDataIoStatus();
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const result = LapisDataPortability.importText(dataIoType.value, ev.target.result);
+                    dataIoMessage.value = `匯入完成：新增 ${result.added} 筆，格式 ${result.format.toUpperCase()}。`;
+                } catch (err) {
+                    dataIoError.value = err.message || '匯入失敗，請檢查檔案格式。';
+                }
+            };
+            reader.onerror = () => {
+                dataIoError.value = '無法讀取檔案，請重新選擇。';
+            };
+            reader.readAsText(file);
+        };
+
+        const exportDataFile = () => {
+            _clearDataIoStatus();
+            if (typeof LapisDataPortability === 'undefined') {
+                dataIoError.value = '匯出工具尚未載入，請重新整理頁面。';
+                return;
+            }
+            try {
+                const format = dataIoExportFormat.value;
+                const text = LapisDataPortability.exportText(dataIoType.value, format);
+                const blob = new Blob([text], { type: format === 'csv' ? 'text/csv;charset=utf-8' : 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `lapis-${dataIoType.value}.${format}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                dataIoMessage.value = `匯出完成：${dataIoCurrentInfo.value.label} ${format.toUpperCase()}。`;
+            } catch (err) {
+                dataIoError.value = err.message || '匯出失敗。';
+            }
+        };
+
         const clearCacheAndUpdate = () => {
             if (confirm(t.value.confirmClearCache)) {
                 StorageProvider.saveCommonSettings({
@@ -350,8 +451,13 @@ createApp({
             customBgStyle, inactiveBtn, themeDropdownOpen,
             selectTheme, toggleLang, toggleNotifications, toggleCustomBg,
             triggerUpload, handleUpload, clearCustomBg, clearCacheAndUpdate,
+            triggerDataImport, handleDataImport, exportDataFile,
             availableCategories, toggleCatChart,
             showImportGuide,
+            dataIoInput, dataIoType, dataIoExportFormat,
+            dataIoTypes: dataIoLocalizedTypes, dataIoCurrentInfo,
+            dataIoMessage, dataIoError,
+            i18nT,
         };
     }
 }).component('LapisConfirm', window.LapisConfirm).mount('#app');

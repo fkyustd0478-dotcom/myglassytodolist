@@ -1,6 +1,43 @@
 'use strict';
 window.LapisFXJigsaw = (() => {
 
+    function _depth(intensity) {
+        return Math.max(0.2, Math.min(1.2, intensity || 1));
+    }
+
+    function _drawPieceShadow(ctx, x, y, w, h, intensity) {
+        const d = _depth(intensity);
+        ctx.save();
+        ctx.shadowBlur = 8 * d;
+        ctx.shadowColor = 'rgba(0,0,0,0.34)';
+        ctx.shadowOffsetX = 2 * d;
+        ctx.shadowOffsetY = 3 * d;
+        ctx.fillStyle = 'rgba(0,0,0,0.10)';
+        ctx.fillRect(x, y, w, h);
+        ctx.restore();
+    }
+
+    function _drawPieceDepth(ctx, x, y, w, h, intensity) {
+        const d = _depth(intensity);
+        const lw = Math.max(1, Math.min(w, h) * 0.012);
+        ctx.save();
+        ctx.lineCap = 'square';
+        ctx.lineWidth = lw;
+        ctx.strokeStyle = `rgba(255,255,255,${0.26 * d})`;
+        ctx.beginPath();
+        ctx.moveTo(x, y + h);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x + w, y);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(0,0,0,${0.22 * d})`;
+        ctx.beginPath();
+        ctx.moveTo(x + w, y);
+        ctx.lineTo(x + w, y + h);
+        ctx.lineTo(x, y + h);
+        ctx.stroke();
+        ctx.restore();
+    }
+
     // ── Static: puzzle-line grid overlay ─────────────────────────────────────
     function _jigsawStatic(src) {
         const { width: w, height: h } = src;
@@ -41,6 +78,13 @@ window.LapisFXJigsaw = (() => {
                     ctx.stroke();
                 }
         }
+        ctx.save();
+        ctx.shadowBlur = Math.max(3, Math.min(w, h) * 0.006);
+        ctx.shadowColor = 'rgba(0,0,0,0.26)';
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+        grid(1, 1, 'rgba(0,0,0,0.24)', 2.2);
+        ctx.restore();
         grid(0, 0, 'rgba(255,255,255,0.88)', 2.5);
         grid(1, 1, 'rgba(0,0,0,0.42)', 1.2);
         return cvs;
@@ -66,12 +110,14 @@ window.LapisFXJigsaw = (() => {
                 const ox  = (dx / len) * maxOut;
                 const oy  = (dy / len) * maxOut;
                 ctx.save();
+                _drawPieceShadow(ctx, px + ox + gap / 2, py + oy + gap / 2, pw - gap, ph - gap, intensity);
                 ctx.beginPath();
                 ctx.rect(px + ox + gap / 2, py + oy + gap / 2, pw - gap, ph - gap);
                 ctx.clip();
                 ctx.drawImage(src, ox, oy);
                 ctx.restore();
                 ctx.beginPath();
+                _drawPieceDepth(ctx, px + ox + gap / 2, py + oy + gap / 2, pw - gap, ph - gap, intensity);
                 ctx.rect(px + ox + gap / 2, py + oy + gap / 2, pw - gap, ph - gap);
                 ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 1.8; ctx.stroke();
                 ctx.strokeStyle = 'rgba(0,0,0,0.35)';       ctx.lineWidth = 0.8; ctx.stroke();
@@ -101,6 +147,7 @@ window.LapisFXJigsaw = (() => {
                 ctx.save();
                 ctx.translate(pcx + ox, pcy + oy);
                 ctx.rotate(angle);
+                _drawPieceShadow(ctx, -pw / 2 + gap / 2, -ph / 2 + gap / 2, pw - gap, ph - gap, intensity);
                 ctx.save();
                 ctx.beginPath();
                 ctx.rect(-pw / 2 + gap / 2, -ph / 2 + gap / 2, pw - gap, ph - gap);
@@ -109,6 +156,7 @@ window.LapisFXJigsaw = (() => {
                 ctx.restore();
                 ctx.beginPath();
                 ctx.rect(-pw / 2 + gap / 2, -ph / 2 + gap / 2, pw - gap, ph - gap);
+                _drawPieceDepth(ctx, -pw / 2 + gap / 2, -ph / 2 + gap / 2, pw - gap, ph - gap, intensity);
                 ctx.strokeStyle = 'rgba(255,255,255,0.72)'; ctx.lineWidth = 1.8; ctx.stroke();
                 ctx.strokeStyle = 'rgba(0,0,0,0.32)';       ctx.lineWidth = 0.8; ctx.stroke();
                 ctx.restore();
@@ -132,12 +180,14 @@ window.LapisFXJigsaw = (() => {
                 const px   = c * pw, py = r * ph;
                 const fall = r * (maxFall / rows) * (0.75 + Math.random() * 0.5);
                 ctx.save();
+                _drawPieceShadow(ctx, px + gap / 2, py + fall + gap / 2, pw - gap, ph - gap, intensity);
                 ctx.beginPath();
                 ctx.rect(px + gap / 2, py + fall + gap / 2, pw - gap, ph - gap);
                 ctx.clip();
                 ctx.drawImage(src, 0, fall);
                 ctx.restore();
                 ctx.beginPath();
+                _drawPieceDepth(ctx, px + gap / 2, py + fall + gap / 2, pw - gap, ph - gap, intensity);
                 ctx.rect(px + gap / 2, py + fall + gap / 2, pw - gap, ph - gap);
                 ctx.strokeStyle = 'rgba(255,255,255,0.72)'; ctx.lineWidth = 1.8; ctx.stroke();
                 ctx.strokeStyle = 'rgba(0,0,0,0.32)';       ctx.lineWidth = 0.8; ctx.stroke();
@@ -182,6 +232,7 @@ window.LapisFXJigsaw = (() => {
                 ctx.clip();
                 ctx.drawImage(src, -pcx, -pcy);
                 ctx.restore();
+                _drawPieceDepth(ctx, -pw / 2, -ph / 2, pw, ph, intensity);
                 ctx.beginPath();
                 ctx.rect(-pw / 2 + 0.5, -ph / 2 + 0.5, pw - 1, ph - 1);
                 ctx.strokeStyle = 'rgba(255,255,255,0.70)';
