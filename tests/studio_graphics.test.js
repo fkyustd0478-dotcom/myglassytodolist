@@ -28,11 +28,30 @@ describe('studio graphics rendering controls', () => {
         expect(jigsaw).toContain('_piecePath(ctx, -pw / 2, -ph / 2, pw, ph, c, r, cols, rows)');
     });
 
-    it('scales glass impact hole by intensity', () => {
-        const shatter = readFileSync('js/fx/lapis_fx_shatter.js', 'utf8');
+    it('rebrands glass shatter to Special without Impact', () => {
+        const html = readFileSync('studio.html', 'utf8');
+        const ui = readFileSync('js/lapis_studio_ui.js', 'utf8');
 
-        expect(shatter).toContain('holeRadius');
-        expect(shatter).toContain('0.018 + 0.035 * Math.min(1, scale)');
+        expect(html).toContain("effectCategory === 'special'");
+        expect(html).toContain('specialVariants');
+        expect(html).not.toContain('glass-impact');
+        expect(ui).toContain("specialCat: 'Special'");
+        expect(ui).toContain("glassFragments: 'Fragments'");
+    });
+
+    it('uses inverse fragments and brush smudge controls', () => {
+        const html = readFileSync('studio.html', 'utf8');
+        const shatter = readFileSync('js/fx/lapis_fx_shatter.js', 'utf8');
+        const ui = readFileSync('js/lapis_studio_ui.js', 'utf8');
+
+        expect(shatter).toContain('function _renderFragments');
+        expect(shatter).toContain('if (scale > 0.72)');
+        expect(shatter).toContain('const shardCount = Math.max(3');
+        expect(shatter).toContain('function _renderSmudge');
+        expect(shatter).toContain('function _strokeMaskPath');
+        expect(html).toContain('smudgeConfig.invert');
+        expect(html).toContain('sandboxAllowsScale');
+        expect(ui).toContain("if (effectKey === 'glass-smudge') config.smudge = smudgeConfig.value");
     });
 
     it('exposes text style toggles and local font fallbacks', () => {
@@ -69,6 +88,7 @@ describe('studio graphics rendering controls', () => {
 
     it('supports sandbox drag scale and rotate controls', () => {
         const html = readFileSync('studio.html', 'utf8');
+        const css = readFileSync('css/lapis_studio.css', 'utf8');
         const ui = readFileSync('js/lapis_studio_ui.js', 'utf8');
         const text = readFileSync('js/fx/lapis_fx_text.js', 'utf8');
         const sticker = readFileSync('js/fx/lapis_fx_sticker.js', 'utf8');
@@ -79,6 +99,9 @@ describe('studio graphics rendering controls', () => {
         expect(html).toContain('beginSandboxRotate');
         expect(ui).toContain('function moveSandbox');
         expect(ui).toContain('function endSandbox');
+        expect(ui).toContain('requestAnimationFrame');
+        expect(html).toContain("{ 'is-dragging': sandboxDragging }");
+        expect(css).toContain('.fx-sandbox-layer.is-dragging .fx-sandbox-box');
         expect(text).toContain('rotation = 0');
         expect(sticker).toContain('rotation = 0');
     });
@@ -95,6 +118,9 @@ describe('studio graphics rendering controls', () => {
         expect(ui).toContain('const jigsawManual');
         expect(manual).toContain('function beginDrag');
         expect(manual).toContain('function moveDrag');
+        expect(manual).toContain('requestAnimationFrame');
+        expect(manual).toContain('const dragging = ref(false)');
+        expect(html).toContain("{ 'is-dragging': jigsawDragging }");
         expect(jigsaw).toContain('function createLayout');
         expect(jigsaw).toContain("case 'explode':   return _jigsawExplode(src, intensity, gridSize, layout)");
         expect(jigsaw).toContain("case 'drift':     return _jigsawDrift(src, intensity, gridSize, layout)");

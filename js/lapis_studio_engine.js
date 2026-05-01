@@ -120,43 +120,6 @@ window.LapisStudioEngine = (() => {
     }
 
     // ── Glass shatter — three variants ───────────────────────────────────────
-    function _drawImpact(ctx, w, h) {
-        const ix = w * (0.35 + Math.random() * 0.3);
-        const iy = h * (0.30 + Math.random() * 0.3);
-        const count = 10 + Math.floor(Math.random() * 8);
-        const base  = Math.min(w, h);
-        ctx.lineCap = 'round';
-        for (let i = 0; i < count; i++) {
-            const angle  = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-            const len    = base * (0.4 + Math.random() * 0.55);
-            const steps  = 2 + Math.floor(Math.random() * 3);
-            const jitter = base * 0.035;
-            const pts    = [[ix, iy]];
-            for (let s = 1; s <= steps; s++) {
-                const t = s / steps;
-                pts.push([
-                    ix + Math.cos(angle) * len * t + (Math.random() - 0.5) * jitter * 2,
-                    iy + Math.sin(angle) * len * t + (Math.random() - 0.5) * jitter * 2,
-                ]);
-            }
-            ctx.beginPath();
-            ctx.moveTo(pts[0][0], pts[0][1]);
-            for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0], pts[p][1]);
-            ctx.strokeStyle = 'rgba(255,255,255,0.88)'; ctx.lineWidth = 2.5; ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(pts[0][0] + 1, pts[0][1] + 1);
-            for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0] + 1, pts[p][1] + 1);
-            ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1.2; ctx.stroke();
-        }
-        const g = ctx.createRadialGradient(ix, iy, 0, ix, iy, base * 0.02);
-        g.addColorStop(0, 'rgba(255,255,255,0.95)');
-        g.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.beginPath();
-        ctx.arc(ix, iy, base * 0.02, 0, Math.PI * 2);
-        ctx.fillStyle = g; ctx.fill();
-    }
-
     function _drawSpiderweb(ctx, w, h) {
         const ix = w * (0.35 + Math.random() * 0.3);
         const iy = h * (0.30 + Math.random() * 0.3);
@@ -241,7 +204,7 @@ window.LapisStudioEngine = (() => {
         switch (variant) {
             case 'spiderweb': _drawSpiderweb(ctx, w, h); break;
             case 'fractured': _drawFractured(ctx, w, h); break;
-            default:          _drawImpact(ctx, w, h);
+            default:          _drawFractured(ctx, w, h);
         }
         return cvs;
     }

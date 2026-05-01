@@ -12,8 +12,11 @@ window.LapisStudioJigsawManual = (() => {
             fxIntensity,
             applyEffectFilter,
         } = options;
-        const { computed } = Vue;
+        const { computed, ref } = Vue;
         let drag = null;
+        let frame = 0;
+        let point = null;
+        const dragging = ref(false);
 
         const jigsawManualActive = computed(() =>
             activeNav.value === 'effects' &&
@@ -74,24 +77,56 @@ window.LapisStudioJigsawManual = (() => {
             const meta = jigsawLayout.value.meta;
             if (!rect || !meta) return;
             drag = { piece, rect, meta, sx: event.clientX, sy: event.clientY, ox: piece.ox, oy: piece.oy };
+            dragging.value = true;
             event.currentTarget.setPointerCapture?.(event.pointerId);
+        }
+
+        function _raf(fn) {
+            return (window.requestAnimationFrame || ((cb) => setTimeout(cb, 16)))(fn);
+        }
+
+        function _caf(id) {
+            (window.cancelAnimationFrame || clearTimeout)(id);
+        }
+
+        function _applyDrag(clientX, clientY) {
+            if (!drag) return;
+            const { piece, rect, meta, sx, sy, ox, oy } = drag;
+            piece.ox = ox + (clientX - sx) / rect.width * meta.width;
+            piece.oy = oy + (clientY - sy) / rect.height * meta.height;
+        }
+
+        function _flushDrag() {
+            frame = 0;
+            if (!point) return;
+            _applyDrag(point.clientX, point.clientY);
+            point = null;
         }
 
         function moveDrag(event) {
             if (!drag) return;
-            const { piece, rect, meta, sx, sy, ox, oy } = drag;
-            piece.ox = ox + (event.clientX - sx) / rect.width * meta.width;
-            piece.oy = oy + (event.clientY - sy) / rect.height * meta.height;
+            point = { clientX: event.clientX, clientY: event.clientY };
+            if (!frame) frame = _raf(_flushDrag);
         }
 
         function endDrag() {
             if (!drag) return;
+            if (frame) {
+                _caf(frame);
+                frame = 0;
+            }
+            if (point) {
+                _applyDrag(point.clientX, point.clientY);
+                point = null;
+            }
             drag = null;
+            dragging.value = false;
             if (activeEffect.value.startsWith('jigsaw-')) applyEffectFilter(activeEffect.value);
         }
 
         return {
             jigsawManualActive,
+            dragging,
             resetLayout,
             ensureLayout,
             toggleJigsawManual,

@@ -242,6 +242,12 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     box-shadow: 0 0 0 1px rgba(255,255,255,0.55), 0 10px 24px rgba(0,0,0,0.22);
     cursor: move;
 }
+.fx-sandbox-layer.is-dragging .fx-sandbox-box {
+    background: rgba(59,130,246,0.08);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    will-change: transform, left, top;
+}
 .fx-rotate-handle,
 .fx-scale-handle {
     position: absolute;
@@ -279,6 +285,11 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     background: rgba(59,130,246,0.08);
     cursor: grab;
     transform-origin: center;
+}
+.jigsaw-manual-layer.is-dragging .jigsaw-piece-hotspot {
+    background: rgba(59,130,246,0.14);
+    border-color: rgba(255,255,255,0.72);
+    will-change: transform, left, top;
 }
 .jigsaw-piece-hotspot:active {
     cursor: grabbing;

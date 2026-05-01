@@ -89,6 +89,7 @@
             <div v-if="sandboxActive"
                  id="fx-sandbox-layer"
                  class="fx-sandbox-layer"
+                 :class="{ 'is-dragging': sandboxDragging }"
                  @pointermove="moveSandbox"
                  @pointerup="endSandbox"
                  @pointercancel="endSandbox">
@@ -101,7 +102,8 @@
                          @pointermove="moveSandbox"
                          @pointerup="endSandbox"
                          @pointerdown.stop="beginSandboxRotate"></div>
-                    <div class="fx-scale-handle"
+                    <div v-if="sandboxAllowsScale"
+                         class="fx-scale-handle"
                          @pointermove="moveSandbox"
                          @pointerup="endSandbox"
                          @pointerdown.stop="beginSandboxScale"></div>
@@ -110,6 +112,7 @@
             <div v-if="jigsawManualActive"
                  id="jigsaw-manual-layer"
                  class="jigsaw-manual-layer"
+                 :class="{ 'is-dragging': jigsawDragging }"
                  @pointermove="moveJigsawPiece"
                  @pointerup="endJigsawPieceDrag"
                  @pointercancel="endJigsawPieceDrag">
@@ -227,7 +230,7 @@
 
     <!-- ── FX Drawer — 3-layer vertical panel (effects nav only) ────────────── -->
     <div v-if="activeNav === 'effects'"
-         class="fx-drawer glass" :style="glassStyle"
+         class="fx-drawer glass glass-panel" :style="glassStyle"
          style="backdrop-filter:blur(24px);">
 
         <!-- Layer 1: Intensity slider (always visible) -->
@@ -253,13 +256,20 @@
                     </button>
                 </template>
 
-                <!-- Glass shatter -->
-                <template v-else-if="effectCategory === 'glass'">
-                    <button v-for="v in glassVariants" :key="v.key"
+                <!-- Special effects -->
+                <template v-else-if="effectCategory === 'special'">
+                    <button v-for="v in specialVariants" :key="v.key"
                             @click="applyEffectFilter(v.key)"
                             class="fx-chip"
                             :class="{ 'is-active': activeEffect === v.key }">
                         {{ t[v.tKey] }}
+                    </button>
+                    <button v-if="activeEffect === 'glass-smudge'"
+                            type="button"
+                            @click="smudgeConfig.invert = !smudgeConfig.invert; applyEffectFilter('glass-smudge')"
+                            class="fx-chip"
+                            :class="{ 'is-active': smudgeConfig.invert }">
+                        Invert
                     </button>
                 </template>
 
@@ -359,10 +369,10 @@
                 <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
                 <span>{{ t.filtersCat }}</span>
             </button>
-            <button @click="effectCategory = 'glass'"
-                    class="fx-tab" :class="{ 'is-active': effectCategory === 'glass' }">
+            <button @click="effectCategory = 'special'"
+                    class="fx-tab" :class="{ 'is-active': effectCategory === 'special' }">
                 <i data-lucide="gem" class="w-4 h-4"></i>
-                <span>{{ t.glassCat }}</span>
+                <span>{{ t.specialCat }}</span>
             </button>
             <button @click="effectCategory = 'jigsaw'"
                     class="fx-tab" :class="{ 'is-active': effectCategory === 'jigsaw' }">

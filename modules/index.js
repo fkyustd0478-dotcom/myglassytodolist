@@ -3,7 +3,7 @@
 'use strict';
 
 window.addEventListener('DOMContentLoaded', () => {
-    const { createApp, computed, ref, onMounted } = Vue;
+    const { createApp, computed, ref, onMounted, onUnmounted } = Vue;
 
     const _DAYS_ZH = ['週日','週一','週二','週三','週四','週五','週六'];
     const _DAYS_EN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -57,6 +57,14 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     const _uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+    const _timeDigits = () => {
+        const d = new Date();
+        return `${d.getHours().toString().padStart(2, '0')}${d.getMinutes().toString().padStart(2, '0')}${d.getSeconds().toString().padStart(2, '0')}`
+            .split('');
+    };
+
+    const _initialFlipDigits = () => _timeDigits().map(v => ({ value: v, previous: v, flipping: false }));
 
     const _dateStr = (offset = 0) => {
         const d = new Date();
@@ -153,13 +161,33 @@ window.addEventListener('DOMContentLoaded', () => {
             const quickWeight = ref('');
             const toastMsg    = ref('');
             const toastShow   = ref(false);
+            const flipDigits  = ref(_initialFlipDigits());
 
             let _toastTimer = null;
+            let _clockTimer = null;
             const _showToast = (msg) => {
                 toastMsg.value  = msg;
                 toastShow.value = true;
                 if (_toastTimer) clearTimeout(_toastTimer);
                 _toastTimer = setTimeout(() => { toastShow.value = false; }, 2400);
+            };
+
+            const tickFlipClock = () => {
+                const next = _timeDigits();
+                const changed = flipDigits.value.some((digit, i) => digit.value !== next[i]);
+                if (!changed) return;
+                flipDigits.value = flipDigits.value.map((digit, i) => ({
+                    previous: digit.value,
+                    value: next[i],
+                    flipping: digit.value !== next[i],
+                }));
+                setTimeout(() => {
+                    flipDigits.value = flipDigits.value.map(digit => ({
+                        previous: digit.value,
+                        value: digit.value,
+                        flipping: false,
+                    }));
+                }, 620);
             };
 
             const openQuickAdd = () => {
@@ -212,11 +240,17 @@ window.addEventListener('DOMContentLoaded', () => {
                         userProfile.value = LapisUserProfile.get();
                     }
                 });
+                _clockTimer = setInterval(tickFlipClock, 1000);
+            });
+
+            onUnmounted(() => {
+                if (_clockTimer) clearInterval(_clockTimer);
+                if (_toastTimer) clearTimeout(_toastTimer);
             });
 
             return {
                 navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle, themeStyle, t,
-                todayLabel, greeting,
+                todayLabel, greeting, flipDigits,
                 dashboard, todayShortLabel, tomorrowShortLabel,
                 quickMode, quickText, quickWeight, toastMsg, toastShow,
                 openQuickAdd, closeQuickAdd, saveQuick,

@@ -234,6 +234,27 @@
     padding: 28px;
 }
 
+.day-detail-morph-enter-active {
+    animation: dayDetailReveal 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.day-detail-morph-leave-active {
+    animation: dayDetailReveal 0.2s ease reverse both;
+}
+.day-detail-backdrop {
+    clip-path: circle(150% at var(--morph-x, 50%) var(--morph-y, 50%));
+}
+.day-detail-backdrop .modal-content {
+    animation: dayDetailContentIn 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes dayDetailReveal {
+    from { clip-path: circle(0 at var(--morph-x, 50%) var(--morph-y, 50%)); }
+    to   { clip-path: circle(150% at var(--morph-x, 50%) var(--morph-y, 50%)); }
+}
+@keyframes dayDetailContentIn {
+    from { opacity: 0; transform: scale(0.82) translateY(18px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 .modal-header {
     display: flex;
     justify-content: space-between;

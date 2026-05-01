@@ -26,6 +26,57 @@
    TOP CAPSULE NAV
    ═══════════════════════════════════════════════════════════════════════════ */
 
+.glass-panel {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(10px) saturate(1.25) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(1.25) !important;
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.16);
+}
+body.theme-dark         .glass-panel,
+body.theme-forest       .glass-panel,
+body.theme-night        .glass-panel,
+body.theme-torii        .glass-panel,
+body.theme-starrysky    .glass-panel,
+body.theme-ferriswheel  .glass-panel {
+    background: rgba(15, 20, 38, 0.46) !important;
+    border-color: rgba(255, 255, 255, 0.14);
+}
+.lapis-dropdown,
+.lapis-modal-shell,
+.dropdown-menu,
+.jump-picker-dropdown {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px) saturate(1.25) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(1.25) !important;
+}
+body.theme-dark         .lapis-dropdown,
+body.theme-forest       .lapis-dropdown,
+body.theme-night        .lapis-dropdown,
+body.theme-torii        .lapis-dropdown,
+body.theme-starrysky    .lapis-dropdown,
+body.theme-ferriswheel  .lapis-dropdown,
+body.theme-dark         .lapis-modal-shell,
+body.theme-forest       .lapis-modal-shell,
+body.theme-night        .lapis-modal-shell,
+body.theme-torii        .lapis-modal-shell,
+body.theme-starrysky    .lapis-modal-shell,
+body.theme-ferriswheel  .lapis-modal-shell,
+body.theme-dark         .dropdown-menu,
+body.theme-forest       .dropdown-menu,
+body.theme-night        .dropdown-menu,
+body.theme-torii        .dropdown-menu,
+body.theme-starrysky    .dropdown-menu,
+body.theme-ferriswheel  .dropdown-menu,
+body.theme-dark         .jump-picker-dropdown,
+body.theme-forest       .jump-picker-dropdown,
+body.theme-night        .jump-picker-dropdown,
+body.theme-torii        .jump-picker-dropdown,
+body.theme-starrysky    .jump-picker-dropdown,
+body.theme-ferriswheel  .jump-picker-dropdown {
+    background: rgba(15, 20, 38, 0.46) !important;
+}
+
 .lapis-top-nav {
     position: sticky;
     top: 0;

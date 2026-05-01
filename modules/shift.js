@@ -267,6 +267,7 @@ const app = createApp({
         const selectedDay     = ref(null);
         const showTagsModal   = ref(false);
         const tagsTab         = ref('shift');
+        const dayDetailOrigin = ref({ x: '50%', y: '50%' });
 
         const confirmModal = reactive({ show: false, title: '', message: '', onConfirm: null });
 
@@ -276,6 +277,12 @@ const app = createApp({
             showTodayTasks.value || showDayDetail.value ||
             confirmModal.show    || showTagsModal.value || clockPicker.show
         );
+
+        const dayDetailMorphStyle = computed(() => ({
+            zIndex: 'var(--z-modal-lv3-backdrop)',
+            '--morph-x': dayDetailOrigin.value.x,
+            '--morph-y': dayDetailOrigin.value.y,
+        }));
 
         // ── Computed: calendar ───────────────────────────────────────────────
         const calendarDays = computed(() => {
@@ -447,10 +454,17 @@ const app = createApp({
             calendarDate.value = d;
         };
 
-        const handleDayClick = (day) => {
+        const handleDayClick = (day, event) => {
             if (activeQuickTag.value) {
                 applyQuickTag(day.dateStr);
             } else {
+                const rect = event?.currentTarget?.getBoundingClientRect?.();
+                if (rect && window.innerWidth && window.innerHeight) {
+                    dayDetailOrigin.value = {
+                        x: `${((rect.left + rect.width / 2) / window.innerWidth) * 100}%`,
+                        y: `${((rect.top + rect.height / 2) / window.innerHeight) * 100}%`,
+                    };
+                }
                 selectedDay.value = day.dateStr;
                 if (!shiftData.value[selectedDay.value]) shiftData.value[selectedDay.value] = {};
                 showDayDetail.value = true;
@@ -769,6 +783,7 @@ const app = createApp({
             showTodayTasks, showDayDetail, selectedDay, selectedDayHasShift, todayTasks,
             calendarInfoEnabled, showHolidayTags, showLunarDates, selectedDayHoliday, selectedDayLunar, selectedDayIsPayday,
             selectedDayOtherTags, selectedDayTodos,
+            dayDetailMorphStyle,
             jumpPicker, openJumpPicker, updateJumpDate, jumpToMonth,
             handleSwipeStart, handleSwipeEnd,
             showTagsModal, tagsTab, shiftSettings,

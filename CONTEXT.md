@@ -130,6 +130,8 @@ Technical highlights:
 
 - Non-uniform cropping lets special masks such as heart and star stretch independently by width and height.
 - High-fidelity jigsaw rendering uses Bezier tab/blank piece paths, depth strokes, shadows, and optional manual arrangement across all jigsaw variants.
+- Special FX includes Fragments, Spiderweb, and Smudge brush reveal effects.
+- Text, sticker, Smudge, and jigsaw manual overlays use pointer events with `requestAnimationFrame`-batched ghost/proxy dragging; full canvas rendering is committed after pointer release.
 - Text and sticker overlays support drag, scale, rotate, and local Death Note font files in `assets/fonts/`.
 
 Known Studio limitations:
@@ -184,6 +186,12 @@ Shared UI files:
 - `js/lapis_core_ui.js`: `LapisNav` and `LapisModal`.
 - `js/lapis_picker.js`: date/time wheel pickers.
 - `js/lapis_confirm.js`: secondary confirm modal.
+
+Visual systems:
+
+- `.glass-panel` provides the shared frosted glass surface for dropdowns, modal shells, and Studio FX drawers.
+- `index.html` includes a theme-aware 24-hour flip clock beside the dashboard greeting.
+- `shift.html` uses a point-origin morph transition for date detail modals.
 
 Navigation:
 

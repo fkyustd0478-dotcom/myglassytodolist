@@ -53,4 +53,40 @@ describe('static UI structure', () => {
         expect(html).toContain('google-g-logo');
         expect(css).toContain('.google-g-logo');
     });
+
+    it('defines shared glass panels for dropdowns modals and Studio FX drawer', () => {
+        const shared = readFileSync('css/lapis_shared_style.css', 'utf8');
+        const studio = readFileSync('studio.html', 'utf8');
+
+        expect(shared).toContain('.glass-panel');
+        expect(shared).toContain('backdrop-filter: blur(10px)');
+        expect(shared).toContain('.lapis-dropdown');
+        expect(shared).toContain('.lapis-modal-shell');
+        expect(studio).toContain('fx-drawer glass glass-panel');
+    });
+
+    it('keeps the index greeting paired with a 24-hour flip clock', () => {
+        const html = readFileSync('index.html', 'utf8');
+        const js = readFileSync('modules/index.js', 'utf8');
+
+        expect(html).toContain('lapis-flip-clock');
+        expect(html).toContain('lapis-flip-card');
+        expect(html).toContain('flipDigits');
+        expect(js).toContain('const _timeDigits');
+        expect(js).toContain("getHours().toString().padStart(2, '0')");
+        expect(js).toContain('setInterval(tickFlipClock, 1000)');
+    });
+
+    it('opens shift day detail with point-origin morphing animation', () => {
+        const html = readFileSync('shift.html', 'utf8');
+        const js = readFileSync('modules/shift.js', 'utf8');
+        const css = readFileSync('css/shift_style.css', 'utf8');
+
+        expect(html).toContain('handleDayClick(day, $event)');
+        expect(html).toContain('name="day-detail-morph"');
+        expect(js).toContain('dayDetailOrigin');
+        expect(js).toContain('dayDetailMorphStyle');
+        expect(css).toContain('@keyframes dayDetailReveal');
+        expect(css).toContain('clip-path: circle(0 at var(--morph-x');
+    });
 });

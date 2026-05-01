@@ -34,7 +34,7 @@
             const jigsawManual    = ref(false);
             const jigsawLayout    = ref([]);
             const activeEffect    = ref('');         // pending (previewed) effect key
-            const effectCategory  = ref('filters'); // 'filters'|'glass'|'jigsaw'|'text'|'stickers'
+            const effectCategory  = ref('filters'); // 'filters'|'special'|'jigsaw'|'text'|'stickers'
             const textConfig      = ref({
                 text: '', fontFamily: 'Arial, sans-serif', fontSize: 80,
                 color: '#ffffff', strokeColor: 'rgba(0,0,0,0.65)', strokeWidth: 2,
@@ -45,7 +45,11 @@
             const stickerCategory = ref('emojis');
             const stickerConfig   = ref({ x: 0.5, y: 0.5, scale: 0.18, rotation: 0 });
             const stickerActive   = ref(''); // last-applied sticker emoji
+            const smudgeConfig    = ref({ x: 0.5, y: 0.5, rotation: -12, invert: false });
+            const sandboxDragging = ref(false);
             let _sandboxDrag       = null;
+            let _sandboxFrame      = 0;
+            let _sandboxPoint      = null;
 
             // Crop overlay
             const cropBoxData   = ref(null);
@@ -77,14 +81,21 @@
             const showFloatingPanel = computed(() => activeNav.value === 'crop');
             const sandboxActive = computed(() => {
                 if (activeNav.value !== 'effects') return false;
+                if (effectCategory.value === 'special') return activeEffect.value === 'glass-smudge';
                 if (effectCategory.value === 'text') return !!textConfig.value.text.trim();
                 if (effectCategory.value === 'stickers') return !!stickerActive.value;
                 return false;
             });
             const sandboxBoxStyle = computed(() => {
-                const cfg = effectCategory.value === 'stickers' ? stickerConfig.value : textConfig.value;
+                const cfg = effectCategory.value === 'stickers'
+                    ? stickerConfig.value
+                    : effectCategory.value === 'special'
+                        ? smudgeConfig.value
+                        : textConfig.value;
                 const scale = effectCategory.value === 'stickers'
                     ? Math.max(0.6, cfg.scale * 4)
+                    : effectCategory.value === 'special'
+                        ? Math.max(0.75, fxIntensity.value * 1.2)
                     : Math.max(0.7, cfg.fontSize / 80);
                 return {
                     left: `${cfg.x * 100}%`,
@@ -92,6 +103,7 @@
                     transform: `translate(-50%, -50%) rotate(${cfg.rotation || 0}deg) scale(${scale})`,
                 };
             });
+            const sandboxAllowsScale = computed(() => effectCategory.value !== 'special');
             const jigsawManualTools = LapisStudioJigsawManual.create({
                 Vue,
                 activeNav,
@@ -152,7 +164,7 @@
                     manualCrop: '手動剪裁', autoCollage: '自動拼貼',
                     addImage: '加入圖片', addImagesHint: '選擇多張圖片後按格式鈕建立拼貼',
                     // Effects
-                    filtersCat: '濾鏡', glassCat: '碎玻璃', jigsawCat: '拼圖',
+                    filtersCat: '濾鏡', specialCat: '特殊', jigsawCat: '拼圖',
                     textCat: '文字', stickerCat: '貼圖',
                     intensity: '強度',
                     enterText: '輸入文字…', buildGrid: '建立',
@@ -160,7 +172,7 @@
                     grayscale: '黑白', sepia: '復古', vivid: '鮮豔',
                     dim: '暗調', warm: '暖色', cool: '冷色',
                     // Glass variants
-                    glassImpact: '衝擊', glassSpiderweb: '蜘蛛網', glassFractured: '碎裂',
+                    glassFragments: '玻璃碎片', glassSpiderweb: '蜘蛛網', glassSmudge: '塗抹',
                     // Jigsaw variants
                     jigsawStatic: '靜止', jigsawExplode: '爆炸',
                     jigsawDrift: '漂移', jigsawGravity: '重力', jigsawScattered: '散落',
@@ -181,13 +193,13 @@
                     confirmDelete: 'Delete this image?',
                     manualCrop: 'Manual Crop', autoCollage: 'Auto Collage',
                     addImage: 'Add Image', addImagesHint: 'Add images then pick a grid layout',
-                    filtersCat: 'Filters', glassCat: 'Glass', jigsawCat: 'Jigsaw',
+                    filtersCat: 'Filters', specialCat: 'Special', jigsawCat: 'Jigsaw',
                     textCat: 'Text', stickerCat: 'Stickers',
                     intensity: 'Intensity',
                     enterText: 'Enter text…', buildGrid: 'Build',
                     grayscale: 'B&W', sepia: 'Sepia', vivid: 'Vivid',
                     dim: 'Dim', warm: 'Warm', cool: 'Cool',
-                    glassImpact: 'Impact', glassSpiderweb: 'Spiderweb', glassFractured: 'Fractured',
+                    glassFragments: 'Fragments', glassSpiderweb: 'Spiderweb', glassSmudge: 'Smudge',
                     jigsawStatic: 'Static', jigsawExplode: 'Explode',
                     jigsawDrift: 'Drift', jigsawGravity: 'Gravity', jigsawScattered: 'Scattered',
                 },
@@ -245,10 +257,10 @@
             });
             const collageLayouts = LapisFXCollage.LAYOUTS;  // static, for template iteration
 
-            const glassVariants = [
-                { key: 'glass-impact',    tKey: 'glassImpact'    },
+            const specialVariants = [
+                { key: 'glass-fragments', tKey: 'glassFragments' },
                 { key: 'glass-spiderweb', tKey: 'glassSpiderweb' },
-                { key: 'glass-fractured', tKey: 'glassFractured' },
+                { key: 'glass-smudge',    tKey: 'glassSmudge'    },
             ];
 
             const jigsawVariants = [
@@ -281,6 +293,7 @@
                 stickerCategory.value  = 'emojis';
                 stickerConfig.value    = { x: 0.5, y: 0.5, scale: 0.18, rotation: 0 };
                 stickerActive.value    = '';
+                smudgeConfig.value     = { x: 0.5, y: 0.5, rotation: -12, invert: false };
             }
 
             async function _loadFile(file) {
@@ -361,6 +374,7 @@
                         intensity: fxIntensity.value,
                         gridSize: jigsawGrid.value,
                     };
+                    if (effectKey === 'glass-smudge') config.smudge = smudgeConfig.value;
                     if (effectKey.startsWith('jigsaw-') && jigsawManual.value) {
                         config.layout = jigsawManualTools.ensureLayout(sc.width, sc.height);
                     }
@@ -388,6 +402,10 @@
             }
 
             function previewSandbox() {
+                if (effectCategory.value === 'special' && activeEffect.value === 'glass-smudge') {
+                    applyEffectFilter(activeEffect.value);
+                    return Promise.resolve();
+                }
                 if (effectCategory.value === 'text') return applyText();
                 if (effectCategory.value === 'stickers' && stickerActive.value) return applySticker(stickerActive.value);
                 return Promise.resolve();
@@ -466,7 +484,9 @@
 
             // ── Crop ─────────────────────────────────────────────────────────
             function _sandboxConfig() {
-                return effectCategory.value === 'stickers' ? stickerConfig.value : textConfig.value;
+                if (effectCategory.value === 'stickers') return stickerConfig.value;
+                if (effectCategory.value === 'special') return smudgeConfig.value;
+                return textConfig.value;
             }
             function _sandboxRect() {
                 return document.getElementById('fx-sandbox-layer')?.getBoundingClientRect();
@@ -477,11 +497,18 @@
             function _angle(cx, cy, e) {
                 return Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
             }
+            function _raf(fn) {
+                return (window.requestAnimationFrame || ((cb) => setTimeout(cb, 16)))(fn);
+            }
+            function _caf(id) {
+                (window.cancelAnimationFrame || clearTimeout)(id);
+            }
             function beginSandboxMove(e) {
                 const rect = _sandboxRect();
                 if (!rect) return;
                 const cfg = _sandboxConfig();
                 _sandboxDrag = { mode: 'move', rect, sx: e.clientX, sy: e.clientY, x: cfg.x, y: cfg.y };
+                sandboxDragging.value = true;
                 e.currentTarget.setPointerCapture?.(e.pointerId);
             }
             function beginSandboxScale(e) {
@@ -489,6 +516,7 @@
                 if (!rect) return;
                 const cfg = _sandboxConfig();
                 _sandboxDrag = { mode: 'scale', rect, sx: e.clientX, size: cfg.scale || cfg.fontSize, fontSize: cfg.fontSize };
+                sandboxDragging.value = true;
                 e.currentTarget.setPointerCapture?.(e.pointerId);
             }
             function beginSandboxRotate(e) {
@@ -498,25 +526,47 @@
                 const cx = rect.left + cfg.x * rect.width;
                 const cy = rect.top + cfg.y * rect.height;
                 _sandboxDrag = { mode: 'rotate', cx, cy, angle: _angle(cx, cy, e), rotation: cfg.rotation || 0 };
+                sandboxDragging.value = true;
                 e.currentTarget.setPointerCapture?.(e.pointerId);
             }
-            function moveSandbox(e) {
+            function _applySandboxMove(clientX, clientY) {
                 if (!_sandboxDrag) return;
                 const cfg = _sandboxConfig();
                 if (_sandboxDrag.mode === 'move') {
-                    cfg.x = _clamp01(_sandboxDrag.x + (e.clientX - _sandboxDrag.sx) / _sandboxDrag.rect.width);
-                    cfg.y = _clamp01(_sandboxDrag.y + (e.clientY - _sandboxDrag.sy) / _sandboxDrag.rect.height);
+                    cfg.x = _clamp01(_sandboxDrag.x + (clientX - _sandboxDrag.sx) / _sandboxDrag.rect.width);
+                    cfg.y = _clamp01(_sandboxDrag.y + (clientY - _sandboxDrag.sy) / _sandboxDrag.rect.height);
                 } else if (_sandboxDrag.mode === 'scale') {
-                    const delta = (e.clientX - _sandboxDrag.sx) / _sandboxDrag.rect.width;
+                    const delta = (clientX - _sandboxDrag.sx) / _sandboxDrag.rect.width;
                     if (effectCategory.value === 'stickers') cfg.scale = Math.max(0.08, Math.min(0.55, _sandboxDrag.size + delta));
-                    else cfg.fontSize = Math.max(36, Math.min(220, _sandboxDrag.fontSize * (1 + delta * 2)));
+                    else if (effectCategory.value === 'text') cfg.fontSize = Math.max(36, Math.min(220, _sandboxDrag.fontSize * (1 + delta * 2)));
                 } else {
-                    cfg.rotation = _sandboxDrag.rotation + _angle(_sandboxDrag.cx, _sandboxDrag.cy, e) - _sandboxDrag.angle;
+                    const angle = Math.atan2(clientY - _sandboxDrag.cy, clientX - _sandboxDrag.cx) * 180 / Math.PI;
+                    cfg.rotation = _sandboxDrag.rotation + angle - _sandboxDrag.angle;
                 }
+            }
+            function _flushSandboxMove() {
+                _sandboxFrame = 0;
+                if (!_sandboxPoint) return;
+                _applySandboxMove(_sandboxPoint.clientX, _sandboxPoint.clientY);
+                _sandboxPoint = null;
+            }
+            function moveSandbox(e) {
+                if (!_sandboxDrag) return;
+                _sandboxPoint = { clientX: e.clientX, clientY: e.clientY };
+                if (!_sandboxFrame) _sandboxFrame = _raf(_flushSandboxMove);
             }
             function endSandbox() {
                 if (!_sandboxDrag) return;
+                if (_sandboxFrame) {
+                    _caf(_sandboxFrame);
+                    _sandboxFrame = 0;
+                }
+                if (_sandboxPoint) {
+                    _applySandboxMove(_sandboxPoint.clientX, _sandboxPoint.clientY);
+                    _sandboxPoint = null;
+                }
                 _sandboxDrag = null;
+                sandboxDragging.value = false;
                 previewSandbox();
             }
 
@@ -744,6 +794,7 @@
             });
             onUnmounted(() => {
                 if (_cropper)       _cropper.destroy();
+                if (_sandboxFrame)   _caf(_sandboxFrame);
                 if (imageUrl.value) URL.revokeObjectURL(imageUrl.value);
                 _revokeCollageCells();
             });
@@ -755,11 +806,11 @@
                 dragOver, cropShape, cropMode,
                 collageLayout, collageCells,
                 fxIntensity, jigsawGrid, jigsawManual, jigsawLayout, cropBoxData, containerSize,
-                isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, jigsawManualActive,
+                isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, sandboxAllowsScale, sandboxDragging, jigsawManualActive,
                 canUndoCt, showFloatingPanel, mainPaddingBottom,
                 activeEffect, effectCategory,
-                effectsList, glassVariants, jigsawVariants, stickerList, collageLayouts,
-                textConfig, stickerCategory, stickerCategoryList, stickerConfig, stickerActive,
+                effectsList, specialVariants, jigsawVariants, stickerList, collageLayouts,
+                textConfig, stickerCategory, stickerCategoryList, stickerConfig, stickerActive, smudgeConfig,
                 t, cropRatios, specialShapes,
                 handleFileInput, triggerUpload, onDrop,
                 enterEffects, exitEffects, applyEffectFilter,
@@ -768,6 +819,7 @@
                 applyText, applySticker,
                 beginSandboxMove, beginSandboxScale, beginSandboxRotate, moveSandbox, endSandbox,
                 jigsawPieceStyle: jigsawManualTools.pieceStyle,
+                jigsawDragging: jigsawManualTools.dragging,
                 beginJigsawPieceDrag: jigsawManualTools.beginDrag,
                 moveJigsawPiece: jigsawManualTools.moveDrag,
                 endJigsawPieceDrag: jigsawManualTools.endDrag,

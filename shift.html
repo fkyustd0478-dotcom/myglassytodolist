@@ -113,7 +113,7 @@
             <div v-for="day in calendarDays" :key="day.dateStr"
                  class="calendar-day glass"
                  :class="{ 'other-month': !day.isCurrentMonth, 'today': day.isToday }"
-                 @click="handleDayClick(day)">
+                 @click="handleDayClick(day, $event)">
                 <!-- Date number + holiday tag in one row -->
                 <div class="day-header-row">
                     <span class="day-number">{{ day.date.getDate() }}</span>
@@ -523,12 +523,12 @@
     </transition>
 
     <!-- ── Day Detail (LV3 secondary) ──────────────────────────────────────── -->
-    <transition name="slide-up">
+    <transition name="day-detail-morph">
         <div v-if="showDayDetail"
-             class="modal-backdrop"
-             style="z-index: var(--z-modal-lv3-backdrop)"
+             class="modal-backdrop day-detail-backdrop glass-panel"
+             :style="dayDetailMorphStyle"
              @click.self="showDayDetail = false">
-            <div class="modal-content glass">
+            <div class="modal-content glass glass-panel">
                 <div class="modal-header">
                     <h2 class="text-2xl font-black tracking-tight">{{ selectedDay }}</h2>
                     <button @click="showDayDetail = false" class="p-2 glass rounded-full">

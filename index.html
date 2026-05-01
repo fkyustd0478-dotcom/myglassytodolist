@@ -49,6 +49,79 @@
             margin-bottom: 6px;
         }
         .hub-title { font-size: 30px; font-weight: 900; line-height: 1.15; margin: 0; }
+        .hub-hero {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 14px;
+            padding-top: 18px;
+            margin-bottom: 18px;
+        }
+        .hub-copy { min-width: 0; }
+        .lapis-flip-clock {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            flex-shrink: 0;
+        }
+        .lapis-flip-card {
+            position: relative;
+            width: 22px;
+            height: 34px;
+            border-radius: 7px;
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 900;
+            line-height: 34px;
+            text-align: center;
+            perspective: 120px;
+            overflow: hidden;
+            background: color-mix(in srgb, var(--primary) 20%, rgba(255,255,255,0.20));
+            border: 1px solid rgba(255,255,255,0.26);
+            box-shadow: inset 0 -1px 0 rgba(0,0,0,0.16), 0 8px 18px rgba(0,0,0,0.14);
+        }
+        .lapis-flip-card::after {
+            content: '';
+            position: absolute;
+            left: 0; right: 0; top: 50%;
+            border-top: 1px solid rgba(0,0,0,0.18);
+            box-shadow: 0 -1px 0 rgba(255,255,255,0.12);
+            z-index: 4;
+        }
+        .lapis-flip-card span {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backface-visibility: hidden;
+        }
+        .lapis-flip-card .flip-next { transform: rotateX(180deg); }
+        .lapis-flip-card.is-flipping .flip-current { animation: flipOut 0.54s ease-in both; }
+        .lapis-flip-card.is-flipping .flip-next { animation: flipIn 0.54s ease-out both; }
+        .lapis-flip-divider {
+            font-size: 20px;
+            font-weight: 900;
+            opacity: 0.55;
+            line-height: 34px;
+        }
+        @keyframes flipOut {
+            0% { transform: rotateX(0deg); }
+            100% { transform: rotateX(-180deg); }
+        }
+        @keyframes flipIn {
+            0% { transform: rotateX(180deg); }
+            100% { transform: rotateX(0deg); }
+        }
+        @media (max-width: 430px) {
+            .hub-hero {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .lapis-flip-card { width: 20px; height: 31px; line-height: 31px; font-size: 18px; }
+            .lapis-flip-divider { line-height: 31px; }
+        }
 
         /* ── Dashboard section label ──────────────────────────────────────── */
         .dash-section-label {
@@ -131,9 +204,20 @@
     <main style="flex:1;overflow-y:auto;padding:0 20px var(--nav-height);-webkit-overflow-scrolling:touch;">
 
         <!-- Welcome Header -->
-        <div style="padding-top:52px;margin-bottom:28px;">
-            <p class="hub-subtitle">{{ todayLabel }}</p>
-            <h1 class="hub-title">{{ greeting }}</h1>
+        <div class="hub-hero">
+            <div class="hub-copy">
+                <p class="hub-subtitle">{{ todayLabel }}</p>
+                <h1 class="hub-title">{{ greeting }}</h1>
+            </div>
+            <div class="lapis-flip-clock" aria-label="24-hour clock">
+                <template v-for="(digit, i) in flipDigits" :key="i">
+                    <div class="lapis-flip-card" :class="{ 'is-flipping': digit.flipping }">
+                        <span class="flip-current">{{ digit.previous }}</span>
+                        <span class="flip-next">{{ digit.value }}</span>
+                    </div>
+                    <em v-if="i === 1 || i === 3" class="lapis-flip-divider">:</em>
+                </template>
+            </div>
         </div>
 
         <!-- ── Today ──────────────────────────────────────────────────────── -->
