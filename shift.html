@@ -73,14 +73,16 @@
                     <div v-if="jumpPicker.show" class="jump-picker-dropdown glass" :style="glassStyle" @click.stop>
                         <!-- Year row -->
                         <div class="flex items-center justify-between mb-4">
-                            <button @click="updateJumpDate('year', jumpPicker.year - 1)"
-                                    class="p-1.5 glass rounded-full opacity-60 hover:opacity-100 active:scale-90 transition-all">
-                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            <button type="button"
+                                    @click.stop="updateJumpDate('year', jumpPicker.year - 1)"
+                                    class="w-8 h-8 glass rounded-full opacity-80 hover:opacity-100 active:scale-90 transition-all text-base font-black">
+                                &lt;
                             </button>
                             <span class="text-xl font-black">{{ jumpPicker.year }}</span>
-                            <button @click="updateJumpDate('year', jumpPicker.year + 1)"
-                                    class="p-1.5 glass rounded-full opacity-60 hover:opacity-100 active:scale-90 transition-all">
-                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            <button type="button"
+                                    @click.stop="updateJumpDate('year', jumpPicker.year + 1)"
+                                    class="w-8 h-8 glass rounded-full opacity-80 hover:opacity-100 active:scale-90 transition-all text-base font-black">
+                                &gt;
                             </button>
                         </div>
                         <!-- Month grid 4×3 -->

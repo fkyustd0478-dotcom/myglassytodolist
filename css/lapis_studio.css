@@ -1,5 +1,15 @@
 /* ── Studio page base ────────────────────────────────────────────────────── */
 [v-cloak] { display: none !important; }
+@font-face {
+    font-family: 'Death Note Font';
+    src: url('../assets/fonts/death-note.woff2') format('woff2');
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Death Note Font 2';
+    src: url('../assets/fonts/death-note2.woff2') format('woff2');
+    font-display: swap;
+}
 html  { background: #0d0d0d; }
 body  { opacity: 0; transition: opacity 0.4s ease-in-out; }
 body.lapis-ready { opacity: 1; }
@@ -168,8 +178,38 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     cursor: pointer;
     padding: 0;
 }
+.fx-style-btn {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    flex-shrink: 0;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+.fx-style-btn.is-active {
+    background: #3b82f6;
+    color: #fff;
+}
+.fx-style-btn:active { transform: scale(0.92); }
 
 /* Sticker emoji buttons */
+.fx-sticker-category {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    background: rgba(255,255,255,0.08);
+    opacity: 0.70;
+}
+.fx-sticker-category.is-active {
+    background: #3b82f6;
+    color: #fff;
+    opacity: 1;
+}
 .fx-sticker-btn {
     font-size: 1.7rem;
     width: 48px; height: 48px;
@@ -183,7 +223,68 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
 .fx-sticker-btn:active { transform: scale(0.85); }
 .fx-sticker-btn.is-active { outline: 2px solid #3b82f6; }
 
+.fx-sandbox-layer {
+    position: absolute;
+    inset: 1rem;
+    z-index: 20;
+    touch-action: none;
+    pointer-events: auto;
+}
+.fx-sandbox-box {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 128px;
+    height: 74px;
+    border: 1.5px solid rgba(59,130,246,0.95);
+    border-radius: 12px;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.55), 0 10px 24px rgba(0,0,0,0.22);
+    cursor: move;
+}
+.fx-rotate-handle,
+.fx-scale-handle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background: #3b82f6;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.22);
+}
+.fx-rotate-handle {
+    left: 50%;
+    top: -34px;
+    transform: translateX(-50%);
+    cursor: grab;
+}
+.fx-scale-handle {
+    right: -12px;
+    bottom: -12px;
+    cursor: nwse-resize;
+}
+
 /* ── Pro-Collage grid workspace ───────────────────────────────────────────── */
+.jigsaw-manual-layer {
+    position: absolute;
+    inset: 1rem;
+    z-index: 21;
+    touch-action: none;
+    pointer-events: auto;
+}
+.jigsaw-piece-hotspot {
+    position: absolute;
+    border: 1px solid rgba(59,130,246,0.45);
+    border-radius: 8px;
+    background: rgba(59,130,246,0.08);
+    cursor: grab;
+    transform-origin: center;
+}
+.jigsaw-piece-hotspot:active {
+    cursor: grabbing;
+    background: rgba(59,130,246,0.18);
+}
+
 .collage-layout-btn {
     padding: 4px 12px;
     border-radius: 9999px;

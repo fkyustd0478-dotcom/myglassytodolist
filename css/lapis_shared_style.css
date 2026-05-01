@@ -488,6 +488,21 @@ body.theme-seaside .lapis-btn-secondary {
     border-color: rgba(0, 0, 0, 0.12) !important;
 }
 
+.google-g-logo {
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(from -45deg, #4285f4 0 25%, #34a853 0 50%, #fbbc05 0 75%, #ea4335 0);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.65);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    GLOBAL GLASSMORPHIC SCROLLBAR
    ═══════════════════════════════════════════════════════════════════════════ */

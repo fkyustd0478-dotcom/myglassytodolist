@@ -408,6 +408,9 @@ const app = createApp({
             jumpPicker.value.year  = calendarDate.value.getFullYear();
             jumpPicker.value.month = calendarDate.value.getMonth();
             jumpPicker.value.show  = !jumpPicker.value.show;
+            nextTick(() => {
+                if (window.lucide) lucide.createIcons();
+            });
         };
         const updateJumpDate = (type, val) => {
             if (type === 'year')  jumpPicker.value.year  = ((val - 1970 + 130) % 130) + 1970;

@@ -8,6 +8,7 @@
         typeof LapisFXText       === 'undefined' ||
         typeof LapisFXSticker    === 'undefined' ||
         typeof LapisStudioEngine === 'undefined' ||
+        typeof LapisStudioJigsawManual === 'undefined' ||
         typeof Cropper           === 'undefined') {
         return setTimeout(waitForDeps, 20);
     }
@@ -29,14 +30,22 @@
             const collageLayout   = ref('2x2');      // active layout key
             const collageCells    = ref([]);         // per-cell URLs (blob/data), null = empty
             const fxIntensity     = ref(1.0);        // 0‥1 slider for effects
+            const jigsawGrid      = ref(4);
+            const jigsawManual    = ref(false);
+            const jigsawLayout    = ref([]);
             const activeEffect    = ref('');         // pending (previewed) effect key
             const effectCategory  = ref('filters'); // 'filters'|'glass'|'jigsaw'|'text'|'stickers'
             const textConfig      = ref({
                 text: '', fontFamily: 'Arial, sans-serif', fontSize: 80,
                 color: '#ffffff', strokeColor: 'rgba(0,0,0,0.65)', strokeWidth: 2,
+                bold: true, italic: false, strike: false,
+                rotation: 0,
                 x: 0.5, y: 0.5,
             });
+            const stickerCategory = ref('emojis');
+            const stickerConfig   = ref({ x: 0.5, y: 0.5, scale: 0.18, rotation: 0 });
             const stickerActive   = ref(''); // last-applied sticker emoji
+            let _sandboxDrag       = null;
 
             // Crop overlay
             const cropBoxData   = ref(null);
@@ -66,6 +75,35 @@
 
             // Crop controls use the floating panel; effects has its own FX drawer.
             const showFloatingPanel = computed(() => activeNav.value === 'crop');
+            const sandboxActive = computed(() => {
+                if (activeNav.value !== 'effects') return false;
+                if (effectCategory.value === 'text') return !!textConfig.value.text.trim();
+                if (effectCategory.value === 'stickers') return !!stickerActive.value;
+                return false;
+            });
+            const sandboxBoxStyle = computed(() => {
+                const cfg = effectCategory.value === 'stickers' ? stickerConfig.value : textConfig.value;
+                const scale = effectCategory.value === 'stickers'
+                    ? Math.max(0.6, cfg.scale * 4)
+                    : Math.max(0.7, cfg.fontSize / 80);
+                return {
+                    left: `${cfg.x * 100}%`,
+                    top: `${cfg.y * 100}%`,
+                    transform: `translate(-50%, -50%) rotate(${cfg.rotation || 0}deg) scale(${scale})`,
+                };
+            });
+            const jigsawManualTools = LapisStudioJigsawManual.create({
+                Vue,
+                activeNav,
+                effectCategory,
+                activeEffect,
+                jigsawManual,
+                jigsawGrid,
+                jigsawLayout,
+                fxIntensity,
+                applyEffectFilter,
+            });
+            const jigsawManualActive = jigsawManualTools.jigsawManualActive;
 
             const mainPaddingBottom = computed(() => {
                 if (activeNav.value === 'effects')
@@ -196,7 +234,15 @@
                 { key: 'cool',      tKey: 'cool'      },
             ];
 
-            const stickerList    = LapisFXSticker.BUILT_IN;
+            const stickerCategoryList = [
+                { key: 'emojis', label: 'Emojis' },
+                { key: 'deco',   label: 'Deco' },
+                { key: 'shapes', label: 'Shapes' },
+            ];
+            const stickerList = computed(() => {
+                const categories = LapisFXSticker.CATEGORIES || {};
+                return categories[stickerCategory.value] || LapisFXSticker.BUILT_IN;
+            });
             const collageLayouts = LapisFXCollage.LAYOUTS;  // static, for template iteration
 
             const glassVariants = [
@@ -222,11 +268,18 @@
                 _effectsBase           = null;
                 effectCategory.value   = 'filters';
                 fxIntensity.value      = 1.0;
+                jigsawGrid.value       = 4;
+                jigsawManual.value     = false;
+                jigsawLayout.value     = [];
                 textConfig.value       = {
                     text: '', fontFamily: 'Arial, sans-serif', fontSize: 80,
                     color: '#ffffff', strokeColor: 'rgba(0,0,0,0.65)', strokeWidth: 2,
+                    bold: true, italic: false, strike: false,
+                    rotation: 0,
                     x: 0.5, y: 0.5,
                 };
+                stickerCategory.value  = 'emojis';
+                stickerConfig.value    = { x: 0.5, y: 0.5, scale: 0.18, rotation: 0 };
                 stickerActive.value    = '';
             }
 
@@ -304,12 +357,26 @@
                     sc.width  = img.naturalWidth;
                     sc.height = img.naturalHeight;
                     sc.getContext('2d').drawImage(img, 0, 0);
-                    const output = LapisStudioEngine.applyEffect(sc, effectKey, { intensity: fxIntensity.value });
+                    const config = {
+                        intensity: fxIntensity.value,
+                        gridSize: jigsawGrid.value,
+                    };
+                    if (effectKey.startsWith('jigsaw-') && jigsawManual.value) {
+                        config.layout = jigsawManualTools.ensureLayout(sc.width, sc.height);
+                    }
+                    const output = LapisStudioEngine.applyEffect(sc, effectKey, config);
                     _resultCanvas      = output;
                     resultUrl.value    = output.toDataURL('image/png');
                     activeEffect.value = effectKey;
                 };
                 img.src = src;
+            }
+
+            function onJigsawGridChange() {
+                jigsawManualTools.resetLayout();
+                if (activeEffect.value && activeEffect.value.startsWith('jigsaw-')) {
+                    applyEffectFilter(activeEffect.value);
+                }
             }
 
             // 100 ms debounce: re-preview current effect when slider moves
@@ -320,15 +387,23 @@
                 }, 100);
             }
 
-            function applyCurrentEffect() {
+            function previewSandbox() {
+                if (effectCategory.value === 'text') return applyText();
+                if (effectCategory.value === 'stickers' && stickerActive.value) return applySticker(stickerActive.value);
+                return Promise.resolve();
+            }
+
+            async function applyCurrentEffect() {
                 if (activeEffect.value === '') return;
+                if (activeEffect.value === '__text__' || activeEffect.value === '__sticker__') await previewSandbox();
                 _pushHistory(_effectsBase !== null ? _effectsBase : '');
                 _effectsBase       = resultUrl.value;
                 activeEffect.value = '';
             }
 
-            function saveFromEffects() {
+            async function saveFromEffects() {
                 if (activeEffect.value !== '') {
+                    if (activeEffect.value === '__text__' || activeEffect.value === '__sticker__') await previewSandbox();
                     _pushHistory(_effectsBase !== null ? _effectsBase : '');
                     activeEffect.value = '';
                 }
@@ -348,10 +423,11 @@
 
             // ── Text overlay ─────────────────────────────────────────────────
             function applyText() {
-                if (!imageUrl.value || !textConfig.value.text.trim()) return;
+                if (!imageUrl.value || !textConfig.value.text.trim()) return Promise.resolve();
                 const src = (_effectsBase !== null ? _effectsBase : resultUrl.value) || imageUrl.value;
                 const img = new Image();
-                img.onload = () => {
+                return new Promise((resolve) => {
+                    img.onload = () => {
                     const sc = document.createElement('canvas');
                     sc.width = img.naturalWidth; sc.height = img.naturalHeight;
                     sc.getContext('2d').drawImage(img, 0, 0);
@@ -359,29 +435,91 @@
                     _resultCanvas      = out;
                     resultUrl.value    = out.toDataURL('image/png');
                     activeEffect.value = '__text__';
-                };
-                img.src = src;
+                    resolve();
+                    };
+                    img.onerror = () => resolve();
+                    img.src = src;
+                });
             }
 
             // ── Sticker overlay ───────────────────────────────────────────────
             function applySticker(emoji) {
-                if (!imageUrl.value) return;
+                if (!imageUrl.value) return Promise.resolve();
                 stickerActive.value = emoji;
                 const src = (_effectsBase !== null ? _effectsBase : resultUrl.value) || imageUrl.value;
                 const img = new Image();
-                img.onload = () => {
+                return new Promise((resolve) => {
+                    img.onload = () => {
                     const sc = document.createElement('canvas');
                     sc.width = img.naturalWidth; sc.height = img.naturalHeight;
                     sc.getContext('2d').drawImage(img, 0, 0);
-                    const out   = LapisFXSticker.render(sc, { sticker: emoji, x: 0.5, y: 0.5, scale: 0.18 });
+                    const out   = LapisFXSticker.render(sc, { sticker: emoji, ...stickerConfig.value });
                     _resultCanvas      = out;
                     resultUrl.value    = out.toDataURL('image/png');
                     activeEffect.value = '__sticker__';
-                };
-                img.src = src;
+                    resolve();
+                    };
+                    img.onerror = () => resolve();
+                    img.src = src;
+                });
             }
 
             // ── Crop ─────────────────────────────────────────────────────────
+            function _sandboxConfig() {
+                return effectCategory.value === 'stickers' ? stickerConfig.value : textConfig.value;
+            }
+            function _sandboxRect() {
+                return document.getElementById('fx-sandbox-layer')?.getBoundingClientRect();
+            }
+            function _clamp01(v) {
+                return Math.max(0.03, Math.min(0.97, v));
+            }
+            function _angle(cx, cy, e) {
+                return Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+            }
+            function beginSandboxMove(e) {
+                const rect = _sandboxRect();
+                if (!rect) return;
+                const cfg = _sandboxConfig();
+                _sandboxDrag = { mode: 'move', rect, sx: e.clientX, sy: e.clientY, x: cfg.x, y: cfg.y };
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+            }
+            function beginSandboxScale(e) {
+                const rect = _sandboxRect();
+                if (!rect) return;
+                const cfg = _sandboxConfig();
+                _sandboxDrag = { mode: 'scale', rect, sx: e.clientX, size: cfg.scale || cfg.fontSize, fontSize: cfg.fontSize };
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+            }
+            function beginSandboxRotate(e) {
+                const rect = _sandboxRect();
+                if (!rect) return;
+                const cfg = _sandboxConfig();
+                const cx = rect.left + cfg.x * rect.width;
+                const cy = rect.top + cfg.y * rect.height;
+                _sandboxDrag = { mode: 'rotate', cx, cy, angle: _angle(cx, cy, e), rotation: cfg.rotation || 0 };
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+            }
+            function moveSandbox(e) {
+                if (!_sandboxDrag) return;
+                const cfg = _sandboxConfig();
+                if (_sandboxDrag.mode === 'move') {
+                    cfg.x = _clamp01(_sandboxDrag.x + (e.clientX - _sandboxDrag.sx) / _sandboxDrag.rect.width);
+                    cfg.y = _clamp01(_sandboxDrag.y + (e.clientY - _sandboxDrag.sy) / _sandboxDrag.rect.height);
+                } else if (_sandboxDrag.mode === 'scale') {
+                    const delta = (e.clientX - _sandboxDrag.sx) / _sandboxDrag.rect.width;
+                    if (effectCategory.value === 'stickers') cfg.scale = Math.max(0.08, Math.min(0.55, _sandboxDrag.size + delta));
+                    else cfg.fontSize = Math.max(36, Math.min(220, _sandboxDrag.fontSize * (1 + delta * 2)));
+                } else {
+                    cfg.rotation = _sandboxDrag.rotation + _angle(_sandboxDrag.cx, _sandboxDrag.cy, e) - _sandboxDrag.angle;
+                }
+            }
+            function endSandbox() {
+                if (!_sandboxDrag) return;
+                _sandboxDrag = null;
+                previewSandbox();
+            }
+
             function _initCollageCells() {
                 const layout = LapisFXCollage.LAYOUTS[collageLayout.value] || { cols: 2, rows: 2 };
                 const count  = layout.cols * layout.rows;
@@ -497,7 +635,7 @@
 
             function setSpecialShape(s) {
                 cropShape.value = s.key;
-                if (_cropper) _cropper.setAspectRatio(1);
+                if (_cropper) _cropper.setAspectRatio(NaN);
             }
 
             function confirmCrop(stayInCrop = false) {
@@ -616,17 +754,23 @@
                 imageUrl, resultUrl, activeNav, contentView,
                 dragOver, cropShape, cropMode,
                 collageLayout, collageCells,
-                fxIntensity, cropBoxData, containerSize,
-                isSpecialShape, shapeOverlaySvg,
+                fxIntensity, jigsawGrid, jigsawManual, jigsawLayout, cropBoxData, containerSize,
+                isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, jigsawManualActive,
                 canUndoCt, showFloatingPanel, mainPaddingBottom,
                 activeEffect, effectCategory,
                 effectsList, glassVariants, jigsawVariants, stickerList, collageLayouts,
-                textConfig, stickerActive,
+                textConfig, stickerCategory, stickerCategoryList, stickerConfig, stickerActive,
                 t, cropRatios, specialShapes,
                 handleFileInput, triggerUpload, onDrop,
                 enterEffects, exitEffects, applyEffectFilter,
-                applyCurrentEffect, saveFromEffects, onSliderInput,
+                applyCurrentEffect, saveFromEffects, onSliderInput, onJigsawGridChange,
+                toggleJigsawManual: jigsawManualTools.toggleJigsawManual,
                 applyText, applySticker,
+                beginSandboxMove, beginSandboxScale, beginSandboxRotate, moveSandbox, endSandbox,
+                jigsawPieceStyle: jigsawManualTools.pieceStyle,
+                beginJigsawPieceDrag: jigsawManualTools.beginDrag,
+                moveJigsawPiece: jigsawManualTools.moveDrag,
+                endJigsawPieceDrag: jigsawManualTools.endDrag,
                 enterCrop, exitCrop, confirmCrop, saveFromCrop,
                 setCropMode, setCollageLayout,
                 triggerCellInput, onCellFileInput,

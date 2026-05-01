@@ -54,6 +54,7 @@ window.LapisFXShatter = (() => {
         const iy    = h * (0.30 + Math.random() * 0.3);
         const base  = Math.min(w, h);
         const scale = Math.max(0.15, intensity);
+        const holeRadius = base * (0.018 + 0.035 * Math.min(1, scale));
         ctx.lineCap = 'round';
 
         // Primary radial cracks — count scales with intensity
@@ -74,12 +75,12 @@ window.LapisFXShatter = (() => {
             ctx.beginPath();
             ctx.moveTo(pts[0][0], pts[0][1]);
             for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0], pts[p][1]);
-            ctx.strokeStyle = 'rgba(255,255,255,0.90)'; ctx.lineWidth = 2.5; ctx.stroke();
+            ctx.strokeStyle = 'rgba(255,255,255,0.96)'; ctx.lineWidth = 2.8; ctx.stroke();
 
             ctx.beginPath();
             ctx.moveTo(pts[0][0] + 1, pts[0][1] + 1);
             for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0] + 1, pts[p][1] + 1);
-            ctx.strokeStyle = 'rgba(0,0,0,0.60)'; ctx.lineWidth = 1.2; ctx.stroke();
+            ctx.strokeStyle = 'rgba(0,0,0,0.68)'; ctx.lineWidth = 1.35; ctx.stroke();
         }
 
         // Secondary burst zone — dense short cracks near impact
@@ -93,17 +94,30 @@ window.LapisFXShatter = (() => {
             const ex  = ix + Math.cos(ang) * r1 + (Math.random() - 0.5) * r1 * 0.5;
             const ey  = iy + Math.sin(ang) * r1 + (Math.random() - 0.5) * r1 * 0.5;
             ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey);
-            ctx.strokeStyle = 'rgba(255,255,255,0.80)'; ctx.lineWidth = 1.5; ctx.stroke();
+            ctx.strokeStyle = 'rgba(255,255,255,0.88)'; ctx.lineWidth = 1.7; ctx.stroke();
             ctx.beginPath(); ctx.moveTo(sx + 1, sy + 1); ctx.lineTo(ex + 1, ey + 1);
-            ctx.strokeStyle = 'rgba(0,0,0,0.50)'; ctx.lineWidth = 0.8; ctx.stroke();
+            ctx.strokeStyle = 'rgba(0,0,0,0.58)'; ctx.lineWidth = 0.9; ctx.stroke();
         }
 
-        const g = ctx.createRadialGradient(ix, iy, 0, ix, iy, base * 0.025);
+        const refractions = Math.max(3, Math.round(9 * scale));
+        for (let i = 0; i < refractions; i++) {
+            const a = (i / refractions) * Math.PI * 2 + 0.25;
+            const r = holeRadius * (1.8 + Math.random() * 2.4);
+            ctx.beginPath();
+            ctx.moveTo(ix + Math.cos(a) * holeRadius * 1.1, iy + Math.sin(a) * holeRadius * 1.1);
+            ctx.lineTo(ix + Math.cos(a + 0.12) * r, iy + Math.sin(a + 0.12) * r);
+            ctx.strokeStyle = `rgba(190,230,255,${0.18 + 0.18 * scale})`;
+            ctx.lineWidth = Math.max(1, base * 0.004);
+            ctx.stroke();
+        }
+
+        const g = ctx.createRadialGradient(ix, iy, 0, ix, iy, holeRadius);
         g.addColorStop(0,   'rgba(255,255,255,1.0)');
-        g.addColorStop(0.5, 'rgba(255,255,255,0.6)');
+        g.addColorStop(0.35, 'rgba(255,255,255,0.72)');
+        g.addColorStop(0.7, 'rgba(40,55,70,0.42)');
         g.addColorStop(1,   'rgba(255,255,255,0)');
         ctx.beginPath();
-        ctx.arc(ix, iy, base * 0.025, 0, Math.PI * 2);
+        ctx.arc(ix, iy, holeRadius, 0, Math.PI * 2);
         ctx.fillStyle = g; ctx.fill();
     }
 

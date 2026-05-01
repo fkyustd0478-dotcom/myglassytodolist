@@ -67,7 +67,7 @@ Existing page dictionaries are registered into this central runtime but local fa
 
 ## Auth UI
 
-There is currently no complete login screen. `AuthProvider` is available globally for future UI controls.
+`setting.html` includes a User Profile block with Google login, email/password login, logout, and local nickname/birthday fields. The Google login action uses a visible Google "G" mark and clear "Login with Google" text.
 
 ## Motion
 
@@ -78,4 +78,3 @@ Motion is intentionally subtle:
 - Studio FX drawer entry and category slide transitions.
 
 Do not redesign page structure when tuning motion.
-

@@ -11,6 +11,7 @@ Studio is a local image editor. It lets users upload an image, crop it, build co
 - `studio.html`: markup and controls.
 - `css/lapis_studio.css`: Studio-specific layout and drawer animation.
 - `js/lapis_studio_ui.js`: Vue state and user flow.
+- `js/lapis_studio_jigsaw_manual.js`: manual jigsaw piece arrangement controls.
 - `js/fx/lapis_fx_base.js`: shared canvas helpers and download.
 - `js/fx/lapis_fx_collage.js`: collage layouts/rendering.
 - `js/fx/lapis_fx_shatter.js`: glass effects.
@@ -25,6 +26,10 @@ Studio is a local image editor. It lets users upload an image, crop it, build co
 3. Crop/collage/FX actions render to canvas.
 4. The result is stored in Vue state as a URL/data URL.
 5. Download uses `LapisStudioEngine.triggerRealDownload()`, with File System Access API support where available.
+
+## Cropping
+
+Manual crop mode supports freeform aspect ratios and special masks. Circle, ellipse, heart, and star masks can be stretched independently by width and height, then exported centered inside the selected frame.
 
 ## Collage
 
@@ -49,6 +54,10 @@ Jigsaw FX:
 - scattered
 
 Recent improvements add depth, shadow, and light/reflection rendering while keeping the FX engine structure intact.
+
+Jigsaw rendering uses Bezier tab/blank piece paths. Manual Arrange is available for all jigsaw variants and stores temporary piece offsets in Studio UI state only; it does not modify app storage.
+
+Text and sticker overlays support drag, scale, rotate, bold, italic, strikethrough, sticker categories, and local fonts including `Death Note Font` and `Death Note Font 2` from `assets/fonts/`.
 
 ## Export
 

@@ -69,25 +69,26 @@ window.LapisStudioEngine = (() => {
     }
 
     function _star(ctx, w, h) {
-        const cx = w / 2, cy = h / 2;
-        const R  = Math.min(w, h) * 0.46;
-        const r  = R * 0.42;
+        ctx.save();
+        ctx.translate(w / 2, h / 2);
+        ctx.scale(w * 0.46, h * 0.46);
         ctx.beginPath();
         for (let i = 0; i < 10; i++) {
             const a   = (i * Math.PI) / 5 - Math.PI / 2;
-            const rad = i % 2 === 0 ? R : r;
-            i === 0 ? ctx.moveTo(cx + rad * Math.cos(a), cy + rad * Math.sin(a))
-                    : ctx.lineTo(cx + rad * Math.cos(a), cy + rad * Math.sin(a));
+            const rad = i % 2 === 0 ? 1 : 0.42;
+            i === 0 ? ctx.moveTo(rad * Math.cos(a), rad * Math.sin(a))
+                    : ctx.lineTo(rad * Math.cos(a), rad * Math.sin(a));
         }
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
     }
 
     function applyMask(src, shape, data) {
-        const x = data ? (data.x      || 0) : 0;
-        const y = data ? (data.y      || 0) : 0;
-        const w = data ? (data.width  || src.width)  : src.width;
-        const h = data ? (data.height || src.height) : src.height;
+        const x = data ? Math.round(data.x      || 0) : 0;
+        const y = data ? Math.round(data.y      || 0) : 0;
+        const w = data ? Math.max(1, Math.round(data.width  || src.width))  : src.width;
+        const h = data ? Math.max(1, Math.round(data.height || src.height)) : src.height;
         const cvs = document.createElement('canvas');
         cvs.width = w; cvs.height = h;
         const ctx = cvs.getContext('2d');
@@ -95,7 +96,7 @@ window.LapisStudioEngine = (() => {
         switch (shape) {
             case 'circle':
                 ctx.beginPath();
-                ctx.arc(w / 2, h / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+                ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
                 ctx.fill(); break;
             case 'ellipse':
                 ctx.beginPath();
@@ -105,9 +106,7 @@ window.LapisStudioEngine = (() => {
             case 'star':  _star(ctx, w, h);  break;
             default: return src;
         }
-        // source-in keeps only pixels where mask is opaque.
-        // translate(-x,-y) aligns the full-size source so the crop region
-        // starts at (0,0) of this output canvas.
+        // source-in keeps the selected region centered in the export frame.
         ctx.globalCompositeOperation = 'source-in';
         ctx.save();
         ctx.translate(-x, -y);
@@ -211,7 +210,7 @@ window.LapisStudioEngine = (() => {
         const bR  = Math.min(bw, bh) / 2;
         const f   = v => v.toFixed(1);
         if (shape === 'circle')
-            return `<circle cx="${f(bcx)}" cy="${f(bcy)}" r="${f(bR)}" fill="black"/>`;
+            return `<ellipse cx="${f(bcx)}" cy="${f(bcy)}" rx="${f(bw/2)}" ry="${f(bh/2)}" fill="black"/>`;
         if (shape === 'ellipse')
             return `<ellipse cx="${f(bcx)}" cy="${f(bcy)}" rx="${f(bw/2)}" ry="${f(bh*0.38)}" fill="black"/>`;
         if (shape === 'heart') {
@@ -226,12 +225,12 @@ window.LapisStudioEngine = (() => {
             return `<path d="${d}" fill="black"/>`;
         }
         if (shape === 'star') {
-            const R = bR * 0.92, r = R * 0.42;
+            const rx = bw * 0.46, ry = bh * 0.46;
             const pts = [];
             for (let i = 0; i < 10; i++) {
                 const a = (i * Math.PI) / 5 - Math.PI / 2;
-                const rad = i % 2 === 0 ? R : r;
-                pts.push(`${f(bcx + rad * Math.cos(a))},${f(bcy + rad * Math.sin(a))}`);
+                const rad = i % 2 === 0 ? 1 : 0.42;
+                pts.push(`${f(bcx + rx * rad * Math.cos(a))},${f(bcy + ry * rad * Math.sin(a))}`);
             }
             return `<polygon points="${pts.join(' ')}" fill="black"/>`;
         }

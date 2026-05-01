@@ -114,6 +114,7 @@ Engine and FX:
 - `js/fx/lapis_fx_collage.js`: collage layouts and rendering.
 - `js/fx/lapis_fx_shatter.js`: glass/shatter effects with depth and reflections.
 - `js/fx/lapis_fx_jigsaw.js`: jigsaw variants with shadow and depth rendering.
+- `js/lapis_studio_jigsaw_manual.js`: manual jigsaw piece arrangement state and pointer handling.
 - `js/fx/lapis_fx_text.js`: text overlay.
 - `js/fx/lapis_fx_sticker.js`: built-in sticker overlays.
 
@@ -124,6 +125,12 @@ Flow:
 3. Crop/collage/effects render to canvas.
 4. Export produces PNG output.
 5. Download uses the File System Access API when available, then falls back to the FX base helper's blob download path.
+
+Technical highlights:
+
+- Non-uniform cropping lets special masks such as heart and star stretch independently by width and height.
+- High-fidelity jigsaw rendering uses Bezier tab/blank piece paths, depth strokes, shadows, and optional manual arrangement across all jigsaw variants.
+- Text and sticker overlays support drag, scale, rotate, and local Death Note font files in `assets/fonts/`.
 
 Known Studio limitations:
 

@@ -36,6 +36,7 @@
     <script src="./js/fx/lapis_fx_text.js" defer></script>
     <script src="./js/fx/lapis_fx_sticker.js" defer></script>
     <script src="./js/fx/lapis_fx_base.js" defer></script>
+    <script src="./js/lapis_studio_jigsaw_manual.js" defer></script>
     <script src="./js/lapis_studio_ui.js" defer></script>
 </head>
 <body>
@@ -85,6 +86,41 @@
             <img :src="resultUrl || imageUrl"
                  class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                  style="pointer-events:none;user-select:none;">
+            <div v-if="sandboxActive"
+                 id="fx-sandbox-layer"
+                 class="fx-sandbox-layer"
+                 @pointermove="moveSandbox"
+                 @pointerup="endSandbox"
+                 @pointercancel="endSandbox">
+                <div class="fx-sandbox-box"
+                     :style="sandboxBoxStyle"
+                     @pointermove="moveSandbox"
+                     @pointerup="endSandbox"
+                     @pointerdown.stop="beginSandboxMove">
+                    <div class="fx-rotate-handle"
+                         @pointermove="moveSandbox"
+                         @pointerup="endSandbox"
+                         @pointerdown.stop="beginSandboxRotate"></div>
+                    <div class="fx-scale-handle"
+                         @pointermove="moveSandbox"
+                         @pointerup="endSandbox"
+                         @pointerdown.stop="beginSandboxScale"></div>
+                </div>
+            </div>
+            <div v-if="jigsawManualActive"
+                 id="jigsaw-manual-layer"
+                 class="jigsaw-manual-layer"
+                 @pointermove="moveJigsawPiece"
+                 @pointerup="endJigsawPieceDrag"
+                 @pointercancel="endJigsawPieceDrag">
+                <button v-for="piece in jigsawLayout"
+                        :key="piece.id"
+                        type="button"
+                        class="jigsaw-piece-hotspot"
+                        :style="jigsawPieceStyle(piece)"
+                        @pointerdown.stop="beginJigsawPieceDrag(piece, $event)">
+                </button>
+            </div>
         </div>
 
         <!-- C: Crop workspace (manual crop mode) -->
@@ -229,11 +265,25 @@
 
                 <!-- Jigsaw -->
                 <template v-else-if="effectCategory === 'jigsaw'">
+                    <select v-model.number="jigsawGrid"
+                            @change="onJigsawGridChange"
+                            class="fx-select"
+                            title="Pieces">
+                        <option v-for="n in [3,4,5,6]" :key="n" :value="n">
+                            {{ n }}x{{ n }}
+                        </option>
+                    </select>
                     <button v-for="v in jigsawVariants" :key="v.key"
                             @click="applyEffectFilter(v.key)"
                             class="fx-chip"
                             :class="{ 'is-active': activeEffect === v.key }">
                         {{ t[v.tKey] }}
+                    </button>
+                    <button type="button"
+                            @click="toggleJigsawManual"
+                            class="fx-chip"
+                            :class="{ 'is-active': jigsawManual }">
+                        Manual
                     </button>
                 </template>
 
@@ -248,7 +298,32 @@
                         <option value="Georgia, serif">Georgia</option>
                         <option value="'Courier New', monospace">Courier</option>
                         <option value="Impact, fantasy">Impact</option>
+                        <option value="KaiTi, 'DFKai-SB', serif">KaiTi</option>
+                        <option value="PMingLiU, serif">PMingLiU</option>
+                        <option value="'Death Note Font', fantasy">Death Note</option>
+                        <option value="'Death Note Font 2', fantasy">Death Note 2</option>
                     </select>
+                    <button type="button"
+                            @click="textConfig.bold = !textConfig.bold"
+                            class="fx-style-btn"
+                            :class="{ 'is-active': textConfig.bold }"
+                            title="Bold">
+                        <i data-lucide="bold" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button"
+                            @click="textConfig.italic = !textConfig.italic"
+                            class="fx-style-btn"
+                            :class="{ 'is-active': textConfig.italic }"
+                            title="Italic">
+                        <i data-lucide="italic" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button"
+                            @click="textConfig.strike = !textConfig.strike"
+                            class="fx-style-btn"
+                            :class="{ 'is-active': textConfig.strike }"
+                            title="Strikethrough">
+                        <i data-lucide="strikethrough" class="w-4 h-4"></i>
+                    </button>
                     <input type="color" v-model="textConfig.color"
                            class="fx-color-swatch" title="文字顏色">
                     <button @click="applyText"
@@ -260,6 +335,12 @@
 
                 <!-- Stickers -->
                 <template v-else>
+                    <button v-for="cat in stickerCategoryList" :key="cat.key"
+                            @click="stickerCategory = cat.key"
+                            class="fx-sticker-category"
+                            :class="{ 'is-active': stickerCategory === cat.key }">
+                        {{ cat.label }}
+                    </button>
                     <button v-for="emoji in stickerList" :key="emoji"
                             @click="applySticker(emoji)"
                             class="fx-sticker-btn"

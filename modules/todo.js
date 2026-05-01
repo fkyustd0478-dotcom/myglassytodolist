@@ -933,7 +933,12 @@ try {
 
             // navSettings persistence is handled per-mutation via StorageProvider.saveCommonSettings.
 
-            watch(currentListId, () => scrollActiveTabIntoView());
+            watch(currentListId, () => {
+                scrollActiveTabIntoView();
+                nextTick(() => {
+                    if (window.lucide) lucide.createIcons();
+                });
+            });
 
             watch([todos, lists], () => {
                 StorageProvider.saveData({ todos: todos.value, lists: lists.value });

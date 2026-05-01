@@ -40,6 +40,7 @@ Lapis is a browser-only Vue application served as static files. Pages are indepe
 - `js/nav.js`: Vue navigation state.
 - `js/lapis_core_ui.js`: nav and modal UI systems.
 - `modules/data_portability.js`: data import/export conversion.
+- `js/lapis_studio_jigsaw_manual.js`: Studio-only manual jigsaw arrangement helper.
 
 ## Page Modules
 
@@ -56,7 +57,7 @@ Lapis is a browser-only Vue application served as static files. Pages are indepe
 ## Dependency Notes
 
 - `workout.html` must load workout helper modules before `modules/workout.js`.
-- `studio.html` must load FX modules before `js/lapis_studio_ui.js`.
+- `studio.html` must load FX modules and `js/lapis_studio_jigsaw_manual.js` before `js/lapis_studio_ui.js`.
 - `i18n.js` must load before modules that register local dictionaries.
 - `auth.js` is loaded as a module and is independent from app data.
 
@@ -66,4 +67,3 @@ Lapis is a browser-only Vue application served as static files. Pages are indepe
 - No cloud data sync.
 - No Firestore or database integration.
 - No server authentication gate.
-
