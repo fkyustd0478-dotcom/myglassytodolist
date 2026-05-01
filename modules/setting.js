@@ -41,9 +41,21 @@ createApp({
                 : key;
         const dataIoInput = ref(null);
         const dataIoType = ref('todo');
+        const dataIoShiftImportKind = ref('shift');
         const dataIoExportFormat = ref('csv');
         const dataIoMessage = ref('');
         const dataIoError = ref('');
+        const userProfile = ref(
+            typeof LapisUserProfile !== 'undefined'
+                ? LapisUserProfile.get()
+                : { nickname: '', birthday: '' }
+        );
+        const profileMessage = ref('');
+        const authUser = ref(null);
+        const authEmail = ref('');
+        const authPassword = ref('');
+        const authMessage = ref('');
+        const authError = ref('');
         const dataIoTypes = [
             {
                 id: 'todo', label: 'Todo 事項', short: '任務與日期',
@@ -58,12 +70,12 @@ createApp({
             {
                 id: 'workoutLibrary', label: '運動庫', short: '動作資料',
                 csv: 'CSV: name,nameZh,categories,type,preferredUnit,description,targetMuscles',
-                txt: 'TXT: Bench Press,Chest;Triceps,sets,kg',
+                txt: 'TXT: Bench Press,槓鈴臥推,sets,kg,Chest:Triceps',
             },
             {
                 id: 'shift', label: '輪班表', short: '班別與標籤',
                 csv: 'CSV: date,shifts,pays,others,note',
-                txt: 'TXT: 2026-04-29 | shifts=Early | pays=Salary | others=Holiday | note=Morning',
+                txt: 'TXT: 2026-05-01,早班 / 2026-05-01,健身',
             },
         ];
 
@@ -71,8 +83,8 @@ createApp({
             ...type,
             label: i18nT(`settings.dataIo.types.${type.id}.label`),
             short: i18nT(`settings.dataIo.types.${type.id}.short`),
-            csv: i18nT(`settings.dataIo.types.${type.id}.csv`),
-            txt: i18nT(`settings.dataIo.types.${type.id}.txt`),
+            csv: type.csv,
+            txt: type.txt,
         })));
 
         const dataIoCurrentInfo = computed(() =>
@@ -341,7 +353,9 @@ createApp({
             const reader = new FileReader();
             reader.onload = (ev) => {
                 try {
-                    const result = LapisDataPortability.importText(dataIoType.value, ev.target.result);
+                    const result = LapisDataPortability.importText(dataIoType.value, ev.target.result, {
+                        shiftImportKind: dataIoShiftImportKind.value
+                    });
                     dataIoMessage.value = `匯入完成：新增 ${result.added} 筆，格式 ${result.format.toUpperCase()}。`;
                 } catch (err) {
                     dataIoError.value = err.message || '匯入失敗，請檢查檔案格式。';
@@ -353,6 +367,27 @@ createApp({
             reader.readAsText(file);
         };
 
+        function _exportTimestamp() {
+            const now = new Date();
+            return `${toLocalISO(now)}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+        }
+
+        function _downloadExportText(type, format, text) {
+            const mime = format === 'csv' ? 'text/csv;charset=utf-8' : 'text/plain;charset=utf-8';
+            const blob = new Blob([text], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `lapis_${type}_${_exportTimestamp()}.${format}`;
+            link.href = url;
+            link.style.cssText = 'position:fixed;top:-100px;left:0;width:0;height:0;display:block;';
+            document.body.appendChild(link);
+            try { link.click(); } catch (_) {}
+            setTimeout(() => {
+                if (document.body.contains(link)) document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 200);
+        }
+
         const exportDataFile = () => {
             _clearDataIoStatus();
             if (typeof LapisDataPortability === 'undefined') {
@@ -362,15 +397,7 @@ createApp({
             try {
                 const format = dataIoExportFormat.value;
                 const text = LapisDataPortability.exportText(dataIoType.value, format);
-                const blob = new Blob([text], { type: format === 'csv' ? 'text/csv;charset=utf-8' : 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `lapis-${dataIoType.value}.${format}`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
+                _downloadExportText(dataIoType.value, format, text);
                 dataIoMessage.value = `匯出完成：${dataIoCurrentInfo.value.label} ${format.toUpperCase()}。`;
             } catch (err) {
                 dataIoError.value = err.message || '匯出失敗。';
@@ -418,6 +445,69 @@ createApp({
         });
 
         let _mqCleanup = null;
+        let _authCleanup = null;
+
+        const _setAuthStatus = (message, error = '') => {
+            authMessage.value = message;
+            authError.value = error;
+        };
+
+        const _authErrorMessage = (error) =>
+            error && error.message ? error.message : 'Authentication failed.';
+
+        const saveUserProfile = () => {
+            try {
+                if (typeof LapisUserProfile === 'undefined') throw new Error('Profile storage is not available.');
+                userProfile.value = LapisUserProfile.save(userProfile.value);
+                profileMessage.value = 'Profile saved.';
+                authError.value = '';
+            } catch (error) {
+                profileMessage.value = '';
+                authError.value = error.message || 'Profile save failed.';
+            }
+        };
+
+        const loginWithGoogle = async () => {
+            try {
+                _setAuthStatus('');
+                authUser.value = await AuthProvider.loginWithGoogle();
+                _setAuthStatus('Signed in with Google.');
+            } catch (error) {
+                _setAuthStatus('', _authErrorMessage(error));
+            }
+        };
+
+        const loginWithEmail = async () => {
+            try {
+                _setAuthStatus('');
+                authUser.value = await AuthProvider.loginWithEmail(authEmail.value, authPassword.value);
+                authPassword.value = '';
+                _setAuthStatus('Signed in.');
+            } catch (error) {
+                _setAuthStatus('', _authErrorMessage(error));
+            }
+        };
+
+        const signupWithEmail = async () => {
+            try {
+                _setAuthStatus('');
+                authUser.value = await AuthProvider.signupWithEmail(authEmail.value, authPassword.value);
+                authPassword.value = '';
+                _setAuthStatus('Account created.');
+            } catch (error) {
+                _setAuthStatus('', _authErrorMessage(error));
+            }
+        };
+
+        const logoutAuth = async () => {
+            try {
+                _setAuthStatus('');
+                authUser.value = await AuthProvider.logout();
+                _setAuthStatus('Signed out.');
+            } catch (error) {
+                _setAuthStatus('', _authErrorMessage(error));
+            }
+        };
 
         watch(navDropdownOpen, () => nextTick(() => { if (window.lucide) lucide.createIcons(); }));
 
@@ -440,9 +530,20 @@ createApp({
                     else mq.removeListener(handler);
                 };
             }
+
+            if (typeof AuthProvider !== 'undefined') {
+                if (AuthProvider.onChange) {
+                    _authCleanup = AuthProvider.onChange((user) => { authUser.value = user; });
+                } else {
+                    authUser.value = AuthProvider.getUser();
+                }
+            }
         });
 
-        onUnmounted(() => { if (_mqCleanup) _mqCleanup(); });
+        onUnmounted(() => {
+            if (_mqCleanup) _mqCleanup();
+            if (_authCleanup) _authCleanup();
+        });
 
         return {
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
@@ -454,9 +555,12 @@ createApp({
             triggerDataImport, handleDataImport, exportDataFile,
             availableCategories, toggleCatChart,
             showImportGuide,
-            dataIoInput, dataIoType, dataIoExportFormat,
+            dataIoInput, dataIoType, dataIoShiftImportKind, dataIoExportFormat,
             dataIoTypes: dataIoLocalizedTypes, dataIoCurrentInfo,
             dataIoMessage, dataIoError,
+            userProfile, saveUserProfile, profileMessage,
+            authUser, authEmail, authPassword, authMessage, authError,
+            loginWithGoogle, loginWithEmail, signupWithEmail, logoutAuth,
             i18nT,
         };
     }

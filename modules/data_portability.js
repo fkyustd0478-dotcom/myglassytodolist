@@ -23,14 +23,16 @@ window.LapisDataPortability = (() => {
         workoutLibrary: {
             label: 'Workout Library',
             csvHeader: ['name', 'nameZh', 'categories', 'type', 'preferredUnit', 'description', 'targetMuscles'],
-            txtHint: 'Bench Press,Chest;Triceps,sets,kg',
+            txtHint: 'Bench Press,槓鈴臥推,sets,kg,Chest:Triceps',
         },
         shift: {
             label: 'Shift',
             csvHeader: ['date', 'shifts', 'pays', 'others', 'note'],
-            txtHint: '2026-04-29 | shifts=Early | pays=Salary | others=Holiday | note=Morning',
+            txtHint: '2026-05-01,早班',
         },
     };
+
+    const SHIFT_TAG_COLORS = ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444', '#14b8a6', '#ec4899'];
 
     function _uid(prefix) {
         return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -67,6 +69,22 @@ window.LapisDataPortability = (() => {
             .split(';')
             .map(v => v.trim())
             .filter(Boolean);
+    }
+
+    function _splitCategoryPath(value) {
+        return String(value || '')
+            .split(':')
+            .map(v => v.trim())
+            .filter(Boolean);
+    }
+
+    function _normalizeExerciseType(value) {
+        const v = String(value || '').trim().toLowerCase();
+        return v === 'time' || v === 'duration' ? 'duration' : 'sets';
+    }
+
+    function _nextShiftColor(index) {
+        return SHIFT_TAG_COLORS[index % SHIFT_TAG_COLORS.length];
     }
 
     function _escapeCsv(value) {
@@ -127,11 +145,18 @@ window.LapisDataPortability = (() => {
         });
     }
 
-    function _rowsFromTxt(type, text) {
+    function _rowsFromTxt(type, text, options = {}) {
         const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
         if (!lines.length) throw new Error('TXT has no rows.');
         if (type === 'shift') {
             return lines.map(line => {
+                if (!line.includes('|')) {
+                    const cells = _parseCsvLine(line);
+                    const row = { date: cells[0] };
+                    if (options.shiftImportKind === 'misc') row.others = cells[1];
+                    else row.shifts = cells[1];
+                    return row;
+                }
                 const row = {};
                 line.split('|').map(p => p.trim()).forEach((part, i) => {
                     if (i === 0 && _isDate(part)) row.date = part;
@@ -151,16 +176,17 @@ window.LapisDataPortability = (() => {
             }
             return {
                 name: cells[0],
-                categories: cells[1],
-                type: cells[2],
+                nameZh: cells[1],
+                type: _normalizeExerciseType(cells[2]),
                 preferredUnit: cells[3],
+                categories: _splitCategoryPath(cells[4]),
             };
         });
     }
 
-    function _rows(type, format, text) {
+    function _rows(type, format, text, options = {}) {
         if (format === 'json') return JSON.parse(text);
-        return format === 'csv' ? _rowsFromCsv(text) : _rowsFromTxt(type, text);
+        return format === 'csv' ? _rowsFromCsv(text) : _rowsFromTxt(type, text, options);
     }
 
     function _validateRows(type, rows) {
@@ -249,12 +275,13 @@ window.LapisDataPortability = (() => {
         rows.forEach(row => {
             const name = String(row.name).trim();
             const idx = exercises.findIndex(e => String(e.name).toLowerCase() === name.toLowerCase());
+            const type = _normalizeExerciseType(row.type);
             const payload = {
                 name,
                 nameZh: row.nameZh || '',
-                categories: _splitList(row.categories),
-                type: row.type || 'sets',
-                preferredUnit: row.preferredUnit || (row.type === 'duration' ? undefined : 'kg'),
+                categories: Array.isArray(row.categories) ? row.categories : _splitList(row.categories),
+                type,
+                preferredUnit: type === 'duration' ? undefined : (row.preferredUnit || 'kg'),
                 description: row.description || '',
                 targetMuscles: row.targetMuscles || '',
             };
@@ -297,7 +324,8 @@ window.LapisDataPortability = (() => {
 
             _splitList(row.shifts).forEach(name => {
                 const tag = _findOrCreateByName(settings.shiftTags, name, n => ({
-                    id: _uid('shift'), name: n, startTime: '08:00', endTime: '17:00', color: '#3b82f6',
+                    id: _uid('shift'), name: n, startTime: '08:00', endTime: '17:00',
+                    color: _nextShiftColor(settings.shiftTags.length),
                 }));
                 if (tag && !data[date].shiftIds.includes(tag.id)) data[date].shiftIds.push(tag.id);
             });
@@ -323,10 +351,10 @@ window.LapisDataPortability = (() => {
         return { added };
     }
 
-    function importText(type, text) {
+    function importText(type, text, options = {}) {
         if (!TYPES[type]) throw new Error('Unknown import type.');
         const format = _detectFormat(type, text);
-        const parsed = _rows(type, format, text);
+        const parsed = _rows(type, format, text, options);
         const rows = format === 'json'
             ? (type === 'todo' ? (parsed.todos || parsed) : type === 'weight' ? (parsed.weights || parsed) : parsed)
             : parsed;
@@ -388,6 +416,18 @@ window.LapisDataPortability = (() => {
         const header = TYPES[type].csvHeader;
         const rows = _exportRows(type);
         if (format === 'csv') return [header.join(','), ...rows.map(r => _csvLine(header.map(h => r[h] || '')))].join('\n');
+        if (type === 'workoutLibrary') {
+            return rows.map(r => _csvLine([
+                r.name,
+                r.nameZh,
+                r.type === 'duration' ? 'time' : 'sets',
+                r.preferredUnit || '',
+                String(r.categories || '').replace(/;/g, ':')
+            ])).join('\n');
+        }
+        if (type === 'shift') {
+            return rows.map(r => _csvLine([r.date, r.shifts, r.others])).join('\n');
+        }
         return rows.map(r => header.map(h => r[h] || '').join(',')).join('\n');
     }
 

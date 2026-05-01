@@ -25,6 +25,7 @@
     </style>
     <script src="./js/effects.js" defer></script>
     <script src="./js/storage.js" defer></script>
+    <script src="./js/user_profile.js" defer></script>
     <script src="./js/firebase_config.js" defer></script>
     <script type="module" src="./js/auth.js"></script>
     <script src="./js/core_engine.js" defer></script>
@@ -50,7 +51,8 @@
 
     <!-- ── Calendar ─────────────────────────────────────────────────────── -->
     <div class="calendar-container level-2"
-         :style="{ paddingBottom: activeQuickTagCategory ? '165px' : '80px' }">
+         :class="{ 'quick-tags-open': activeQuickTagCategory }"
+         :style="{ paddingBottom: activeQuickTagCategory ? '128px' : '80px' }">
         <div class="calendar-header flex items-center justify-center gap-6">
             <button @click="changeMonth(-1)" class="glass p-2 rounded-full active:scale-90 transition-transform">
                 <i data-lucide="chevron-left" class="w-5 h-5"></i>
@@ -113,6 +115,10 @@
                 <!-- Date number + holiday tag in one row -->
                 <div class="day-header-row">
                     <span class="day-number">{{ day.date.getDate() }}</span>
+                    <span v-if="day.isUserBirthday" class="birthday-cake-stack" aria-label="Birthday">
+                        <span>🎂</span>
+                        <span>🎂</span>
+                    </span>
                     <span v-if="showHolidayTags && day.holiday" class="holiday-tag">{{ day.holiday }}</span>
                 </div>
                 <!-- Priority indicators: 1=Shift 2=Other 3=Payday 4=Pay -->
@@ -298,7 +304,7 @@
                         <input v-model="tag.color" type="color"
                                class="w-7 h-7 rounded-lg cursor-pointer shrink-0 border-none bg-transparent"
                                style="padding:1px">
-                        <button @click="removeShiftTag(tag.id)" class="text-red-400 shrink-0">
+                        <button @click="confirmDeleteTag('shift', tag.id)" class="text-red-400 shrink-0">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -328,7 +334,7 @@
                             <input v-model="tag.color" type="color"
                                    class="w-7 h-7 rounded-lg cursor-pointer shrink-0 border-none bg-transparent"
                                    style="padding:1px">
-                            <button @click="removeOtherTag(tag.id)" class="text-red-400 shrink-0">
+                            <button @click="confirmDeleteTag('other', tag.id)" class="text-red-400 shrink-0">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -417,7 +423,7 @@
                             <input v-model="job.color" type="color"
                                    class="w-7 h-7 rounded-lg cursor-pointer shrink-0 border-none bg-transparent"
                                    style="padding:1px">
-                            <button @click="removeJob(job.id)" class="text-red-400 shrink-0">
+                            <button @click="confirmDeleteTag('pay', job.id)" class="text-red-400 shrink-0">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>

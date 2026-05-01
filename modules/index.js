@@ -118,6 +118,11 @@ window.addEventListener('DOMContentLoaded', () => {
             }));
 
             const t = computed(() => getDashboardTranslations(navSettings.lang));
+            const userProfile = ref(
+                typeof LapisUserProfile !== 'undefined'
+                    ? LapisUserProfile.get()
+                    : { nickname: '', birthday: '' }
+            );
 
             const todayLabel = computed(() => {
                 const d   = new Date();
@@ -132,9 +137,9 @@ window.addEventListener('DOMContentLoaded', () => {
             const greeting = computed(() => {
                 const h = new Date().getHours();
                 const s = t.value;
-                if (h < 12) return s.greetMorn;
-                if (h < 18) return s.greetAftn;
-                return s.greetEvng;
+                const base = h < 12 ? s.greetMorn : h < 18 ? s.greetAftn : s.greetEvng;
+                const nickname = (userProfile.value.nickname || '').trim();
+                return nickname ? `${nickname}, ${base}` : base;
             });
 
             // ── Dashboard ─────────────────────────────────────────────────────
@@ -202,6 +207,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 window.addEventListener('storage', (e) => {
                     if (e.key === 'todo_data' || e.key === 'glassy_shift_data') {
                         dashboard.value = _loadDashboard();
+                    }
+                    if (e.key === 'lapis_user_profile' && typeof LapisUserProfile !== 'undefined') {
+                        userProfile.value = LapisUserProfile.get();
                     }
                 });
             });

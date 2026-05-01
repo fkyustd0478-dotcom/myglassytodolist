@@ -252,6 +252,11 @@ const app = createApp({
         const shiftData    = ref(StorageProvider.getShiftData());
         // Todo data synced from shared localStorage key (written by todo.js)
         const todoData     = ref(StorageProvider.getTodoData());
+        const userProfile  = ref(
+            typeof LapisUserProfile !== 'undefined'
+                ? LapisUserProfile.get()
+                : { nickname: '', birthday: '' }
+        );
 
         // ── UI state ─────────────────────────────────────────────────────────
         const activeQuickTag         = ref(null);
@@ -328,6 +333,9 @@ const app = createApp({
                     holiday: (typeof TAIWAN_HOLIDAYS !== 'undefined') ? (TAIWAN_HOLIDAYS[dateStr] || null) : null,
                     lunar:   (typeof LunarCalendar   !== 'undefined') ? LunarCalendar.gridLabel(dateStr)   : '',
                     isPayday: day.isCurrentMonth && effectivePaydayStr === dateStr,
+                    isUserBirthday: day.isCurrentMonth
+                        && typeof LapisUserProfile !== 'undefined'
+                        && LapisUserProfile.birthdayMatches(dateStr, userProfile.value.birthday),
                     // Date-based Other tags (array of tag objects)
                     otherTagsOnDay: otherTagsByDate[dateStr] || [],
                     // Todo glow dots (capped at 3)
@@ -708,6 +716,9 @@ const app = createApp({
             window.addEventListener('storage', (e) => {
                 if (e.key === 'todo_data' && e.newValue) {
                     try { todoData.value = JSON.parse(e.newValue); } catch (_) {}
+                }
+                if (e.key === 'lapis_user_profile' && typeof LapisUserProfile !== 'undefined') {
+                    userProfile.value = LapisUserProfile.get();
                 }
             });
 

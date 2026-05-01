@@ -22,6 +22,7 @@
 
     <script src="./js/effects.js" defer></script>
     <script src="./js/storage.js" defer></script>
+    <script src="./js/user_profile.js" defer></script>
     <script src="./js/firebase_config.js" defer></script>
     <script type="module" src="./js/auth.js"></script>
     <script src="./js/core_engine.js" defer></script>
@@ -329,37 +330,131 @@
 
             <!-- ── User Tab ────────────────────────────────────────────────── -->
             <div v-show="settingsTab === 'user'" class="space-y-4">
+                <!-- User Profile -->
+                <div class="glass rounded-3xl p-5 space-y-4" :style="glassStyle">
+                    <div class="flex items-center gap-2 opacity-40">
+                        <i data-lucide="user-circle" class="w-4 h-4"></i>
+                        <h3 class="text-[10px] font-black uppercase tracking-widest">User Profile</h3>
+                    </div>
+
+                    <div class="rounded-2xl p-3 space-y-1"
+                         :style="isDarkTheme ? 'background:rgba(0,0,0,0.22)' : 'background:rgba(0,0,0,0.05)'">
+                        <p class="text-xs font-black opacity-70">
+                            {{ authUser ? 'Signed in' : 'Not signed in' }}
+                        </p>
+                        <p class="text-[11px] opacity-60 break-all">
+                            {{ authUser ? (authUser.email || authUser.uid) : 'Firebase account is optional.' }}
+                        </p>
+                        <p v-if="authUser && authUser.uid" class="text-[10px] opacity-40 break-all">
+                            ID: {{ authUser.uid }}
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input v-model="userProfile.nickname"
+                               type="text"
+                               maxlength="80"
+                               placeholder="Nickname"
+                               class="rounded-2xl px-3 py-3 text-sm font-bold outline-none"
+                               :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
+                        <input v-model="userProfile.birthday"
+                               type="date"
+                               class="rounded-2xl px-3 py-3 text-sm font-bold outline-none"
+                               :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
+                    </div>
+
+                    <button @click="saveUserProfile"
+                            class="w-full h-12 rounded-2xl bg-blue-600 text-white text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        Save Profile
+                    </button>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input v-model="authEmail"
+                               type="email"
+                               placeholder="Email"
+                               class="rounded-2xl px-3 py-3 text-sm font-bold outline-none"
+                               :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
+                        <input v-model="authPassword"
+                               type="password"
+                               placeholder="Password"
+                               class="rounded-2xl px-3 py-3 text-sm font-bold outline-none"
+                               :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button @click="loginWithEmail"
+                                class="h-11 rounded-2xl glass text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                                :style="glassStyle">
+                            <i data-lucide="log-in" class="w-4 h-4"></i>
+                            Login
+                        </button>
+                        <button @click="signupWithEmail"
+                                class="h-11 rounded-2xl glass text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                                :style="glassStyle">
+                            <i data-lucide="user-plus" class="w-4 h-4"></i>
+                            Sign Up
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button @click="loginWithGoogle"
+                                class="h-11 rounded-2xl bg-blue-600 text-white text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                            <i data-lucide="chrome" class="w-4 h-4"></i>
+                            Google
+                        </button>
+                        <button @click="logoutAuth"
+                                class="h-11 rounded-2xl glass text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                                :style="glassStyle">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                            Logout
+                        </button>
+                    </div>
+
+                    <div v-if="profileMessage || authMessage"
+                         class="rounded-2xl px-3 py-2 text-xs font-bold"
+                         style="background:rgba(34,197,94,0.16);color:#16a34a">
+                        {{ profileMessage || authMessage }}
+                    </div>
+                    <div v-if="authError"
+                         class="rounded-2xl px-3 py-2 text-xs font-bold"
+                         style="background:rgba(239,68,68,0.16);color:#ef4444">
+                        {{ authError }}
+                    </div>
+                </div>
                 <!-- Data Management -->
                 <div class="glass rounded-3xl p-5 space-y-4" :style="glassStyle">
                     <div class="flex items-center gap-2 opacity-40">
                         <i data-lucide="database" class="w-4 h-4"></i>
                         <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.dataSection }}</h3>
                     </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-bold">{{ i18nT('settings.dataIo.title') }}</span>
-                        <button @click="showImportGuide = true"
-                                class="flex items-center gap-1.5 px-4 py-2 rounded-full glass text-xs font-black opacity-70 hover:opacity-100 transition-opacity"
-                                :style="glassStyle">
-                            <i data-lucide="info" class="w-3.5 h-3.5"></i>
-                            {{ t.importGuideBtn }}
-                        </button>
+                    <p class="text-sm font-bold">{{ i18nT('settings.dataIo.title') }}</p>
+
+                    <div class="space-y-2">
+                        <select v-model="dataIoType"
+                                class="w-full rounded-2xl px-3 py-3 text-sm font-black outline-none"
+                                :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
+                            <option v-for="type in dataIoTypes" :key="type.id" :value="type.id">
+                                {{ type.label }}
+                            </option>
+                        </select>
+                        <p class="text-[10px] opacity-50">{{ dataIoCurrentInfo.short }}</p>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2">
-                        <button v-for="type in dataIoTypes" :key="type.id"
-                                @click="dataIoType = type.id"
-                                class="rounded-2xl px-3 py-3 text-left border-2 transition-all"
-                                :class="dataIoType === type.id ? 'border-blue-500 bg-blue-500/10' : inactiveBtn">
-                            <p class="text-xs font-black">{{ type.label }}</p>
-                            <p class="text-[10px] opacity-50 mt-1">{{ type.short }}</p>
-                        </button>
+                    <div v-if="dataIoType === 'shift'" class="space-y-2">
+                        <select v-model="dataIoShiftImportKind"
+                                class="w-full rounded-2xl px-3 py-3 text-sm font-black outline-none"
+                                :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
+                            <option value="shift">匯入為班別</option>
+                            <option value="misc">匯入為雜項</option>
+                        </select>
                     </div>
 
                     <div class="rounded-2xl p-3 space-y-2"
                          :style="isDarkTheme ? 'background:rgba(0,0,0,0.22)' : 'background:rgba(0,0,0,0.05)'">
                         <p class="text-xs font-black opacity-70">{{ dataIoCurrentInfo.label }}</p>
-                        <p class="text-[11px] opacity-60 leading-relaxed">{{ dataIoCurrentInfo.csv }}</p>
-                        <p class="text-[11px] opacity-60 leading-relaxed">{{ dataIoCurrentInfo.txt }}</p>
+                        <p class="text-[11px] opacity-60 leading-relaxed break-all">{{ dataIoCurrentInfo.csv }}</p>
+                        <p class="text-[11px] opacity-60 leading-relaxed break-all">{{ dataIoCurrentInfo.txt }}</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">

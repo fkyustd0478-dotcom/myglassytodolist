@@ -3,6 +3,7 @@
 import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js';
 import {
     browserLocalPersistence,
+    createUserWithEmailAndPassword,
     getAuth,
     GoogleAuthProvider,
     onAuthStateChanged,
@@ -21,6 +22,8 @@ const authState = {
     initPromise: null
 };
 
+const authListeners = new Set();
+
 function toPublicUser(user) {
     if (!user) return null;
     return {
@@ -35,6 +38,9 @@ function toPublicUser(user) {
 
 function setCurrentUser(user) {
     authState.user = toPublicUser(user);
+    authListeners.forEach((callback) => {
+        try { callback(authState.user); } catch (_) {}
+    });
 }
 
 function getConfig() {
@@ -79,6 +85,14 @@ const AuthProvider = {
         return authState.user;
     },
 
+    async signupWithEmail(email, password) {
+        if (!email || !password) throw new Error('Email and password are required.');
+        await initAuth();
+        const result = await createUserWithEmailAndPassword(requireAuth(), email, password);
+        setCurrentUser(result.user);
+        return authState.user;
+    },
+
     async logout() {
         await initAuth();
         await signOut(requireAuth());
@@ -92,6 +106,13 @@ const AuthProvider = {
 
     isLoggedIn() {
         return !!authState.user;
+    },
+
+    onChange(callback) {
+        authListeners.add(callback);
+        callback(authState.user);
+        initAuth().catch((error) => console.warn('[AuthProvider] init failed:', error));
+        return () => authListeners.delete(callback);
     }
 };
 
