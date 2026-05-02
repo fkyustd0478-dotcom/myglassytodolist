@@ -157,17 +157,26 @@
             </div>
         </div>
 
-        <!-- D: Pro-Collage workspace — 6-layout grid with per-cell tap-to-fill -->
+        <!-- D: PicCollage-style freeform workspace -->
         <div v-show="contentView === 'collage'"
              class="flex-1 flex flex-col overflow-hidden">
-            <!-- Layout selector strip -->
-            <div class="shrink-0 flex gap-2 px-3 py-2 overflow-x-auto"
-                 style="scrollbar-width:none;">
-                <button v-for="(lyt, key) in collageLayouts" :key="key"
-                        @click="setCollageLayout(key)"
-                        class="collage-layout-btn"
-                        :class="{ 'is-active': collageLayout === key }">
-                    {{ lyt.label }}
+            <div class="shrink-0 flex gap-2 px-3 py-2 overflow-x-auto no-scrollbar">
+                <button type="button" class="collage-layout-btn is-active"
+                        @click="triggerCellInput(0)">
+                    <i data-lucide="image-plus" class="w-4 h-4"></i>
+                    Add
+                </button>
+                <button type="button" class="collage-layout-btn"
+                        @click="nudgeCollageLayer(1)">
+                    <i data-lucide="bring-to-front" class="w-4 h-4"></i>
+                </button>
+                <button type="button" class="collage-layout-btn"
+                        @click="nudgeCollageLayer(-1)">
+                    <i data-lucide="send-to-back" class="w-4 h-4"></i>
+                </button>
+                <button type="button" class="collage-layout-btn"
+                        @click="deleteCollageItem">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
             </div>
             <div class="shrink-0 grid grid-cols-2 gap-2 px-3 pb-2">
@@ -178,47 +187,50 @@
                            @input="syncCollageScale">
                 </label>
                 <label class="collage-control">
-                    <span>Gap {{ collageGap }}px</span>
-                    <input type="range" min="0" max="5" step="1"
-                           v-model.number="collageGap">
+                    <span>Mask</span>
+                    <select v-model="collageMask"
+                            @change="setCollageItemMask(collageMask)">
+                        <option value="square">Square</option>
+                        <option value="circle">Circle</option>
+                        <option value="heart">Heart</option>
+                    </select>
+                </label>
+                <label class="collage-control">
+                    <span>Background</span>
+                    <input type="color" v-model="collageBg">
                 </label>
             </div>
             <div class="flex-1 flex items-center justify-center p-3 overflow-hidden">
-                <div class="duo-collage-preview"
-                     :class="'layout-' + collageLayout">
-                    <div v-for="(slot, ci) in collageSlots" :key="ci"
-                         class="collage-cell duo-slot"
-                         :class="{ 'is-active': activeCollageSlot === ci, 'is-fixed': slot.fixed }"
-                         :style="collageSlotFrameStyle(slot, ci)"
-                         @click="slot.sourceImage ? selectCollageSlot(ci) : triggerCellInput(ci)"
-                         @dblclick="triggerCellInput(ci)"
-                         @pointerdown="beginCollageSlotDrag(ci, $event)"
+                <div class="pic-collage-canvas"
+                     :style="{ background: collageBg }"
+                     @dblclick="triggerCellInput(0)">
+                    <div v-if="!collageItems.length"
+                         class="pic-collage-empty"
+                         @click="triggerCellInput(0)">
+                        <i data-lucide="image-plus" class="w-9 h-9 opacity-45"></i>
+                        <span class="text-xs opacity-45">Add photos</span>
+                    </div>
+                    <div v-for="(item, ci) in collageItems" :key="ci"
+                         class="pic-collage-item"
+                         :class="{ 'is-active': activeCollageSlot === ci }"
+                         :style="collageItemStyle(item)"
+                         @click.stop="selectCollageItem(ci)"
+                         @pointerdown.stop="beginCollageItemDrag(ci, 'item-move', $event)"
                          @pointermove="moveCollageSlot"
                          @pointerup="endCollageSlot"
                          @pointercancel="endCollageSlot">
-                        <img v-if="slot.sourceImage" :src="slot.sourceImage"
-                             :style="collageSlotStyle(slot)"
+                        <img :src="item.sourceImage"
                              class="absolute inset-0 w-full h-full object-cover pointer-events-none">
-                        <div v-else class="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                            <i data-lucide="plus-circle" class="w-7 h-7 opacity-35"></i>
-                            <span class="text-xs opacity-35">{{ ci + 1 }}</span>
-                        </div>
                         <button type="button"
-                                class="collage-lock-btn"
-                                @click.stop="toggleCollageFixed(ci)">
-                            <i :data-lucide="slot.fixed ? 'lock' : 'unlock'" class="w-3 h-3"></i>
-                        </button>
-                        <button type="button"
-                                class="collage-slot-move"
-                                @pointerdown.stop="beginCollageSlotMove(ci, $event)"
+                                class="collage-rotate-handle"
+                                @pointerdown.stop="beginCollageItemDrag(ci, 'item-rotate', $event)"
                                 @pointermove="moveCollageSlot"
                                 @pointerup="endCollageSlot"
                                 @pointercancel="endCollageSlot">
-                            <i data-lucide="move" class="w-3 h-3"></i>
                         </button>
                         <button type="button"
-                                class="collage-slot-resize"
-                                @pointerdown.stop="beginCollageSlotResize(ci, $event)"
+                                class="collage-scale-handle"
+                                @pointerdown.stop="beginCollageItemDrag(ci, 'item-scale', $event)"
                                 @pointermove="moveCollageSlot"
                                 @pointerup="endCollageSlot"
                                 @pointercancel="endCollageSlot">
@@ -574,7 +586,7 @@
 
     <!-- Hidden file inputs -->
     <input id="studio-file-input"  type="file" accept="image/*" class="hidden" @change="handleFileInput">
-    <input id="collage-cell-input" type="file" accept="image/*" class="hidden" @change="onCellFileInput">
+    <input id="collage-cell-input" type="file" accept="image/*" multiple class="hidden" @change="onCellFileInput">
 
 </div>
 </body>

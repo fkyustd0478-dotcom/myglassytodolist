@@ -271,6 +271,55 @@ window.LapisFXCollage = (() => {
         return cvs;
     }
 
+    function _freeformMask(ctx, mask, size) {
+        const s = size / 2;
+        ctx.beginPath();
+        if (mask === 'circle') {
+            ctx.arc(0, 0, s, 0, Math.PI * 2);
+        } else if (mask === 'heart') {
+            ctx.save();
+            ctx.scale(size * 0.011, size * 0.011);
+            ctx.moveTo(0, 18);
+            ctx.bezierCurveTo(-46, -20, -70, 24, -35, 58);
+            ctx.bezierCurveTo(-12, 80, 0, 92, 0, 92);
+            ctx.bezierCurveTo(0, 92, 12, 80, 35, 58);
+            ctx.bezierCurveTo(70, 24, 46, -20, 0, 18);
+            ctx.restore();
+        } else {
+            ctx.rect(-s, -s, size, size);
+        }
+    }
+
+    async function createFreeform(items, options = {}) {
+        const size = Math.max(600, Number(options.size) || 1080);
+        const safeItems = (items || []).filter(item => item?.sourceImage || item?.image);
+        const images = await Promise.all(safeItems.map(item => _loadImg(item.sourceImage || item.image).catch(() => null)));
+        const cvs = document.createElement('canvas');
+        cvs.width = size; cvs.height = size;
+        const ctx = cvs.getContext('2d');
+        ctx.fillStyle = options.background || '#141414';
+        ctx.fillRect(0, 0, size, size);
+
+        safeItems
+            .map((item, index) => ({ item, img: images[index] }))
+            .filter(entry => entry.img)
+            .sort((a, b) => (a.item.zIndex || 0) - (b.item.zIndex || 0))
+            .forEach(({ item, img }) => {
+                const box = size * Math.max(0.12, Math.min(1.2, item.scale || 0.34));
+                ctx.save();
+                ctx.translate((item.x ?? 0.5) * size, (item.y ?? 0.5) * size);
+                ctx.rotate(((item.rotation || 0) * Math.PI) / 180);
+                ctx.shadowColor = item.shadow ? 'rgba(0,0,0,0.28)' : 'transparent';
+                ctx.shadowBlur = item.shadow ? size * 0.018 : 0;
+                ctx.shadowOffsetY = item.shadow ? size * 0.012 : 0;
+                _freeformMask(ctx, item.mask || 'square', box);
+                ctx.clip();
+                _drawCover(ctx, img, -box / 2, -box / 2, box, box);
+                ctx.restore();
+            });
+        return cvs;
+    }
+
     // Build from named layout + per-cell URL array.
     async function createFromLayout(layoutKey, cellUrls, gap = 10) {
         const layout       = LAYOUTS[layoutKey] || LAYOUTS['2x2'];
@@ -280,5 +329,5 @@ window.LapisFXCollage = (() => {
         return createGrid(urls, cols, gap);
     }
 
-    return { LAYOUTS, DUO_LAYOUTS, CollageManager, getSlotGeometry, slotCss, createGrid, createFromLayout, createDuo };
+    return { LAYOUTS, DUO_LAYOUTS, CollageManager, getSlotGeometry, slotCss, createGrid, createFromLayout, createDuo, createFreeform };
 })();

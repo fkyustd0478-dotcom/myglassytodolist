@@ -29,6 +29,9 @@
             const cropMode        = ref('manual');   // 'manual' | 'collage'
             const collageLayout   = ref('vertical'); // active duo mask key
             const collageSlots    = ref([]);         // { sourceImage, maskPath, viewport, bounds, fixed }
+            const collageItems    = ref([]);         // PicCollage-like freeform objects
+            const collageMask     = ref('square');
+            const collageBg       = ref('#141414');
             const collageGap      = ref(0);
             const activeCollageSlot = ref(0);
             const collageDragging = ref(false);
@@ -741,6 +744,7 @@
                 collageSlots.value = LapisFXCollage.CollageManager
                     ? LapisFXCollage.CollageManager.createSlots(collageLayout.value, 2)
                     : [_collageSlot(), _collageSlot()];
+                collageItems.value = [];
                 activeCollageSlot.value = 0;
                 fxIntensity.value = 0.25;
             }
@@ -804,16 +808,141 @@
             }
 
             function onCellFileInput(e) {
-                const file = e.target.files[0];
+                const files = Array.from(e.target.files || []);
                 e.target.value = '';
-                if (!file || !file.type.startsWith('image/')) return;
-                const url = URL.createObjectURL(file);
-                const old = collageSlots.value[_collageActiveCell]?.sourceImage;
-                const base = resultUrl.value || imageUrl.value;
-                if (old && old !== base && old !== imageUrl.value) URL.revokeObjectURL(old);
-                const next = [...collageSlots.value];
-                next[_collageActiveCell] = { ...(next[_collageActiveCell] || _collageSlot()), sourceImage: url };
-                collageSlots.value = next;
+                files.filter(file => file.type.startsWith('image/')).forEach(file => _addCollageItem(URL.createObjectURL(file)));
+            }
+
+            function _addCollageItem(url) {
+                const index = collageItems.value.length;
+                collageItems.value = [
+                    ...collageItems.value,
+                    {
+                        sourceImage: url,
+                        x: 0.5 + Math.min(0.12, index * 0.04),
+                        y: 0.5 + Math.min(0.12, index * 0.04),
+                        scale: 0.34,
+                        rotation: 0,
+                        mask: collageMask.value,
+                        zIndex: index,
+                        shadow: true,
+                    },
+                ];
+                activeCollageSlot.value = collageItems.value.length - 1;
+                fxIntensity.value = Math.max(0, Math.min(1, (0.34 - 0.12) / 0.88));
+            }
+
+            function collageItemStyle(item) {
+                const size = `${Math.max(12, Math.min(120, (item.scale || 0.34) * 100))}%`;
+                return {
+                    left: `${(item.x ?? 0.5) * 100}%`,
+                    top: `${(item.y ?? 0.5) * 100}%`,
+                    width: size,
+                    height: size,
+                    transform: `translate(-50%, -50%) rotate(${item.rotation || 0}deg)`,
+                    zIndex: item.zIndex || 0,
+                    borderRadius: item.mask === 'circle' ? '9999px' : '8px',
+                    clipPath: item.mask === 'heart'
+                        ? "path('M50 92 C50 92 8 62 8 31 C8 9 34 3 50 24 C66 3 92 9 92 31 C92 62 50 92 50 92 Z')"
+                        : 'none',
+                    boxShadow: item.shadow ? '0 16px 32px rgba(0,0,0,0.22)' : 'none',
+                };
+            }
+
+            function selectCollageItem(index) {
+                activeCollageSlot.value = index;
+                const scale = collageItems.value[index]?.scale || 0.34;
+                fxIntensity.value = Math.max(0, Math.min(1, (scale - 0.12) / 0.88));
+                collageMask.value = collageItems.value[index]?.mask || 'square';
+            }
+
+            function setCollageItemMask(mask) {
+                collageMask.value = mask;
+                const item = collageItems.value[activeCollageSlot.value];
+                if (!item) return;
+                const next = [...collageItems.value];
+                next[activeCollageSlot.value] = { ...item, mask };
+                collageItems.value = next;
+            }
+
+            function nudgeCollageLayer(delta) {
+                const item = collageItems.value[activeCollageSlot.value];
+                if (!item) return;
+                const next = [...collageItems.value];
+                next[activeCollageSlot.value] = { ...item, zIndex: (item.zIndex || 0) + delta };
+                collageItems.value = next;
+            }
+
+            function deleteCollageItem() {
+                const item = collageItems.value[activeCollageSlot.value];
+                if (!item) return;
+                URL.revokeObjectURL(item.sourceImage);
+                collageItems.value = collageItems.value.filter((_, i) => i !== activeCollageSlot.value);
+                activeCollageSlot.value = Math.max(0, Math.min(activeCollageSlot.value, collageItems.value.length - 1));
+            }
+
+            function beginCollageItemDrag(index, mode, event) {
+                const item = collageItems.value[index];
+                if (!item) return;
+                const frame = event.currentTarget.closest('.pic-collage-canvas')?.getBoundingClientRect();
+                if (!frame) return;
+                selectCollageItem(index);
+                _collagePointers.set(event.pointerId, { index, x: event.clientX, y: event.clientY });
+                const paired = [..._collagePointers.values()].filter(p => p.index === index);
+                if (paired.length >= 2) {
+                    const a = paired[0], b = paired[1];
+                    _collageDrag = {
+                        mode: 'item-pinch',
+                        index,
+                        distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+                        scale: item.scale || 0.34,
+                    };
+                } else {
+                    _collageDrag = {
+                        mode,
+                        index,
+                        frame,
+                        sx: event.clientX,
+                        sy: event.clientY,
+                        x: item.x,
+                        y: item.y,
+                        scale: item.scale || 0.34,
+                        rotation: item.rotation || 0,
+                    };
+                }
+                collageDragging.value = true;
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+            }
+
+            function _applyCollageItemDrag(clientX, clientY) {
+                if (!_collageDrag) return false;
+                const { mode, index, frame, sx, sy, x, y, scale, rotation } = _collageDrag;
+                const item = collageItems.value[index];
+                if (!item || !mode?.startsWith('item-')) return false;
+                const next = [...collageItems.value];
+                if (mode === 'item-pinch') {
+                    const paired = [..._collagePointers.values()].filter(p => p.index === index);
+                    if (paired.length < 2) return true;
+                    const distance = Math.max(1, Math.hypot(paired[0].x - paired[1].x, paired[0].y - paired[1].y));
+                    const nextScale = Math.max(0.12, Math.min(1.2, _collageDrag.scale * distance / _collageDrag.distance));
+                    next[index] = { ...item, scale: nextScale };
+                    fxIntensity.value = Math.max(0, Math.min(1, (nextScale - 0.12) / 0.88));
+                } else if (mode === 'item-scale') {
+                    const delta = ((clientX - sx) + (clientY - sy)) / Math.max(1, frame.width);
+                    const nextScale = Math.max(0.12, Math.min(1.2, scale + delta));
+                    next[index] = { ...item, scale: nextScale };
+                    fxIntensity.value = Math.max(0, Math.min(1, (nextScale - 0.12) / 0.88));
+                } else if (mode === 'item-rotate') {
+                    next[index] = { ...item, rotation: rotation + (clientX - sx) * 0.6 };
+                } else {
+                    next[index] = {
+                        ...item,
+                        x: Math.max(0, Math.min(1, x + (clientX - sx) / frame.width)),
+                        y: Math.max(0, Math.min(1, y + (clientY - sy) / frame.height)),
+                    };
+                }
+                collageItems.value = next;
+                return true;
             }
 
             function collageSlotStyle(slot) {
@@ -837,6 +966,13 @@
             }
 
             function syncCollageScale() {
+                const item = collageItems.value[activeCollageSlot.value];
+                if (item) {
+                    const next = [...collageItems.value];
+                    next[activeCollageSlot.value] = { ...item, scale: 0.12 + fxIntensity.value * 0.88 };
+                    collageItems.value = next;
+                    return;
+                }
                 const slot = collageSlots.value[activeCollageSlot.value];
                 if (!slot || slot.fixed) return;
                 const next = [...collageSlots.value];
@@ -987,6 +1123,7 @@
                         y: event.clientY,
                     });
                 }
+                if (_applyCollageItemDrag(event.clientX, event.clientY)) return;
                 _collagePoint = { clientX: event.clientX, clientY: event.clientY };
                 if (!_collageFrame) _collageFrame = _raf(_flushCollageDrag);
             }
@@ -1008,7 +1145,9 @@
 
             async function buildCollage() {
                 try {
-                    const canvas = await LapisFXCollage.createDuo(collageSlots.value, collageLayout.value, { gap: collageGap.value });
+                    const canvas = collageItems.value.length
+                        ? await LapisFXCollage.createFreeform(collageItems.value, { background: collageBg.value, size: 1080 })
+                        : await LapisFXCollage.createDuo(collageSlots.value, collageLayout.value, { gap: collageGap.value });
                     if (!canvas) return;
                     _pushHistory();
                     _resultCanvas   = canvas;
@@ -1093,7 +1232,12 @@
                     const u = slot.sourceImage;
                     if (u && u !== base && u !== imageUrl.value) URL.revokeObjectURL(u);
                 });
+                collageItems.value.forEach(item => {
+                    const u = item.sourceImage;
+                    if (u && u !== base && u !== imageUrl.value) URL.revokeObjectURL(u);
+                });
                 collageSlots.value = [];
+                collageItems.value = [];
             }
 
             function exitCrop() {
@@ -1189,7 +1333,8 @@
                 customBgStyle, systemDark, resolvedTheme,
                 imageUrl, resultUrl, activeNav, contentView,
                 dragOver, cropShape, cropMode,
-                collageLayout, collageSlots, collageGap, activeCollageSlot, collageDragging,
+                collageLayout, collageSlots, collageItems, collageMask, collageBg,
+                collageGap, activeCollageSlot, collageDragging,
                 fxIntensity, jigsawGrid, jigsawRoi, jigsawManual, jigsawLayout, cropBoxData, containerSize,
                 isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, sandboxDragging,
                 jigsawManualActive, jigsawRoiActive, jigsawRoiStyle, jigsawRoiLayerStyle, jigsawRoiDragging,
@@ -1214,9 +1359,11 @@
                 enterCrop, enterCollage, exitCrop, confirmCrop, saveFromCrop,
                 setCropMode, setCollageLayout,
                 triggerCellInput, onCellFileInput,
-                collageSlotStyle, selectCollageSlot, syncCollageScale, toggleCollageFixed,
+                collageSlotStyle, collageItemStyle, selectCollageSlot, selectCollageItem,
+                setCollageItemMask, nudgeCollageLayer, deleteCollageItem,
+                syncCollageScale, toggleCollageFixed,
                 collageSlotFrameStyle, beginCollageSlotDrag, beginCollageSlotMove,
-                beginCollageSlotResize, moveCollageSlot, endCollageSlot,
+                beginCollageSlotResize, beginCollageItemDrag, moveCollageSlot, endCollageSlot,
                 buildCollage, cropApply,
                 setRatio, setSpecialShape, undo,
                 promptDownload, confirmDownloadImage, promptDeleteImage, confirmDeleteImage,

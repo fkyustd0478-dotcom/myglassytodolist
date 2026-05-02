@@ -116,11 +116,42 @@ describe('studio graphics rendering controls', () => {
         expect(sticker).toContain('shapes:');
     });
 
-    it('supports dynamic duo collage slot masking', () => {
+    it('supports PicCollage-style freeform collage editing', () => {
         const html = readFileSync('studio.html', 'utf8');
         const ui = readFileSync('js/lapis_studio_ui.js', 'utf8');
         const collage = readFileSync('js/fx/lapis_fx_collage.js', 'utf8');
         const css = readFileSync('css/lapis_studio.css', 'utf8');
+
+        expect(collage).toContain('async function createFreeform');
+        expect(collage).toContain('function _freeformMask');
+        expect(collage).toContain("mask === 'heart'");
+        expect(collage).toContain('item.zIndex');
+        expect(collage).toContain('ctx.rotate');
+        expect(ui).toContain('const collageItems');
+        expect(ui).toContain('const collageMask');
+        expect(ui).toContain('const collageBg');
+        expect(ui).toContain('function _addCollageItem');
+        expect(ui).toContain('function collageItemStyle');
+        expect(ui).toContain('function beginCollageItemDrag');
+        expect(ui).toContain("mode: 'item-pinch'");
+        expect(ui).toContain('LapisFXCollage.createFreeform');
+        expect(ui).toContain('function nudgeCollageLayer');
+        expect(ui).toContain('function deleteCollageItem');
+        expect(html).toContain('pic-collage-canvas');
+        expect(html).toContain('multiple class="hidden"');
+        expect(html).toContain('beginCollageItemDrag');
+        expect(html).toContain('collage-rotate-handle');
+        expect(html).toContain('collage-scale-handle');
+        expect(html).toContain('v-model="collageBg"');
+        expect(html).toContain('v-model="collageMask"');
+        expect(css).toContain('.pic-collage-canvas');
+        expect(css).toContain('.pic-collage-item');
+        expect(css).toContain('.collage-scale-handle');
+    });
+
+    it('keeps duo collage renderer compatibility', () => {
+        const ui = readFileSync('js/lapis_studio_ui.js', 'utf8');
+        const collage = readFileSync('js/fx/lapis_fx_collage.js', 'utf8');
 
         expect(collage).toContain('const DUO_LAYOUTS');
         expect(collage).toContain('overlapHearts');
@@ -149,17 +180,6 @@ describe('studio graphics rendering controls', () => {
         expect(ui).toContain("mode: 'pinch'");
         expect(ui).toContain('_collagePointers');
         expect(ui).toContain('LapisFXCollage.createDuo(collageSlots.value, collageLayout.value, { gap: collageGap.value })');
-        expect(html).toContain('v-model.number="collageGap"');
-        expect(html).toContain(':style="collageSlotFrameStyle(slot, ci)"');
-        expect(html).toContain('@click="slot.sourceImage ? selectCollageSlot(ci) : triggerCellInput(ci)"');
-        expect(html).toContain('beginCollageSlotDrag');
-        expect(html).toContain('beginCollageSlotMove');
-        expect(html).toContain('beginCollageSlotResize');
-        expect(html).toContain('toggleCollageFixed');
-        expect(html).toContain('@click="enterCollage"');
-        expect(css).toContain('.duo-collage-preview');
-        expect(css).toContain('position: relative');
-        expect(css).toContain('.collage-slot-resize');
     });
 
     it('supports sandbox drag scale and rotate controls', () => {
