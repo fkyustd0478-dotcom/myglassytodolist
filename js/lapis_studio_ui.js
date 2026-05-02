@@ -28,8 +28,8 @@
             const cropShape       = ref('free');
             const cropMode        = ref('manual');   // 'manual' | 'collage'
             const collageLayout   = ref('vertical'); // active duo mask key
-            const collageSlots    = ref([]);         // { image, maskType, scale, offsetX, offsetY, fixed }
-            const collageGap      = ref(2);
+            const collageSlots    = ref([]);         // { sourceImage, maskPath, viewport, bounds, fixed }
+            const collageGap      = ref(0);
             const activeCollageSlot = ref(0);
             const collageDragging = ref(false);
             const fxIntensity     = ref(1.0);        // 0‥1 slider for effects
@@ -76,6 +76,7 @@
             let _collageDrag       = null;
             let _collageFrame      = 0;
             let _collagePoint      = null;
+            let _collagePointers   = new Map();
 
             // ── Content panel ─────────────────────────────────────────────────
             const contentView = computed(() => {
@@ -91,7 +92,7 @@
             );
 
             // Crop controls use the floating panel; effects has its own FX drawer.
-            const showFloatingPanel = computed(() => activeNav.value === 'crop');
+            const showFloatingPanel = computed(() => activeNav.value === 'crop' && cropMode.value === 'manual');
             const sandboxActive = computed(() => {
                 if (activeNav.value !== 'effects') return false;
                 if (effectCategory.value === 'text') return !!textConfig.value.text.trim();
@@ -135,6 +136,15 @@
                 width: `${jigsawRoi.value.w * 100}%`,
                 height: `${jigsawRoi.value.h * 100}%`,
             }));
+            const jigsawRoiLayerStyle = computed(() => {
+                imageUrl.value;
+                resultUrl.value;
+                activeNav.value;
+                const rect = _jigsawImageCssRect();
+                return rect
+                    ? { left: `${rect.x}px`, top: `${rect.y}px`, width: `${rect.w}px`, height: `${rect.h}px` }
+                    : {};
+            });
 
             const mainPaddingBottom = computed(() => {
                 if (activeNav.value === 'effects')
@@ -432,12 +442,53 @@
             }
 
             function _jigsawRoiPixels(width, height) {
+                const layerRect = _jigsawRoiRect();
+                const boxRect = document.querySelector('.jigsaw-roi-box')?.getBoundingClientRect();
+                if (layerRect && boxRect) return _domRectToCanvasRoi(boxRect, layerRect, width, height);
                 const r = jigsawRoi.value;
-                return { x: r.x * width, y: r.y * height, w: r.w * width, h: r.h * height };
+                return _normalizedRoiToPixels(r, width, height);
             }
 
             function _jigsawRoiRect() {
                 return document.getElementById('jigsaw-roi-layer')?.getBoundingClientRect();
+            }
+
+            function _jigsawImageCssRect() {
+                const img = document.getElementById('studio-preview-image');
+                if (!img || !img.naturalWidth || !img.naturalHeight) return null;
+                const parent = img.parentElement?.getBoundingClientRect();
+                if (!parent) return null;
+                const availableW = Math.max(1, parent.width - 32);
+                const availableH = Math.max(1, parent.height - 32);
+                const scale = Math.min(availableW / img.naturalWidth, availableH / img.naturalHeight);
+                const w = img.naturalWidth * scale;
+                const h = img.naturalHeight * scale;
+                return {
+                    x: (parent.width - w) / 2,
+                    y: (parent.height - h) / 2,
+                    w,
+                    h,
+                };
+            }
+
+            function _normalizedRoiToPixels(r, width, height) {
+                return { x: r.x * width, y: r.y * height, w: r.w * width, h: r.h * height };
+            }
+
+            function _domRectToCanvasRoi(boxRect, imageRect, canvasWidth, canvasHeight) {
+                const dpr = window.devicePixelRatio || 1;
+                const cssToCanvasX = canvasWidth / (imageRect.width || (canvasWidth / dpr));
+                const cssToCanvasY = canvasHeight / (imageRect.height || (canvasHeight / dpr));
+                const x = Math.max(0, (boxRect.left - imageRect.left) * cssToCanvasX);
+                const y = Math.max(0, (boxRect.top - imageRect.top) * cssToCanvasY);
+                const maxW = canvasWidth - x;
+                const maxH = canvasHeight - y;
+                return {
+                    x,
+                    y,
+                    w: Math.max(1, Math.min(maxW, boxRect.width * cssToCanvasX)),
+                    h: Math.max(1, Math.min(maxH, boxRect.height * cssToCanvasY)),
+                };
             }
 
             function _clampJigsawRoi(r) {
@@ -687,17 +738,21 @@
             }
 
             function _initCollageCells() {
-                const base = resultUrl.value || imageUrl.value;
-                collageSlots.value = [
-                    _collageSlot(base),
-                    _collageSlot(''),
-                ];
+                collageSlots.value = LapisFXCollage.CollageManager
+                    ? LapisFXCollage.CollageManager.createSlots(collageLayout.value, 2)
+                    : [_collageSlot(), _collageSlot()];
                 activeCollageSlot.value = 0;
                 fxIntensity.value = 0.25;
             }
 
-            function _collageSlot(image = '') {
-                return { image, maskType: collageLayout.value, scale: 1, offsetX: 0, offsetY: 0, fixed: false };
+            function _collageSlot(sourceImage = '', index = 0) {
+                return {
+                    sourceImage,
+                    maskPath: `${collageLayout.value}:${index}`,
+                    viewport: { x: 0, y: 0, scale: 1 },
+                    bounds: { x: 0, y: 0, w: 0, h: 0 },
+                    fixed: false,
+                };
             }
 
             async function enterCrop() {
@@ -707,10 +762,19 @@
                 cropShape.value    = 'free';
                 cropMode.value     = 'manual';
                 cropBoxData.value  = null;
-                _initCollageCells();
                 activeNav.value    = 'crop';
                 await nextTick();
                 _initCropper(NaN);
+            }
+
+            function enterCollage() {
+                _effectsBase       = null;
+                activeEffect.value = '';
+                cropMode.value     = 'collage';
+                cropBoxData.value  = null;
+                if (_cropper) { _cropper.destroy(); _cropper = null; }
+                _initCollageCells();
+                activeNav.value    = 'crop';
             }
 
             function setCropMode(mode) {
@@ -721,6 +785,7 @@
                     cropBoxData.value = null;
                     _initCollageCells();
                 } else {
+                    if (!imageUrl.value) return;
                     nextTick(() => _initCropper(NaN));
                 }
             }
@@ -728,7 +793,9 @@
             function setCollageLayout(key) {
                 if (!collageLayouts[key]) return;
                 collageLayout.value = key;
-                collageSlots.value = collageSlots.value.map(slot => ({ ...slot, maskType: key }));
+                collageSlots.value = LapisFXCollage.CollageManager
+                    ? LapisFXCollage.CollageManager.applyLayout(collageSlots.value, key)
+                    : collageSlots.value.map((slot, index) => ({ ...slot, maskPath: `${key}:${index}` }));
             }
 
             function triggerCellInput(ci) {
@@ -741,23 +808,31 @@
                 e.target.value = '';
                 if (!file || !file.type.startsWith('image/')) return;
                 const url = URL.createObjectURL(file);
-                const old = collageSlots.value[_collageActiveCell]?.image;
+                const old = collageSlots.value[_collageActiveCell]?.sourceImage;
                 const base = resultUrl.value || imageUrl.value;
                 if (old && old !== base && old !== imageUrl.value) URL.revokeObjectURL(old);
                 const next = [...collageSlots.value];
-                next[_collageActiveCell] = { ...(next[_collageActiveCell] || _collageSlot()), image: url };
+                next[_collageActiveCell] = { ...(next[_collageActiveCell] || _collageSlot()), sourceImage: url };
                 collageSlots.value = next;
             }
 
             function collageSlotStyle(slot) {
+                const viewport = slot.viewport || { x: 0, y: 0, scale: 1 };
                 return {
-                    transform: `translate(${slot.offsetX * 100}%, ${slot.offsetY * 100}%) scale(${slot.scale || 1})`,
+                    transform: `translate(${viewport.x * 100}%, ${viewport.y * 100}%) scale(${viewport.scale || 1})`,
                 };
+            }
+
+            function collageSlotFrameStyle(slot, index) {
+                const css = LapisFXCollage.slotCss
+                    ? LapisFXCollage.slotCss(collageLayout.value, index, collageGap.value, slot)
+                    : {};
+                return { ...css, zIndex: index + 1 };
             }
 
             function selectCollageSlot(index) {
                 activeCollageSlot.value = index;
-                const scale = collageSlots.value[index]?.scale || 1;
+                const scale = collageSlots.value[index]?.viewport?.scale || 1;
                 fxIntensity.value = Math.max(0, Math.min(1, (scale - 0.5) / 2));
             }
 
@@ -765,7 +840,34 @@
                 const slot = collageSlots.value[activeCollageSlot.value];
                 if (!slot || slot.fixed) return;
                 const next = [...collageSlots.value];
-                next[activeCollageSlot.value] = { ...slot, scale: 0.5 + fxIntensity.value * 2 };
+                next[activeCollageSlot.value] = {
+                    ...slot,
+                    viewport: { ...(slot.viewport || {}), scale: 0.5 + fxIntensity.value * 2 },
+                };
+                collageSlots.value = next;
+            }
+
+            function _collageGeometry(index, slot) {
+                return LapisFXCollage.getSlotGeometry
+                    ? LapisFXCollage.getSlotGeometry(collageLayout.value, index, collageGap.value, slot).bounds
+                    : (slot.bounds || { x: index * 0.5, y: 0, w: 0.5, h: 1 });
+            }
+
+            function _setCollageBounds(index, bounds) {
+                const slot = collageSlots.value[index];
+                if (!slot || slot.fixed) return;
+                const x = Math.max(0, Math.min(0.92, bounds.x));
+                const y = Math.max(0, Math.min(0.92, bounds.y));
+                const next = [...collageSlots.value];
+                next[index] = {
+                    ...slot,
+                    bounds: {
+                        x,
+                        y,
+                        w: Math.max(0.08, Math.min(1 - x, bounds.w)),
+                        h: Math.max(0.08, Math.min(1 - y, bounds.h)),
+                    },
+                };
                 collageSlots.value = next;
             }
 
@@ -782,21 +884,89 @@
                 if (!slot || slot.fixed) return;
                 const rect = event.currentTarget.getBoundingClientRect();
                 selectCollageSlot(index);
-                _collageDrag = { index, rect, sx: event.clientX, sy: event.clientY, x: slot.offsetX || 0, y: slot.offsetY || 0 };
+                _collagePointers.set(event.pointerId, { index, x: event.clientX, y: event.clientY });
+                const paired = [..._collagePointers.values()].filter(p => p.index === index);
+                if (paired.length >= 2) {
+                    const a = paired[0], b = paired[1];
+                    const viewport = slot.viewport || { x: 0, y: 0, scale: 1 };
+                    _collageDrag = {
+                        mode: 'pinch',
+                        index,
+                        distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+                        scale: viewport.scale || 1,
+                    };
+                    collageDragging.value = true;
+                    return;
+                }
+                const viewport = slot.viewport || { x: 0, y: 0, scale: 1 };
+                _collageDrag = { mode: 'pan', index, rect, sx: event.clientX, sy: event.clientY, x: viewport.x || 0, y: viewport.y || 0 };
+                collageDragging.value = true;
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+            }
+
+            function beginCollageSlotMove(index, event) {
+                const slot = collageSlots.value[index];
+                if (!slot || slot.fixed) return;
+                selectCollageSlot(index);
+                const b = _collageGeometry(index, slot);
+                const frame = event.currentTarget.closest('.duo-collage-preview')?.getBoundingClientRect();
+                _collageDrag = { mode: 'move-slot', index, sx: event.clientX, sy: event.clientY, bounds: b, frame };
+                collageDragging.value = true;
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+            }
+
+            function beginCollageSlotResize(index, event) {
+                const slot = collageSlots.value[index];
+                if (!slot || slot.fixed) return;
+                selectCollageSlot(index);
+                const b = _collageGeometry(index, slot);
+                const frame = event.currentTarget.closest('.duo-collage-preview')?.getBoundingClientRect();
+                _collageDrag = { mode: 'resize-slot', index, sx: event.clientX, sy: event.clientY, bounds: b, frame };
                 collageDragging.value = true;
                 event.currentTarget.setPointerCapture?.(event.pointerId);
             }
 
             function _applyCollageDrag(clientX, clientY) {
                 if (!_collageDrag) return;
-                const { index, rect, sx, sy, x, y } = _collageDrag;
+                const { mode, index, rect, sx, sy, x, y, bounds, frame } = _collageDrag;
                 const slot = collageSlots.value[index];
                 if (!slot || slot.fixed) return;
+                if (mode === 'pinch') {
+                    const paired = [..._collagePointers.values()].filter(p => p.index === index);
+                    if (paired.length < 2) return;
+                    const distance = Math.max(1, Math.hypot(paired[0].x - paired[1].x, paired[0].y - paired[1].y));
+                    const scale = Math.max(0.5, Math.min(2.5, _collageDrag.scale * distance / _collageDrag.distance));
+                    const next = [...collageSlots.value];
+                    next[index] = { ...slot, viewport: { ...(slot.viewport || {}), scale } };
+                    collageSlots.value = next;
+                    fxIntensity.value = Math.max(0, Math.min(1, (scale - 0.5) / 2));
+                    return;
+                }
+                if (mode === 'move-slot') {
+                    _setCollageBounds(index, {
+                        ...bounds,
+                        x: bounds.x + (clientX - sx) / Math.max(1, frame?.width || 360),
+                        y: bounds.y + (clientY - sy) / Math.max(1, frame?.height || 360),
+                    });
+                    return;
+                }
+                if (mode === 'resize-slot') {
+                    _setCollageBounds(index, {
+                        ...bounds,
+                        w: bounds.w + (clientX - sx) / Math.max(1, frame?.width || 360),
+                        h: bounds.h + (clientY - sy) / Math.max(1, frame?.height || 360),
+                    });
+                    return;
+                }
+                const viewport = slot.viewport || { x: 0, y: 0, scale: 1 };
                 const next = [...collageSlots.value];
                 next[index] = {
                     ...slot,
-                    offsetX: Math.max(-0.6, Math.min(0.6, x + (clientX - sx) / rect.width)),
-                    offsetY: Math.max(-0.6, Math.min(0.6, y + (clientY - sy) / rect.height)),
+                    viewport: {
+                        ...viewport,
+                        x: Math.max(-0.6, Math.min(0.6, x + (clientX - sx) / rect.width)),
+                        y: Math.max(-0.6, Math.min(0.6, y + (clientY - sy) / rect.height)),
+                    },
                 };
                 collageSlots.value = next;
             }
@@ -810,11 +980,19 @@
 
             function moveCollageSlot(event) {
                 if (!_collageDrag) return;
+                if (_collagePointers.has(event.pointerId)) {
+                    _collagePointers.set(event.pointerId, {
+                        ..._collagePointers.get(event.pointerId),
+                        x: event.clientX,
+                        y: event.clientY,
+                    });
+                }
                 _collagePoint = { clientX: event.clientX, clientY: event.clientY };
                 if (!_collageFrame) _collageFrame = _raf(_flushCollageDrag);
             }
 
-            function endCollageSlot() {
+            function endCollageSlot(event) {
+                if (event?.pointerId !== undefined) _collagePointers.delete(event.pointerId);
                 if (!_collageDrag) return;
                 if (_collageFrame) {
                     _caf(_collageFrame);
@@ -912,7 +1090,7 @@
             function _revokeCollageCells() {
                 const base = resultUrl.value || imageUrl.value;
                 collageSlots.value.forEach(slot => {
-                    const u = slot.image;
+                    const u = slot.sourceImage;
                     if (u && u !== base && u !== imageUrl.value) URL.revokeObjectURL(u);
                 });
                 collageSlots.value = [];
@@ -938,7 +1116,7 @@
 
             // ── Download (main nav only) ──────────────────────────────────────
             async function promptDownload() {
-                if (!imageUrl.value) {
+                if (!(imageUrl.value || resultUrl.value)) {
                     showStudioMessage(t.value.noImage, t.value.saveAs);
                     return;
                 }
@@ -948,7 +1126,7 @@
             }
 
             async function confirmDownloadImage() {
-                if (!imageUrl.value) return;
+                if (!(imageUrl.value || resultUrl.value)) return;
                 const name = (downloadName.value || 'lapis-image').trim() || 'lapis-image';
                 closeStudioModal('studio-download-modal');
 
@@ -1014,7 +1192,7 @@
                 collageLayout, collageSlots, collageGap, activeCollageSlot, collageDragging,
                 fxIntensity, jigsawGrid, jigsawRoi, jigsawManual, jigsawLayout, cropBoxData, containerSize,
                 isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, sandboxDragging,
-                jigsawManualActive, jigsawRoiActive, jigsawRoiStyle, jigsawRoiDragging,
+                jigsawManualActive, jigsawRoiActive, jigsawRoiStyle, jigsawRoiLayerStyle, jigsawRoiDragging,
                 canUndoCt, showFloatingPanel, mainPaddingBottom,
                 activeEffect, effectCategory,
                 effectsList, jigsawVariants, stickerList, collageLayouts,
@@ -1033,11 +1211,12 @@
                 beginJigsawPieceDrag: jigsawManualTools.beginDrag,
                 moveJigsawPiece: jigsawManualTools.moveDrag,
                 endJigsawPieceDrag: jigsawManualTools.endDrag,
-                enterCrop, exitCrop, confirmCrop, saveFromCrop,
+                enterCrop, enterCollage, exitCrop, confirmCrop, saveFromCrop,
                 setCropMode, setCollageLayout,
                 triggerCellInput, onCellFileInput,
                 collageSlotStyle, selectCollageSlot, syncCollageScale, toggleCollageFixed,
-                beginCollageSlotDrag, moveCollageSlot, endCollageSlot,
+                collageSlotFrameStyle, beginCollageSlotDrag, beginCollageSlotMove,
+                beginCollageSlotResize, moveCollageSlot, endCollageSlot,
                 buildCollage, cropApply,
                 setRatio, setSpecialShape, undo,
                 promptDownload, confirmDownloadImage, promptDeleteImage, confirmDeleteImage,

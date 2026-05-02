@@ -273,14 +273,16 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
 /* ── Pro-Collage grid workspace ───────────────────────────────────────────── */
 .jigsaw-manual-layer {
     position: absolute;
-    inset: 1rem;
+    right: auto;
+    bottom: auto;
     z-index: 21;
     touch-action: none;
     pointer-events: auto;
 }
 .jigsaw-roi-layer {
     position: absolute;
-    inset: 1rem;
+    right: auto;
+    bottom: auto;
     z-index: 20;
     touch-action: none;
     pointer-events: auto;
@@ -410,26 +412,10 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
 .duo-collage-preview {
     width: min(100%, 360px);
     aspect-ratio: 1;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: 1fr;
+    position: relative;
     touch-action: none;
 }
-.duo-collage-preview.layout-horizontal {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-}
-.duo-collage-preview.layout-circles .duo-slot { border-radius: 9999px; }
-.duo-collage-preview.layout-hearts .duo-slot { clip-path: path('M50 92 C50 92 8 62 8 31 C8 9 34 3 50 24 C66 3 92 9 92 31 C92 62 50 92 50 92 Z'); }
-.duo-collage-preview.layout-triangles .duo-slot:first-child { clip-path: polygon(0 0, 100% 0, 0 100%); }
-.duo-collage-preview.layout-triangles .duo-slot:last-child { clip-path: polygon(100% 0, 100% 100%, 0 100%); }
-.duo-collage-preview.layout-film {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-}
 .duo-collage-preview.layout-film .duo-slot { border-radius: 4px; }
-.duo-collage-preview.layout-taiji .duo-slot:first-child { border-radius: 48% 52% 50% 50%; }
-.duo-collage-preview.layout-taiji .duo-slot:last-child { border-radius: 52% 48% 50% 50%; }
 
 .collage-cell {
     background: rgba(255,255,255,0.05);
@@ -437,8 +423,7 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     border-radius: 6px;
     overflow: hidden;
     cursor: pointer;
-    position: relative;
-    aspect-ratio: 1;
+    position: absolute;
     transition: border-color 0.15s;
 }
 .collage-cell:active { border-color: #3b82f6; }
@@ -467,4 +452,32 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     background: rgba(15,23,42,0.62);
     color: #fff;
     backdrop-filter: blur(8px);
+}
+.collage-slot-move {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    z-index: 3;
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    background: rgba(15,23,42,0.62);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    backdrop-filter: blur(8px);
+    cursor: move;
+}
+.collage-slot-resize {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    z-index: 3;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    border: 2px solid rgba(255,255,255,0.86);
+    background: rgba(59,130,246,0.72);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.24);
+    cursor: nwse-resize;
 }

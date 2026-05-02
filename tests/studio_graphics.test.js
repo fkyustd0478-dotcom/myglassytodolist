@@ -19,13 +19,20 @@ describe('studio graphics rendering controls', () => {
 
         expect(html).toContain('v-model.number="jigsawGrid"');
         expect(html).toContain('3,4,5,6');
+        expect(html).toContain('id="studio-preview-image"');
         expect(html).toContain('id="jigsaw-roi-layer"');
+        expect(html).toContain(':style="jigsawRoiLayerStyle"');
         expect(html).toContain('beginJigsawRoiMove');
         expect(html).toContain("beginJigsawRoiResize('se', $event)");
         expect(css).toContain('.jigsaw-roi-box');
+        expect(css).toContain('right: auto');
         expect(ui).toContain('gridSize: jigsawGrid.value');
         expect(ui).toContain('const jigsawRoi');
+        expect(ui).toContain('const jigsawRoiLayerStyle');
         expect(ui).toContain('config.roi = _jigsawRoiPixels(sc.width, sc.height)');
+        expect(ui).toContain('function _domRectToCanvasRoi');
+        expect(ui).toContain('devicePixelRatio');
+        expect(ui).toContain('function _jigsawImageCssRect');
         expect(ui).toContain('function moveJigsawRoi');
         expect(jigsaw).toContain('function _centerRoi');
         expect(jigsaw).toContain('function _renderRoi');
@@ -116,17 +123,43 @@ describe('studio graphics rendering controls', () => {
         const css = readFileSync('css/lapis_studio.css', 'utf8');
 
         expect(collage).toContain('const DUO_LAYOUTS');
+        expect(collage).toContain('overlapHearts');
+        expect(collage).toContain('circleOverlap');
+        expect(collage).toContain('inset:');
+        expect(collage).toContain('diagonal:');
+        expect(collage).toContain('const CollageManager');
+        expect(collage).toContain('sourceImage');
+        expect(collage).toContain('maskPath');
+        expect(collage).toContain('viewport: { x: 0, y: 0, scale: 1 }');
+        expect(collage).toContain('bounds: { x: 0, y: 0, w: 0, h: 0 }');
+        expect(collage).toContain('function getSlotGeometry');
+        expect(collage).toContain('function slotCss');
         expect(collage).toContain('async function createDuo');
         expect(collage).toContain('ctx.clip()');
         expect(collage).toContain('ctx.drawImage(img, x, y, dw, dh)');
         expect(ui).toContain('const collageSlots');
-        expect(ui).toContain('{ image, maskType: collageLayout.value, scale: 1, offsetX: 0, offsetY: 0, fixed: false }');
-        expect(ui).toContain('collageSlots.value = collageSlots.value.map(slot => ({ ...slot, maskType: key }))');
+        expect(ui).toContain('const collageGap      = ref(0)');
+        expect(ui).toContain('CollageManager.createSlots(collageLayout.value, 2)');
+        expect(ui).toContain('CollageManager.applyLayout(collageSlots.value, key)');
+        expect(ui).toContain('sourceImage');
+        expect(ui).toContain('viewport: { x: 0, y: 0, scale: 1 }');
+        expect(ui).toContain('function collageSlotFrameStyle');
+        expect(ui).toContain('function beginCollageSlotMove');
+        expect(ui).toContain('function beginCollageSlotResize');
+        expect(ui).toContain("mode: 'pinch'");
+        expect(ui).toContain('_collagePointers');
         expect(ui).toContain('LapisFXCollage.createDuo(collageSlots.value, collageLayout.value, { gap: collageGap.value })');
         expect(html).toContain('v-model.number="collageGap"');
+        expect(html).toContain(':style="collageSlotFrameStyle(slot, ci)"');
+        expect(html).toContain('@click="slot.sourceImage ? selectCollageSlot(ci) : triggerCellInput(ci)"');
         expect(html).toContain('beginCollageSlotDrag');
+        expect(html).toContain('beginCollageSlotMove');
+        expect(html).toContain('beginCollageSlotResize');
         expect(html).toContain('toggleCollageFixed');
+        expect(html).toContain('@click="enterCollage"');
         expect(css).toContain('.duo-collage-preview');
+        expect(css).toContain('position: relative');
+        expect(css).toContain('.collage-slot-resize');
     });
 
     it('supports sandbox drag scale and rotate controls', () => {
@@ -156,6 +189,7 @@ describe('studio graphics rendering controls', () => {
         const manual = readFileSync('js/lapis_studio_jigsaw_manual.js', 'utf8');
 
         expect(html).toContain('jigsaw-manual-layer');
+        expect(html).toContain(':style="jigsawRoiLayerStyle"');
         expect(html).toContain('lapis_studio_jigsaw_manual.js');
         expect(html).toContain('toggleJigsawManual');
         expect(ui).toContain('const jigsawManual');

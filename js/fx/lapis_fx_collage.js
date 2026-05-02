@@ -16,8 +16,37 @@ window.LapisFXCollage = (() => {
         taiji:      { label: 'Taiji' },
         circles:    { label: 'Circle' },
         hearts:     { label: 'Heart' },
+        overlapHearts: { label: 'Heart Stack' },
+        inset:      { label: 'Inset' },
+        diagonal:   { label: 'Diagonal' },
+        circleOverlap: { label: 'Circle Stack' },
         triangles:  { label: 'Triangle' },
         film:       { label: 'Film' },
+    };
+
+    const CollageManager = {
+        createSlot(layoutKey = 'vertical', index = 0) {
+            return {
+                sourceImage: '',
+                maskPath: `${layoutKey}:${index}`,
+                viewport: { x: 0, y: 0, scale: 1 },
+                bounds: { x: 0, y: 0, w: 0, h: 0 },
+                fixed: false,
+            };
+        },
+        createSlots(layoutKey = 'vertical', count = 2) {
+            return Array.from({ length: count }, (_, index) => this.createSlot(layoutKey, index));
+        },
+        applyLayout(slots, layoutKey = 'vertical') {
+            return Array.from({ length: 2 }, (_, index) => {
+                const slot = slots?.[index] || this.createSlot(layoutKey, index);
+                return {
+                    ...slot,
+                    maskPath: `${layoutKey}:${index}`,
+                    bounds: { x: 0, y: 0, w: 0, h: 0 },
+                };
+            });
+        },
     };
 
     function _loadImg(url) {
@@ -56,13 +85,61 @@ window.LapisFXCollage = (() => {
         ctx.restore();
     }
 
-    function _slotPath(ctx, layoutKey, index, w, h, gap) {
+    function _gap(gap) {
+        return Math.max(0, Math.min(5, Number(gap) || 0));
+    }
+
+    function _hasBounds(slot) {
+        const b = slot?.bounds;
+        return b && b.w > 0 && b.h > 0;
+    }
+
+    function _shapeFor(layoutKey, index) {
+        if (layoutKey === 'hearts' || layoutKey === 'overlapHearts') return 'heart';
+        if (layoutKey === 'circles' || layoutKey === 'circleOverlap') return 'circle';
+        if (layoutKey === 'triangles') return index === 0 ? 'tri-a' : 'tri-b';
+        if (layoutKey === 'diagonal') return index === 0 ? 'diag-a' : 'diag-b';
+        if (layoutKey === 'taiji') return index === 0 ? 'taiji-a' : 'taiji-b';
+        return 'rect';
+    }
+
+    function getSlotGeometry(layoutKey, index, gap = 0, slot = null) {
+        const g = _gap(gap);
+        if (_hasBounds(slot)) return { bounds: slot.bounds, shape: _shapeFor(layoutKey, index) };
+        if (layoutKey === 'horizontal') return { bounds: { x: 0, y: index === 0 ? 0 : 0.5 + g / 1800, w: 1, h: 0.5 - g / 1800 }, shape: 'rect' };
+        if (layoutKey === 'circles') return { bounds: { x: index === 0 ? 0.03 : 0.37, y: 0.18, w: 0.60, h: 0.64 }, shape: 'circle' };
+        if (layoutKey === 'hearts') return { bounds: { x: index === 0 ? 0.06 : 0.52, y: 0.16, w: 0.42, h: 0.58 }, shape: 'heart' };
+        if (layoutKey === 'overlapHearts') {
+            const push = g / 900;
+            return { bounds: { x: index === 0 ? 0.13 - push : 0.35 + push, y: index === 0 ? 0.22 : 0.18, w: 0.52, h: 0.56 }, shape: 'heart' };
+        }
+        if (layoutKey === 'inset') {
+            return index === 0
+                ? { bounds: { x: 0, y: 0, w: 1, h: 1 }, shape: 'rect' }
+                : { bounds: { x: 0.28 + g / 900, y: 0.28 + g / 900, w: 0.44, h: 0.44 }, shape: 'rect' };
+        }
+        if (layoutKey === 'diagonal') return { bounds: { x: 0, y: 0, w: 1, h: 1 }, shape: index === 0 ? 'diag-a' : 'diag-b' };
+        if (layoutKey === 'circleOverlap') {
+            const push = g / 900;
+            return { bounds: { x: index === 0 ? 0.12 - push : 0.30 + push, y: index === 0 ? 0.20 : 0.26, w: 0.58, h: 0.58 }, shape: 'circle' };
+        }
+        if (layoutKey === 'triangles') return { bounds: { x: 0, y: 0, w: 1, h: 1 }, shape: index === 0 ? 'tri-a' : 'tri-b' };
+        if (layoutKey === 'film') return { bounds: { x: 0.08, y: index === 0 ? 0.10 + g / 1800 : 0.54 + g / 1800, w: 0.84, h: 0.36 - g / 900 }, shape: 'rect' };
+        if (layoutKey === 'taiji') return { bounds: { x: 0, y: 0, w: 1, h: 1 }, shape: index === 0 ? 'taiji-a' : 'taiji-b' };
+        return { bounds: { x: index === 0 ? 0 : 0.5 + g / 1800, y: 0, w: 0.5 - g / 1800, h: 1 }, shape: 'rect' };
+    }
+
+    function _toPixels(bounds, w, h) {
+        return { x: bounds.x * w, y: bounds.y * h, w: bounds.w * w, h: bounds.h * h };
+    }
+
+    function _slotPath(ctx, layoutKey, index, w, h, gap, slot) {
         const g = Math.max(0, Math.min(5, Number(gap) || 0));
         const halfG = g / 2;
+        const geo = getSlotGeometry(layoutKey, index, g, slot);
+        const b = _toPixels(geo.bounds, w, h);
         ctx.beginPath();
-        if (layoutKey === 'horizontal') {
-            ctx.rect(0, index === 0 ? 0 : h / 2 + halfG, w, h / 2 - halfG);
-        } else if (layoutKey === 'taiji') {
+        if (geo.shape === 'taiji-a' || geo.shape === 'taiji-b') {
             if (index === 0) {
                 ctx.moveTo(w / 2 - halfG, 0);
                 ctx.bezierCurveTo(w * 0.15, h * 0.18, w * 0.85, h * 0.32, w / 2 - halfG, h / 2);
@@ -74,35 +151,50 @@ window.LapisFXCollage = (() => {
                 ctx.bezierCurveTo(w * 0.85, h * 0.68, w * 0.15, h * 0.82, w / 2 + halfG, h);
                 ctx.lineTo(w, h); ctx.lineTo(w, 0); ctx.closePath();
             }
-        } else if (layoutKey === 'circles') {
-            ctx.arc(index === 0 ? w * 0.32 : w * 0.68, h / 2, Math.max(1, Math.min(w, h) * 0.30 - halfG), 0, Math.PI * 2);
-        } else if (layoutKey === 'hearts') {
-            _heartPath(ctx, index === 0 ? w * 0.06 + halfG : w * 0.50 + halfG, h * 0.16, w * 0.42 - g, h * 0.58);
-        } else if (layoutKey === 'triangles') {
-            if (index === 0) { ctx.moveTo(0, 0); ctx.lineTo(w - halfG, 0); ctx.lineTo(0, h - halfG); }
-            else { ctx.moveTo(w, h); ctx.lineTo(w, halfG); ctx.lineTo(halfG, h); }
-            ctx.closePath();
-        } else if (layoutKey === 'film') {
-            ctx.rect(w * 0.08, index === 0 ? h * 0.10 + halfG : h * 0.54 + halfG, w * 0.84, h * 0.36 - g);
+        } else if (geo.shape === 'circle') {
+            ctx.ellipse(b.x + b.w / 2, b.y + b.h / 2, Math.max(1, b.w / 2 - halfG), Math.max(1, b.h / 2 - halfG), 0, 0, Math.PI * 2);
+        } else if (geo.shape === 'heart') {
+            _heartPath(ctx, b.x + halfG, b.y + halfG, b.w - g, b.h - g);
+        } else if (geo.shape === 'tri-a' || geo.shape === 'diag-a') {
+            ctx.moveTo(b.x, b.y); ctx.lineTo(b.x + b.w - halfG, b.y); ctx.lineTo(b.x, b.y + b.h - halfG); ctx.closePath();
+        } else if (geo.shape === 'tri-b' || geo.shape === 'diag-b') {
+            ctx.moveTo(b.x + b.w, b.y); ctx.lineTo(b.x + b.w, b.y + b.h); ctx.lineTo(b.x, b.y + b.h); ctx.closePath();
         } else {
-            ctx.rect(index === 0 ? 0 : w / 2 + halfG, 0, w / 2 - halfG, h);
+            ctx.rect(b.x + halfG, b.y + halfG, Math.max(1, b.w - g), Math.max(1, b.h - g));
         }
     }
 
-    function _slotBounds(layoutKey, index, w, h, gap) {
-        const g = Math.max(0, Math.min(5, Number(gap) || 0));
-        if (layoutKey === 'horizontal') return { x: 0, y: index === 0 ? 0 : h / 2 + g / 2, w, h: h / 2 - g / 2 };
-        if (layoutKey === 'circles') return { x: (index === 0 ? 0.02 : 0.38) * w, y: h * 0.18, w: w * 0.60, h: h * 0.64 };
-        if (layoutKey === 'film') return { x: w * 0.08, y: index === 0 ? h * 0.10 + g / 2 : h * 0.54 + g / 2, w: w * 0.84, h: h * 0.36 - g };
-        return { x: index === 0 ? 0 : w / 2 + g / 2, y: 0, w: w / 2 - g / 2, h };
+    function _slotBounds(layoutKey, index, w, h, gap, slot) {
+        return _toPixels(getSlotGeometry(layoutKey, index, gap, slot).bounds, w, h);
+    }
+
+    function slotCss(layoutKey, index, gap = 0, slot = null) {
+        const geo = getSlotGeometry(layoutKey, index, gap, slot);
+        const b = geo.bounds;
+        const style = {
+            left: `${b.x * 100}%`,
+            top: `${b.y * 100}%`,
+            width: `${b.w * 100}%`,
+            height: `${b.h * 100}%`,
+        };
+        if (geo.shape === 'circle') style.borderRadius = '9999px';
+        if (geo.shape === 'heart') style.clipPath = "path('M50 92 C50 92 8 62 8 31 C8 9 34 3 50 24 C66 3 92 9 92 31 C92 62 50 92 50 92 Z')";
+        if (geo.shape === 'tri-a' || geo.shape === 'diag-a') style.clipPath = 'polygon(0 0, 100% 0, 0 100%)';
+        if (geo.shape === 'tri-b' || geo.shape === 'diag-b') style.clipPath = 'polygon(100% 0, 100% 100%, 0 100%)';
+        if (geo.shape === 'taiji-a') style.clipPath = 'path("M50 0 C15 18 85 32 50 50 C15 68 85 82 50 100 L0 100 L0 0 Z")';
+        if (geo.shape === 'taiji-b') style.clipPath = 'path("M50 0 C85 18 15 32 50 50 C85 68 15 82 50 100 L100 100 L100 0 Z")';
+        return style;
     }
 
     function _drawSlot(ctx, slot, img, bounds) {
-        const scale = Math.max(bounds.w / img.naturalWidth, bounds.h / img.naturalHeight) * Math.max(0.4, slot.scale || 1);
+        const viewport = slot.viewport || {};
+        const scale = Math.max(bounds.w / img.naturalWidth, bounds.h / img.naturalHeight) * Math.max(0.4, viewport.scale || slot.scale || 1);
         const dw = img.naturalWidth * scale;
         const dh = img.naturalHeight * scale;
-        const x = bounds.x + bounds.w / 2 - dw / 2 + (slot.offsetX || 0) * bounds.w;
-        const y = bounds.y + bounds.h / 2 - dh / 2 + (slot.offsetY || 0) * bounds.h;
+        const vx = viewport.x ?? slot.offsetX ?? 0;
+        const vy = viewport.y ?? slot.offsetY ?? 0;
+        const x = bounds.x + bounds.w / 2 - dw / 2 + vx * bounds.w;
+        const y = bounds.y + bounds.h / 2 - dh / 2 + vy * bounds.h;
         ctx.drawImage(img, x, y, dw, dh);
     }
 
@@ -151,7 +243,10 @@ window.LapisFXCollage = (() => {
     async function createDuo(slots, layoutKey = 'vertical', options = {}) {
         const safeSlots = Array.from({ length: 2 }, (_, i) => slots?.[i] || {});
         const images = await Promise.all(
-            safeSlots.map(slot => (slot.image ? _loadImg(slot.image).catch(() => null) : Promise.resolve(null)))
+            safeSlots.map(slot => {
+                const src = slot.sourceImage || slot.image;
+                return src ? _loadImg(src).catch(() => null) : Promise.resolve(null);
+            })
         );
         const w = Math.max(900, ...images.map(img => img ? img.naturalWidth : 0));
         const h = Math.max(900, ...images.map(img => img ? img.naturalHeight : 0));
@@ -164,9 +259,9 @@ window.LapisFXCollage = (() => {
 
         for (let i = 0; i < 2; i++) {
             ctx.save();
-            _slotPath(ctx, layoutKey, i, w, h, gap);
+            _slotPath(ctx, layoutKey, i, w, h, gap, safeSlots[i]);
             ctx.clip();
-            if (images[i]) _drawSlot(ctx, safeSlots[i], images[i], _slotBounds(layoutKey, i, w, h, gap));
+            if (images[i]) _drawSlot(ctx, safeSlots[i], images[i], _slotBounds(layoutKey, i, w, h, gap, safeSlots[i]));
             else {
                 ctx.fillStyle = '#222';
                 ctx.fillRect(0, 0, w, h);
@@ -185,5 +280,5 @@ window.LapisFXCollage = (() => {
         return createGrid(urls, cols, gap);
     }
 
-    return { LAYOUTS, DUO_LAYOUTS, createGrid, createFromLayout, createDuo };
+    return { LAYOUTS, DUO_LAYOUTS, CollageManager, getSlotGeometry, slotCss, createGrid, createFromLayout, createDuo };
 })();

@@ -84,6 +84,7 @@
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
             <img :src="resultUrl || imageUrl"
+                 id="studio-preview-image"
                  class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                  style="pointer-events:none;user-select:none;">
             <div v-if="sandboxActive"
@@ -112,6 +113,7 @@
                  id="jigsaw-roi-layer"
                  class="jigsaw-roi-layer"
                  :class="{ 'is-dragging': jigsawRoiDragging }"
+                 :style="jigsawRoiLayerStyle"
                  @pointermove="moveJigsawRoi"
                  @pointerup="endJigsawRoi"
                  @pointercancel="endJigsawRoi">
@@ -129,6 +131,7 @@
                  id="jigsaw-manual-layer"
                  class="jigsaw-manual-layer"
                  :class="{ 'is-dragging': jigsawDragging }"
+                 :style="jigsawRoiLayerStyle"
                  @pointermove="moveJigsawPiece"
                  @pointerup="endJigsawPieceDrag"
                  @pointercancel="endJigsawPieceDrag">
@@ -182,18 +185,18 @@
             </div>
             <div class="flex-1 flex items-center justify-center p-3 overflow-hidden">
                 <div class="duo-collage-preview"
-                     :class="'layout-' + collageLayout"
-                     :style="{ gap: collageGap + 'px' }">
+                     :class="'layout-' + collageLayout">
                     <div v-for="(slot, ci) in collageSlots" :key="ci"
                          class="collage-cell duo-slot"
                          :class="{ 'is-active': activeCollageSlot === ci, 'is-fixed': slot.fixed }"
-                         @click="slot.image ? selectCollageSlot(ci) : triggerCellInput(ci)"
+                         :style="collageSlotFrameStyle(slot, ci)"
+                         @click="slot.sourceImage ? selectCollageSlot(ci) : triggerCellInput(ci)"
                          @dblclick="triggerCellInput(ci)"
                          @pointerdown="beginCollageSlotDrag(ci, $event)"
                          @pointermove="moveCollageSlot"
                          @pointerup="endCollageSlot"
                          @pointercancel="endCollageSlot">
-                        <img v-if="slot.image" :src="slot.image"
+                        <img v-if="slot.sourceImage" :src="slot.sourceImage"
                              :style="collageSlotStyle(slot)"
                              class="absolute inset-0 w-full h-full object-cover pointer-events-none">
                         <div v-else class="absolute inset-0 flex flex-col items-center justify-center gap-1">
@@ -204,6 +207,21 @@
                                 class="collage-lock-btn"
                                 @click.stop="toggleCollageFixed(ci)">
                             <i :data-lucide="slot.fixed ? 'lock' : 'unlock'" class="w-3 h-3"></i>
+                        </button>
+                        <button type="button"
+                                class="collage-slot-move"
+                                @pointerdown.stop="beginCollageSlotMove(ci, $event)"
+                                @pointermove="moveCollageSlot"
+                                @pointerup="endCollageSlot"
+                                @pointercancel="endCollageSlot">
+                            <i data-lucide="move" class="w-3 h-3"></i>
+                        </button>
+                        <button type="button"
+                                class="collage-slot-resize"
+                                @pointerdown.stop="beginCollageSlotResize(ci, $event)"
+                                @pointermove="moveCollageSlot"
+                                @pointerup="endCollageSlot"
+                                @pointercancel="endCollageSlot">
                         </button>
                     </div>
                 </div>
@@ -225,21 +243,8 @@
         <div class="glass overflow-x-auto no-scrollbar px-3 py-2 flex items-center gap-2"
              style="backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.08);"
              :style="glassStyle">
-            <!-- Mode toggle -->
-            <button @click="setCropMode('manual')"
-                    class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                    :class="{ 'is-active': cropMode === 'manual' }"
-                    :style="cropMode !== 'manual' ? glassStyle : {}">
-                {{ t.manualCrop }}
-            </button>
-            <button @click="setCropMode('collage')"
-                    class="shape-btn shrink-0 px-3 py-1.5 rounded-full glass text-xs font-bold whitespace-nowrap transition-all"
-                    :class="{ 'is-active': cropMode === 'collage' }"
-                    :style="cropMode !== 'collage' ? glassStyle : {}">
-                {{ t.autoCollage }}
-            </button>
             <!-- Manual: ratio + special shapes -->
-            <template v-if="cropMode === 'manual'">
+            <template>
                 <div class="shrink-0 w-px h-5 mx-1 opacity-20"
                      :class="isDarkTheme ? 'bg-white' : 'bg-black'"></div>
                 <button v-for="r in cropRatios" :key="r.key"
@@ -419,11 +424,15 @@
             </button>
             <button @click="enterCrop" class="nav-item"
                     :style="!imageUrl ? { opacity: 0.35, pointerEvents: 'none' } : {}">
+                <i data-lucide="crop" class="w-5 h-5"></i>
+                <span>{{ t.manualCrop }}</span>
+            </button>
+            <button @click="enterCollage" class="nav-item">
                 <i data-lucide="layout-grid" class="w-5 h-5"></i>
-                <span>{{ t.cropCollage }}</span>
+                <span>{{ t.autoCollage }}</span>
             </button>
             <button @click="enterEffects" class="nav-item"
-                    :style="!imageUrl ? { opacity: 0.35, pointerEvents: 'none' } : {}">
+                    :style="!(imageUrl || resultUrl) ? { opacity: 0.35, pointerEvents: 'none' } : {}">
                 <i data-lucide="sparkles" class="w-5 h-5"></i>
                 <span>{{ t.effects }}</span>
             </button>
