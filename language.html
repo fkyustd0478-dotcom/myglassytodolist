@@ -27,6 +27,7 @@
     <script src="./js/i18n.js" defer></script>
     <script src="./js/nav.js" defer></script>
     <script src="./js/lapis_core_ui.js" defer></script>
+    <script src="./modules/language.js" defer></script>
 
     <style>
         [v-cloak] { display: none !important; }
@@ -49,9 +50,10 @@
 
     <!-- Main Content -->
     <main class="relative z-10 flex-1 overflow-y-auto no-scrollbar px-6 py-4" style="padding-bottom:var(--nav-height)">
+        <language-learning-view :active-tab="activeTab"></language-learning-view>
 
         <!-- Active Tab: Learn -->
-        <div v-show="activeTab === 'learn'" class="flex flex-col items-center justify-center h-full gap-6">
+        <div v-if="false && activeTab === 'learn'" class="flex flex-col items-center justify-center h-full gap-6">
             <div class="glass rounded-[2.5rem] p-10 flex flex-col items-center gap-4 max-w-sm w-full" :style="glassStyle">
                 <i data-lucide="graduation-cap" class="w-12 h-12 opacity-40"></i>
                 <h2 class="text-xl font-black tracking-tight">{{ t.learn }}</h2>
@@ -60,7 +62,7 @@
         </div>
 
         <!-- Active Tab: Vocabulary -->
-        <div v-show="activeTab === 'vocab'" class="flex flex-col items-center justify-center h-full gap-6">
+        <div v-if="false && activeTab === 'vocab'" class="flex flex-col items-center justify-center h-full gap-6">
             <div class="glass rounded-[2.5rem] p-10 flex flex-col items-center gap-4 max-w-sm w-full" :style="glassStyle">
                 <i data-lucide="library" class="w-12 h-12 opacity-40"></i>
                 <h2 class="text-xl font-black tracking-tight">{{ t.vocab }}</h2>
@@ -69,7 +71,7 @@
         </div>
 
         <!-- Active Tab: Notes -->
-        <div v-show="activeTab === 'notes'" class="flex flex-col items-center justify-center h-full gap-6">
+        <div v-if="false && activeTab === 'notes'" class="flex flex-col items-center justify-center h-full gap-6">
             <div class="glass rounded-[2.5rem] p-10 flex flex-col items-center gap-4 max-w-sm w-full" :style="glassStyle">
                 <i data-lucide="notebook-pen" class="w-12 h-12 opacity-40"></i>
                 <h2 class="text-xl font-black tracking-tight">{{ t.notes }}</h2>
@@ -78,7 +80,7 @@
         </div>
 
         <!-- Active Tab: Achievements -->
-        <div v-show="activeTab === 'achievements'" class="flex flex-col items-center justify-center h-full gap-6">
+        <div v-if="false && activeTab === 'achievements'" class="flex flex-col items-center justify-center h-full gap-6">
             <div class="glass rounded-[2.5rem] p-10 flex flex-col items-center gap-4 max-w-sm w-full" :style="glassStyle">
                 <i data-lucide="trophy" class="w-12 h-12 opacity-40"></i>
                 <h2 class="text-xl font-black tracking-tight">{{ t.achievements }}</h2>
@@ -92,19 +94,19 @@
     <nav class="bottom-nav glass" :style="glassStyle">
         <button @click="activeTab = 'learn'" class="nav-item" :class="{ active: activeTab === 'learn' }">
             <i data-lucide="graduation-cap" class="w-5 h-5"></i>
-            <span>{{ t.learn }}</span>
+            <span>Study</span>
         </button>
         <button @click="activeTab = 'vocab'" class="nav-item" :class="{ active: activeTab === 'vocab' }">
             <i data-lucide="library" class="w-5 h-5"></i>
-            <span>{{ t.vocab }}</span>
+            <span>Vocabulary</span>
         </button>
         <button @click="activeTab = 'notes'" class="nav-item" :class="{ active: activeTab === 'notes' }">
             <i data-lucide="notebook-pen" class="w-5 h-5"></i>
-            <span>{{ t.notes }}</span>
+            <span>Notes</span>
         </button>
         <button @click="activeTab = 'achievements'" class="nav-item" :class="{ active: activeTab === 'achievements' }">
             <i data-lucide="trophy" class="w-5 h-5"></i>
-            <span>{{ t.achievements }}</span>
+            <span>Achievements</span>
         </button>
     </nav>
 
@@ -112,11 +114,12 @@
 
 <script defer>
 (function waitForVue() {
-    if (typeof Vue === 'undefined' || typeof useNav === 'undefined') {
+    if (typeof Vue === 'undefined' || typeof useNav === 'undefined' || typeof window.LanguageLearningView === 'undefined') {
         return setTimeout(waitForVue, 20);
     }
     const { createApp, ref, computed, onMounted } = Vue;
     createApp({
+        components: { LanguageLearningView: window.LanguageLearningView },
         setup() {
             const { navDropdownOpen, currentPageTitle, toggleNavDropdown,
                     navSettings, isDarkTheme, glassStyle, themeClasses,
