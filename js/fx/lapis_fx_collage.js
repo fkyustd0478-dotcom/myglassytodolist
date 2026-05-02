@@ -11,8 +11,12 @@ window.LapisFXCollage = (() => {
     };
 
     const DUO_LAYOUTS = {
-        vertical:   { label: 'Vertical' },
-        horizontal: { label: 'Horizontal' },
+        vertical:   { label: '2V', count: 2 },
+        horizontal: { label: '2H', count: 2 },
+        curve2:     { label: 'Curve', count: 2 },
+        grid3:      { label: '3 Grid', count: 3 },
+        stack3:     { label: '3 Stack', count: 3 },
+        grid4:      { label: '4 Grid', count: 4 },
         taiji:      { label: 'Taiji' },
         circles:    { label: 'Circle' },
         hearts:     { label: 'Heart' },
@@ -23,6 +27,18 @@ window.LapisFXCollage = (() => {
         triangles:  { label: 'Triangle' },
         film:       { label: 'Film' },
     };
+    const FIXED_LAYOUTS = {
+        vertical: DUO_LAYOUTS.vertical,
+        horizontal: DUO_LAYOUTS.horizontal,
+        curve2: DUO_LAYOUTS.curve2,
+        grid3: DUO_LAYOUTS.grid3,
+        stack3: DUO_LAYOUTS.stack3,
+        grid4: DUO_LAYOUTS.grid4,
+    };
+
+    function layoutCount(layoutKey) {
+        return Math.max(2, Math.min(4, Number((DUO_LAYOUTS[layoutKey] || {}).count) || 2));
+    }
 
     const CollageManager = {
         createSlot(layoutKey = 'vertical', index = 0) {
@@ -35,10 +51,10 @@ window.LapisFXCollage = (() => {
             };
         },
         createSlots(layoutKey = 'vertical', count = 2) {
-            return Array.from({ length: count }, (_, index) => this.createSlot(layoutKey, index));
+            return Array.from({ length: count || layoutCount(layoutKey) }, (_, index) => this.createSlot(layoutKey, index));
         },
         applyLayout(slots, layoutKey = 'vertical') {
-            return Array.from({ length: 2 }, (_, index) => {
+            return Array.from({ length: layoutCount(layoutKey) }, (_, index) => {
                 const slot = slots?.[index] || this.createSlot(layoutKey, index);
                 return {
                     ...slot,
@@ -95,6 +111,7 @@ window.LapisFXCollage = (() => {
     }
 
     function _shapeFor(layoutKey, index) {
+        if (layoutKey === 'curve2') return index === 0 ? 'curve-a' : 'curve-b';
         if (layoutKey === 'hearts' || layoutKey === 'overlapHearts') return 'heart';
         if (layoutKey === 'circles' || layoutKey === 'circleOverlap') return 'circle';
         if (layoutKey === 'triangles') return index === 0 ? 'tri-a' : 'tri-b';
@@ -106,6 +123,13 @@ window.LapisFXCollage = (() => {
     function getSlotGeometry(layoutKey, index, gap = 0, slot = null) {
         const g = _gap(gap);
         if (_hasBounds(slot)) return { bounds: slot.bounds, shape: _shapeFor(layoutKey, index) };
+        if (layoutKey === 'curve2') return { bounds: { x: 0, y: 0, w: 1, h: 1 }, shape: index === 0 ? 'curve-a' : 'curve-b' };
+        if (layoutKey === 'grid3') {
+            if (index === 0) return { bounds: { x: 0, y: 0, w: 0.5, h: 1 }, shape: 'rect' };
+            return { bounds: { x: 0.5, y: index === 1 ? 0 : 0.5, w: 0.5, h: 0.5 }, shape: 'rect' };
+        }
+        if (layoutKey === 'stack3') return { bounds: { x: 0, y: index / 3, w: 1, h: 1 / 3 }, shape: 'rect' };
+        if (layoutKey === 'grid4') return { bounds: { x: index % 2 ? 0.5 : 0, y: index > 1 ? 0.5 : 0, w: 0.5, h: 0.5 }, shape: 'rect' };
         if (layoutKey === 'horizontal') return { bounds: { x: 0, y: index === 0 ? 0 : 0.5 + g / 1800, w: 1, h: 0.5 - g / 1800 }, shape: 'rect' };
         if (layoutKey === 'circles') return { bounds: { x: index === 0 ? 0.03 : 0.37, y: 0.18, w: 0.60, h: 0.64 }, shape: 'circle' };
         if (layoutKey === 'hearts') return { bounds: { x: index === 0 ? 0.06 : 0.52, y: 0.16, w: 0.42, h: 0.58 }, shape: 'heart' };
@@ -155,6 +179,19 @@ window.LapisFXCollage = (() => {
             ctx.ellipse(b.x + b.w / 2, b.y + b.h / 2, Math.max(1, b.w / 2 - halfG), Math.max(1, b.h / 2 - halfG), 0, 0, Math.PI * 2);
         } else if (geo.shape === 'heart') {
             _heartPath(ctx, b.x + halfG, b.y + halfG, b.w - g, b.h - g);
+        } else if (geo.shape === 'curve-a') {
+            ctx.moveTo(0, 0);
+            ctx.lineTo(w * 0.54, 0);
+            ctx.bezierCurveTo(w * 0.32, h * 0.28, w * 0.68, h * 0.72, w * 0.46, h);
+            ctx.lineTo(0, h);
+            ctx.closePath();
+        } else if (geo.shape === 'curve-b') {
+            ctx.moveTo(w * 0.54, 0);
+            ctx.lineTo(w, 0);
+            ctx.lineTo(w, h);
+            ctx.lineTo(w * 0.46, h);
+            ctx.bezierCurveTo(w * 0.68, h * 0.72, w * 0.32, h * 0.28, w * 0.54, 0);
+            ctx.closePath();
         } else if (geo.shape === 'tri-a' || geo.shape === 'diag-a') {
             ctx.moveTo(b.x, b.y); ctx.lineTo(b.x + b.w - halfG, b.y); ctx.lineTo(b.x, b.y + b.h - halfG); ctx.closePath();
         } else if (geo.shape === 'tri-b' || geo.shape === 'diag-b') {
@@ -179,6 +216,8 @@ window.LapisFXCollage = (() => {
         };
         if (geo.shape === 'circle') style.borderRadius = '9999px';
         if (geo.shape === 'heart') style.clipPath = "path('M50 92 C50 92 8 62 8 31 C8 9 34 3 50 24 C66 3 92 9 92 31 C92 62 50 92 50 92 Z')";
+        if (geo.shape === 'curve-a') style.clipPath = 'path("M0 0 L54 0 C32 28 68 72 46 100 L0 100 Z")';
+        if (geo.shape === 'curve-b') style.clipPath = 'path("M54 0 L100 0 L100 100 L46 100 C68 72 32 28 54 0 Z")';
         if (geo.shape === 'tri-a' || geo.shape === 'diag-a') style.clipPath = 'polygon(0 0, 100% 0, 0 100%)';
         if (geo.shape === 'tri-b' || geo.shape === 'diag-b') style.clipPath = 'polygon(100% 0, 100% 100%, 0 100%)';
         if (geo.shape === 'taiji-a') style.clipPath = 'path("M50 0 C15 18 85 32 50 50 C15 68 85 82 50 100 L0 100 L0 0 Z")';
@@ -241,7 +280,8 @@ window.LapisFXCollage = (() => {
     }
 
     async function createDuo(slots, layoutKey = 'vertical', options = {}) {
-        const safeSlots = Array.from({ length: 2 }, (_, i) => slots?.[i] || {});
+        const count = layoutCount(layoutKey);
+        const safeSlots = Array.from({ length: count }, (_, i) => slots?.[i] || {});
         const images = await Promise.all(
             safeSlots.map(slot => {
                 const src = slot.sourceImage || slot.image;
@@ -257,7 +297,7 @@ window.LapisFXCollage = (() => {
         ctx.fillStyle = options.background || '#141414';
         ctx.fillRect(0, 0, w, h);
 
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < count; i++) {
             ctx.save();
             _slotPath(ctx, layoutKey, i, w, h, gap, safeSlots[i]);
             ctx.clip();
@@ -346,5 +386,5 @@ window.LapisFXCollage = (() => {
         return createGrid(urls, cols, gap);
     }
 
-    return { LAYOUTS, DUO_LAYOUTS, CollageManager, getSlotGeometry, slotCss, createGrid, createFromLayout, createDuo, createFreeform };
+    return { LAYOUTS, DUO_LAYOUTS, FIXED_LAYOUTS, CollageManager, layoutCount, getSlotGeometry, slotCss, createGrid, createFromLayout, createDuo, createFreeform };
 })();

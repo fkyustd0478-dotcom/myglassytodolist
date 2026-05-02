@@ -27,6 +27,7 @@
             const dragOver        = ref(false);
             const cropShape       = ref('free');
             const cropMode        = ref('manual');   // 'manual' | 'collage'
+            const collageFlow     = ref('free');     // 'free' | 'fixed'
             const collageLayout   = ref('vertical'); // active duo mask key
             const collageSlots    = ref([]);         // { sourceImage, maskPath, viewport, bounds, fixed }
             const collageItems    = ref([]);         // PicCollage-like freeform objects
@@ -96,8 +97,10 @@
             );
 
             // Crop controls use the floating panel; effects has its own FX drawer.
-            const showFloatingPanel = computed(() => activeNav.value === 'crop' && cropMode.value === 'manual');
-            const activeCollageItem = computed(() => collageItems.value[activeCollageSlot.value] || null);
+            const showFloatingPanel = computed(() => false);
+            const activeCollageItem = computed(() =>
+                collageFlow.value === 'free' ? (collageItems.value[activeCollageSlot.value] || null) : null
+            );
             const sandboxActive = computed(() => {
                 if (activeNav.value !== 'effects') return false;
                 if (effectCategory.value === 'text') return !!textConfig.value.text.trim();
@@ -155,7 +158,9 @@
                 if (activeNav.value === 'effects')
                     return 'calc(246px + env(safe-area-inset-bottom, 0px))';
                 if (activeNav.value === 'crop')
-                    return 'calc(134px + env(safe-area-inset-bottom, 0px))';
+                    return cropMode.value === 'manual'
+                        ? 'calc(190px + env(safe-area-inset-bottom, 0px))'
+                        : 'calc(134px + env(safe-area-inset-bottom, 0px))';
                 return 'calc(80px + env(safe-area-inset-bottom, 0px))';
             });
 
@@ -256,9 +261,8 @@
             // ── Data lists ────────────────────────────────────────────────────
             const cropRatios = computed(() => [
                 { key: 'free', label: t.value.free,    ratio: NaN  },
-                { key: '1:1',  label: t.value['1:1'],  ratio: 1    },
                 { key: '4:3',  label: t.value['4:3'],  ratio: 4/3  },
-                { key: '9:16', label: t.value['9:16'], ratio: 9/16 },
+                { key: '16:9', label: '16:9',          ratio: 16/9 },
             ]);
 
             const specialShapes = [
@@ -268,12 +272,17 @@
                 { key: 'star',    svg: '<svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor"><polygon points="10,1 12.9,7 19.5,7.6 14.5,12 16.2,18.5 10,15 3.8,18.5 5.5,12 0.5,7.6 7.1,7"/></svg>' },
             ];
             const cropSetupOptions = computed(() => [
+                { key: 'free', label: t.value.free, ratio: NaN },
                 { key: '4:3', label: '4:3', ratio: 4/3 },
                 { key: '16:9', label: '16:9', ratio: 16/9 },
                 ...specialShapes
                     .filter(shape => ['circle', 'heart', 'star'].includes(shape.key))
                     .map(shape => ({ ...shape, label: t.value[shape.key], ratio: NaN })),
             ]);
+            const fixedCollageLayouts = computed(() =>
+                Object.entries(LapisFXCollage.FIXED_LAYOUTS || LapisFXCollage.DUO_LAYOUTS || {})
+                    .map(([key, layout]) => ({ key, ...layout }))
+            );
 
             const effectsList = [
                 { key: 'grayscale', tKey: 'grayscale' },
@@ -751,9 +760,10 @@
             }
 
             function _initCollageCells() {
+                const count = LapisFXCollage.layoutCount ? LapisFXCollage.layoutCount(collageLayout.value) : 2;
                 collageSlots.value = LapisFXCollage.CollageManager
-                    ? LapisFXCollage.CollageManager.createSlots(collageLayout.value, 2)
-                    : [_collageSlot(), _collageSlot()];
+                    ? LapisFXCollage.CollageManager.createSlots(collageLayout.value, count)
+                    : Array.from({ length: count }, (_, index) => _collageSlot('', index));
                 collageItems.value = [];
                 activeCollageSlot.value = 0;
                 fxIntensity.value = 0.25;
@@ -771,12 +781,12 @@
 
             function promptCropSetup() {
                 if (!(imageUrl.value || resultUrl.value)) { alert(t.value.noImage); return; }
-                openStudioModal('studio-crop-setup-modal');
+                enterCrop({ key: 'free', ratio: NaN });
             }
 
             function chooseCropSetup(option) {
-                closeStudioModal('studio-crop-setup-modal');
-                enterCrop(option);
+                cropShape.value = option.key || 'free';
+                if (_cropper) _cropper.setAspectRatio(Number.isFinite(option.ratio) ? option.ratio : NaN);
             }
 
             async function enterCrop(option = { key: 'free', ratio: NaN }) {
@@ -795,6 +805,7 @@
                 _effectsBase       = null;
                 activeEffect.value = '';
                 cropMode.value     = 'collage';
+                collageFlow.value  = 'free';
                 cropBoxData.value  = null;
                 if (_cropper) { _cropper.destroy(); _cropper = null; }
                 _initCollageCells();
@@ -818,9 +829,23 @@
             function setCollageLayout(key) {
                 if (!collageLayouts[key]) return;
                 collageLayout.value = key;
+                const count = LapisFXCollage.layoutCount ? LapisFXCollage.layoutCount(key) : 2;
                 collageSlots.value = LapisFXCollage.CollageManager
                     ? LapisFXCollage.CollageManager.applyLayout(collageSlots.value, key)
-                    : collageSlots.value.map((slot, index) => ({ ...slot, maskPath: `${key}:${index}` }));
+                    : Array.from({ length: count }, (_, index) => ({
+                        ...(collageSlots.value[index] || _collageSlot('', index)),
+                        maskPath: `${key}:${index}`,
+                        bounds: { x: 0, y: 0, w: 0, h: 0 },
+                    }));
+                activeCollageSlot.value = Math.min(activeCollageSlot.value, collageSlots.value.length - 1);
+                collageApplied.value = false;
+            }
+
+            function setCollageFlow(flow) {
+                collageFlow.value = flow;
+                if (flow === 'fixed' && !collageSlots.value.length) _initCollageCells();
+                activeCollageSlot.value = 0;
+                collageApplied.value = false;
             }
 
             function triggerCellInput(ci) {
@@ -831,6 +856,23 @@
             function onCellFileInput(e) {
                 const files = Array.from(e.target.files || []);
                 e.target.value = '';
+                if (collageFlow.value === 'fixed') {
+                    const next = [...collageSlots.value];
+                    files.filter(file => file.type.startsWith('image/')).forEach((file, offset) => {
+                        const index = _collageActiveCell + offset;
+                        if (!next[index]) return;
+                        if (next[index].sourceImage) URL.revokeObjectURL(next[index].sourceImage);
+                        next[index] = {
+                            ...next[index],
+                            sourceImage: URL.createObjectURL(file),
+                            viewport: { x: 0, y: 0, scale: 1 },
+                        };
+                    });
+                    collageSlots.value = next;
+                    activeCollageSlot.value = Math.min(_collageActiveCell, next.length - 1);
+                    collageApplied.value = false;
+                    return;
+                }
                 files.filter(file => file.type.startsWith('image/')).forEach(file => _addCollageItem(URL.createObjectURL(file)));
             }
 
@@ -1198,9 +1240,9 @@
 
             async function buildCollage(exitAfterBuild = true) {
                 try {
-                    const canvas = collageItems.value.length
-                        ? await LapisFXCollage.createFreeform(collageItems.value, { background: collageBg.value, size: 1080 })
-                        : await LapisFXCollage.createDuo(collageSlots.value, collageLayout.value, { gap: collageGap.value });
+                    const canvas = collageFlow.value === 'fixed'
+                        ? await LapisFXCollage.createDuo(collageSlots.value, collageLayout.value, { gap: 0, background: collageBg.value })
+                        : await LapisFXCollage.createFreeform(collageItems.value, { background: collageBg.value, size: 1080 });
                     if (!canvas) return;
                     _pushHistory();
                     _resultCanvas   = canvas;
@@ -1312,7 +1354,10 @@
 
             async function saveFromCrop() {
                 if (cropMode.value === 'collage') {
-                    if (collageItems.value.length && !collageApplied.value) {
+                    const hasContent = collageFlow.value === 'fixed'
+                        ? collageSlots.value.some(slot => slot.sourceImage)
+                        : collageItems.value.length;
+                    if (hasContent && !collageApplied.value) {
                         showStudioMessage('Apply before Save.', t.value.save);
                         return;
                     }
@@ -1401,14 +1446,14 @@
                 customBgStyle, systemDark, resolvedTheme,
                 imageUrl, resultUrl, activeNav, contentView,
                 dragOver, cropShape, cropMode,
-                collageLayout, collageSlots, collageItems, collageMask, collageBg,
+                collageFlow, collageLayout, collageSlots, collageItems, collageMask, collageBg,
                 collageGap, activeCollageSlot, activeCollageItem, collageDragging,
                 fxIntensity, jigsawGrid, jigsawRoi, jigsawManual, jigsawLayout, cropBoxData, containerSize,
                 isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, sandboxDragging,
                 jigsawManualActive, jigsawRoiActive, jigsawRoiStyle, jigsawRoiLayerStyle, jigsawRoiDragging,
                 canUndoCt, showFloatingPanel, mainPaddingBottom,
                 activeEffect, effectCategory,
-                effectsList, jigsawVariants, stickerList, collageLayouts,
+                effectsList, jigsawVariants, stickerList, collageLayouts, fixedCollageLayouts,
                 textConfig, stickerCategory, stickerCategoryList, stickerConfig, stickerActive,
                 downloadName, modalMessageTitle, modalMessage,
                 t, cropRatios, specialShapes, cropSetupOptions,
@@ -1425,7 +1470,7 @@
                 moveJigsawPiece: jigsawManualTools.moveDrag,
                 endJigsawPieceDrag: jigsawManualTools.endDrag,
                 promptCropSetup, chooseCropSetup, enterCrop, enterCollage, exitCrop, confirmCrop, saveFromCrop,
-                setCropMode, setCollageLayout,
+                setCropMode, setCollageLayout, setCollageFlow,
                 triggerCellInput, onCellFileInput,
                 collageSlotStyle, collageItemStyle, selectCollageSlot, selectCollageItem,
                 setCollageItemMask, nudgeCollageLayer, deleteCollageItem,

@@ -7,9 +7,10 @@ describe('studio graphics rendering controls', () => {
         const base = readFileSync('js/fx/lapis_fx_base.js', 'utf8');
         const html = readFileSync('studio.html', 'utf8');
 
-        expect(html).toContain('studio-crop-setup-modal');
         expect(html).toContain('@click="promptCropSetup"');
+        expect(html).toContain("activeNav === 'crop' && cropMode === 'manual'");
         expect(ui).toContain('const cropSetupOptions');
+        expect(ui).toContain("{ key: 'free', label: t.value.free, ratio: NaN }");
         expect(ui).toContain("key: '16:9'");
         expect(ui).toContain('function chooseCropSetup');
         expect(ui).toContain('setAspectRatio(NaN)');
@@ -138,6 +139,7 @@ describe('studio graphics rendering controls', () => {
         expect(collage).toContain('item.zIndex');
         expect(collage).toContain('ctx.rotate');
         expect(ui).toContain('const collageItems');
+        expect(ui).toContain("const collageFlow");
         expect(ui).toContain('const collageMask');
         expect(ui).toContain('const collageBg');
         expect(ui).toContain('const activeCollageItem');
@@ -154,6 +156,9 @@ describe('studio graphics rendering controls', () => {
         expect(ui).toContain('buildCollage(false)');
         expect(ui).toContain('activeNav.value = \'main\'');
         expect(html).toContain('pic-collage-canvas');
+        expect(html).toContain("collageFlow === 'free'");
+        expect(html).toContain("collageFlow === 'fixed'");
+        expect(html).toContain('fixedCollageLayouts');
         expect(html).toContain('multiple class="hidden"');
         expect(html).toContain('beginCollageItemDrag');
         expect(html).toContain('collage-rotate-handle');
@@ -170,6 +175,11 @@ describe('studio graphics rendering controls', () => {
         expect(css).toContain('.pic-collage-item');
         expect(css).toContain('.collage-scale-handle');
         expect(collage).toContain('const p = (nx, ny)');
+        expect(collage).toContain('const FIXED_LAYOUTS');
+        expect(collage).toContain('curve2');
+        expect(collage).toContain('grid4');
+        expect(collage).toContain('function layoutCount');
+        expect(collage).toContain('for (let i = 0; i < count; i++)');
     });
 
     it('keeps duo collage renderer compatibility', () => {
@@ -177,6 +187,8 @@ describe('studio graphics rendering controls', () => {
         const collage = readFileSync('js/fx/lapis_fx_collage.js', 'utf8');
 
         expect(collage).toContain('const DUO_LAYOUTS');
+        expect(collage).toContain('FIXED_LAYOUTS');
+        expect(collage).toContain('count: 4');
         expect(collage).toContain('overlapHearts');
         expect(collage).toContain('circleOverlap');
         expect(collage).toContain('inset:');
@@ -193,7 +205,7 @@ describe('studio graphics rendering controls', () => {
         expect(collage).toContain('ctx.drawImage(img, x, y, dw, dh)');
         expect(ui).toContain('const collageSlots');
         expect(ui).toContain('const collageGap      = ref(0)');
-        expect(ui).toContain('CollageManager.createSlots(collageLayout.value, 2)');
+        expect(ui).toContain('CollageManager.createSlots(collageLayout.value, count)');
         expect(ui).toContain('CollageManager.applyLayout(collageSlots.value, key)');
         expect(ui).toContain('sourceImage');
         expect(ui).toContain('viewport: { x: 0, y: 0, scale: 1 }');
@@ -202,7 +214,7 @@ describe('studio graphics rendering controls', () => {
         expect(ui).toContain('function beginCollageSlotResize');
         expect(ui).toContain("mode: 'pinch'");
         expect(ui).toContain('_collagePointers');
-        expect(ui).toContain('LapisFXCollage.createDuo(collageSlots.value, collageLayout.value, { gap: collageGap.value })');
+        expect(ui).toContain('LapisFXCollage.createDuo(collageSlots.value, collageLayout.value, { gap: 0, background: collageBg.value })');
     });
 
     it('supports sandbox drag scale and rotate controls', () => {
