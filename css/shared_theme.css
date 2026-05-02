@@ -5,6 +5,7 @@
 
 /* ── Global Design Tokens ────────────────────────────────────────────────── */
 :root {
+    --lapis-theme-opacity: 1;
     --glass-bg:      rgba(255, 255, 255, 0.2);
     --glass-border:  rgba(255, 255, 255, 0.1);
     --primary:       #3b82f6;
@@ -233,7 +234,7 @@ body {
 .glass {
     backdrop-filter: blur(12px) brightness(0.85);
     -webkit-backdrop-filter: blur(12px) brightness(0.85);
-    background: var(--glass-bg);
+    background: rgba(255, 255, 255, calc(0.2 * var(--lapis-theme-opacity)));
     border: 2.5px solid rgba(255, 255, 255, 0.9);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
 }
@@ -251,7 +252,7 @@ body {
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) .glass {
-    background: rgba(255, 255, 255, 0.75) !important;
+    background: rgba(255, 255, 255, calc(0.75 * var(--lapis-theme-opacity))) !important;
     border: 1.5px solid rgba(0, 0, 0, 0.08) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05),
                 inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;

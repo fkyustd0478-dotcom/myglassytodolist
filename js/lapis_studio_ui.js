@@ -31,10 +31,11 @@
             const collageCells    = ref([]);         // per-cell URLs (blob/data), null = empty
             const fxIntensity     = ref(1.0);        // 0‥1 slider for effects
             const jigsawGrid      = ref(4);
+            const jigsawRange     = ref(100);
             const jigsawManual    = ref(false);
             const jigsawLayout    = ref([]);
             const activeEffect    = ref('');         // pending (previewed) effect key
-            const effectCategory  = ref('filters'); // 'filters'|'special'|'jigsaw'|'text'|'stickers'
+            const effectCategory  = ref('filters'); // 'filters'|'jigsaw'|'text'|'stickers'
             const textConfig      = ref({
                 text: '', fontFamily: 'Arial, sans-serif', fontSize: 80,
                 color: '#ffffff', strokeColor: 'rgba(0,0,0,0.65)', strokeWidth: 2,
@@ -45,7 +46,9 @@
             const stickerCategory = ref('emojis');
             const stickerConfig   = ref({ x: 0.5, y: 0.5, scale: 0.18, rotation: 0 });
             const stickerActive   = ref(''); // last-applied sticker emoji
-            const smudgeConfig    = ref({ x: 0.5, y: 0.5, rotation: -12, invert: false });
+            const downloadName    = ref('lapis-image');
+            const modalMessageTitle = ref('');
+            const modalMessage    = ref('');
             const sandboxDragging = ref(false);
             let _sandboxDrag       = null;
             let _sandboxFrame      = 0;
@@ -81,7 +84,6 @@
             const showFloatingPanel = computed(() => activeNav.value === 'crop');
             const sandboxActive = computed(() => {
                 if (activeNav.value !== 'effects') return false;
-                if (effectCategory.value === 'special') return activeEffect.value === 'glass-smudge';
                 if (effectCategory.value === 'text') return !!textConfig.value.text.trim();
                 if (effectCategory.value === 'stickers') return !!stickerActive.value;
                 return false;
@@ -89,13 +91,9 @@
             const sandboxBoxStyle = computed(() => {
                 const cfg = effectCategory.value === 'stickers'
                     ? stickerConfig.value
-                    : effectCategory.value === 'special'
-                        ? smudgeConfig.value
-                        : textConfig.value;
+                    : textConfig.value;
                 const scale = effectCategory.value === 'stickers'
                     ? Math.max(0.6, cfg.scale * 4)
-                    : effectCategory.value === 'special'
-                        ? Math.max(0.75, fxIntensity.value * 1.2)
                     : Math.max(0.7, cfg.fontSize / 80);
                 return {
                     left: `${cfg.x * 100}%`,
@@ -103,7 +101,6 @@
                     transform: `translate(-50%, -50%) rotate(${cfg.rotation || 0}deg) scale(${scale})`,
                 };
             });
-            const sandboxAllowsScale = computed(() => effectCategory.value !== 'special');
             const jigsawManualTools = LapisStudioJigsawManual.create({
                 Vue,
                 activeNav,
@@ -111,6 +108,7 @@
                 activeEffect,
                 jigsawManual,
                 jigsawGrid,
+                jigsawRange,
                 jigsawLayout,
                 fxIntensity,
                 applyEffectFilter,
@@ -152,7 +150,7 @@
                     tapToUpload: '點擊或拖曳圖片至此',
                     uploadHint: '支援 JPG、PNG、WebP，最大 10 MB',
                     choosePhoto: '選擇照片',
-                    saveAs: '另存為', cancel: '取消',
+                    saveAs: '另存為', cancel: '取消', confirm: '確認', deleteImage: '刪除圖片',
                     free: '自由', '1:1': '1:1', '4:3': '4:3', '9:16': '9:16',
                     circle: '圓形', ellipse: '橢圓', heart: '愛心', star: '星形',
                     errSize: '圖片超過 10 MB，請選擇較小的檔案。',
@@ -164,15 +162,13 @@
                     manualCrop: '手動剪裁', autoCollage: '自動拼貼',
                     addImage: '加入圖片', addImagesHint: '選擇多張圖片後按格式鈕建立拼貼',
                     // Effects
-                    filtersCat: '濾鏡', specialCat: '特殊', jigsawCat: '拼圖',
+                    filtersCat: '濾鏡', jigsawCat: '拼圖',
                     textCat: '文字', stickerCat: '貼圖',
-                    intensity: '強度',
+                    intensity: '強度', range: '範圍',
                     enterText: '輸入文字…', buildGrid: '建立',
                     // Colour filters
                     grayscale: '黑白', sepia: '復古', vivid: '鮮豔',
                     dim: '暗調', warm: '暖色', cool: '冷色',
-                    // Glass variants
-                    glassFragments: '玻璃碎片', glassSpiderweb: '蜘蛛網', glassSmudge: '塗抹',
                     // Jigsaw variants
                     jigsawStatic: '靜止', jigsawExplode: '爆炸',
                     jigsawDrift: '漂移', jigsawGravity: '重力', jigsawScattered: '散落',
@@ -183,7 +179,7 @@
                     tapToUpload: 'Tap or drag an image here',
                     uploadHint: 'JPG, PNG, WebP — max 10 MB',
                     choosePhoto: 'Choose Photo',
-                    saveAs: 'Save As', cancel: 'Cancel',
+                    saveAs: 'Save As', cancel: 'Cancel', confirm: 'Confirm', deleteImage: 'Delete Image',
                     free: 'Free', '1:1': '1:1', '4:3': '4:3', '9:16': '9:16',
                     circle: 'Circle', ellipse: 'Ellipse', heart: 'Heart', star: 'Star',
                     errSize: 'Image exceeds 10 MB.',
@@ -193,13 +189,12 @@
                     confirmDelete: 'Delete this image?',
                     manualCrop: 'Manual Crop', autoCollage: 'Auto Collage',
                     addImage: 'Add Image', addImagesHint: 'Add images then pick a grid layout',
-                    filtersCat: 'Filters', specialCat: 'Special', jigsawCat: 'Jigsaw',
+                    filtersCat: 'Filters', jigsawCat: 'Jigsaw',
                     textCat: 'Text', stickerCat: 'Stickers',
-                    intensity: 'Intensity',
+                    intensity: 'Intensity', range: 'Range',
                     enterText: 'Enter text…', buildGrid: 'Build',
                     grayscale: 'B&W', sepia: 'Sepia', vivid: 'Vivid',
                     dim: 'Dim', warm: 'Warm', cool: 'Cool',
-                    glassFragments: 'Fragments', glassSpiderweb: 'Spiderweb', glassSmudge: 'Smudge',
                     jigsawStatic: 'Static', jigsawExplode: 'Explode',
                     jigsawDrift: 'Drift', jigsawGravity: 'Gravity', jigsawScattered: 'Scattered',
                 },
@@ -257,12 +252,6 @@
             });
             const collageLayouts = LapisFXCollage.LAYOUTS;  // static, for template iteration
 
-            const specialVariants = [
-                { key: 'glass-fragments', tKey: 'glassFragments' },
-                { key: 'glass-spiderweb', tKey: 'glassSpiderweb' },
-                { key: 'glass-smudge',    tKey: 'glassSmudge'    },
-            ];
-
             const jigsawVariants = [
                 { key: 'jigsaw-static',    tKey: 'jigsawStatic'    },
                 { key: 'jigsaw-explode',   tKey: 'jigsawExplode'   },
@@ -281,6 +270,7 @@
                 effectCategory.value   = 'filters';
                 fxIntensity.value      = 1.0;
                 jigsawGrid.value       = 4;
+                jigsawRange.value      = 100;
                 jigsawManual.value     = false;
                 jigsawLayout.value     = [];
                 textConfig.value       = {
@@ -293,7 +283,6 @@
                 stickerCategory.value  = 'emojis';
                 stickerConfig.value    = { x: 0.5, y: 0.5, scale: 0.18, rotation: 0 };
                 stickerActive.value    = '';
-                smudgeConfig.value     = { x: 0.5, y: 0.5, rotation: -12, invert: false };
             }
 
             async function _loadFile(file) {
@@ -314,9 +303,28 @@
             function triggerUpload()     { document.getElementById('studio-file-input').click(); }
             function onDrop(e)           { dragOver.value = false; _loadFile(e.dataTransfer.files[0]); }
 
+            function openStudioModal(id) {
+                if (typeof LapisModal !== 'undefined') LapisModal.open(id);
+            }
+
+            function closeStudioModal(id) {
+                if (typeof LapisModal !== 'undefined') LapisModal.close(id);
+            }
+
+            function showStudioMessage(message, title = t.value.save) {
+                modalMessageTitle.value = title;
+                modalMessage.value = message;
+                openStudioModal('studio-message-modal');
+            }
+
             // ── Image delete ──────────────────────────────────────────────────
             function promptDeleteImage() {
-                if (!confirm(t.value.confirmDelete)) return;
+                if (!imageUrl.value) return;
+                openStudioModal('studio-delete-modal');
+            }
+
+            function confirmDeleteImage() {
+                closeStudioModal('studio-delete-modal');
                 if (_cropper) { _cropper.destroy(); _cropper = null; }
                 if (imageUrl.value) URL.revokeObjectURL(imageUrl.value);
                 imageUrl.value    = '';
@@ -373,8 +381,8 @@
                     const config = {
                         intensity: fxIntensity.value,
                         gridSize: jigsawGrid.value,
+                        roiRange: jigsawRange.value / 100,
                     };
-                    if (effectKey === 'glass-smudge') config.smudge = smudgeConfig.value;
                     if (effectKey.startsWith('jigsaw-') && jigsawManual.value) {
                         config.layout = jigsawManualTools.ensureLayout(sc.width, sc.height);
                     }
@@ -393,6 +401,13 @@
                 }
             }
 
+            function onJigsawRangeChange() {
+                jigsawManualTools.resetLayout();
+                if (activeEffect.value && activeEffect.value.startsWith('jigsaw-')) {
+                    applyEffectFilter(activeEffect.value);
+                }
+            }
+
             // 100 ms debounce: re-preview current effect when slider moves
             function onSliderInput() {
                 if (_sliderTimer) clearTimeout(_sliderTimer);
@@ -402,10 +417,6 @@
             }
 
             function previewSandbox() {
-                if (effectCategory.value === 'special' && activeEffect.value === 'glass-smudge') {
-                    applyEffectFilter(activeEffect.value);
-                    return Promise.resolve();
-                }
                 if (effectCategory.value === 'text') return applyText();
                 if (effectCategory.value === 'stickers' && stickerActive.value) return applySticker(stickerActive.value);
                 return Promise.resolve();
@@ -485,7 +496,6 @@
             // ── Crop ─────────────────────────────────────────────────────────
             function _sandboxConfig() {
                 if (effectCategory.value === 'stickers') return stickerConfig.value;
-                if (effectCategory.value === 'special') return smudgeConfig.value;
                 return textConfig.value;
             }
             function _sandboxRect() {
@@ -744,9 +754,19 @@
 
             // ── Download (main nav only) ──────────────────────────────────────
             async function promptDownload() {
-                if (!imageUrl.value) { alert(t.value.noImage); return; }
-                const name = window.prompt(t.value.saveAs, `glassystudio_${Date.now()}`);
-                if (name === null) return;
+                if (!imageUrl.value) {
+                    showStudioMessage(t.value.noImage, t.value.saveAs);
+                    return;
+                }
+                downloadName.value = 'lapis-image';
+                openStudioModal('studio-download-modal');
+                nextTick(() => document.getElementById('studio-download-name')?.focus());
+            }
+
+            async function confirmDownloadImage() {
+                if (!imageUrl.value) return;
+                const name = (downloadName.value || 'lapis-image').trim() || 'lapis-image';
+                closeStudioModal('studio-download-modal');
 
                 let fileHandle = null;
                 if (window.showSaveFilePicker && LapisStudioEngine.sanitizeDownloadName) {
@@ -775,7 +795,7 @@
                     }
                     await LapisStudioEngine.triggerRealDownload(canvas, name, fileHandle);
                 } catch (e) {
-                    alert(t.value.errExport);
+                    showStudioMessage(t.value.errExport, t.value.saveAs);
                 }
             }
 
@@ -787,6 +807,7 @@
             // ── Lifecycle ─────────────────────────────────────────────────────
             onMounted(() => {
                 if (typeof LapisNav !== 'undefined') LapisNav.inject({ bottom: false });
+                if (typeof LapisModal !== 'undefined') LapisModal.init();
                 if (window.lucide) lucide.createIcons();
             });
             onUpdated(() => {
@@ -805,16 +826,17 @@
                 imageUrl, resultUrl, activeNav, contentView,
                 dragOver, cropShape, cropMode,
                 collageLayout, collageCells,
-                fxIntensity, jigsawGrid, jigsawManual, jigsawLayout, cropBoxData, containerSize,
-                isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, sandboxAllowsScale, sandboxDragging, jigsawManualActive,
+                fxIntensity, jigsawGrid, jigsawRange, jigsawManual, jigsawLayout, cropBoxData, containerSize,
+                isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, sandboxDragging, jigsawManualActive,
                 canUndoCt, showFloatingPanel, mainPaddingBottom,
                 activeEffect, effectCategory,
-                effectsList, specialVariants, jigsawVariants, stickerList, collageLayouts,
-                textConfig, stickerCategory, stickerCategoryList, stickerConfig, stickerActive, smudgeConfig,
+                effectsList, jigsawVariants, stickerList, collageLayouts,
+                textConfig, stickerCategory, stickerCategoryList, stickerConfig, stickerActive,
+                downloadName, modalMessageTitle, modalMessage,
                 t, cropRatios, specialShapes,
                 handleFileInput, triggerUpload, onDrop,
                 enterEffects, exitEffects, applyEffectFilter,
-                applyCurrentEffect, saveFromEffects, onSliderInput, onJigsawGridChange,
+                applyCurrentEffect, saveFromEffects, onSliderInput, onJigsawGridChange, onJigsawRangeChange,
                 toggleJigsawManual: jigsawManualTools.toggleJigsawManual,
                 applyText, applySticker,
                 beginSandboxMove, beginSandboxScale, beginSandboxRotate, moveSandbox, endSandbox,
@@ -828,7 +850,8 @@
                 triggerCellInput, onCellFileInput,
                 buildCollage, cropApply,
                 setRatio, setSpecialShape, undo,
-                promptDownload, promptDeleteImage,
+                promptDownload, confirmDownloadImage, promptDeleteImage, confirmDeleteImage,
+                closeStudioModal,
                 refreshIcons,
             };
         },

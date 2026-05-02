@@ -65,6 +65,23 @@ describe('static UI structure', () => {
         expect(studio).toContain('fx-drawer glass glass-panel');
     });
 
+    it('supports persisted theme opacity for glass surfaces', () => {
+        const html = readFileSync('setting.html', 'utf8');
+        const setting = readFileSync('modules/setting.js', 'utf8');
+        const nav = readFileSync('js/nav.js', 'utf8');
+        const shared = readFileSync('css/lapis_shared_style.css', 'utf8');
+        const theme = readFileSync('css/shared_theme.css', 'utf8');
+
+        expect(html).toContain('v-model.number="settings.themeOpacity"');
+        expect(html).toContain('{{ t.themeOpacity }}');
+        expect(setting).toContain('themeOpacity: 1');
+        expect(setting).toContain('navSettings.themeOpacity        = val.themeOpacity');
+        expect(nav).toContain('--lapis-theme-opacity');
+        expect(nav).toContain('watch(() => navSettings.themeOpacity');
+        expect(shared).toContain('var(--lapis-theme-opacity)');
+        expect(theme).toContain('var(--lapis-theme-opacity)');
+    });
+
     it('keeps the index greeting paired with a 24-hour flip clock', () => {
         const html = readFileSync('index.html', 'utf8');
         const js = readFileSync('modules/index.js', 'utf8');

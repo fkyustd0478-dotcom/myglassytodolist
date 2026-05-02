@@ -170,6 +170,23 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     flex-shrink: 0;
     cursor: pointer;
 }
+.fx-range-control {
+    min-width: 118px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+.fx-range-control input {
+    width: 70px;
+    accent-color: #3b82f6;
+}
 .fx-color-swatch {
     width: 30px; height: 30px;
     border-radius: 6px;
@@ -294,6 +311,43 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
 .jigsaw-piece-hotspot:active {
     cursor: grabbing;
     background: rgba(59,130,246,0.18);
+}
+
+.studio-action-modal {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.studio-action-modal .studio-confirm-shell {
+    max-width: 360px;
+    padding: 26px 22px 28px;
+    background: rgba(255,255,255,0.20);
+    border: 1px solid rgba(255,255,255,0.22);
+    box-shadow: 0 24px 60px rgba(15,23,42,0.28);
+}
+.studio-modal-message {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    opacity: 0.78;
+}
+.studio-modal-input {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid rgba(255,255,255,0.20);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.12);
+    color: inherit;
+    padding: 0 14px;
+    font: inherit;
+    font-weight: 800;
+    outline: none;
+}
+.studio-modal-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.16);
+}
+.studio-danger-btn {
+    background: #dc2626;
+    box-shadow: 0 4px 16px rgba(220,38,38,0.35);
 }
 
 .collage-layout-btn {

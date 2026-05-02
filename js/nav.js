@@ -37,6 +37,7 @@ function useNav() {
         useCustomBg: false,
         customBg: '',
         customBgOpacity: 0,
+        themeOpacity: 1,
         effect: 'none',
         notificationsEnabled: true,
         lang: 'zh',
@@ -92,9 +93,11 @@ function useNav() {
         }
     };
 
+    const themeOpacity = computed(() => Math.max(0, Math.min(1, Number(navSettings.themeOpacity ?? 1))));
+
     const glassStyle = computed(() => isDarkTheme.value
-        ? { backgroundColor: 'rgba(0,0,0,0.5)', border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
-        : { backgroundColor: 'rgba(255,255,255,0.75)', border: '1.5px solid rgba(0,0,0,0.08)', color: '#1a1a1a', backdropFilter: 'blur(20px) brightness(1.03)', boxShadow: '0 8px 32px rgba(0,0,0,0.05)' }
+        ? { backgroundColor: `rgba(0,0,0,${0.5 * themeOpacity.value})`, border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
+        : { backgroundColor: `rgba(255,255,255,${0.75 * themeOpacity.value})`, border: '1.5px solid rgba(0,0,0,0.08)', color: '#1a1a1a', backdropFilter: 'blur(20px) brightness(1.03)', boxShadow: '0 8px 32px rgba(0,0,0,0.05)' }
     );
 
     const themeClasses  = computed(() => `theme-${resolvedTheme.value}`);
@@ -163,6 +166,10 @@ function useNav() {
     window.LapisNav = window.LapisNav || {};
     window.LapisNav._applyTheme = () => _applyTheme(resolvedTheme.value, navSettings.useCustomBg);
 
+    function _applyThemeOpacity() {
+        document.documentElement.style.setProperty('--lapis-theme-opacity', themeOpacity.value);
+    }
+
     // ── Body class injection ──────────────────────────────────────────────────
     // Debounce prevents concurrent overlapping async transitions (rapid theme clicks)
     // which would leave primary opacity:0. First apply bypasses debounce (page hidden).
@@ -178,6 +185,8 @@ function useNav() {
         if (!navSettings.useCustomBg) return;
         if (typeof LapisCore !== 'undefined') LapisCore.setActiveOpacity(1 - opacity);
     });
+
+    watch(() => navSettings.themeOpacity, _applyThemeOpacity, { immediate: true });
 
     onMounted(async () => {
         _updateTitle();
@@ -227,6 +236,7 @@ function useNav() {
                 if (s.theme           !== undefined && s.theme           !== navSettings.theme)           navSettings.theme           = s.theme;
                 if (s.useCustomBg     !== undefined && s.useCustomBg     !== navSettings.useCustomBg)     navSettings.useCustomBg     = s.useCustomBg;
                 if (s.customBgOpacity !== undefined && s.customBgOpacity !== navSettings.customBgOpacity) navSettings.customBgOpacity = s.customBgOpacity;
+                if (s.themeOpacity    !== undefined && s.themeOpacity    !== navSettings.themeOpacity)    navSettings.themeOpacity    = s.themeOpacity;
                 if (s.lang            !== undefined && s.lang            !== navSettings.lang)            navSettings.lang            = s.lang;
                 if (s.customBg !== undefined && s.customBg !== navSettings.customBg) {
                     navSettings.customBg = s.customBg;

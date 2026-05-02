@@ -8,6 +8,7 @@ window.LapisStudioJigsawManual = (() => {
             activeEffect,
             jigsawManual,
             jigsawGrid,
+            jigsawRange,
             jigsawLayout,
             fxIntensity,
             applyEffectFilter,
@@ -35,17 +36,23 @@ window.LapisStudioJigsawManual = (() => {
             const valid = current.meta &&
                 current.meta.width === width &&
                 current.meta.height === height &&
-                current.meta.gridSize === jigsawGrid.value;
+                current.meta.gridSize === jigsawGrid.value &&
+                current.meta.range === jigsawRange.value;
             if (!valid) {
-                const layout = LapisFXJigsaw.createLayout(width, height, jigsawGrid.value, fxIntensity.value);
+                const layout = LapisFXJigsaw.createLayout(width, height, jigsawGrid.value, fxIntensity.value, {
+                    range: jigsawRange.value / 100,
+                    pure: true,
+                });
                 jigsawLayout.value = layout.pieces;
                 jigsawLayout.value.meta = {
                     width: layout.width,
                     height: layout.height,
                     gridSize: layout.gridSize,
+                    range: jigsawRange.value,
+                    roi: layout.roi,
                 };
             }
-            return { pieces: jigsawLayout.value };
+            return { pieces: jigsawLayout.value, roi: jigsawLayout.value.meta.roi, pure: true };
         }
 
         function toggleJigsawManual() {
@@ -59,15 +66,16 @@ window.LapisStudioJigsawManual = (() => {
 
         function pieceStyle(piece) {
             const meta = jigsawLayout.value.meta || { width: 1, height: 1, gridSize: jigsawGrid.value };
-            const pw = meta.width / meta.gridSize;
-            const ph = meta.height / meta.gridSize;
-            const x = (piece.c * pw + pw / 2 + piece.ox) / meta.width * 100;
-            const y = (piece.r * ph + ph / 2 + piece.oy) / meta.height * 100;
+            const roi = meta.roi || { x: 0, y: 0, w: meta.width, h: meta.height };
+            const pw = roi.w / meta.gridSize;
+            const ph = roi.h / meta.gridSize;
+            const x = (roi.x + piece.c * pw + pw / 2 + piece.ox) / meta.width * 100;
+            const y = (roi.y + piece.r * ph + ph / 2 + piece.oy) / meta.height * 100;
             return {
                 left: `${x}%`,
                 top: `${y}%`,
-                width: `${100 / meta.gridSize}%`,
-                height: `${100 / meta.gridSize}%`,
+                width: `${roi.w / meta.width * 100 / meta.gridSize}%`,
+                height: `${roi.h / meta.height * 100 / meta.gridSize}%`,
                 transform: `translate(-50%, -50%) rotate(${piece.angle}rad)`,
             };
         }

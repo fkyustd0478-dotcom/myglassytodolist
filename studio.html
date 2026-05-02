@@ -102,8 +102,7 @@
                          @pointermove="moveSandbox"
                          @pointerup="endSandbox"
                          @pointerdown.stop="beginSandboxRotate"></div>
-                    <div v-if="sandboxAllowsScale"
-                         class="fx-scale-handle"
+                    <div class="fx-scale-handle"
                          @pointermove="moveSandbox"
                          @pointerup="endSandbox"
                          @pointerdown.stop="beginSandboxScale"></div>
@@ -256,23 +255,6 @@
                     </button>
                 </template>
 
-                <!-- Special effects -->
-                <template v-else-if="effectCategory === 'special'">
-                    <button v-for="v in specialVariants" :key="v.key"
-                            @click="applyEffectFilter(v.key)"
-                            class="fx-chip"
-                            :class="{ 'is-active': activeEffect === v.key }">
-                        {{ t[v.tKey] }}
-                    </button>
-                    <button v-if="activeEffect === 'glass-smudge'"
-                            type="button"
-                            @click="smudgeConfig.invert = !smudgeConfig.invert; applyEffectFilter('glass-smudge')"
-                            class="fx-chip"
-                            :class="{ 'is-active': smudgeConfig.invert }">
-                        Invert
-                    </button>
-                </template>
-
                 <!-- Jigsaw -->
                 <template v-else-if="effectCategory === 'jigsaw'">
                     <select v-model.number="jigsawGrid"
@@ -283,6 +265,15 @@
                             {{ n }}x{{ n }}
                         </option>
                     </select>
+                    <label class="fx-range-control" title="Range">
+                        <span>{{ t.range }}</span>
+                        <input type="range"
+                               min="25"
+                               max="100"
+                               step="5"
+                               v-model.number="jigsawRange"
+                               @input="onJigsawRangeChange">
+                    </label>
                     <button v-for="v in jigsawVariants" :key="v.key"
                             @click="applyEffectFilter(v.key)"
                             class="fx-chip"
@@ -368,11 +359,6 @@
                     class="fx-tab" :class="{ 'is-active': effectCategory === 'filters' }">
                 <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
                 <span>{{ t.filtersCat }}</span>
-            </button>
-            <button @click="effectCategory = 'special'"
-                    class="fx-tab" :class="{ 'is-active': effectCategory === 'special' }">
-                <i data-lucide="gem" class="w-4 h-4"></i>
-                <span>{{ t.specialCat }}</span>
             </button>
             <button @click="effectCategory = 'jigsaw'"
                     class="fx-tab" :class="{ 'is-active': effectCategory === 'jigsaw' }">
@@ -474,6 +460,81 @@
         </nav>
 
     </transition>
+
+    <div id="studio-delete-modal"
+         class="lapis-modal-backdrop centered studio-action-modal"
+         style="display:none;">
+        <div class="lapis-modal-shell glass-panel studio-confirm-shell">
+            <div class="lapis-modal-header">
+                <h3 class="lapis-modal-title">{{ t.deleteImage }}</h3>
+                <button type="button" class="lapis-modal-close" @click="closeStudioModal('studio-delete-modal')">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="lapis-modal-body">
+                <p class="studio-modal-message">{{ t.confirmDelete }}</p>
+            </div>
+            <div class="lapis-modal-footer">
+                <button type="button" class="lapis-btn-secondary" @click="closeStudioModal('studio-delete-modal')">
+                    {{ t.cancel }}
+                </button>
+                <button type="button" class="lapis-btn-primary studio-danger-btn" @click="confirmDeleteImage">
+                    {{ t.confirm }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="studio-download-modal"
+         class="lapis-modal-backdrop centered studio-action-modal"
+         style="display:none;">
+        <div class="lapis-modal-shell glass-panel studio-confirm-shell">
+            <div class="lapis-modal-header">
+                <h3 class="lapis-modal-title">{{ t.saveAs }}</h3>
+                <button type="button" class="lapis-modal-close" @click="closeStudioModal('studio-download-modal')">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="lapis-modal-body">
+                <input id="studio-download-name"
+                       v-model="downloadName"
+                       type="text"
+                       class="studio-modal-input"
+                       inputmode="text"
+                       autocomplete="off"
+                       @keyup.enter="confirmDownloadImage">
+            </div>
+            <div class="lapis-modal-footer">
+                <button type="button" class="lapis-btn-secondary" @click="closeStudioModal('studio-download-modal')">
+                    {{ t.cancel }}
+                </button>
+                <button type="button" class="lapis-btn-primary" @click="confirmDownloadImage">
+                    {{ t.confirm }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="studio-message-modal"
+         class="lapis-modal-backdrop centered studio-action-modal"
+         style="display:none;">
+        <div class="lapis-modal-shell glass-panel studio-confirm-shell">
+            <div class="lapis-modal-header">
+                <h3 class="lapis-modal-title">{{ modalMessageTitle }}</h3>
+                <button type="button" class="lapis-modal-close" @click="closeStudioModal('studio-message-modal')">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="lapis-modal-body">
+                <p class="studio-modal-message">{{ modalMessage }}</p>
+            </div>
+            <div class="lapis-modal-footer">
+                <button type="button" class="lapis-btn-primary" @click="closeStudioModal('studio-message-modal')">
+                    {{ t.confirm }}
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Hidden file inputs -->
     <input id="studio-file-input"  type="file" accept="image/*" class="hidden" @change="handleFileInput">

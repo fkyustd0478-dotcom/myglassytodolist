@@ -22,6 +22,7 @@ createApp({
             useCustomBg: false,
             customBg: '',
             customBgOpacity: 0,
+            themeOpacity: 1,
             lang: 'zh',
             effect: 'none',
             notificationsEnabled: true,
@@ -118,6 +119,7 @@ createApp({
                 navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
                 // Theme section
                 theme: 'Theme', system: 'System', light: 'Light', dark: 'Dark',
+                themeOpacity: 'Theme Opacity',
                 otherThemes: 'Other Themes',
                 cherry: 'Cherry Blossom', sky: 'Sky', seaside: 'Seaside', sunset: 'Sunset',
                 forest: 'Forest', sea: 'Sea', night: 'Night', torii: 'Torii',
@@ -167,6 +169,7 @@ createApp({
                 tabTheme: '主題設定', tabUser: '使用者頁面', tabCalendar: '頁面功能設定',
                 navIndex: '琉璃待辦', navShift: '琉璃輪班', navSetting: '系統設定', navWorkout: '琉璃健身',
                 theme: '主題', system: '系統', light: '明亮', dark: '深色',
+                themeOpacity: '主題透明度',
                 otherThemes: '其他主題',
                 cherry: '櫻花', sky: '藍天', seaside: '海濱', sunset: '日落',
                 forest: '森林', sea: '大海', night: '夜景', torii: '鳥居',
@@ -239,9 +242,11 @@ createApp({
             return darkThemes.includes(settings.value.theme);
         });
 
+        const themeOpacity = computed(() => Math.max(0, Math.min(1, Number(settings.value.themeOpacity ?? 1))));
+
         const glassStyle = computed(() => isDarkTheme.value
-            ? { backgroundColor: 'rgba(0,0,0,0.5)', border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
-            : { backgroundColor: 'rgba(255,255,255,0.75)', border: '1.5px solid rgba(0,0,0,0.08)', color: '#1a1a1a', backdropFilter: 'blur(20px) brightness(1.03)', boxShadow: '0 8px 32px rgba(0,0,0,0.05)' }
+            ? { backgroundColor: `rgba(0,0,0,${0.5 * themeOpacity.value})`, border: '2.5px solid rgba(255,255,255,0.9)', color: '#ffffff', backdropFilter: 'blur(16px) brightness(1.2)' }
+            : { backgroundColor: `rgba(255,255,255,${0.75 * themeOpacity.value})`, border: '1.5px solid rgba(0,0,0,0.08)', color: '#1a1a1a', backdropFilter: 'blur(20px) brightness(1.03)', boxShadow: '0 8px 32px rgba(0,0,0,0.05)' }
         );
 
         const themeClasses = computed(() => `theme-${resolvedTheme.value}`);
@@ -409,7 +414,7 @@ createApp({
                 StorageProvider.saveCommonSettings({
                     theme: 'system', useCustomBg: false, customBg: '',
                     lang: settings.value.lang, effect: 'none',
-                    notificationsEnabled: true, customBgOpacity: 0
+                    notificationsEnabled: true, customBgOpacity: 0, themeOpacity: 1
                 });
                 location.reload();
             }
@@ -424,6 +429,7 @@ createApp({
             navSettings.theme               = val.theme;
             navSettings.useCustomBg         = val.useCustomBg;
             navSettings.customBgOpacity     = val.customBgOpacity;
+            navSettings.themeOpacity        = val.themeOpacity;
             navSettings.lang                = val.lang;
             navSettings.calendarInfoEnabled = val.calendarInfoEnabled;
             navSettings.showHolidayTags     = val.showHolidayTags;

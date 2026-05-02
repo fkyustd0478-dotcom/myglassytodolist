@@ -13,11 +13,20 @@ describe('studio graphics rendering controls', () => {
 
     it('passes jigsaw grid size from Studio UI to renderer', () => {
         const html = readFileSync('studio.html', 'utf8');
+        const css = readFileSync('css/lapis_studio.css', 'utf8');
         const ui = readFileSync('js/lapis_studio_ui.js', 'utf8');
+        const jigsaw = readFileSync('js/fx/lapis_fx_jigsaw.js', 'utf8');
 
         expect(html).toContain('v-model.number="jigsawGrid"');
         expect(html).toContain('3,4,5,6');
+        expect(html).toContain('v-model.number="jigsawRange"');
+        expect(html).toContain('onJigsawRangeChange');
+        expect(css).toContain('.fx-range-control');
         expect(ui).toContain('gridSize: jigsawGrid.value');
+        expect(ui).toContain('roiRange: jigsawRange.value / 100');
+        expect(jigsaw).toContain('function _centerRoi');
+        expect(jigsaw).toContain('function _renderRoi');
+        expect(jigsaw).toContain('config.roiRange');
     });
 
     it('uses bezier puzzle piece paths for scattered jigsaw pieces', () => {
@@ -28,30 +37,41 @@ describe('studio graphics rendering controls', () => {
         expect(jigsaw).toContain('_piecePath(ctx, -pw / 2, -ph / 2, pw, ph, c, r, cols, rows)');
     });
 
-    it('rebrands glass shatter to Special without Impact', () => {
+    it('removes Special FX category from Studio menu', () => {
         const html = readFileSync('studio.html', 'utf8');
         const ui = readFileSync('js/lapis_studio_ui.js', 'utf8');
 
-        expect(html).toContain("effectCategory === 'special'");
-        expect(html).toContain('specialVariants');
+        expect(html).not.toContain("effectCategory === 'special'");
+        expect(html).not.toContain('specialVariants');
+        expect(html).not.toContain('glass-fragments');
+        expect(html).not.toContain('glass-spiderweb');
+        expect(html).not.toContain('glass-smudge');
+        expect(ui).not.toContain('specialVariants');
+        expect(ui).not.toContain('smudgeConfig');
+        expect(ui).not.toContain("effectCategory.value === 'special'");
+        expect(ui).not.toContain("specialCat: 'Special'");
+        expect(ui).not.toContain("glassFragments: 'Fragments'");
         expect(html).not.toContain('glass-impact');
-        expect(ui).toContain("specialCat: 'Special'");
-        expect(ui).toContain("glassFragments: 'Fragments'");
     });
 
-    it('uses inverse fragments and brush smudge controls', () => {
+    it('uses LapisModal for Studio delete and download prompts', () => {
         const html = readFileSync('studio.html', 'utf8');
-        const shatter = readFileSync('js/fx/lapis_fx_shatter.js', 'utf8');
+        const css = readFileSync('css/lapis_studio.css', 'utf8');
         const ui = readFileSync('js/lapis_studio_ui.js', 'utf8');
 
-        expect(shatter).toContain('function _renderFragments');
-        expect(shatter).toContain('if (scale > 0.72)');
-        expect(shatter).toContain('const shardCount = Math.max(3');
-        expect(shatter).toContain('function _renderSmudge');
-        expect(shatter).toContain('function _strokeMaskPath');
-        expect(html).toContain('smudgeConfig.invert');
-        expect(html).toContain('sandboxAllowsScale');
-        expect(ui).toContain("if (effectKey === 'glass-smudge') config.smudge = smudgeConfig.value");
+        expect(html).toContain('id="studio-delete-modal"');
+        expect(html).toContain('id="studio-download-modal"');
+        expect(html).toContain('lapis-modal-backdrop centered studio-action-modal');
+        expect(html).toContain('class="lapis-modal-shell glass-panel studio-confirm-shell"');
+        expect(html).toContain('v-model="downloadName"');
+        expect(css).toContain('backdrop-filter: blur(10px)');
+        expect(ui).toContain("LapisModal.open(id)");
+        expect(ui).toContain("LapisModal.init()");
+        expect(ui).toContain("downloadName.value = 'lapis-image'");
+        expect(ui).toContain('confirmDownloadImage');
+        expect(ui).toContain('confirmDeleteImage');
+        expect(ui).not.toContain('window.prompt');
+        expect(ui).not.toContain('confirm(t.value.confirmDelete)');
     });
 
     it('exposes text style toggles and local font fallbacks', () => {
@@ -120,6 +140,8 @@ describe('studio graphics rendering controls', () => {
         expect(manual).toContain('function moveDrag');
         expect(manual).toContain('requestAnimationFrame');
         expect(manual).toContain('const dragging = ref(false)');
+        expect(manual).toContain('pure: true');
+        expect(jigsaw).toContain('pure ? 0');
         expect(html).toContain("{ 'is-dragging': jigsawDragging }");
         expect(jigsaw).toContain('function createLayout');
         expect(jigsaw).toContain("case 'explode':   return _jigsawExplode(src, intensity, gridSize, layout)");

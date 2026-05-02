@@ -44,24 +44,57 @@ window.LapisFXJigsaw = (() => {
         return Math.max(3, Math.min(6, Math.round(n)));
     }
 
-    function createLayout(width, height, gridSize = 4, intensity = 1) {
+    function _centerRoi(width, height, range = 1) {
+        const pct = Math.max(0.25, Math.min(1, Number(range) || 1));
+        const rw = width * pct;
+        const rh = height * pct;
+        return {
+            x: (width - rw) / 2,
+            y: (height - rh) / 2,
+            w: rw,
+            h: rh,
+        };
+    }
+
+    function _isFullRoi(src, roi) {
+        return !roi ||
+            (roi.x <= 0.5 && roi.y <= 0.5 &&
+             Math.abs(roi.w - src.width) <= 1 &&
+             Math.abs(roi.h - src.height) <= 1);
+    }
+
+    function _cropRegion(src, roi) {
+        const crop = document.createElement('canvas');
+        crop.width = Math.max(1, Math.round(roi.w));
+        crop.height = Math.max(1, Math.round(roi.h));
+        crop.getContext('2d').drawImage(
+            src,
+            roi.x, roi.y, roi.w, roi.h,
+            0, 0, crop.width, crop.height
+        );
+        return crop;
+    }
+
+    function createLayout(width, height, gridSize = 4, intensity = 1, options = {}) {
         const cols = Math.max(3, Math.min(6, Math.round(gridSize)));
         const rows = cols;
-        const pw = width / cols, ph = height / rows;
+        const roi = options.roi || _centerRoi(width, height, options.range || 1);
+        const pw = roi.w / cols, ph = roi.h / rows;
         const maxDrift = Math.min(pw, ph) * 0.55 * intensity;
         const maxRot = 0.32 * intensity;
+        const pure = !!options.pure;
         const pieces = [];
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 pieces.push({
                     id: `${r}-${c}`, r, c,
-                    ox: (Math.random() - 0.5) * 2 * maxDrift,
-                    oy: (Math.random() - 0.5) * 2 * maxDrift,
-                    angle: (Math.random() - 0.5) * 2 * maxRot,
+                    ox: pure ? 0 : (Math.random() - 0.5) * 2 * maxDrift,
+                    oy: pure ? 0 : (Math.random() - 0.5) * 2 * maxDrift,
+                    angle: pure ? 0 : (Math.random() - 0.5) * 2 * maxRot,
                 });
             }
         }
-        return { width, height, gridSize: cols, pieces };
+        return { width, height, gridSize: cols, roi, pure, pieces };
     }
 
     function _layoutPiece(layout, r, c) {
@@ -195,6 +228,36 @@ window.LapisFXJigsaw = (() => {
         ctx.restore();
         grid(0, 0, 'rgba(255,255,255,0.88)', 2.5);
         grid(1, 1, 'rgba(0,0,0,0.42)', 1.2);
+        return cvs;
+    }
+
+    function _renderVariant(src, variant, intensity, gridSize, layout) {
+        switch (variant) {
+            case 'explode':   return _jigsawExplode(src, intensity, gridSize, layout);
+            case 'drift':     return _jigsawDrift(src, intensity, gridSize, layout);
+            case 'gravity':   return _jigsawGravity(src, intensity, gridSize, layout);
+            case 'scattered': return _jigsawScattered(src, intensity, gridSize, layout);
+            default:          return _jigsawStatic(src, gridSize, layout, intensity);
+        }
+    }
+
+    function _renderRoi(src, variant, intensity, gridSize, roi, layout) {
+        const cvs = document.createElement('canvas');
+        cvs.width = src.width;
+        cvs.height = src.height;
+        const ctx = cvs.getContext('2d');
+        ctx.drawImage(src, 0, 0);
+        const crop = _cropRegion(src, roi);
+        const localLayout = layout?.pieces?.length
+            ? { ...layout, width: crop.width, height: crop.height, roi: { x: 0, y: 0, w: crop.width, h: crop.height } }
+            : null;
+        const rendered = _renderVariant(crop, variant, intensity, gridSize, localLayout);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(roi.x, roi.y, roi.w, roi.h);
+        ctx.clip();
+        ctx.drawImage(rendered, roi.x, roi.y, roi.w, roi.h);
+        ctx.restore();
         return cvs;
     }
 
@@ -343,13 +406,11 @@ window.LapisFXJigsaw = (() => {
         const intensity = config.intensity !== undefined ? config.intensity : 1.0;
         const gridSize = _gridSize(config);
         const layout = config.layout;
-        switch (variant) {
-            case 'explode':   return _jigsawExplode(src, intensity, gridSize, layout);
-            case 'drift':     return _jigsawDrift(src, intensity, gridSize, layout);
-            case 'gravity':   return _jigsawGravity(src, intensity, gridSize, layout);
-            case 'scattered': return _jigsawScattered(src, intensity, gridSize, layout);
-            default:          return _jigsawStatic(src, gridSize, layout, intensity);
+        const roi = layout?.roi || _centerRoi(src.width, src.height, config.roiRange || 1);
+        if (!_isFullRoi(src, roi)) {
+            return _renderRoi(src, variant, intensity, gridSize, roi, layout);
         }
+        return _renderVariant(src, variant, intensity, gridSize, layout);
     }
 
     return { render, createLayout };
