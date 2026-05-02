@@ -8,7 +8,7 @@ window.LapisStudioJigsawManual = (() => {
             activeEffect,
             jigsawManual,
             jigsawGrid,
-            jigsawRange,
+            jigsawRoi,
             jigsawLayout,
             fxIntensity,
             applyEffectFilter,
@@ -33,14 +33,15 @@ window.LapisStudioJigsawManual = (() => {
 
         function ensureLayout(width, height) {
             const current = jigsawLayout.value;
+            const roi = _roiPixels(width, height);
             const valid = current.meta &&
                 current.meta.width === width &&
                 current.meta.height === height &&
                 current.meta.gridSize === jigsawGrid.value &&
-                current.meta.range === jigsawRange.value;
+                _sameRoi(current.meta.roi, roi);
             if (!valid) {
                 const layout = LapisFXJigsaw.createLayout(width, height, jigsawGrid.value, fxIntensity.value, {
-                    range: jigsawRange.value / 100,
+                    roi,
                     pure: true,
                 });
                 jigsawLayout.value = layout.pieces;
@@ -48,11 +49,25 @@ window.LapisStudioJigsawManual = (() => {
                     width: layout.width,
                     height: layout.height,
                     gridSize: layout.gridSize,
-                    range: jigsawRange.value,
                     roi: layout.roi,
                 };
             }
             return { pieces: jigsawLayout.value, roi: jigsawLayout.value.meta.roi, pure: true };
+        }
+
+        function _roiPixels(width, height) {
+            const r = jigsawRoi.value;
+            return {
+                x: r.x * width,
+                y: r.y * height,
+                w: r.w * width,
+                h: r.h * height,
+            };
+        }
+
+        function _sameRoi(a, b) {
+            return !!a && Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1 &&
+                Math.abs(a.w - b.w) < 1 && Math.abs(a.h - b.h) < 1;
         }
 
         function toggleJigsawManual() {

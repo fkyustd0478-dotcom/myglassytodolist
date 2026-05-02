@@ -108,6 +108,23 @@
                          @pointerdown.stop="beginSandboxScale"></div>
                 </div>
             </div>
+            <div v-if="jigsawRoiActive"
+                 id="jigsaw-roi-layer"
+                 class="jigsaw-roi-layer"
+                 :class="{ 'is-dragging': jigsawRoiDragging }"
+                 @pointermove="moveJigsawRoi"
+                 @pointerup="endJigsawRoi"
+                 @pointercancel="endJigsawRoi">
+                <div class="jigsaw-roi-box"
+                     :style="jigsawRoiStyle"
+                     @pointerdown.stop="beginJigsawRoiMove">
+                    <span class="jigsaw-roi-label">ROI</span>
+                    <button type="button" class="jigsaw-roi-handle is-nw" @pointerdown.stop="beginJigsawRoiResize('nw', $event)"></button>
+                    <button type="button" class="jigsaw-roi-handle is-ne" @pointerdown.stop="beginJigsawRoiResize('ne', $event)"></button>
+                    <button type="button" class="jigsaw-roi-handle is-sw" @pointerdown.stop="beginJigsawRoiResize('sw', $event)"></button>
+                    <button type="button" class="jigsaw-roi-handle is-se" @pointerdown.stop="beginJigsawRoiResize('se', $event)"></button>
+                </div>
+            </div>
             <div v-if="jigsawManualActive"
                  id="jigsaw-manual-layer"
                  class="jigsaw-manual-layer"
@@ -150,25 +167,44 @@
                     {{ lyt.label }}
                 </button>
             </div>
-            <!-- Per-cell grid -->
+            <div class="shrink-0 grid grid-cols-2 gap-2 px-3 pb-2">
+                <label class="collage-control">
+                    <span>Zoom</span>
+                    <input type="range" min="0" max="1" step="0.01"
+                           v-model.number="fxIntensity"
+                           @input="syncCollageScale">
+                </label>
+                <label class="collage-control">
+                    <span>Gap {{ collageGap }}px</span>
+                    <input type="range" min="0" max="5" step="1"
+                           v-model.number="collageGap">
+                </label>
+            </div>
             <div class="flex-1 flex items-center justify-center p-3 overflow-hidden">
-                <div :style="{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(' + (collageLayouts[collageLayout] || { cols:2 }).cols + ', 1fr)',
-                        gap: '6px',
-                        width: '100%',
-                        maxWidth: ((collageLayouts[collageLayout] || { cols:2 }).cols * 130) + 'px',
-                        aspectRatio: (collageLayouts[collageLayout] || { cols:2, rows:2 }).cols + ' / ' + (collageLayouts[collageLayout] || { cols:2, rows:2 }).rows
-                     }">
-                    <div v-for="(cellUrl, ci) in collageCells" :key="ci"
-                         class="collage-cell"
-                         @click="triggerCellInput(ci)">
-                        <img v-if="cellUrl" :src="cellUrl"
+                <div class="duo-collage-preview"
+                     :class="'layout-' + collageLayout"
+                     :style="{ gap: collageGap + 'px' }">
+                    <div v-for="(slot, ci) in collageSlots" :key="ci"
+                         class="collage-cell duo-slot"
+                         :class="{ 'is-active': activeCollageSlot === ci, 'is-fixed': slot.fixed }"
+                         @click="slot.image ? selectCollageSlot(ci) : triggerCellInput(ci)"
+                         @dblclick="triggerCellInput(ci)"
+                         @pointerdown="beginCollageSlotDrag(ci, $event)"
+                         @pointermove="moveCollageSlot"
+                         @pointerup="endCollageSlot"
+                         @pointercancel="endCollageSlot">
+                        <img v-if="slot.image" :src="slot.image"
+                             :style="collageSlotStyle(slot)"
                              class="absolute inset-0 w-full h-full object-cover pointer-events-none">
                         <div v-else class="absolute inset-0 flex flex-col items-center justify-center gap-1">
                             <i data-lucide="plus-circle" class="w-7 h-7 opacity-35"></i>
                             <span class="text-xs opacity-35">{{ ci + 1 }}</span>
                         </div>
+                        <button type="button"
+                                class="collage-lock-btn"
+                                @click.stop="toggleCollageFixed(ci)">
+                            <i :data-lucide="slot.fixed ? 'lock' : 'unlock'" class="w-3 h-3"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -265,15 +301,6 @@
                             {{ n }}x{{ n }}
                         </option>
                     </select>
-                    <label class="fx-range-control" title="Range">
-                        <span>{{ t.range }}</span>
-                        <input type="range"
-                               min="25"
-                               max="100"
-                               step="5"
-                               v-model.number="jigsawRange"
-                               @input="onJigsawRangeChange">
-                    </label>
                     <button v-for="v in jigsawVariants" :key="v.key"
                             @click="applyEffectFilter(v.key)"
                             class="fx-chip"

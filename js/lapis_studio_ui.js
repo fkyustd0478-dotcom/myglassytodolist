@@ -27,11 +27,14 @@
             const dragOver        = ref(false);
             const cropShape       = ref('free');
             const cropMode        = ref('manual');   // 'manual' | 'collage'
-            const collageLayout   = ref('2x2');      // active layout key
-            const collageCells    = ref([]);         // per-cell URLs (blob/data), null = empty
+            const collageLayout   = ref('vertical'); // active duo mask key
+            const collageSlots    = ref([]);         // { image, maskType, scale, offsetX, offsetY, fixed }
+            const collageGap      = ref(2);
+            const activeCollageSlot = ref(0);
+            const collageDragging = ref(false);
             const fxIntensity     = ref(1.0);        // 0‥1 slider for effects
             const jigsawGrid      = ref(4);
-            const jigsawRange     = ref(100);
+            const jigsawRoi       = ref({ x: 0.2, y: 0.2, w: 0.6, h: 0.6 });
             const jigsawManual    = ref(false);
             const jigsawLayout    = ref([]);
             const activeEffect    = ref('');         // pending (previewed) effect key
@@ -50,9 +53,13 @@
             const modalMessageTitle = ref('');
             const modalMessage    = ref('');
             const sandboxDragging = ref(false);
+            const jigsawRoiDragging = ref(false);
             let _sandboxDrag       = null;
             let _sandboxFrame      = 0;
             let _sandboxPoint      = null;
+            let _jigsawRoiDrag     = null;
+            let _jigsawRoiFrame    = 0;
+            let _jigsawRoiPoint    = null;
 
             // Crop overlay
             const cropBoxData   = ref(null);
@@ -66,6 +73,9 @@
             let _effectsBase       = null;  // snapshot at effects-session start
             let _sliderTimer       = null;  // debounce handle for intensity slider
             let _collageActiveCell = 0;     // which cell is receiving a new file
+            let _collageDrag       = null;
+            let _collageFrame      = 0;
+            let _collagePoint      = null;
 
             // ── Content panel ─────────────────────────────────────────────────
             const contentView = computed(() => {
@@ -108,12 +118,23 @@
                 activeEffect,
                 jigsawManual,
                 jigsawGrid,
-                jigsawRange,
+                jigsawRoi,
                 jigsawLayout,
                 fxIntensity,
                 applyEffectFilter,
             });
             const jigsawManualActive = jigsawManualTools.jigsawManualActive;
+            const jigsawRoiActive = computed(() =>
+                activeNav.value === 'effects' &&
+                effectCategory.value === 'jigsaw' &&
+                !!imageUrl.value
+            );
+            const jigsawRoiStyle = computed(() => ({
+                left: `${jigsawRoi.value.x * 100}%`,
+                top: `${jigsawRoi.value.y * 100}%`,
+                width: `${jigsawRoi.value.w * 100}%`,
+                height: `${jigsawRoi.value.h * 100}%`,
+            }));
 
             const mainPaddingBottom = computed(() => {
                 if (activeNav.value === 'effects')
@@ -164,7 +185,7 @@
                     // Effects
                     filtersCat: '濾鏡', jigsawCat: '拼圖',
                     textCat: '文字', stickerCat: '貼圖',
-                    intensity: '強度', range: '範圍',
+                    intensity: '強度',
                     enterText: '輸入文字…', buildGrid: '建立',
                     // Colour filters
                     grayscale: '黑白', sepia: '復古', vivid: '鮮豔',
@@ -191,7 +212,7 @@
                     addImage: 'Add Image', addImagesHint: 'Add images then pick a grid layout',
                     filtersCat: 'Filters', jigsawCat: 'Jigsaw',
                     textCat: 'Text', stickerCat: 'Stickers',
-                    intensity: 'Intensity', range: 'Range',
+                    intensity: 'Intensity',
                     enterText: 'Enter text…', buildGrid: 'Build',
                     grayscale: 'B&W', sepia: 'Sepia', vivid: 'Vivid',
                     dim: 'Dim', warm: 'Warm', cool: 'Cool',
@@ -250,7 +271,7 @@
                 const categories = LapisFXSticker.CATEGORIES || {};
                 return categories[stickerCategory.value] || LapisFXSticker.BUILT_IN;
             });
-            const collageLayouts = LapisFXCollage.LAYOUTS;  // static, for template iteration
+            const collageLayouts = LapisFXCollage.DUO_LAYOUTS || LapisFXCollage.LAYOUTS;  // static, for template iteration
 
             const jigsawVariants = [
                 { key: 'jigsaw-static',    tKey: 'jigsawStatic'    },
@@ -270,7 +291,7 @@
                 effectCategory.value   = 'filters';
                 fxIntensity.value      = 1.0;
                 jigsawGrid.value       = 4;
-                jigsawRange.value      = 100;
+                jigsawRoi.value        = { x: 0.2, y: 0.2, w: 0.6, h: 0.6 };
                 jigsawManual.value     = false;
                 jigsawLayout.value     = [];
                 textConfig.value       = {
@@ -381,8 +402,10 @@
                     const config = {
                         intensity: fxIntensity.value,
                         gridSize: jigsawGrid.value,
-                        roiRange: jigsawRange.value / 100,
                     };
+                    if (effectKey.startsWith('jigsaw-')) {
+                        config.roi = _jigsawRoiPixels(sc.width, sc.height);
+                    }
                     if (effectKey.startsWith('jigsaw-') && jigsawManual.value) {
                         config.layout = jigsawManualTools.ensureLayout(sc.width, sc.height);
                     }
@@ -401,11 +424,94 @@
                 }
             }
 
-            function onJigsawRangeChange() {
+            function onJigsawRoiChange() {
                 jigsawManualTools.resetLayout();
                 if (activeEffect.value && activeEffect.value.startsWith('jigsaw-')) {
                     applyEffectFilter(activeEffect.value);
                 }
+            }
+
+            function _jigsawRoiPixels(width, height) {
+                const r = jigsawRoi.value;
+                return { x: r.x * width, y: r.y * height, w: r.w * width, h: r.h * height };
+            }
+
+            function _jigsawRoiRect() {
+                return document.getElementById('jigsaw-roi-layer')?.getBoundingClientRect();
+            }
+
+            function _clampJigsawRoi(r) {
+                const min = 0.16;
+                const w = Math.max(min, Math.min(1, r.w));
+                const h = Math.max(min, Math.min(1, r.h));
+                return {
+                    x: Math.max(0, Math.min(1 - w, r.x)),
+                    y: Math.max(0, Math.min(1 - h, r.y)),
+                    w,
+                    h,
+                };
+            }
+
+            function beginJigsawRoiMove(e) {
+                const rect = _jigsawRoiRect();
+                if (!rect) return;
+                _jigsawRoiDrag = { mode: 'move', rect, sx: e.clientX, sy: e.clientY, start: { ...jigsawRoi.value } };
+                jigsawRoiDragging.value = true;
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+            }
+
+            function beginJigsawRoiResize(handle, e) {
+                const rect = _jigsawRoiRect();
+                if (!rect) return;
+                _jigsawRoiDrag = { mode: 'resize', handle, rect, sx: e.clientX, sy: e.clientY, start: { ...jigsawRoi.value } };
+                jigsawRoiDragging.value = true;
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+            }
+
+            function _applyJigsawRoiDrag(clientX, clientY) {
+                if (!_jigsawRoiDrag) return;
+                const { mode, handle, rect, sx, sy, start } = _jigsawRoiDrag;
+                const dx = (clientX - sx) / rect.width;
+                const dy = (clientY - sy) / rect.height;
+                let next = { ...start };
+                if (mode === 'move') {
+                    next.x = start.x + dx;
+                    next.y = start.y + dy;
+                } else {
+                    if (handle.includes('e')) next.w = start.w + dx;
+                    if (handle.includes('s')) next.h = start.h + dy;
+                    if (handle.includes('w')) { next.x = start.x + dx; next.w = start.w - dx; }
+                    if (handle.includes('n')) { next.y = start.y + dy; next.h = start.h - dy; }
+                }
+                jigsawRoi.value = _clampJigsawRoi(next);
+            }
+
+            function _flushJigsawRoiDrag() {
+                _jigsawRoiFrame = 0;
+                if (!_jigsawRoiPoint) return;
+                _applyJigsawRoiDrag(_jigsawRoiPoint.clientX, _jigsawRoiPoint.clientY);
+                _jigsawRoiPoint = null;
+            }
+
+            function moveJigsawRoi(e) {
+                if (!_jigsawRoiDrag) return;
+                _jigsawRoiPoint = { clientX: e.clientX, clientY: e.clientY };
+                if (!_jigsawRoiFrame) _jigsawRoiFrame = _raf(_flushJigsawRoiDrag);
+            }
+
+            function endJigsawRoi() {
+                if (!_jigsawRoiDrag) return;
+                if (_jigsawRoiFrame) {
+                    _caf(_jigsawRoiFrame);
+                    _jigsawRoiFrame = 0;
+                }
+                if (_jigsawRoiPoint) {
+                    _applyJigsawRoiDrag(_jigsawRoiPoint.clientX, _jigsawRoiPoint.clientY);
+                    _jigsawRoiPoint = null;
+                }
+                _jigsawRoiDrag = null;
+                jigsawRoiDragging.value = false;
+                onJigsawRoiChange();
             }
 
             // 100 ms debounce: re-preview current effect when slider moves
@@ -581,10 +687,17 @@
             }
 
             function _initCollageCells() {
-                const layout = LapisFXCollage.LAYOUTS[collageLayout.value] || { cols: 2, rows: 2 };
-                const count  = layout.cols * layout.rows;
-                const base   = resultUrl.value || imageUrl.value;
-                collageCells.value = Array.from({ length: count }, (_, i) => (i === 0 ? base : null));
+                const base = resultUrl.value || imageUrl.value;
+                collageSlots.value = [
+                    _collageSlot(base),
+                    _collageSlot(''),
+                ];
+                activeCollageSlot.value = 0;
+                fxIntensity.value = 0.25;
+            }
+
+            function _collageSlot(image = '') {
+                return { image, maskType: collageLayout.value, scale: 1, offsetX: 0, offsetY: 0, fixed: false };
             }
 
             async function enterCrop() {
@@ -613,16 +726,9 @@
             }
 
             function setCollageLayout(key) {
-                if (!LapisFXCollage.LAYOUTS[key]) return;
+                if (!collageLayouts[key]) return;
                 collageLayout.value = key;
-                const layout = LapisFXCollage.LAYOUTS[key];
-                const count  = layout.cols * layout.rows;
-                const base   = resultUrl.value || imageUrl.value;
-                const prev   = collageCells.value;
-                collageCells.value = Array.from({ length: count }, (_, i) => {
-                    if (i === 0) return base || null;
-                    return prev[i] || null;
-                });
+                collageSlots.value = collageSlots.value.map(slot => ({ ...slot, maskType: key }));
             }
 
             function triggerCellInput(ci) {
@@ -635,19 +741,96 @@
                 e.target.value = '';
                 if (!file || !file.type.startsWith('image/')) return;
                 const url = URL.createObjectURL(file);
-                const old = collageCells.value[_collageActiveCell];
+                const old = collageSlots.value[_collageActiveCell]?.image;
                 const base = resultUrl.value || imageUrl.value;
                 if (old && old !== base && old !== imageUrl.value) URL.revokeObjectURL(old);
-                const next = [...collageCells.value];
-                next[_collageActiveCell] = url;
-                collageCells.value = next;
+                const next = [...collageSlots.value];
+                next[_collageActiveCell] = { ...(next[_collageActiveCell] || _collageSlot()), image: url };
+                collageSlots.value = next;
+            }
+
+            function collageSlotStyle(slot) {
+                return {
+                    transform: `translate(${slot.offsetX * 100}%, ${slot.offsetY * 100}%) scale(${slot.scale || 1})`,
+                };
+            }
+
+            function selectCollageSlot(index) {
+                activeCollageSlot.value = index;
+                const scale = collageSlots.value[index]?.scale || 1;
+                fxIntensity.value = Math.max(0, Math.min(1, (scale - 0.5) / 2));
+            }
+
+            function syncCollageScale() {
+                const slot = collageSlots.value[activeCollageSlot.value];
+                if (!slot || slot.fixed) return;
+                const next = [...collageSlots.value];
+                next[activeCollageSlot.value] = { ...slot, scale: 0.5 + fxIntensity.value * 2 };
+                collageSlots.value = next;
+            }
+
+            function toggleCollageFixed(index) {
+                const slot = collageSlots.value[index];
+                if (!slot) return;
+                const next = [...collageSlots.value];
+                next[index] = { ...slot, fixed: !slot.fixed };
+                collageSlots.value = next;
+            }
+
+            function beginCollageSlotDrag(index, event) {
+                const slot = collageSlots.value[index];
+                if (!slot || slot.fixed) return;
+                const rect = event.currentTarget.getBoundingClientRect();
+                selectCollageSlot(index);
+                _collageDrag = { index, rect, sx: event.clientX, sy: event.clientY, x: slot.offsetX || 0, y: slot.offsetY || 0 };
+                collageDragging.value = true;
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+            }
+
+            function _applyCollageDrag(clientX, clientY) {
+                if (!_collageDrag) return;
+                const { index, rect, sx, sy, x, y } = _collageDrag;
+                const slot = collageSlots.value[index];
+                if (!slot || slot.fixed) return;
+                const next = [...collageSlots.value];
+                next[index] = {
+                    ...slot,
+                    offsetX: Math.max(-0.6, Math.min(0.6, x + (clientX - sx) / rect.width)),
+                    offsetY: Math.max(-0.6, Math.min(0.6, y + (clientY - sy) / rect.height)),
+                };
+                collageSlots.value = next;
+            }
+
+            function _flushCollageDrag() {
+                _collageFrame = 0;
+                if (!_collagePoint) return;
+                _applyCollageDrag(_collagePoint.clientX, _collagePoint.clientY);
+                _collagePoint = null;
+            }
+
+            function moveCollageSlot(event) {
+                if (!_collageDrag) return;
+                _collagePoint = { clientX: event.clientX, clientY: event.clientY };
+                if (!_collageFrame) _collageFrame = _raf(_flushCollageDrag);
+            }
+
+            function endCollageSlot() {
+                if (!_collageDrag) return;
+                if (_collageFrame) {
+                    _caf(_collageFrame);
+                    _collageFrame = 0;
+                }
+                if (_collagePoint) {
+                    _applyCollageDrag(_collagePoint.clientX, _collagePoint.clientY);
+                    _collagePoint = null;
+                }
+                _collageDrag = null;
+                collageDragging.value = false;
             }
 
             async function buildCollage() {
                 try {
-                    const canvas = await LapisFXCollage.createFromLayout(
-                        collageLayout.value, collageCells.value
-                    );
+                    const canvas = await LapisFXCollage.createDuo(collageSlots.value, collageLayout.value, { gap: collageGap.value });
                     if (!canvas) return;
                     _pushHistory();
                     _resultCanvas   = canvas;
@@ -728,10 +911,11 @@
 
             function _revokeCollageCells() {
                 const base = resultUrl.value || imageUrl.value;
-                collageCells.value.forEach(u => {
+                collageSlots.value.forEach(slot => {
+                    const u = slot.image;
                     if (u && u !== base && u !== imageUrl.value) URL.revokeObjectURL(u);
                 });
-                collageCells.value = [];
+                collageSlots.value = [];
             }
 
             function exitCrop() {
@@ -816,6 +1000,8 @@
             onUnmounted(() => {
                 if (_cropper)       _cropper.destroy();
                 if (_sandboxFrame)   _caf(_sandboxFrame);
+                if (_jigsawRoiFrame) _caf(_jigsawRoiFrame);
+                if (_collageFrame)   _caf(_collageFrame);
                 if (imageUrl.value) URL.revokeObjectURL(imageUrl.value);
                 _revokeCollageCells();
             });
@@ -825,9 +1011,10 @@
                 customBgStyle, systemDark, resolvedTheme,
                 imageUrl, resultUrl, activeNav, contentView,
                 dragOver, cropShape, cropMode,
-                collageLayout, collageCells,
-                fxIntensity, jigsawGrid, jigsawRange, jigsawManual, jigsawLayout, cropBoxData, containerSize,
-                isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, sandboxDragging, jigsawManualActive,
+                collageLayout, collageSlots, collageGap, activeCollageSlot, collageDragging,
+                fxIntensity, jigsawGrid, jigsawRoi, jigsawManual, jigsawLayout, cropBoxData, containerSize,
+                isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, sandboxDragging,
+                jigsawManualActive, jigsawRoiActive, jigsawRoiStyle, jigsawRoiDragging,
                 canUndoCt, showFloatingPanel, mainPaddingBottom,
                 activeEffect, effectCategory,
                 effectsList, jigsawVariants, stickerList, collageLayouts,
@@ -836,7 +1023,8 @@
                 t, cropRatios, specialShapes,
                 handleFileInput, triggerUpload, onDrop,
                 enterEffects, exitEffects, applyEffectFilter,
-                applyCurrentEffect, saveFromEffects, onSliderInput, onJigsawGridChange, onJigsawRangeChange,
+                applyCurrentEffect, saveFromEffects, onSliderInput, onJigsawGridChange,
+                beginJigsawRoiMove, beginJigsawRoiResize, moveJigsawRoi, endJigsawRoi,
                 toggleJigsawManual: jigsawManualTools.toggleJigsawManual,
                 applyText, applySticker,
                 beginSandboxMove, beginSandboxScale, beginSandboxRotate, moveSandbox, endSandbox,
@@ -848,6 +1036,8 @@
                 enterCrop, exitCrop, confirmCrop, saveFromCrop,
                 setCropMode, setCollageLayout,
                 triggerCellInput, onCellFileInput,
+                collageSlotStyle, selectCollageSlot, syncCollageScale, toggleCollageFixed,
+                beginCollageSlotDrag, moveCollageSlot, endCollageSlot,
                 buildCollage, cropApply,
                 setRatio, setSpecialShape, undo,
                 promptDownload, confirmDownloadImage, promptDeleteImage, confirmDeleteImage,

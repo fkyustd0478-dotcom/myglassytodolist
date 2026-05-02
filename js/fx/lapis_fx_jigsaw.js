@@ -406,7 +406,7 @@ window.LapisFXJigsaw = (() => {
         const intensity = config.intensity !== undefined ? config.intensity : 1.0;
         const gridSize = _gridSize(config);
         const layout = config.layout;
-        const roi = layout?.roi || _centerRoi(src.width, src.height, config.roiRange || 1);
+        const roi = layout?.roi || config.roi || _centerRoi(src.width, src.height, config.roiRange || 1);
         if (!_isFullRoi(src, roi)) {
             return _renderRoi(src, variant, intensity, gridSize, roi, layout);
         }

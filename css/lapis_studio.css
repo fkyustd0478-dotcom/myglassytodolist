@@ -170,23 +170,6 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     flex-shrink: 0;
     cursor: pointer;
 }
-.fx-range-control {
-    min-width: 118px;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 8px;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.14);
-    flex-shrink: 0;
-    font-size: 0.68rem;
-    font-weight: 800;
-}
-.fx-range-control input {
-    width: 70px;
-    accent-color: #3b82f6;
-}
 .fx-color-swatch {
     width: 30px; height: 30px;
     border-radius: 6px;
@@ -295,6 +278,51 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     touch-action: none;
     pointer-events: auto;
 }
+.jigsaw-roi-layer {
+    position: absolute;
+    inset: 1rem;
+    z-index: 20;
+    touch-action: none;
+    pointer-events: auto;
+}
+.jigsaw-roi-box {
+    position: absolute;
+    border: 1.5px solid rgba(59,130,246,0.95);
+    border-radius: 12px;
+    background: rgba(59,130,246,0.08);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.70), 0 12px 30px rgba(0,0,0,0.22);
+    cursor: move;
+}
+.jigsaw-roi-layer.is-dragging .jigsaw-roi-box {
+    background: rgba(59,130,246,0.14);
+    will-change: left, top, width, height;
+}
+.jigsaw-roi-label {
+    position: absolute;
+    left: 8px;
+    top: 6px;
+    padding: 2px 6px;
+    border-radius: 9999px;
+    background: rgba(59,130,246,0.88);
+    color: #fff;
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    pointer-events: none;
+}
+.jigsaw-roi-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 9999px;
+    background: #3b82f6;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.22);
+}
+.jigsaw-roi-handle.is-nw { left: -11px; top: -11px; cursor: nwse-resize; }
+.jigsaw-roi-handle.is-ne { right: -11px; top: -11px; cursor: nesw-resize; }
+.jigsaw-roi-handle.is-sw { left: -11px; bottom: -11px; cursor: nesw-resize; }
+.jigsaw-roi-handle.is-se { right: -11px; bottom: -11px; cursor: nwse-resize; }
 .jigsaw-piece-hotspot {
     position: absolute;
     border: 1px solid rgba(59,130,246,0.45);
@@ -362,6 +390,47 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
 }
 .collage-layout-btn.is-active { background: #3b82f6; color: #fff; }
 
+.collage-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 6px 9px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    font-size: 0.64rem;
+    font-weight: 900;
+}
+.collage-control input {
+    min-width: 0;
+    width: 100%;
+    accent-color: #3b82f6;
+}
+.duo-collage-preview {
+    width: min(100%, 360px);
+    aspect-ratio: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 1fr;
+    touch-action: none;
+}
+.duo-collage-preview.layout-horizontal {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.duo-collage-preview.layout-circles .duo-slot { border-radius: 9999px; }
+.duo-collage-preview.layout-hearts .duo-slot { clip-path: path('M50 92 C50 92 8 62 8 31 C8 9 34 3 50 24 C66 3 92 9 92 31 C92 62 50 92 50 92 Z'); }
+.duo-collage-preview.layout-triangles .duo-slot:first-child { clip-path: polygon(0 0, 100% 0, 0 100%); }
+.duo-collage-preview.layout-triangles .duo-slot:last-child { clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+.duo-collage-preview.layout-film {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.duo-collage-preview.layout-film .duo-slot { border-radius: 4px; }
+.duo-collage-preview.layout-taiji .duo-slot:first-child { border-radius: 48% 52% 50% 50%; }
+.duo-collage-preview.layout-taiji .duo-slot:last-child { border-radius: 52% 48% 50% 50%; }
+
 .collage-cell {
     background: rgba(255,255,255,0.05);
     border: 1.5px dashed rgba(255,255,255,0.15);
@@ -373,3 +442,29 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     transition: border-color 0.15s;
 }
 .collage-cell:active { border-color: #3b82f6; }
+.duo-slot.is-active {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.28);
+}
+.duo-slot.is-fixed::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.12);
+    pointer-events: none;
+}
+.collage-lock-btn {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    z-index: 2;
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15,23,42,0.62);
+    color: #fff;
+    backdrop-filter: blur(8px);
+}

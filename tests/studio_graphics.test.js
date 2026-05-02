@@ -19,14 +19,17 @@ describe('studio graphics rendering controls', () => {
 
         expect(html).toContain('v-model.number="jigsawGrid"');
         expect(html).toContain('3,4,5,6');
-        expect(html).toContain('v-model.number="jigsawRange"');
-        expect(html).toContain('onJigsawRangeChange');
-        expect(css).toContain('.fx-range-control');
+        expect(html).toContain('id="jigsaw-roi-layer"');
+        expect(html).toContain('beginJigsawRoiMove');
+        expect(html).toContain("beginJigsawRoiResize('se', $event)");
+        expect(css).toContain('.jigsaw-roi-box');
         expect(ui).toContain('gridSize: jigsawGrid.value');
-        expect(ui).toContain('roiRange: jigsawRange.value / 100');
+        expect(ui).toContain('const jigsawRoi');
+        expect(ui).toContain('config.roi = _jigsawRoiPixels(sc.width, sc.height)');
+        expect(ui).toContain('function moveJigsawRoi');
         expect(jigsaw).toContain('function _centerRoi');
         expect(jigsaw).toContain('function _renderRoi');
-        expect(jigsaw).toContain('config.roiRange');
+        expect(jigsaw).toContain('config.roi');
     });
 
     it('uses bezier puzzle piece paths for scattered jigsaw pieces', () => {
@@ -106,6 +109,26 @@ describe('studio graphics rendering controls', () => {
         expect(sticker).toContain('shapes:');
     });
 
+    it('supports dynamic duo collage slot masking', () => {
+        const html = readFileSync('studio.html', 'utf8');
+        const ui = readFileSync('js/lapis_studio_ui.js', 'utf8');
+        const collage = readFileSync('js/fx/lapis_fx_collage.js', 'utf8');
+        const css = readFileSync('css/lapis_studio.css', 'utf8');
+
+        expect(collage).toContain('const DUO_LAYOUTS');
+        expect(collage).toContain('async function createDuo');
+        expect(collage).toContain('ctx.clip()');
+        expect(collage).toContain('ctx.drawImage(img, x, y, dw, dh)');
+        expect(ui).toContain('const collageSlots');
+        expect(ui).toContain('{ image, maskType: collageLayout.value, scale: 1, offsetX: 0, offsetY: 0, fixed: false }');
+        expect(ui).toContain('collageSlots.value = collageSlots.value.map(slot => ({ ...slot, maskType: key }))');
+        expect(ui).toContain('LapisFXCollage.createDuo(collageSlots.value, collageLayout.value, { gap: collageGap.value })');
+        expect(html).toContain('v-model.number="collageGap"');
+        expect(html).toContain('beginCollageSlotDrag');
+        expect(html).toContain('toggleCollageFixed');
+        expect(css).toContain('.duo-collage-preview');
+    });
+
     it('supports sandbox drag scale and rotate controls', () => {
         const html = readFileSync('studio.html', 'utf8');
         const css = readFileSync('css/lapis_studio.css', 'utf8');
@@ -140,6 +163,7 @@ describe('studio graphics rendering controls', () => {
         expect(manual).toContain('function moveDrag');
         expect(manual).toContain('requestAnimationFrame');
         expect(manual).toContain('const dragging = ref(false)');
+        expect(manual).toContain('jigsawRoi');
         expect(manual).toContain('pure: true');
         expect(jigsaw).toContain('pure ? 0');
         expect(html).toContain("{ 'is-dragging': jigsawDragging }");
