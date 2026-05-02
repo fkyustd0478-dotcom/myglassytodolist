@@ -359,6 +359,33 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     line-height: 1.55;
     opacity: 0.78;
 }
+.studio-crop-options {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+}
+.studio-crop-choice {
+    height: 58px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.10);
+    display: grid;
+    place-items: center;
+    color: inherit;
+    font-weight: 900;
+}
+.studio-crop-option-icon {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+}
+.studio-crop-option-ratio {
+    font-size: 0.9rem;
+}
+@media (max-width: 420px) {
+    .studio-crop-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .studio-modal-input {
     width: 100%;
     min-height: 48px;

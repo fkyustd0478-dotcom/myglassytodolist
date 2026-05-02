@@ -278,14 +278,13 @@ window.LapisFXCollage = (() => {
         if (mask === 'circle') {
             ctx.ellipse(0, 0, sx, sy, 0, 0, Math.PI * 2);
         } else if (mask === 'heart') {
-            ctx.save();
-            ctx.scale(w * 0.011, h * 0.011);
-            ctx.moveTo(0, 18);
-            ctx.bezierCurveTo(-46, -20, -70, 24, -35, 58);
-            ctx.bezierCurveTo(-12, 80, 0, 92, 0, 92);
-            ctx.bezierCurveTo(0, 92, 12, 80, 35, 58);
-            ctx.bezierCurveTo(70, 24, 46, -20, 0, 18);
-            ctx.restore();
+            const p = (nx, ny) => [(nx - 50) * w / 100, (ny - 50) * h / 100];
+            ctx.moveTo(...p(50, 92));
+            ctx.bezierCurveTo(...p(50, 92), ...p(8, 62), ...p(8, 31));
+            ctx.bezierCurveTo(...p(8, 9), ...p(34, 3), ...p(50, 24));
+            ctx.bezierCurveTo(...p(66, 3), ...p(92, 9), ...p(92, 31));
+            ctx.bezierCurveTo(...p(92, 62), ...p(50, 92), ...p(50, 92));
+            ctx.closePath();
         } else if (mask === 'triangle') {
             ctx.moveTo(0, -sy);
             ctx.lineTo(sx, sy);

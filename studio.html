@@ -181,12 +181,6 @@
             </div>
             <div class="shrink-0 grid grid-cols-2 gap-2 px-3 pb-2">
                 <label class="collage-control">
-                    <span>Zoom</span>
-                    <input type="range" min="0" max="1" step="0.01"
-                           v-model.number="fxIntensity"
-                           @input="syncCollageScale">
-                </label>
-                <label class="collage-control">
                     <span>Mask</span>
                     <select v-model="collageMask"
                             @change="setCollageItemMask(collageMask)">
@@ -199,19 +193,7 @@
                 </label>
                 <label class="collage-control">
                     <span>Background</span>
-                    <input type="color" v-model="collageBg">
-                </label>
-                <label class="collage-control">
-                    <span>Width</span>
-                    <input type="range" min="0.35" max="2" step="0.01"
-                           :value="activeCollageItem ? activeCollageItem.scaleX || 1 : 1"
-                           @input="syncCollageAspect('scaleX', $event.target.value)">
-                </label>
-                <label class="collage-control">
-                    <span>Height</span>
-                    <input type="range" min="0.35" max="2" step="0.01"
-                           :value="activeCollageItem ? activeCollageItem.scaleY || 1 : 1"
-                           @input="syncCollageAspect('scaleY', $event.target.value)">
+                    <input type="color" v-model="collageBg" @input="markCollageDirty">
                 </label>
                 <label class="collage-control">
                     <span>Rotate</span>
@@ -257,13 +239,6 @@
                         </button>
                     </div>
                 </div>
-            </div>
-            <!-- Build button -->
-            <div class="shrink-0 flex justify-center pb-2">
-                <button @click="buildCollage"
-                        class="px-8 py-2.5 rounded-full bg-blue-600 text-white text-sm font-bold active:scale-95 transition-transform">
-                    {{ t.buildGrid }}
-                </button>
             </div>
         </div>
 
@@ -454,7 +429,7 @@
                 <i data-lucide="upload-cloud" class="w-5 h-5"></i>
                 <span>{{ t.upload }}</span>
             </button>
-            <button @click="enterCrop" class="nav-item"
+            <button @click="promptCropSetup" class="nav-item"
                     :style="!(imageUrl || resultUrl) ? { opacity: 0.35, pointerEvents: 'none' } : {}">
                 <i data-lucide="crop" class="w-5 h-5"></i>
                 <span>{{ t.manualCrop }}</span>
@@ -503,7 +478,7 @@
         </nav>
 
         <!-- ── Crop/Collage action row ──────────────────────────────────── -->
-        <!-- Apply (manual) = commit crop + stay; Apply (collage) = no-op   -->
+        <!-- Apply (manual) = commit crop + stay; Apply (collage) = commit + stay -->
         <!-- Save  = commit + EXIT to main nav (no download)                -->
         <nav v-else key="nav-crop"
              class="bottom-nav glass" style="backdrop-filter:blur(24px);" :style="glassStyle">
@@ -516,8 +491,7 @@
                 <span>{{ t.undo }}</span>
             </button>
             <button @click="cropApply" class="nav-item"
-                    :class="{ active: cropMode === 'manual' }"
-                    :style="cropMode === 'collage' ? { opacity: 0.35, pointerEvents: 'none' } : {}">
+                    :class="{ active: cropMode === 'manual' || cropMode === 'collage' }">
                 <i data-lucide="check" class="w-5 h-5"></i>
                 <span>{{ t.apply }}</span>
             </button>
@@ -528,6 +502,34 @@
         </nav>
 
     </transition>
+
+    <div id="studio-crop-setup-modal"
+         class="lapis-modal-backdrop centered studio-action-modal"
+         style="display:none;">
+        <div class="lapis-modal-shell glass-panel studio-confirm-shell">
+            <div class="lapis-modal-header">
+                <h3 class="lapis-modal-title">{{ t.manualCrop }}</h3>
+                <button type="button" class="lapis-modal-close" @click="closeStudioModal('studio-crop-setup-modal')">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="lapis-modal-body">
+                <div class="studio-crop-options">
+                    <button v-for="option in cropSetupOptions"
+                            :key="option.key"
+                            type="button"
+                            class="studio-crop-choice"
+                            :title="option.label"
+                            @click="chooseCropSetup(option)">
+                        <span v-if="option.svg"
+                              class="studio-crop-option-icon"
+                              v-html="option.svg"></span>
+                        <span v-else class="studio-crop-option-ratio">{{ option.label }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="studio-delete-modal"
          class="lapis-modal-backdrop centered studio-action-modal"

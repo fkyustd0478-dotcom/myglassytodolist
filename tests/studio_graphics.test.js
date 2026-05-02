@@ -5,7 +5,13 @@ describe('studio graphics rendering controls', () => {
     it('allows non-uniform special shape cropping', () => {
         const ui = readFileSync('js/lapis_studio_ui.js', 'utf8');
         const base = readFileSync('js/fx/lapis_fx_base.js', 'utf8');
+        const html = readFileSync('studio.html', 'utf8');
 
+        expect(html).toContain('studio-crop-setup-modal');
+        expect(html).toContain('@click="promptCropSetup"');
+        expect(ui).toContain('const cropSetupOptions');
+        expect(ui).toContain("key: '16:9'");
+        expect(ui).toContain('function chooseCropSetup');
         expect(ui).toContain('setAspectRatio(NaN)');
         expect(base).toContain('ctx.ellipse(w / 2, h / 2, w / 2, h / 2');
         expect(base).toContain('ctx.scale(w * 0.46, h * 0.46)');
@@ -141,7 +147,8 @@ describe('studio graphics rendering controls', () => {
         expect(ui).toContain("mode: 'item-pinch'");
         expect(ui).toContain('LapisFXCollage.createFreeform');
         expect(ui).toContain('function nudgeCollageLayer');
-        expect(ui).toContain('function syncCollageAspect');
+        expect(ui).toContain('collageApplied');
+        expect(ui).toContain('function markCollageDirty');
         expect(ui).toContain('function syncCollageRotation');
         expect(ui).toContain('function deleteCollageItem');
         expect(ui).toContain('buildCollage(false)');
@@ -155,12 +162,14 @@ describe('studio graphics rendering controls', () => {
         expect(html).toContain('v-model="collageMask"');
         expect(html).toContain('value="triangle"');
         expect(html).toContain('value="star"');
-        expect(html).toContain("syncCollageAspect('scaleX'");
-        expect(html).toContain("syncCollageAspect('scaleY'");
+        expect(html).not.toContain("syncCollageAspect('scaleX'");
+        expect(html).not.toContain("syncCollageAspect('scaleY'");
+        expect(html).not.toContain('{{ t.buildGrid }}');
         expect(html).toContain('syncCollageRotation');
         expect(css).toContain('.pic-collage-canvas');
         expect(css).toContain('.pic-collage-item');
         expect(css).toContain('.collage-scale-handle');
+        expect(collage).toContain('const p = (nx, ny)');
     });
 
     it('keeps duo collage renderer compatibility', () => {

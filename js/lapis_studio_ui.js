@@ -35,6 +35,7 @@
             const collageGap      = ref(0);
             const activeCollageSlot = ref(0);
             const collageDragging = ref(false);
+            const collageApplied  = ref(false);
             const fxIntensity     = ref(1.0);        // 0‥1 slider for effects
             const jigsawGrid      = ref(4);
             const jigsawRoi       = ref({ x: 0.2, y: 0.2, w: 0.6, h: 0.6 });
@@ -266,6 +267,13 @@
                 { key: 'heart',   svg: '<svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor"><path d="M10 17C10 17 3 12 3 7.5a4.5 4.5 0 0 1 7-3.73A4.5 4.5 0 0 1 17 7.5C17 12 10 17 10 17z"/></svg>' },
                 { key: 'star',    svg: '<svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor"><polygon points="10,1 12.9,7 19.5,7.6 14.5,12 16.2,18.5 10,15 3.8,18.5 5.5,12 0.5,7.6 7.1,7"/></svg>' },
             ];
+            const cropSetupOptions = computed(() => [
+                { key: '4:3', label: '4:3', ratio: 4/3 },
+                { key: '16:9', label: '16:9', ratio: 16/9 },
+                ...specialShapes
+                    .filter(shape => ['circle', 'heart', 'star'].includes(shape.key))
+                    .map(shape => ({ ...shape, label: t.value[shape.key], ratio: NaN })),
+            ]);
 
             const effectsList = [
                 { key: 'grayscale', tKey: 'grayscale' },
@@ -318,6 +326,7 @@
                 stickerCategory.value  = 'emojis';
                 stickerConfig.value    = { x: 0.5, y: 0.5, scale: 0.18, rotation: 0 };
                 stickerActive.value    = '';
+                collageApplied.value   = false;
             }
 
             async function _loadFile(file) {
@@ -760,16 +769,26 @@
                 };
             }
 
-            async function enterCrop() {
+            function promptCropSetup() {
+                if (!(imageUrl.value || resultUrl.value)) { alert(t.value.noImage); return; }
+                openStudioModal('studio-crop-setup-modal');
+            }
+
+            function chooseCropSetup(option) {
+                closeStudioModal('studio-crop-setup-modal');
+                enterCrop(option);
+            }
+
+            async function enterCrop(option = { key: 'free', ratio: NaN }) {
                 if (!(imageUrl.value || resultUrl.value)) { alert(t.value.noImage); return; }
                 _effectsBase       = null;
                 activeEffect.value = '';
-                cropShape.value    = 'free';
+                cropShape.value    = option.key || 'free';
                 cropMode.value     = 'manual';
                 cropBoxData.value  = null;
                 activeNav.value    = 'crop';
                 await nextTick();
-                _initCropper(NaN);
+                _initCropper(Number.isFinite(option.ratio) ? option.ratio : NaN);
             }
 
             function enterCollage() {
@@ -779,6 +798,7 @@
                 cropBoxData.value  = null;
                 if (_cropper) { _cropper.destroy(); _cropper = null; }
                 _initCollageCells();
+                collageApplied.value = false;
                 activeNav.value    = 'crop';
             }
 
@@ -833,6 +853,7 @@
                 ];
                 activeCollageSlot.value = collageItems.value.length - 1;
                 fxIntensity.value = Math.max(0, Math.min(1, (0.34 - 0.12) / 0.88));
+                collageApplied.value = false;
             }
 
             function collageItemStyle(item) {
@@ -849,7 +870,7 @@
                     zIndex: item.zIndex || 0,
                     borderRadius: mask === 'circle' ? '9999px' : '8px',
                     clipPath: mask === 'heart'
-                        ? "path('M50 92 C50 92 8 62 8 31 C8 9 34 3 50 24 C66 3 92 9 92 31 C92 62 50 92 50 92 Z')"
+                        ? 'polygon(50% 92%, 36% 80%, 20% 64%, 8% 45%, 8% 28%, 16% 10%, 32% 6%, 50% 24%, 68% 6%, 84% 10%, 92% 28%, 92% 45%, 80% 64%, 64% 80%)'
                         : mask === 'triangle'
                             ? 'polygon(50% 0, 100% 100%, 0 100%)'
                             : mask === 'star'
@@ -873,6 +894,11 @@
                 const next = [...collageItems.value];
                 next[activeCollageSlot.value] = { ...item, mask };
                 collageItems.value = next;
+                collageApplied.value = false;
+            }
+
+            function markCollageDirty() {
+                collageApplied.value = false;
             }
 
             function nudgeCollageLayer(delta) {
@@ -885,17 +911,7 @@
                     : Math.min(...levels, 0) - 10;
                 next[activeCollageSlot.value] = { ...item, zIndex };
                 collageItems.value = next;
-            }
-
-            function syncCollageAspect(axis, value) {
-                const item = collageItems.value[activeCollageSlot.value];
-                if (!item) return;
-                const next = [...collageItems.value];
-                next[activeCollageSlot.value] = {
-                    ...item,
-                    [axis]: Math.max(0.35, Math.min(2, Number(value) || 1)),
-                };
-                collageItems.value = next;
+                collageApplied.value = false;
             }
 
             function syncCollageRotation(value) {
@@ -904,6 +920,7 @@
                 const next = [...collageItems.value];
                 next[activeCollageSlot.value] = { ...item, rotation: Number(value) || 0 };
                 collageItems.value = next;
+                collageApplied.value = false;
             }
 
             function deleteCollageItem() {
@@ -912,6 +929,7 @@
                 URL.revokeObjectURL(item.sourceImage);
                 collageItems.value = collageItems.value.filter((_, i) => i !== activeCollageSlot.value);
                 activeCollageSlot.value = Math.max(0, Math.min(activeCollageSlot.value, collageItems.value.length - 1));
+                collageApplied.value = false;
             }
 
             function beginCollageItemDrag(index, mode, event) {
@@ -940,6 +958,8 @@
                         x: item.x,
                         y: item.y,
                         scale: item.scale || 0.34,
+                        scaleX: item.scaleX || 1,
+                        scaleY: item.scaleY || 1,
                         rotation: item.rotation || 0,
                     };
                 }
@@ -949,7 +969,7 @@
 
             function _applyCollageItemDrag(clientX, clientY) {
                 if (!_collageDrag) return false;
-                const { mode, index, frame, sx, sy, x, y, scale, rotation } = _collageDrag;
+                const { mode, index, frame, sx, sy, x, y, scale, scaleX, scaleY, rotation } = _collageDrag;
                 const item = collageItems.value[index];
                 if (!item || !mode?.startsWith('item-')) return false;
                 const next = [...collageItems.value];
@@ -961,10 +981,9 @@
                     next[index] = { ...item, scale: nextScale };
                     fxIntensity.value = Math.max(0, Math.min(1, (nextScale - 0.12) / 0.88));
                 } else if (mode === 'item-scale') {
-                    const delta = ((clientX - sx) + (clientY - sy)) / Math.max(1, frame.width);
-                    const nextScale = Math.max(0.12, Math.min(1.2, scale + delta));
-                    next[index] = { ...item, scale: nextScale };
-                    fxIntensity.value = Math.max(0, Math.min(1, (nextScale - 0.12) / 0.88));
+                    const nextScaleX = Math.max(0.35, Math.min(2, scaleX + ((clientX - sx) / Math.max(1, frame.width)) * 2));
+                    const nextScaleY = Math.max(0.35, Math.min(2, scaleY + ((clientY - sy) / Math.max(1, frame.height)) * 2));
+                    next[index] = { ...item, scaleX: nextScaleX, scaleY: nextScaleY };
                 } else if (mode === 'item-rotate') {
                     next[index] = { ...item, rotation: rotation + (clientX - sx) * 0.6 };
                 } else {
@@ -975,6 +994,7 @@
                     };
                 }
                 collageItems.value = next;
+                collageApplied.value = false;
                 return true;
             }
 
@@ -1185,6 +1205,7 @@
                     _pushHistory();
                     _resultCanvas   = canvas;
                     resultUrl.value = canvas.toDataURL('image/png');
+                    collageApplied.value = true;
                     if (exitAfterBuild) {
                         _revokeCollageCells();
                         cropMode.value = 'manual';
@@ -1197,10 +1218,12 @@
                 }
             }
 
-            // Apply in crop nav — manual mode commits crop; collage mode is no-op
-            // (collage is committed immediately by buildCollage panel buttons)
-            function cropApply() {
-                if (cropMode.value === 'collage') return;
+            // Apply in crop nav commits manual crop or current collage.
+            async function cropApply() {
+                if (cropMode.value === 'collage') {
+                    await buildCollage(false);
+                    return;
+                }
                 confirmCrop(true);
             }
 
@@ -1289,7 +1312,10 @@
 
             async function saveFromCrop() {
                 if (cropMode.value === 'collage') {
-                    if (collageItems.value.length) await buildCollage(false);
+                    if (collageItems.value.length && !collageApplied.value) {
+                        showStudioMessage('Apply before Save.', t.value.save);
+                        return;
+                    }
                     _revokeCollageCells();
                     cropMode.value = 'manual';
                     activeNav.value = 'main';
@@ -1385,7 +1411,7 @@
                 effectsList, jigsawVariants, stickerList, collageLayouts,
                 textConfig, stickerCategory, stickerCategoryList, stickerConfig, stickerActive,
                 downloadName, modalMessageTitle, modalMessage,
-                t, cropRatios, specialShapes,
+                t, cropRatios, specialShapes, cropSetupOptions,
                 handleFileInput, triggerUpload, onDrop,
                 enterEffects, exitEffects, applyEffectFilter,
                 applyCurrentEffect, saveFromEffects, onSliderInput, onJigsawGridChange,
@@ -1398,12 +1424,12 @@
                 beginJigsawPieceDrag: jigsawManualTools.beginDrag,
                 moveJigsawPiece: jigsawManualTools.moveDrag,
                 endJigsawPieceDrag: jigsawManualTools.endDrag,
-                enterCrop, enterCollage, exitCrop, confirmCrop, saveFromCrop,
+                promptCropSetup, chooseCropSetup, enterCrop, enterCollage, exitCrop, confirmCrop, saveFromCrop,
                 setCropMode, setCollageLayout,
                 triggerCellInput, onCellFileInput,
                 collageSlotStyle, collageItemStyle, selectCollageSlot, selectCollageItem,
                 setCollageItemMask, nudgeCollageLayer, deleteCollageItem,
-                syncCollageAspect, syncCollageRotation,
+                markCollageDirty, syncCollageRotation,
                 syncCollageScale, toggleCollageFixed,
                 collageSlotFrameStyle, beginCollageSlotDrag, beginCollageSlotMove,
                 beginCollageSlotResize, beginCollageItemDrag, moveCollageSlot, endCollageSlot,
