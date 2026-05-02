@@ -499,6 +499,14 @@ body.theme-waterfall  .studio-drop-zone { border-color: rgba(0, 0, 0, 0.14); }
     place-items: center;
     color: rgba(255,255,255,0.62);
 }
+.fixed-collage-image {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    max-width: none;
+    max-height: none;
+    transform-origin: center;
+}
 .duo-slot.is-fixed::after {
     content: '';
     position: absolute;

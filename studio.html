@@ -160,68 +160,6 @@
         <!-- D: PicCollage-style freeform workspace -->
         <div v-show="contentView === 'collage'"
              class="flex-1 flex flex-col overflow-hidden">
-            <div class="shrink-0 flex gap-2 px-3 py-2 overflow-x-auto no-scrollbar">
-                <button type="button" class="collage-layout-btn"
-                        :class="{ 'is-active': collageFlow === 'free' }"
-                        @click="setCollageFlow('free')">
-                    Free
-                </button>
-                <button type="button" class="collage-layout-btn"
-                        :class="{ 'is-active': collageFlow === 'fixed' }"
-                        @click="setCollageFlow('fixed')">
-                    Fixed
-                </button>
-                <button type="button" class="collage-layout-btn"
-                        @click="triggerCellInput(collageFlow === 'fixed' ? activeCollageSlot : 0)">
-                    <i data-lucide="image-plus" class="w-4 h-4"></i>
-                    Add
-                </button>
-                <button v-if="collageFlow === 'free'" type="button" class="collage-layout-btn"
-                        @click="nudgeCollageLayer(1)">
-                    <i data-lucide="bring-to-front" class="w-4 h-4"></i>
-                </button>
-                <button v-if="collageFlow === 'free'" type="button" class="collage-layout-btn"
-                        @click="nudgeCollageLayer(-1)">
-                    <i data-lucide="send-to-back" class="w-4 h-4"></i>
-                </button>
-                <button v-if="collageFlow === 'free'" type="button" class="collage-layout-btn"
-                        @click="deleteCollageItem">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
-                <template v-if="collageFlow === 'fixed'">
-                    <button v-for="layout in fixedCollageLayouts"
-                            :key="layout.key"
-                            type="button"
-                            class="collage-layout-btn"
-                            :class="{ 'is-active': collageLayout === layout.key }"
-                            @click="setCollageLayout(layout.key)">
-                        {{ layout.label }}
-                    </button>
-                </template>
-            </div>
-            <div class="shrink-0 grid grid-cols-2 gap-2 px-3 pb-2">
-                <label v-if="collageFlow === 'free'" class="collage-control">
-                    <span>Mask</span>
-                    <select v-model="collageMask"
-                            @change="setCollageItemMask(collageMask)">
-                        <option value="square">Square</option>
-                        <option value="circle">Circle</option>
-                        <option value="heart">Heart</option>
-                        <option value="triangle">Triangle</option>
-                        <option value="star">Star</option>
-                    </select>
-                </label>
-                <label class="collage-control">
-                    <span>Background</span>
-                    <input type="color" v-model="collageBg" @input="markCollageDirty">
-                </label>
-                <label v-if="collageFlow === 'free'" class="collage-control">
-                    <span>Rotate</span>
-                    <input type="range" min="-180" max="180" step="1"
-                           :value="activeCollageItem ? activeCollageItem.rotation || 0 : 0"
-                           @input="syncCollageRotation($event.target.value)">
-                </label>
-            </div>
             <div class="flex-1 flex items-center justify-center p-3 overflow-hidden">
                 <div v-if="collageFlow === 'free'"
                      class="pic-collage-canvas"
@@ -277,8 +215,8 @@
                             @pointercancel="endCollageSlot">
                         <img v-if="slot.sourceImage"
                              :src="slot.sourceImage"
-                             class="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                             :style="collageSlotStyle(slot)">
+                             class="fixed-collage-image pointer-events-none"
+                             :style="collageSlotImageStyle(slot, ci)">
                         <span v-else class="collage-slot-empty">
                             <i data-lucide="image-plus" class="w-5 h-5"></i>
                         </span>
@@ -307,6 +245,75 @@
                 <span v-if="option.svg" v-html="option.svg"></span>
                 <span v-else>{{ option.label }}</span>
             </button>
+        </div>
+    </div>
+
+    <div v-if="activeNav === 'crop' && cropMode === 'collage'"
+         class="fx-drawer glass glass-panel" :style="glassStyle"
+         style="backdrop-filter:blur(24px);">
+        <div class="fx-drawer-slider">
+            <span class="fx-label">{{ t.autoCollage }}</span>
+            <input v-if="collageFlow === 'fixed'"
+                   type="range" min="-180" max="180" step="1"
+                   :value="activeFixedSlot ? activeFixedSlot.viewport?.rotation || 0 : 0"
+                   @input="syncFixedCollageRotation($event.target.value)">
+            <input v-else
+                   type="range" min="-180" max="180" step="1"
+                   :value="activeCollageItem ? activeCollageItem.rotation || 0 : 0"
+                   @input="syncCollageRotation($event.target.value)">
+            <span class="fx-intensity-pct">
+                {{ collageFlow === 'fixed' ? t.fixedCollage : t.freeCollage }}
+            </span>
+        </div>
+        <div class="fx-drawer-content">
+            <button type="button" class="fx-chip"
+                    :class="{ 'is-active': collageFlow === 'free' }"
+                    @click="setCollageFlow('free')">
+                {{ t.freeCollage }}
+            </button>
+            <button type="button" class="fx-chip"
+                    :class="{ 'is-active': collageFlow === 'fixed' }"
+                    @click="setCollageFlow('fixed')">
+                {{ t.fixedCollage }}
+            </button>
+            <button type="button" class="fx-chip"
+                    @click="triggerCellInput(collageFlow === 'fixed' ? activeCollageSlot : 0)">
+                {{ t.addPhoto }}
+            </button>
+            <template v-if="collageFlow === 'fixed'">
+                <button v-for="layout in fixedCollageLayouts"
+                        :key="layout.key"
+                        type="button"
+                        class="fx-chip"
+                        :class="{ 'is-active': collageLayout === layout.key }"
+                        @click="setCollageLayout(layout.key)">
+                    {{ layout.label }}
+                </button>
+            </template>
+            <template v-else>
+                <select v-model="collageMask"
+                        class="fx-select"
+                        @change="setCollageItemMask(collageMask)">
+                    <option value="square">{{ t.square }}</option>
+                    <option value="circle">{{ t.circle }}</option>
+                    <option value="heart">{{ t.heart }}</option>
+                    <option value="triangle">{{ t.triangle }}</option>
+                    <option value="star">{{ t.star }}</option>
+                </select>
+                <button type="button" class="fx-chip" @click="nudgeCollageLayer(1)">
+                    {{ t.bringForward }}
+                </button>
+                <button type="button" class="fx-chip" @click="nudgeCollageLayer(-1)">
+                    {{ t.sendBackward }}
+                </button>
+                <button type="button" class="fx-chip" @click="deleteCollageItem">
+                    {{ t.deleteImage }}
+                </button>
+            </template>
+            <input type="color" v-model="collageBg"
+                   class="fx-color-swatch"
+                   :title="t.background"
+                   @input="markCollageDirty">
         </div>
     </div>
 

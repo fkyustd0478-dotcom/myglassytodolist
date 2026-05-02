@@ -151,6 +151,11 @@ describe('studio graphics rendering controls', () => {
         expect(ui).toContain('function nudgeCollageLayer');
         expect(ui).toContain('collageApplied');
         expect(ui).toContain('function markCollageDirty');
+        expect(ui).toContain('function collageSlotImageStyle');
+        expect(ui).toContain('function syncFixedCollageRotation');
+        expect(ui).toContain('function _imageMeta');
+        expect(ui).toContain('imageAspect');
+        expect(ui).toContain("freeCollage: '自由排版'");
         expect(ui).toContain('function syncCollageRotation');
         expect(ui).toContain('function deleteCollageItem');
         expect(ui).toContain('buildCollage(false)');
@@ -158,7 +163,10 @@ describe('studio graphics rendering controls', () => {
         expect(html).toContain('pic-collage-canvas');
         expect(html).toContain("collageFlow === 'free'");
         expect(html).toContain("collageFlow === 'fixed'");
+        expect(html).toContain("activeNav === 'crop' && cropMode === 'collage'");
         expect(html).toContain('fixedCollageLayouts');
+        expect(html).toContain('fixed-collage-image');
+        expect(html).toContain('syncFixedCollageRotation');
         expect(html).toContain('multiple class="hidden"');
         expect(html).toContain('beginCollageItemDrag');
         expect(html).toContain('collage-rotate-handle');
@@ -179,6 +187,8 @@ describe('studio graphics rendering controls', () => {
         expect(collage).toContain('curve2');
         expect(collage).toContain('grid4');
         expect(collage).toContain('function layoutCount');
+        expect(collage).toContain('viewport.rotation');
+        expect(collage).toContain('ctx.rotate');
         expect(collage).toContain('for (let i = 0; i < count; i++)');
     });
 
@@ -202,13 +212,13 @@ describe('studio graphics rendering controls', () => {
         expect(collage).toContain('function slotCss');
         expect(collage).toContain('async function createDuo');
         expect(collage).toContain('ctx.clip()');
-        expect(collage).toContain('ctx.drawImage(img, x, y, dw, dh)');
+        expect(collage).toContain('ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh)');
         expect(ui).toContain('const collageSlots');
         expect(ui).toContain('const collageGap      = ref(0)');
         expect(ui).toContain('CollageManager.createSlots(collageLayout.value, count)');
         expect(ui).toContain('CollageManager.applyLayout(collageSlots.value, key)');
         expect(ui).toContain('sourceImage');
-        expect(ui).toContain('viewport: { x: 0, y: 0, scale: 1 }');
+        expect(ui).toContain('viewport: { x: 0, y: 0, scale: 1, rotation: 0 }');
         expect(ui).toContain('function collageSlotFrameStyle');
         expect(ui).toContain('function beginCollageSlotMove');
         expect(ui).toContain('function beginCollageSlotResize');

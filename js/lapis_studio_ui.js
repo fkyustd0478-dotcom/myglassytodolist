@@ -158,9 +158,7 @@
                 if (activeNav.value === 'effects')
                     return 'calc(246px + env(safe-area-inset-bottom, 0px))';
                 if (activeNav.value === 'crop')
-                    return cropMode.value === 'manual'
-                        ? 'calc(190px + env(safe-area-inset-bottom, 0px))'
-                        : 'calc(134px + env(safe-area-inset-bottom, 0px))';
+                    return 'calc(190px + env(safe-area-inset-bottom, 0px))';
                 return 'calc(80px + env(safe-area-inset-bottom, 0px))';
             });
 
@@ -207,6 +205,12 @@
                     textCat: '文字', stickerCat: '貼圖',
                     intensity: '強度',
                     enterText: '輸入文字…', buildGrid: '建立',
+                    freeCollage: '自由排版', fixedCollage: '固定排版',
+                    addPhoto: '新增圖片', background: '背景',
+                    square: '方形', triangle: '三角形',
+                    bringForward: '上移圖層', sendBackward: '下移圖層',
+                    layout2v: '雙直欄', layout2h: '雙橫列', layoutCurve: '曲線分割',
+                    layout3grid: '三格排版', layout3stack: '三列排版', layout4grid: '四格排版',
                     // Colour filters
                     grayscale: '黑白', sepia: '復古', vivid: '鮮豔',
                     dim: '暗調', warm: '暖色', cool: '冷色',
@@ -234,6 +238,12 @@
                     textCat: 'Text', stickerCat: 'Stickers',
                     intensity: 'Intensity',
                     enterText: 'Enter text…', buildGrid: 'Build',
+                    freeCollage: 'Free', fixedCollage: 'Fixed',
+                    addPhoto: 'Add Photo', background: 'Background',
+                    square: 'Square', triangle: 'Triangle',
+                    bringForward: 'Forward', sendBackward: 'Backward',
+                    layout2v: '2V', layout2h: '2H', layoutCurve: 'Curve',
+                    layout3grid: '3 Grid', layout3stack: '3 Stack', layout4grid: '4 Grid',
                     grayscale: 'B&W', sepia: 'Sepia', vivid: 'Vivid',
                     dim: 'Dim', warm: 'Warm', cool: 'Cool',
                     jigsawStatic: 'Static', jigsawExplode: 'Explode',
@@ -281,8 +291,9 @@
             ]);
             const fixedCollageLayouts = computed(() =>
                 Object.entries(LapisFXCollage.FIXED_LAYOUTS || LapisFXCollage.DUO_LAYOUTS || {})
-                    .map(([key, layout]) => ({ key, ...layout }))
+                    .map(([key, layout]) => ({ key, ...layout, label: t.value[layout.tKey] || layout.label }))
             );
+            const activeFixedSlot = computed(() => collageSlots.value[activeCollageSlot.value] || null);
 
             const effectsList = [
                 { key: 'grayscale', tKey: 'grayscale' },
@@ -773,10 +784,23 @@
                 return {
                     sourceImage,
                     maskPath: `${collageLayout.value}:${index}`,
-                    viewport: { x: 0, y: 0, scale: 1 },
+                    viewport: { x: 0, y: 0, scale: 1, rotation: 0 },
                     bounds: { x: 0, y: 0, w: 0, h: 0 },
+                    imageAspect: 1,
                     fixed: false,
                 };
+            }
+
+            function _imageMeta(url) {
+                return new Promise(resolve => {
+                    const img = new Image();
+                    img.onload = () => resolve({
+                        sourceImage: url,
+                        imageAspect: Math.max(0.01, img.naturalWidth / Math.max(1, img.naturalHeight)),
+                    });
+                    img.onerror = () => resolve({ sourceImage: url, imageAspect: 1 });
+                    img.src = url;
+                });
             }
 
             function promptCropSetup() {
@@ -853,19 +877,22 @@
                 document.getElementById('collage-cell-input').click();
             }
 
-            function onCellFileInput(e) {
+            async function onCellFileInput(e) {
                 const files = Array.from(e.target.files || []);
                 e.target.value = '';
                 if (collageFlow.value === 'fixed') {
                     const next = [...collageSlots.value];
-                    files.filter(file => file.type.startsWith('image/')).forEach((file, offset) => {
+                    const metas = await Promise.all(files
+                        .filter(file => file.type.startsWith('image/'))
+                        .map(file => _imageMeta(URL.createObjectURL(file))));
+                    metas.forEach((meta, offset) => {
                         const index = _collageActiveCell + offset;
                         if (!next[index]) return;
                         if (next[index].sourceImage) URL.revokeObjectURL(next[index].sourceImage);
                         next[index] = {
                             ...next[index],
-                            sourceImage: URL.createObjectURL(file),
-                            viewport: { x: 0, y: 0, scale: 1 },
+                            ...meta,
+                            viewport: { x: 0, y: 0, scale: 1, rotation: 0 },
                         };
                     });
                     collageSlots.value = next;
@@ -1047,6 +1074,20 @@
                 };
             }
 
+            function collageSlotImageStyle(slot, index) {
+                const viewport = slot.viewport || { x: 0, y: 0, scale: 1, rotation: 0 };
+                const bounds = _collageGeometry(index, slot);
+                const slotAspect = Math.max(0.01, bounds.w / Math.max(0.01, bounds.h));
+                const imageAspect = Math.max(0.01, slot.imageAspect || 1);
+                const width = imageAspect >= slotAspect ? `${(imageAspect / slotAspect) * 100}%` : '100%';
+                const height = imageAspect >= slotAspect ? '100%' : `${(slotAspect / imageAspect) * 100}%`;
+                return {
+                    width,
+                    height,
+                    transform: `translate(-50%, -50%) translate(${(viewport.x || 0) * 100}%, ${(viewport.y || 0) * 100}%) scale(${viewport.scale || 1}) rotate(${viewport.rotation || 0}deg)`,
+                };
+            }
+
             function collageSlotFrameStyle(slot, index) {
                 const css = LapisFXCollage.slotCss
                     ? LapisFXCollage.slotCss(collageLayout.value, index, collageGap.value, slot)
@@ -1171,6 +1212,7 @@
                     next[index] = { ...slot, viewport: { ...(slot.viewport || {}), scale } };
                     collageSlots.value = next;
                     fxIntensity.value = Math.max(0, Math.min(1, (scale - 0.5) / 2));
+                    collageApplied.value = false;
                     return;
                 }
                 if (mode === 'move-slot') {
@@ -1200,6 +1242,19 @@
                     },
                 };
                 collageSlots.value = next;
+                collageApplied.value = false;
+            }
+
+            function syncFixedCollageRotation(value) {
+                const slot = collageSlots.value[activeCollageSlot.value];
+                if (!slot) return;
+                const next = [...collageSlots.value];
+                next[activeCollageSlot.value] = {
+                    ...slot,
+                    viewport: { ...(slot.viewport || {}), rotation: Number(value) || 0 },
+                };
+                collageSlots.value = next;
+                collageApplied.value = false;
             }
 
             function _flushCollageDrag() {
@@ -1447,7 +1502,7 @@
                 imageUrl, resultUrl, activeNav, contentView,
                 dragOver, cropShape, cropMode,
                 collageFlow, collageLayout, collageSlots, collageItems, collageMask, collageBg,
-                collageGap, activeCollageSlot, activeCollageItem, collageDragging,
+                collageGap, activeCollageSlot, activeCollageItem, activeFixedSlot, collageDragging,
                 fxIntensity, jigsawGrid, jigsawRoi, jigsawManual, jigsawLayout, cropBoxData, containerSize,
                 isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, sandboxDragging,
                 jigsawManualActive, jigsawRoiActive, jigsawRoiStyle, jigsawRoiLayerStyle, jigsawRoiDragging,
@@ -1472,9 +1527,9 @@
                 promptCropSetup, chooseCropSetup, enterCrop, enterCollage, exitCrop, confirmCrop, saveFromCrop,
                 setCropMode, setCollageLayout, setCollageFlow,
                 triggerCellInput, onCellFileInput,
-                collageSlotStyle, collageItemStyle, selectCollageSlot, selectCollageItem,
+                collageSlotStyle, collageSlotImageStyle, collageItemStyle, selectCollageSlot, selectCollageItem,
                 setCollageItemMask, nudgeCollageLayer, deleteCollageItem,
-                markCollageDirty, syncCollageRotation,
+                markCollageDirty, syncCollageRotation, syncFixedCollageRotation,
                 syncCollageScale, toggleCollageFixed,
                 collageSlotFrameStyle, beginCollageSlotDrag, beginCollageSlotMove,
                 beginCollageSlotResize, beginCollageItemDrag, moveCollageSlot, endCollageSlot,

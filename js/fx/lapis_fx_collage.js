@@ -11,12 +11,12 @@ window.LapisFXCollage = (() => {
     };
 
     const DUO_LAYOUTS = {
-        vertical:   { label: '2V', count: 2 },
-        horizontal: { label: '2H', count: 2 },
-        curve2:     { label: 'Curve', count: 2 },
-        grid3:      { label: '3 Grid', count: 3 },
-        stack3:     { label: '3 Stack', count: 3 },
-        grid4:      { label: '4 Grid', count: 4 },
+        vertical:   { label: '2V', tKey: 'layout2v', count: 2 },
+        horizontal: { label: '2H', tKey: 'layout2h', count: 2 },
+        curve2:     { label: 'Curve', tKey: 'layoutCurve', count: 2 },
+        grid3:      { label: '3 Grid', tKey: 'layout3grid', count: 3 },
+        stack3:     { label: '3 Stack', tKey: 'layout3stack', count: 3 },
+        grid4:      { label: '4 Grid', tKey: 'layout4grid', count: 4 },
         taiji:      { label: 'Taiji' },
         circles:    { label: 'Circle' },
         hearts:     { label: 'Heart' },
@@ -216,8 +216,8 @@ window.LapisFXCollage = (() => {
         };
         if (geo.shape === 'circle') style.borderRadius = '9999px';
         if (geo.shape === 'heart') style.clipPath = "path('M50 92 C50 92 8 62 8 31 C8 9 34 3 50 24 C66 3 92 9 92 31 C92 62 50 92 50 92 Z')";
-        if (geo.shape === 'curve-a') style.clipPath = 'path("M0 0 L54 0 C32 28 68 72 46 100 L0 100 Z")';
-        if (geo.shape === 'curve-b') style.clipPath = 'path("M54 0 L100 0 L100 100 L46 100 C68 72 32 28 54 0 Z")';
+        if (geo.shape === 'curve-a') style.clipPath = 'polygon(0 0, 54% 0, 50% 12%, 45% 24%, 43% 36%, 45% 50%, 50% 64%, 51% 78%, 46% 100%, 0 100%)';
+        if (geo.shape === 'curve-b') style.clipPath = 'polygon(54% 0, 100% 0, 100% 100%, 46% 100%, 51% 78%, 50% 64%, 45% 50%, 43% 36%, 45% 24%, 50% 12%)';
         if (geo.shape === 'tri-a' || geo.shape === 'diag-a') style.clipPath = 'polygon(0 0, 100% 0, 0 100%)';
         if (geo.shape === 'tri-b' || geo.shape === 'diag-b') style.clipPath = 'polygon(100% 0, 100% 100%, 0 100%)';
         if (geo.shape === 'taiji-a') style.clipPath = 'path("M50 0 C15 18 85 32 50 50 C15 68 85 82 50 100 L0 100 L0 0 Z")';
@@ -232,9 +232,13 @@ window.LapisFXCollage = (() => {
         const dh = img.naturalHeight * scale;
         const vx = viewport.x ?? slot.offsetX ?? 0;
         const vy = viewport.y ?? slot.offsetY ?? 0;
-        const x = bounds.x + bounds.w / 2 - dw / 2 + vx * bounds.w;
-        const y = bounds.y + bounds.h / 2 - dh / 2 + vy * bounds.h;
-        ctx.drawImage(img, x, y, dw, dh);
+        const cx = bounds.x + bounds.w / 2 + vx * bounds.w;
+        const cy = bounds.y + bounds.h / 2 + vy * bounds.h;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(((viewport.rotation || slot.rotation || 0) * Math.PI) / 180);
+        ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+        ctx.restore();
     }
 
     // Build canvas from flat array of URLs (null = empty placeholder cell).
