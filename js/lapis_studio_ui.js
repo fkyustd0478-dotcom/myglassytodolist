@@ -88,7 +88,7 @@
                 if (activeNav.value === 'crop') {
                     return cropMode.value === 'collage' ? 'collage' : 'crop';
                 }
-                if (!imageUrl.value) return 'upload';
+                if (!(imageUrl.value || resultUrl.value)) return 'upload';
                 return 'preview';  // 'main' and 'effects' both show the image
             });
 

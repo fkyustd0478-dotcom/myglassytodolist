@@ -487,7 +487,7 @@
             </button>
             <!-- Download is the ONLY entry point for file export -->
             <button @click="promptDownload" class="nav-item"
-                    :style="!imageUrl ? { opacity: 0.35, pointerEvents: 'none' } : {}">
+                    :style="!(imageUrl || resultUrl) ? { opacity: 0.35, pointerEvents: 'none' } : {}">
                 <i data-lucide="download" class="w-5 h-5"></i>
                 <span>{{ t.save }}</span>
             </button>

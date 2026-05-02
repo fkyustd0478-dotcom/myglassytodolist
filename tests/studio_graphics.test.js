@@ -160,6 +160,8 @@ describe('studio graphics rendering controls', () => {
         expect(ui).toContain('function deleteCollageItem');
         expect(ui).toContain('buildCollage(false)');
         expect(ui).toContain('activeNav.value = \'main\'');
+        expect(ui).toContain("if (!(imageUrl.value || resultUrl.value)) return 'upload'");
+        expect(html).toContain(':style="!(imageUrl || resultUrl) ? { opacity: 0.35, pointerEvents: \'none\' } : {}"');
         expect(html).toContain('pic-collage-canvas');
         expect(html).toContain("collageFlow === 'free'");
         expect(html).toContain("collageFlow === 'fixed'");
