@@ -96,6 +96,7 @@
 
             // Crop controls use the floating panel; effects has its own FX drawer.
             const showFloatingPanel = computed(() => activeNav.value === 'crop' && cropMode.value === 'manual');
+            const activeCollageItem = computed(() => collageItems.value[activeCollageSlot.value] || null);
             const sandboxActive = computed(() => {
                 if (activeNav.value !== 'effects') return false;
                 if (effectCategory.value === 'text') return !!textConfig.value.text.trim();
@@ -760,7 +761,7 @@
             }
 
             async function enterCrop() {
-                if (!imageUrl.value) { alert(t.value.noImage); return; }
+                if (!(imageUrl.value || resultUrl.value)) { alert(t.value.noImage); return; }
                 _effectsBase       = null;
                 activeEffect.value = '';
                 cropShape.value    = 'free';
@@ -822,6 +823,8 @@
                         x: 0.5 + Math.min(0.12, index * 0.04),
                         y: 0.5 + Math.min(0.12, index * 0.04),
                         scale: 0.34,
+                        scaleX: 1,
+                        scaleY: 1,
                         rotation: 0,
                         mask: collageMask.value,
                         zIndex: index,
@@ -833,17 +836,24 @@
             }
 
             function collageItemStyle(item) {
-                const size = `${Math.max(12, Math.min(120, (item.scale || 0.34) * 100))}%`;
+                const base = Math.max(12, Math.min(120, (item.scale || 0.34) * 100));
+                const w = `${base * Math.max(0.35, Math.min(2, item.scaleX || 1))}%`;
+                const h = `${base * Math.max(0.35, Math.min(2, item.scaleY || 1))}%`;
+                const mask = item.mask || 'square';
                 return {
                     left: `${(item.x ?? 0.5) * 100}%`,
                     top: `${(item.y ?? 0.5) * 100}%`,
-                    width: size,
-                    height: size,
+                    width: w,
+                    height: h,
                     transform: `translate(-50%, -50%) rotate(${item.rotation || 0}deg)`,
                     zIndex: item.zIndex || 0,
-                    borderRadius: item.mask === 'circle' ? '9999px' : '8px',
-                    clipPath: item.mask === 'heart'
+                    borderRadius: mask === 'circle' ? '9999px' : '8px',
+                    clipPath: mask === 'heart'
                         ? "path('M50 92 C50 92 8 62 8 31 C8 9 34 3 50 24 C66 3 92 9 92 31 C92 62 50 92 50 92 Z')"
+                        : mask === 'triangle'
+                            ? 'polygon(50% 0, 100% 100%, 0 100%)'
+                            : mask === 'star'
+                                ? 'polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 92%, 50% 70%, 21% 92%, 32% 57%, 2% 35%, 39% 35%)'
                         : 'none',
                     boxShadow: item.shadow ? '0 16px 32px rgba(0,0,0,0.22)' : 'none',
                 };
@@ -869,7 +879,30 @@
                 const item = collageItems.value[activeCollageSlot.value];
                 if (!item) return;
                 const next = [...collageItems.value];
-                next[activeCollageSlot.value] = { ...item, zIndex: (item.zIndex || 0) + delta };
+                const levels = collageItems.value.map(i => i.zIndex || 0);
+                const zIndex = delta > 0
+                    ? Math.max(...levels, 0) + 10
+                    : Math.min(...levels, 0) - 10;
+                next[activeCollageSlot.value] = { ...item, zIndex };
+                collageItems.value = next;
+            }
+
+            function syncCollageAspect(axis, value) {
+                const item = collageItems.value[activeCollageSlot.value];
+                if (!item) return;
+                const next = [...collageItems.value];
+                next[activeCollageSlot.value] = {
+                    ...item,
+                    [axis]: Math.max(0.35, Math.min(2, Number(value) || 1)),
+                };
+                collageItems.value = next;
+            }
+
+            function syncCollageRotation(value) {
+                const item = collageItems.value[activeCollageSlot.value];
+                if (!item) return;
+                const next = [...collageItems.value];
+                next[activeCollageSlot.value] = { ...item, rotation: Number(value) || 0 };
                 collageItems.value = next;
             }
 
@@ -1143,7 +1176,7 @@
                 collageDragging.value = false;
             }
 
-            async function buildCollage() {
+            async function buildCollage(exitAfterBuild = true) {
                 try {
                     const canvas = collageItems.value.length
                         ? await LapisFXCollage.createFreeform(collageItems.value, { background: collageBg.value, size: 1080 })
@@ -1152,8 +1185,15 @@
                     _pushHistory();
                     _resultCanvas   = canvas;
                     resultUrl.value = canvas.toDataURL('image/png');
+                    if (exitAfterBuild) {
+                        _revokeCollageCells();
+                        cropMode.value = 'manual';
+                        activeNav.value = 'main';
+                    }
+                    return true;
                 } catch (_) {
                     alert(t.value.errLoad);
+                    return false;
                 }
             }
 
@@ -1247,9 +1287,11 @@
                 activeNav.value   = 'main';
             }
 
-            function saveFromCrop() {
+            async function saveFromCrop() {
                 if (cropMode.value === 'collage') {
+                    if (collageItems.value.length) await buildCollage(false);
                     _revokeCollageCells();
+                    cropMode.value = 'manual';
                     activeNav.value = 'main';
                     return;
                 }
@@ -1334,7 +1376,7 @@
                 imageUrl, resultUrl, activeNav, contentView,
                 dragOver, cropShape, cropMode,
                 collageLayout, collageSlots, collageItems, collageMask, collageBg,
-                collageGap, activeCollageSlot, collageDragging,
+                collageGap, activeCollageSlot, activeCollageItem, collageDragging,
                 fxIntensity, jigsawGrid, jigsawRoi, jigsawManual, jigsawLayout, cropBoxData, containerSize,
                 isSpecialShape, shapeOverlaySvg, sandboxActive, sandboxBoxStyle, sandboxDragging,
                 jigsawManualActive, jigsawRoiActive, jigsawRoiStyle, jigsawRoiLayerStyle, jigsawRoiDragging,
@@ -1361,6 +1403,7 @@
                 triggerCellInput, onCellFileInput,
                 collageSlotStyle, collageItemStyle, selectCollageSlot, selectCollageItem,
                 setCollageItemMask, nudgeCollageLayer, deleteCollageItem,
+                syncCollageAspect, syncCollageRotation,
                 syncCollageScale, toggleCollageFixed,
                 collageSlotFrameStyle, beginCollageSlotDrag, beginCollageSlotMove,
                 beginCollageSlotResize, beginCollageItemDrag, moveCollageSlot, endCollageSlot,

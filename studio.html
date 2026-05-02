@@ -193,11 +193,31 @@
                         <option value="square">Square</option>
                         <option value="circle">Circle</option>
                         <option value="heart">Heart</option>
+                        <option value="triangle">Triangle</option>
+                        <option value="star">Star</option>
                     </select>
                 </label>
                 <label class="collage-control">
                     <span>Background</span>
                     <input type="color" v-model="collageBg">
+                </label>
+                <label class="collage-control">
+                    <span>Width</span>
+                    <input type="range" min="0.35" max="2" step="0.01"
+                           :value="activeCollageItem ? activeCollageItem.scaleX || 1 : 1"
+                           @input="syncCollageAspect('scaleX', $event.target.value)">
+                </label>
+                <label class="collage-control">
+                    <span>Height</span>
+                    <input type="range" min="0.35" max="2" step="0.01"
+                           :value="activeCollageItem ? activeCollageItem.scaleY || 1 : 1"
+                           @input="syncCollageAspect('scaleY', $event.target.value)">
+                </label>
+                <label class="collage-control">
+                    <span>Rotate</span>
+                    <input type="range" min="-180" max="180" step="1"
+                           :value="activeCollageItem ? activeCollageItem.rotation || 0 : 0"
+                           @input="syncCollageRotation($event.target.value)">
                 </label>
             </div>
             <div class="flex-1 flex items-center justify-center p-3 overflow-hidden">
@@ -435,7 +455,7 @@
                 <span>{{ t.upload }}</span>
             </button>
             <button @click="enterCrop" class="nav-item"
-                    :style="!imageUrl ? { opacity: 0.35, pointerEvents: 'none' } : {}">
+                    :style="!(imageUrl || resultUrl) ? { opacity: 0.35, pointerEvents: 'none' } : {}">
                 <i data-lucide="crop" class="w-5 h-5"></i>
                 <span>{{ t.manualCrop }}</span>
             </button>

@@ -271,22 +271,38 @@ window.LapisFXCollage = (() => {
         return cvs;
     }
 
-    function _freeformMask(ctx, mask, size) {
-        const s = size / 2;
+    function _freeformMask(ctx, mask, w, h) {
+        const sx = w / 2;
+        const sy = h / 2;
         ctx.beginPath();
         if (mask === 'circle') {
-            ctx.arc(0, 0, s, 0, Math.PI * 2);
+            ctx.ellipse(0, 0, sx, sy, 0, 0, Math.PI * 2);
         } else if (mask === 'heart') {
             ctx.save();
-            ctx.scale(size * 0.011, size * 0.011);
+            ctx.scale(w * 0.011, h * 0.011);
             ctx.moveTo(0, 18);
             ctx.bezierCurveTo(-46, -20, -70, 24, -35, 58);
             ctx.bezierCurveTo(-12, 80, 0, 92, 0, 92);
             ctx.bezierCurveTo(0, 92, 12, 80, 35, 58);
             ctx.bezierCurveTo(70, 24, 46, -20, 0, 18);
             ctx.restore();
+        } else if (mask === 'triangle') {
+            ctx.moveTo(0, -sy);
+            ctx.lineTo(sx, sy);
+            ctx.lineTo(-sx, sy);
+            ctx.closePath();
+        } else if (mask === 'star') {
+            for (let i = 0; i < 10; i++) {
+                const r = i % 2 === 0 ? 1 : 0.45;
+                const a = -Math.PI / 2 + i * Math.PI / 5;
+                const x = Math.cos(a) * sx * r;
+                const y = Math.sin(a) * sy * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
         } else {
-            ctx.rect(-s, -s, size, size);
+            ctx.rect(-sx, -sy, w, h);
         }
     }
 
@@ -305,16 +321,18 @@ window.LapisFXCollage = (() => {
             .filter(entry => entry.img)
             .sort((a, b) => (a.item.zIndex || 0) - (b.item.zIndex || 0))
             .forEach(({ item, img }) => {
-                const box = size * Math.max(0.12, Math.min(1.2, item.scale || 0.34));
+                const base = size * Math.max(0.12, Math.min(1.2, item.scale || 0.34));
+                const boxW = base * Math.max(0.35, Math.min(2, item.scaleX || 1));
+                const boxH = base * Math.max(0.35, Math.min(2, item.scaleY || 1));
                 ctx.save();
                 ctx.translate((item.x ?? 0.5) * size, (item.y ?? 0.5) * size);
                 ctx.rotate(((item.rotation || 0) * Math.PI) / 180);
                 ctx.shadowColor = item.shadow ? 'rgba(0,0,0,0.28)' : 'transparent';
                 ctx.shadowBlur = item.shadow ? size * 0.018 : 0;
                 ctx.shadowOffsetY = item.shadow ? size * 0.012 : 0;
-                _freeformMask(ctx, item.mask || 'square', box);
+                _freeformMask(ctx, item.mask || 'square', boxW, boxH);
                 ctx.clip();
-                _drawCover(ctx, img, -box / 2, -box / 2, box, box);
+                _drawCover(ctx, img, -boxW / 2, -boxH / 2, boxW, boxH);
                 ctx.restore();
             });
         return cvs;
