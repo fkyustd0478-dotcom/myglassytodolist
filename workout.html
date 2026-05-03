@@ -807,58 +807,91 @@
 
                     <!-- Exercise list -->
                     <div v-if="logExercises.length > 0" class="space-y-3">
-                        <div v-for="(entry, eIdx) in logExercises" :key="entry.exerciseId + eIdx"
+                        <div v-for="(entry, eIdx) in logExercises" :key="(entry.id || entry.exerciseId || '') + eIdx"
                              class="glass rounded-2xl p-4" :style="glassStyle">
 
-                            <!-- Exercise header -->
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                         :style="entry.categories && entry.categories[0] ? catPillStyle(entry.categories[0]) : { background:'rgba(100,116,139,0.15)' }"
-                                         v-html="entry.type === 'duration' ? ICON_TIMER : ICON_DUMBBELL"></div>
-                                    <div>
-                                        <p class="font-black text-sm leading-tight">{{ entry.nameZh || entry.name }}</p>
-                                        <p v-if="entry.nameZh" class="text-[10px] opacity-40 font-mono leading-tight">{{ entry.name }}</p>
+                            <!-- Superset entry -->
+                            <template v-if="entry.type === 'superset'">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-black"
+                                             style="background:rgba(168,85,247,0.2);color:#a855f7">S</div>
+                                        <div>
+                                            <p class="font-black text-sm leading-tight">組合訓練</p>
+                                            <p class="text-[10px] opacity-40 font-mono leading-tight">{{ entry.rounds }} rounds</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button @click="toggleSupersetComplete(eIdx)"
+                                                class="compact-done-btn" :class="{ done: entry.isCompleted }"
+                                                v-html="entry.isCompleted ? ICON_CHECK : ICON_CIRCLE"></button>
+                                        <button @click="removeLogExercise(eIdx)"
+                                                class="opacity-30 hover:opacity-70 transition-opacity active:scale-90"
+                                                v-html="ICON_X"></button>
                                     </div>
                                 </div>
-                                <button @click="removeLogExercise(eIdx)"
-                                        class="opacity-30 hover:opacity-70 transition-opacity active:scale-90"
-                                        v-html="ICON_X"></button>
-                            </div>
-
-                            <!-- Sets (compact): [Reps] × [numSets] × [Weight] -->
-                            <div v-if="entry.type === 'sets'" class="space-y-1.5">
-                                <div v-for="(set, sIdx) in entry.sets" :key="sIdx" class="compact-set-row">
-                                    <span class="compact-set-num">{{ sIdx + 1 }}</span>
-                                    <input v-model="set.reps" type="number" inputmode="numeric"
-                                           :placeholder="t.reps" min="0" class="compact-input">
-                                    <span class="compact-x">×</span>
-                                    <input v-model="set.numSets" type="number" inputmode="numeric"
-                                           :placeholder="t.sets" min="1" class="compact-input compact-input-sm">
-                                    <span class="compact-x">×</span>
-                                    <input v-model="set.weight" type="number" inputmode="decimal"
-                                           :placeholder="t.weight" min="0" class="compact-input">
-                                    <button @click="toggleSetDone(eIdx, sIdx)"
-                                            class="compact-done-btn" :class="{ done: set.done }"
-                                            v-html="set.done ? ICON_CHECK : ICON_CIRCLE"></button>
-                                    <button @click="removeSet(eIdx, sIdx)"
-                                            class="compact-del-btn" v-html="ICON_MINUS"></button>
+                                <div class="space-y-1.5">
+                                    <div v-for="(item, iIdx) in entry.items" :key="iIdx"
+                                         class="flex items-center gap-2 rounded-xl px-3 py-2"
+                                         style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.15)">
+                                        <span class="text-xs font-black opacity-50 w-4">{{ String.fromCharCode(65+iIdx) }}</span>
+                                        <p class="flex-1 min-w-0 text-xs font-black truncate">{{ item.nameZh || item.name }}</p>
+                                        <span class="text-[10px] opacity-50 font-mono flex-shrink-0">{{ item.reps }}×{{ item.weight }}kg</span>
+                                    </div>
                                 </div>
-                                <button @click="addSet(eIdx)"
-                                        class="w-full mt-1 py-1.5 rounded-xl text-xs font-black opacity-40 hover:opacity-70 transition-opacity"
-                                        style="border:1px dashed rgba(255,255,255,0.2)">
-                                    + {{ t.addSet }}
-                                </button>
-                            </div>
+                            </template>
 
-                            <!-- Duration type -->
-                            <div v-else class="flex items-center gap-3">
-                                <input v-model="entry.minutes" type="number" inputmode="numeric"
-                                       :placeholder="t.minutes" min="0"
-                                       class="flex-1 rounded-xl px-4 py-2 text-sm font-bold text-center outline-none"
-                                       style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">
-                                <span class="text-sm font-black opacity-40">{{ t.min }}</span>
-                            </div>
+                            <!-- Regular exercise entry -->
+                            <template v-else>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                             :style="entry.categories && entry.categories[0] ? catPillStyle(entry.categories[0]) : { background:'rgba(100,116,139,0.15)' }"
+                                             v-html="entry.type === 'duration' ? ICON_TIMER : ICON_DUMBBELL"></div>
+                                        <div>
+                                            <p class="font-black text-sm leading-tight">{{ entry.nameZh || entry.name }}</p>
+                                            <p v-if="entry.nameZh" class="text-[10px] opacity-40 font-mono leading-tight">{{ entry.name }}</p>
+                                        </div>
+                                    </div>
+                                    <button @click="removeLogExercise(eIdx)"
+                                            class="opacity-30 hover:opacity-70 transition-opacity active:scale-90"
+                                            v-html="ICON_X"></button>
+                                </div>
+
+                                <!-- Sets (compact): [Reps] × [numSets] × [Weight] -->
+                                <div v-if="entry.type === 'sets'" class="space-y-1.5">
+                                    <div v-for="(set, sIdx) in entry.sets" :key="sIdx" class="compact-set-row">
+                                        <span class="compact-set-num">{{ sIdx + 1 }}</span>
+                                        <input v-model="set.reps" type="number" inputmode="numeric"
+                                               :placeholder="t.reps" min="0" class="compact-input">
+                                        <span class="compact-x">×</span>
+                                        <input v-model="set.numSets" type="number" inputmode="numeric"
+                                               :placeholder="t.sets" min="1" class="compact-input compact-input-sm">
+                                        <span class="compact-x">×</span>
+                                        <input v-model="set.weight" type="number" inputmode="decimal"
+                                               :placeholder="t.weight" min="0" class="compact-input">
+                                        <button @click="toggleSetDone(eIdx, sIdx)"
+                                                class="compact-done-btn" :class="{ done: set.done }"
+                                                v-html="set.done ? ICON_CHECK : ICON_CIRCLE"></button>
+                                        <button @click="removeSet(eIdx, sIdx)"
+                                                class="compact-del-btn" v-html="ICON_MINUS"></button>
+                                    </div>
+                                    <button @click="addSet(eIdx)"
+                                            class="w-full mt-1 py-1.5 rounded-xl text-xs font-black opacity-40 hover:opacity-70 transition-opacity"
+                                            style="border:1px dashed rgba(255,255,255,0.2)">
+                                        + {{ t.addSet }}
+                                    </button>
+                                </div>
+
+                                <!-- Duration type -->
+                                <div v-else class="flex items-center gap-3">
+                                    <input v-model="entry.minutes" type="number" inputmode="numeric"
+                                           :placeholder="t.minutes" min="0"
+                                           class="flex-1 rounded-xl px-4 py-2 text-sm font-bold text-center outline-none"
+                                           style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)">
+                                    <span class="text-sm font-black opacity-40">{{ t.min }}</span>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
@@ -900,13 +933,112 @@
                         </div>
                     </div>
 
-                    <!-- Add exercise toggle -->
-                    <button @click="showPickModal = !showPickModal"
-                            class="w-full py-3 rounded-2xl glass font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
-                            :style="glassStyle" style="border:1px dashed rgba(255,255,255,0.2)">
-                        <span v-html="showPickModal ? ICON_MINUS : ICON_PLUS"></span>
-                        {{ t.addExercise }}
-                    </button>
+                    <!-- Superset builder panel -->
+                    <div v-show="showSupersetPanel" class="glass rounded-2xl p-4" :style="glassStyle"
+                         style="border:1px solid rgba(168,85,247,0.3)">
+                        <p class="section-label mb-3" style="color:#a855f7">組合訓練</p>
+
+                        <!-- Slot list -->
+                        <div class="space-y-2 mb-3">
+                            <div v-for="(slot, sIdx) in supersetItems" :key="sIdx"
+                                 class="rounded-xl p-3" style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.15)">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xs font-black opacity-50 w-4">{{ String.fromCharCode(65+sIdx) }}</span>
+                                    <button @click="openPickForSlot(sIdx)"
+                                            class="flex-1 text-left text-xs font-bold rounded-lg px-2 py-1 truncate"
+                                            style="background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.2)">
+                                        {{ slot.name ? (slot.nameZh || slot.name) : '選擇動作...' }}
+                                    </button>
+                                    <button v-if="supersetItems.length > 2" @click="removeSupersetSlot(sIdx)"
+                                            class="opacity-30 hover:opacity-70 active:scale-90" v-html="ICON_X"></button>
+                                </div>
+                                <div v-if="slot.name" class="flex items-center gap-2">
+                                    <input v-model="slot.reps" type="number" inputmode="numeric"
+                                           placeholder="次數" min="1" class="compact-input flex-1">
+                                    <span class="compact-x text-[10px]">×</span>
+                                    <input v-model="slot.weight" type="number" inputmode="decimal"
+                                           placeholder="重量 kg" min="0" class="compact-input flex-1">
+                                    <span class="text-[10px] opacity-40">kg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add slot -->
+                        <button @click="addSupersetSlot()"
+                                class="w-full py-1.5 rounded-xl text-xs font-black opacity-40 hover:opacity-70 mb-3"
+                                style="border:1px dashed rgba(168,85,247,0.4)">
+                            + 新增動作
+                        </button>
+
+                        <!-- Rounds -->
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-xs font-black opacity-60 flex-shrink-0">總輪數</span>
+                            <input v-model="supersetRounds" type="number" inputmode="numeric" min="1"
+                                   class="flex-1 rounded-xl px-3 py-1.5 text-sm font-bold text-center outline-none"
+                                   style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.25)">
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex gap-2">
+                            <button @click="cancelSuperset()"
+                                    class="flex-1 py-2.5 rounded-xl text-xs font-black glass" :style="glassStyle">
+                                取消
+                            </button>
+                            <button @click="commitSuperset()"
+                                    class="flex-1 py-2.5 rounded-xl text-xs font-black text-white"
+                                    style="background:linear-gradient(135deg,#a855f7,#7c3aed)"
+                                    :class="{ 'opacity-40 pointer-events-none': supersetItems.filter(s=>s.name).length < 2 }">
+                                加入訓練
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Superset slot picker -->
+                    <div v-show="supersetPickModal" class="glass rounded-2xl p-4" :style="glassStyle"
+                         style="border:1px solid rgba(168,85,247,0.3)">
+                        <p class="section-label mb-2" style="color:#a855f7">選擇組合動作</p>
+                        <div class="glass rounded-xl flex items-center gap-2 px-3 py-2 mb-3" :style="glassStyle">
+                            <span v-html="ICON_SEARCH" class="opacity-40 flex-shrink-0"></span>
+                            <input v-model="supersetPickSearch" placeholder="搜尋動作..."
+                                   class="flex-1 bg-transparent outline-none text-sm font-bold min-w-0">
+                        </div>
+                        <div class="space-y-1.5 max-h-48 overflow-y-auto">
+                            <div v-if="filteredSupersetPick.length === 0"
+                                 class="text-center py-6 opacity-30 text-sm font-bold">{{ t.noLibrary }}</div>
+                            <button v-for="ex in filteredSupersetPick" :key="ex.id"
+                                    @click="pickForSupersetSlot(ex)"
+                                    class="w-full glass rounded-xl px-3 py-2.5 flex items-center gap-3 text-left active:scale-98 transition-transform"
+                                    :style="glassStyle">
+                                <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                     :style="ex.categories && ex.categories[0] ? catPillStyle(ex.categories[0]) : { background:'rgba(100,116,139,0.15)' }"
+                                     v-html="ICON_DUMBBELL"></div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-black text-sm truncate">{{ exDisplayName(ex) }}</p>
+                                    <div class="flex gap-1 flex-wrap mt-0.5">
+                                        <span v-for="cat in (ex.categories || []).slice(0,2)" :key="cat"
+                                              class="category-pill" :style="catPillStyle(cat)">{{ catLabel(cat) }}</span>
+                                    </div>
+                                </div>
+                                <span v-html="ICON_PLUS_CIRCLE" class="opacity-40 flex-shrink-0"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Add exercise / superset buttons -->
+                    <div class="flex gap-2">
+                        <button @click="showPickModal = !showPickModal; if(showPickModal) showSupersetPanel=false"
+                                class="flex-1 py-3 rounded-2xl glass font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                                :style="glassStyle" style="border:1px dashed rgba(255,255,255,0.2)">
+                            <span v-html="showPickModal ? ICON_MINUS : ICON_PLUS"></span>
+                            {{ t.addExercise }}
+                        </button>
+                        <button @click="openSupersetPanel(); showPickModal=false"
+                                class="flex-1 py-3 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                                style="background:rgba(168,85,247,0.15);border:1px dashed rgba(168,85,247,0.4);color:#a855f7">
+                            <span v-html="ICON_PLUS"></span>
+                            組合訓練
+                        </button>
+                    </div>
 
                 </div><!-- end .log-body -->
 

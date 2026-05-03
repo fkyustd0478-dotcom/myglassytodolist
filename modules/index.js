@@ -228,7 +228,13 @@ window.addEventListener('DOMContentLoaded', () => {
         logs.filter(l => !l.isDeleted).forEach(log => {
             let vol = 0;
             log.exercises.forEach(e => {
-                if (e.type === 'sets') {
+                if (e.type === 'superset') {
+                    const rounds = parseInt(e.rounds) || 1;
+                    (e.items || []).forEach(item => {
+                        const w = parseFloat(item.weight), r = parseInt(item.reps);
+                        if (!isNaN(w) && !isNaN(r)) vol += w * r * rounds;
+                    });
+                } else if (e.type === 'sets') {
                     (e.sets || []).forEach(s => {
                         const w = parseFloat(s.weight), r = parseInt(s.reps), n = parseInt(s.numSets) || 1;
                         if (!isNaN(w) && !isNaN(r)) vol += w * r * n;
@@ -247,6 +253,15 @@ window.addEventListener('DOMContentLoaded', () => {
         logs.filter(l => !l.isDeleted).forEach(log => {
             let vol = 0;
             log.exercises.forEach(e => {
+                if (e.type === 'superset') {
+                    const rounds = parseInt(e.rounds) || 1;
+                    (e.items || []).forEach(item => {
+                        if (!(item.categories || []).includes(subCat)) return;
+                        const w = parseFloat(item.weight), r = parseInt(item.reps);
+                        if (!isNaN(w) && !isNaN(r)) vol += w * r * rounds;
+                    });
+                    return;
+                }
                 if (e.type !== 'sets') return;
                 if (!(e.categories || []).includes(subCat)) return;
                 (e.sets || []).forEach(s => {

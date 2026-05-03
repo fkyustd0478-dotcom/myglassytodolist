@@ -24,6 +24,15 @@ window.addEventListener('DOMContentLoaded', () => {
         (logs || []).filter(l => !l.isDeleted).forEach(log => {
             let vol = 0;
             (log.exercises || []).forEach(e => {
+                if (e.type === 'superset') {
+                    const rounds = parseInt(e.rounds) || 1;
+                    (e.items || []).forEach(item => {
+                        if (!item.categories || !item.categories.some(c => subs.has(c))) return;
+                        const w = parseFloat(item.weight), r = parseInt(item.reps);
+                        if (!isNaN(w) && !isNaN(r)) vol += w * r * rounds;
+                    });
+                    return;
+                }
                 if (!e.categories || !e.categories.some(c => subs.has(c))) return;
                 if (e.type !== 'sets') return;
                 (e.sets || []).forEach(s => {
@@ -196,6 +205,78 @@ window.addEventListener('DOMContentLoaded', () => {
             const logDate          = ref(_todayStr());
             const logTime          = ref({ hour: _now().getHours(), minute: _now().getMinutes() });
             const logExercises     = ref([]);
+
+            // ── Superset state ────────────────────────────────────────────────
+            const showSupersetPanel  = ref(false);
+            const supersetItems      = ref([]);
+            const supersetRounds     = ref(3);
+            const supersetPickModal  = ref(false);
+            const supersetPickSlot   = ref(-1);
+            const supersetPickSearch = ref('');
+
+            const filteredSupersetPick = computed(() => {
+                const q = supersetPickSearch.value.trim().toLowerCase();
+                return libData.exercises
+                    .filter(e => e.type === 'sets')
+                    .filter(e => !q || e.name.toLowerCase().includes(q) || (e.nameZh || '').includes(q));
+            });
+
+            const openSupersetPanel = () => {
+                supersetItems.value = [
+                    { name: '', nameZh: '', categories: [], reps: '', weight: '' },
+                    { name: '', nameZh: '', categories: [], reps: '', weight: '' },
+                ];
+                supersetRounds.value = 3;
+                showSupersetPanel.value = true;
+            };
+
+            const cancelSuperset = () => {
+                showSupersetPanel.value = false;
+                supersetItems.value = [];
+            };
+
+            const addSupersetSlot = () => {
+                supersetItems.value.push({ name: '', nameZh: '', categories: [], reps: '', weight: '' });
+            };
+
+            const removeSupersetSlot = (idx) => {
+                supersetItems.value.splice(idx, 1);
+            };
+
+            const openPickForSlot = (idx) => {
+                supersetPickSlot.value = idx;
+                supersetPickSearch.value = '';
+                supersetPickModal.value = true;
+            };
+
+            const pickForSupersetSlot = (ex) => {
+                const slot = supersetPickSlot.value;
+                if (slot >= 0 && slot < supersetItems.value.length) {
+                    supersetItems.value[slot] = {
+                        name: ex.name, nameZh: ex.nameZh || '',
+                        categories: ex.categories || [], reps: '', weight: '',
+                    };
+                }
+                supersetPickModal.value = false;
+                supersetPickSlot.value = -1;
+            };
+
+            const commitSuperset = () => {
+                const validItems = supersetItems.value.filter(it => it.name);
+                if (validItems.length < 2) return;
+                logExercises.value.push({
+                    id: _wUid(), type: 'superset',
+                    rounds: parseInt(supersetRounds.value) || 3,
+                    items: validItems.map(it => ({ ...it, reps: it.reps || '1', weight: it.weight || '0' })),
+                    isCompleted: false,
+                });
+                showSupersetPanel.value = false;
+                supersetItems.value = [];
+            };
+
+            const toggleSupersetComplete = (eIdx) => {
+                logExercises.value[eIdx].isCompleted = !logExercises.value[eIdx].isCompleted;
+            };
 
             // ── Toast ─────────────────────────────────────────────────────────
             const showToast   = ref(false);
@@ -388,11 +469,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
             // ── Modal tracking ────────────────────────────────────────────────
             const isAnyModalOpen = computed(() =>
-                showDateTimePicker.value || showLogModal.value ||
-                lib.showPickModal.value  || lib.showExModal.value  ||
-                lib.showCatMgr.value     || showClearConfirm.value ||
-                confirmModal.show        || lib.showExDetail.value ||
-                metrics.showPRModal.value || metrics.weightHistoryModal.value
+                showDateTimePicker.value  || showLogModal.value ||
+                lib.showPickModal.value   || lib.showExModal.value  ||
+                lib.showCatMgr.value      || showClearConfirm.value ||
+                confirmModal.show         || lib.showExDetail.value ||
+                metrics.showPRModal.value || metrics.weightHistoryModal.value ||
+                showSupersetPanel.value   || supersetPickModal.value
             );
 
             // ── Lifecycle ─────────────────────────────────────────────────────
@@ -512,6 +594,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 ...lib,
                 // metrics composable
                 ...metrics,
+                // superset
+                showSupersetPanel, supersetItems, supersetRounds,
+                supersetPickModal, supersetPickSearch, filteredSupersetPick,
+                openSupersetPanel, cancelSuperset, addSupersetSlot, removeSupersetSlot,
+                openPickForSlot, pickForSupersetSlot, commitSuperset, toggleSupersetComplete,
             };
         }
     }).component('LapisConfirm', window.LapisConfirm).mount('#app');
