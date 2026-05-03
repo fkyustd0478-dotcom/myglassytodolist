@@ -27,7 +27,6 @@
             markMastered: '標記熟練',
             completed: '完成單字',
             settings: '設定',
-            language: '介面語言',
             difficultyCap: '難度上限',
             deckSize: '每輪最多字卡',
             deckSizeHint: '預設 10 張，最多 100 張，以 5 為單位。',
@@ -35,8 +34,8 @@
             noCardsHint: '請調整難度上限，或查看已熟練清單。',
             pronunciation: '發音',
             source: '來源',
-            partOfSpeech: '詞性',
-            meaning: '中文',
+            all: '全部',
+            list: '清單',
         },
         en: {
             level: 'Level',
@@ -60,7 +59,6 @@
             markMastered: 'Mastered',
             completed: 'Completed Words',
             settings: 'Settings',
-            language: 'Language',
             difficultyCap: 'Difficulty Cap',
             deckSize: 'Cards per Deck',
             deckSizeHint: 'Default 10, max 100, step 5.',
@@ -68,8 +66,8 @@
             noCardsHint: 'Adjust difficulty cap or review mastered words.',
             pronunciation: 'Pronunciation',
             source: 'Source',
-            partOfSpeech: 'Part of Speech',
-            meaning: 'Chinese',
+            all: 'All',
+            list: 'List',
         },
     };
 
@@ -77,15 +75,6 @@
         setTimeout(() => {
             if (global.lucide) global.lucide.createIcons();
         }, 0);
-    }
-
-    function saveLanguagePreference(lang, navSettings) {
-        if (navSettings) navSettings.lang = lang;
-        try {
-            const settings = JSON.parse(global.localStorage?.getItem('todo_settings') || '{}');
-            global.localStorage?.setItem('todo_settings', JSON.stringify({ ...settings, lang }));
-        } catch (_) {}
-        if (global.LapisI18n) global.LapisI18n.setLang(lang);
     }
 
     global.LanguageLearningView = {
@@ -100,17 +89,78 @@
         },
         mounted() {
             this.dealDeck('refill');
+            this.initSwiper();
             refreshIcons();
         },
         updated() {
             refreshIcons();
         },
         methods: {
+            initSwiper() {
+                if (!global.Swiper || this.swiper) return;
+                this.$nextTick(() => {
+                    const el = this.$el.querySelector('.language-card-swiper');
+                    if (!el || this.swiper) return;
+                    this.swiper = new global.Swiper(el, {
+                        effect: 'cards',
+                        grabCursor: false,
+                        allowTouchMove: false,
+                        cardsEffect: {
+                            perSlideOffset: 9,
+                            perSlideRotate: 2,
+                            rotate: true,
+                            slideShadows: false,
+                        },
+                        on: {
+                            slideChange: swiper => {
+                                this.deckIndex = swiper.activeIndex;
+                            },
+                        },
+                    });
+                });
+            },
+            syncSwiper() {
+                this.$nextTick(() => {
+                    if (!this.swiper) {
+                        this.initSwiper();
+                        return;
+                    }
+                    this.swiper.update();
+                    this.swiper.slideTo(this.deckIndex, 0);
+                });
+            },
             voiceUrl(word) {
                 return Data.voiceUrl(word);
             },
-            setLanguage(lang) {
-                saveLanguagePreference(lang, this.navSettings);
+            playVoice(word) {
+                const audio = new Audio(this.voiceUrl(word));
+                audio.play().catch(() => {});
+            },
+            maskedExample(item) {
+                return Logic.maskWordInExample(item.example_en, item.word);
+            },
+            partLabel(item) {
+                return Data.partOfSpeechLabel(item.part_of_speech, this.lang);
+            },
+            handleNext() {
+                this.nextCard();
+                this.$nextTick(() => this.swiper?.slideTo(this.deckIndex));
+            },
+            handlePrevious() {
+                this.previousCard();
+                this.$nextTick(() => this.swiper?.slideTo(this.deckIndex));
+            },
+            handleRefill() {
+                this.dealDeck('refill');
+                this.syncSwiper();
+            },
+            handleDifficultyCap(value) {
+                this.setDifficultyCap(value);
+                this.syncSwiper();
+            },
+            handleDeckSize(value) {
+                this.setDeckSize(value);
+                this.syncSwiper();
             },
             stackStyle(index) {
                 const offset = Math.min(index, 7);
@@ -124,20 +174,20 @@
         template: `
             <div class="language-page max-w-3xl mx-auto w-full space-y-4">
                 <section v-show="activeTab === 'learn'" class="space-y-4">
-                    <div v-if="currentWord" class="relative min-h-[430px]">
-                        <div v-for="(card, index) in visibleStackCards"
-                             :key="card.word + '-' + deckCycle"
-                             class="absolute inset-x-0 top-0 transition-all duration-300"
-                             :style="stackStyle(index)">
-                            <div class="glass rounded-[2rem] p-5 border border-white/10 shadow-2xl"
+                    <div v-if="currentWord" class="swiper language-card-swiper min-h-[470px]">
+                        <div class="swiper-wrapper">
+                            <div v-for="(card, index) in studyDeck"
+                                 :key="card.word + '-' + deckCycle"
+                                 class="swiper-slide">
+                            <div class="glass rounded-[2rem] p-5 border border-white/10 shadow-2xl min-h-[440px]"
                                  :class="{
-                                    'bg-green-500/20 border-green-400/70': index === 0 && (currentState.feedback === 'correct' || currentState.feedback === 'revealed'),
-                                    'bg-red-500/15 border-red-400/70': index === 0 && currentState.feedback === 'incorrect',
-                                    'translate-x-3 rotate-1': index === 0 && deckMotion === 'next',
-                                    '-translate-x-3 -rotate-1': index === 0 && deckMotion === 'previous',
-                                    'scale-95': index === 0 && deckMotion === 'refill'
-                                 }">
-                                <div v-if="index === 0" class="space-y-5">
+                                    'bg-green-500/20 border-green-400/70': index === deckIndex && (currentState.feedback === 'correct' || currentState.feedback === 'revealed'),
+                                    'bg-red-500/15 border-red-400/70': index === deckIndex && currentState.feedback === 'incorrect',
+                                    'translate-x-3 rotate-1': index === deckIndex && deckMotion === 'next',
+                                    '-translate-x-3 -rotate-1': index === deckIndex && deckMotion === 'previous',
+                                    'scale-95': index === deckIndex && deckMotion === 'refill'
+                                  }">
+                                <div v-if="index === deckIndex" class="space-y-5">
                                     <div class="flex items-center justify-between gap-3">
                                         <span class="text-xs font-black uppercase opacity-50">{{ ui.level }} {{ currentWord.difficulty }}</span>
                                         <button type="button" class="px-3 py-2 rounded-xl bg-white/10 text-xs font-black" @click="addToNotes">
@@ -146,7 +196,7 @@
                                     </div>
 
                                     <div class="rounded-2xl bg-white/10 p-4 space-y-3">
-                                        <p class="text-lg font-black leading-snug">{{ currentWord.example_en }}</p>
+                                        <p class="text-lg font-black leading-snug">{{ maskedExample(currentWord) }}</p>
                                         <p class="text-sm font-bold opacity-70">{{ currentWord.example_zh }}</p>
                                     </div>
 
@@ -156,13 +206,12 @@
                                         </p>
                                         <div v-if="currentState.feedback === 'correct' || currentState.feedback === 'revealed'" class="mt-4 space-y-2">
                                             <p class="text-lg font-bold opacity-80">{{ currentWord.phonetic }}</p>
-                                            <p class="text-sm font-bold opacity-70">{{ ui.partOfSpeech }}: {{ currentWord.part_of_speech }}</p>
-                                            <p class="text-sm font-bold opacity-70">{{ ui.meaning }}: {{ currentWord.chinese_meaning }}</p>
+                                            <p class="text-sm font-bold opacity-70">{{ partLabel(currentWord) }} {{ currentWord.chinese_meaning }}</p>
                                             <div class="flex items-center justify-center gap-2 pt-2">
-                                                <a class="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-black"
-                                                   :href="voiceUrl(currentWord.word)" target="_blank" rel="noopener">
+                                                <button type="button" class="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-black"
+                                                        @click="playVoice(currentWord.word)">
                                                     {{ ui.pronunciation }}
-                                                </a>
+                                                </button>
                                                 <a class="px-3 py-2 rounded-xl bg-white/10 text-xs font-black"
                                                    :href="currentWord.url" target="_blank" rel="noopener">
                                                     URI
@@ -179,21 +228,21 @@
                                            @keyup.enter="submitAnswer">
                                     <div class="grid grid-cols-3 gap-2">
                                         <button type="button" class="rounded-2xl py-3 bg-white/10 font-black disabled:opacity-35"
-                                                :disabled="!canGoPrevious" @click="previousCard">
+                                                :disabled="!canGoPrevious" @click="handlePrevious">
                                             {{ ui.previous }}
                                         </button>
                                         <button type="button" class="rounded-2xl py-3 bg-blue-600 text-white font-black" @click="submitAnswer">
                                             {{ ui.check }}
                                         </button>
                                         <button type="button" class="rounded-2xl py-3 bg-white/10 font-black disabled:opacity-35"
-                                                :disabled="!canGoNext" @click="nextCard">
+                                                :disabled="!canGoNext" @click="handleNext">
                                             {{ ui.next }}
                                         </button>
                                     </div>
                                     <button v-if="canShowAnswer" type="button" class="w-full rounded-2xl py-3 bg-red-600 text-white font-black" @click="showAnswer">
                                         {{ ui.showAnswer }}
                                     </button>
-                                    <button v-if="deckFinished" type="button" class="w-full rounded-2xl py-3 bg-emerald-600 text-white font-black" @click="dealDeck('refill')">
+                                    <button v-if="deckFinished" type="button" class="w-full rounded-2xl py-3 bg-emerald-600 text-white font-black" @click="handleRefill">
                                         {{ ui.continue }}
                                     </button>
                                     <p class="text-center text-xs font-bold opacity-50">
@@ -202,12 +251,13 @@
                                 </div>
                                 <div v-else class="h-[400px]"></div>
                             </div>
+                            </div>
                         </div>
                     </div>
                     <div v-else class="glass rounded-[2rem] p-8 text-center space-y-3">
                         <p class="text-xl font-black">{{ ui.noCards }}</p>
                         <p class="text-sm opacity-60">{{ ui.noCardsHint }}</p>
-                        <button type="button" class="px-4 py-3 rounded-2xl bg-blue-600 text-white font-black" @click="dealDeck('refill')">
+                            <button type="button" class="px-4 py-3 rounded-2xl bg-blue-600 text-white font-black" @click="handleRefill">
                             {{ ui.continue }}
                         </button>
                     </div>
@@ -218,44 +268,49 @@
                            type="search"
                            class="w-full rounded-2xl px-4 py-4 bg-white/80 text-slate-900 font-bold outline-none"
                            :placeholder="ui.search">
-                    <div class="space-y-3">
-                        <div v-for="item in filteredVocabulary" :key="item.word" class="glass rounded-2xl p-4 flex items-center justify-between gap-3">
-                            <div>
-                                <p class="text-lg font-black">{{ item.word }}</p>
-                                <p class="text-sm opacity-60">{{ item.phonetic }} · {{ item.part_of_speech }}</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select v-model="vocabDifficulty" class="rounded-2xl px-3 py-3 bg-white/80 text-slate-900 font-bold">
+                            <option value="all">{{ ui.all }}</option>
+                            <option v-for="level in ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']" :key="level" :value="level">{{ level }}</option>
+                        </select>
+                        <select v-model="vocabLetter" class="rounded-2xl px-3 py-3 bg-white/80 text-slate-900 font-bold">
+                            <option value="all">{{ ui.all }}</option>
+                            <option v-for="letter in vocabularyLetters" :key="letter" :value="letter">{{ letter.toUpperCase() }}</option>
+                        </select>
+                    </div>
+                    <div class="space-y-4">
+                        <div v-for="group in vocabularyGroups" :key="group.difficulty" class="space-y-3">
+                            <h2 class="px-1 text-sm font-black opacity-60">{{ group.difficulty }}</h2>
+                            <div v-for="letterGroup in group.letters" :key="group.difficulty + letterGroup.letter" class="space-y-2">
+                                <h3 class="px-1 text-xs font-black uppercase opacity-45">{{ letterGroup.letter }}</h3>
+                                <div v-for="item in letterGroup.words" :key="item.word" class="glass rounded-2xl p-4 flex items-center justify-between gap-3">
+                                    <div>
+                                        <p class="text-lg font-black">{{ item.word }}</p>
+                                        <p class="text-sm opacity-60">{{ item.phonetic }} · {{ partLabel(item) }}</p>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full bg-white/10 text-xs font-black">{{ item.difficulty }}</span>
+                                </div>
                             </div>
-                            <span class="px-3 py-1 rounded-full bg-white/10 text-xs font-black">{{ item.difficulty }}</span>
                         </div>
                     </div>
                 </section>
 
                 <section v-show="activeTab === 'notes'" class="space-y-4">
-                    <div class="glass rounded-2xl p-4">
-                        <h2 class="font-black mb-3">{{ ui.following }}</h2>
-                        <p v-if="!followingWords.length" class="text-sm opacity-50">{{ ui.noFollowing }}</p>
-                        <div v-for="item in followingWords" :key="item.word" class="flex items-center justify-between gap-3 py-2 border-t border-white/10">
-                            <span class="font-bold">{{ item.word }}</span>
-                            <button type="button" class="px-3 py-2 rounded-xl bg-green-600 text-white text-xs font-black" @click="markMastered(item.word)">
-                                {{ ui.markMastered }}
-                            </button>
-                        </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" class="rounded-2xl py-3 font-black" :class="noteList === 'following' ? 'bg-blue-600 text-white' : 'bg-white/10'" @click="noteList = 'following'">{{ ui.following }}</button>
+                        <button type="button" class="rounded-2xl py-3 font-black" :class="noteList === 'errors' ? 'bg-blue-600 text-white' : 'bg-white/10'" @click="noteList = 'errors'">{{ ui.errors }}</button>
+                        <button type="button" class="rounded-2xl py-3 font-black" :class="noteList === 'mastered' ? 'bg-blue-600 text-white' : 'bg-white/10'" @click="noteList = 'mastered'">{{ ui.mastered }}</button>
                     </div>
                     <div class="glass rounded-2xl p-4">
-                        <h2 class="font-black mb-3">{{ ui.errors }}</h2>
-                        <p v-if="!errorWords.length" class="text-sm opacity-50">{{ ui.noErrors }}</p>
-                        <div v-for="item in errorWords" :key="item.word" class="flex items-center justify-between gap-3 py-2 border-t border-white/10">
+                        <h2 class="font-black mb-3">{{ noteList === 'errors' ? ui.errors : noteList === 'mastered' ? ui.mastered : ui.following }}</h2>
+                        <p v-if="!activeNoteWords.length" class="text-sm opacity-50">
+                            {{ noteList === 'errors' ? ui.noErrors : noteList === 'mastered' ? ui.noMastered : ui.noFollowing }}
+                        </p>
+                        <div v-for="item in activeNoteWords" :key="item.word" class="flex items-center justify-between gap-3 py-2 border-t border-white/10">
                             <span class="font-bold">{{ item.word }}</span>
-                            <button type="button" class="px-3 py-2 rounded-xl bg-green-600 text-white text-xs font-black" @click="markMastered(item.word)">
+                            <button v-if="noteList !== 'mastered'" type="button" class="px-3 py-2 rounded-xl bg-green-600 text-white text-xs font-black" @click="markMastered(item.word)">
                                 {{ ui.markMastered }}
                             </button>
-                        </div>
-                    </div>
-                    <div class="glass rounded-2xl p-4">
-                        <h2 class="font-black mb-3">{{ ui.mastered }}</h2>
-                        <p v-if="!masteredWords.length" class="text-sm opacity-50">{{ ui.noMastered }}</p>
-                        <div v-for="item in masteredWords" :key="item.word" class="py-2 border-t border-white/10">
-                            <p class="font-bold">{{ item.word }}</p>
-                            <p class="text-sm opacity-60">{{ item.phonetic }}</p>
                         </div>
                     </div>
                 </section>
@@ -277,17 +332,10 @@
                     <div class="glass rounded-2xl p-4 space-y-4">
                         <h2 class="font-black">{{ ui.settings }}</h2>
                         <label class="block space-y-2">
-                            <span class="text-sm font-black opacity-70">{{ ui.language }}</span>
-                            <div class="grid grid-cols-2 gap-2">
-                                <button type="button" class="rounded-2xl py-3 font-black" :class="lang === 'zh' ? 'bg-blue-600 text-white' : 'bg-white/10'" @click="setLanguage('zh')">中文</button>
-                                <button type="button" class="rounded-2xl py-3 font-black" :class="lang === 'en' ? 'bg-blue-600 text-white' : 'bg-white/10'" @click="setLanguage('en')">English</button>
-                            </div>
-                        </label>
-                        <label class="block space-y-2">
                             <span class="text-sm font-black opacity-70">{{ ui.difficultyCap }}</span>
                             <select class="w-full rounded-2xl px-4 py-3 bg-white/80 text-slate-900 font-bold"
                                     :value="settings.difficultyCap"
-                                    @change="setDifficultyCap($event.target.value)">
+                                    @change="handleDifficultyCap($event.target.value)">
                                 <option v-for="level in ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']" :key="level" :value="level">{{ level }}</option>
                             </select>
                         </label>
@@ -296,7 +344,7 @@
                             <input type="range" min="5" max="100" step="5"
                                    class="w-full"
                                    :value="settings.deckSize"
-                                   @input="setDeckSize($event.target.value)">
+                                   @input="handleDeckSize($event.target.value)">
                             <p class="text-xs opacity-50">{{ ui.deckSizeHint }}</p>
                         </label>
                     </div>

@@ -48,6 +48,7 @@ describe('language vocabulary learning module', () => {
         expect(logic.buildHint('be')).toBe('_ _');
         expect(logic.buildHint('apple')).toBe('a _ _ _ _');
         expect(logic.buildHint('journey')).toBe('j _ _ _ _ _ y');
+        expect(logic.maskWordInExample('to peel an apple', 'apple')).toBe('to peel an a _ _ _ _');
     });
 
     it('tracks unique achievements by CEFR level and reveals answers after three failures', () => {
@@ -69,21 +70,36 @@ describe('language vocabulary learning module', () => {
         expect(logic.clampDeckSize(12)).toBe(10);
         expect(data.vocabularyPath('A1', 'A')).toBe('./vocabulary/A1/a.json');
         expect(data.voiceUrl('apple')).toBe('https://dict.youdao.com/dictvoice?audio=apple&type=2');
+        expect(data.partOfSpeechLabel('noun', 'zh')).toBe('名詞');
+        expect(data.partOfSpeechLabel('adj.', 'en')).toBe('Adjective');
     });
 
-    it('wires the single-page HTML to split language modules and settings navigation', () => {
+    it('wires the single-page HTML to Swiper, Fuse, split modules, and settings navigation', () => {
         const html = readFileSync('language.html', 'utf8');
         const view = readFileSync('modules/language_view.js', 'utf8');
+        const logic = readFileSync('modules/language_logic.js', 'utf8');
 
+        expect(html).toContain('swiper-bundle.min.js');
+        expect(html).toContain('fuse.js@7.0.0');
         expect(html).toContain('./modules/language_data.js');
         expect(html).toContain('./modules/language_logic.js');
         expect(html).toContain('./modules/language_view.js');
         expect(html).toContain("activeTab = 'settings'");
-        expect(view).toContain('visibleStackCards');
+        expect(view).toContain('new global.Swiper');
+        expect(view).toContain("effect: 'cards'");
+        expect(view).toContain('language-card-swiper');
+        expect(view).toContain('new Audio');
+        expect(view).not.toContain('setLanguage');
+        expect(logic).toContain('global.Fuse');
+        expect(logic).toContain('vocabDifficulty');
+        expect(logic).toContain('vocabLetter');
+        expect(logic).toContain('noteList');
+        expect(logic).toContain('groupByDifficultyAndLetter');
         expect(view).toContain('setDifficultyCap');
         expect(view).toContain('setDeckSize');
         expect(readFileSync('modules/language_data.js', 'utf8')).toContain('dictvoice?audio=');
-        expect(view).toContain('currentWord.example_en');
+        expect(view).toContain('maskedExample(currentWord)');
         expect(view).toContain('currentWord.example_zh');
+        expect(view).toContain('partLabel(currentWord) }} {{ currentWord.chinese_meaning');
     });
 });

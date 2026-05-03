@@ -2,6 +2,28 @@
 
 (function (global) {
     const DIFFICULTIES = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    const PARTS_OF_SPEECH = [
+        { zh: '名詞', en: 'Noun', code: 'n.', aliases: ['noun', 'n'] },
+        { zh: '代名詞', en: 'Pronoun', code: 'pron.', aliases: ['pronoun', 'pron'] },
+        { zh: '動詞', en: 'Verb', code: 'v.', aliases: ['verb', 'v'] },
+        { zh: '形容詞', en: 'Adjective', code: 'adj.', aliases: ['adjective', 'adj'] },
+        { zh: '副詞', en: 'Adverb', code: 'adv.', aliases: ['adverb', 'adv'] },
+        { zh: '介系詞', en: 'Preposition', code: 'prep.', aliases: ['preposition', 'prep'] },
+        { zh: '連接詞', en: 'Conjunction', code: 'conj.', aliases: ['conjunction', 'conj'] },
+        { zh: '感嘆詞', en: 'Interjection', code: 'interj.', aliases: ['interjection', 'interj'] },
+        { zh: '及物動詞', en: 'Transitive Verb', code: 'vt.', aliases: ['transitive verb', 'vt'] },
+        { zh: '不及物動詞', en: 'Intransitive Verb', code: 'vi.', aliases: ['intransitive verb', 'vi'] },
+        { zh: '助動詞', en: 'Auxiliary Verb', code: 'aux.', aliases: ['auxiliary verb', 'aux'] },
+        { zh: '限定詞', en: 'Determiner', code: 'det.', aliases: ['determiner', 'det'] },
+        { zh: '數詞', en: 'numeral', code: 'num', aliases: ['numeral', 'num'] },
+        { zh: '片語', en: 'phrase(s)', code: 'phr.', aliases: ['phrase', 'phrases', 'phr'] },
+        { zh: '縮寫', en: 'abbreviation', code: 'abbr.', aliases: ['abbreviation', 'abbr'] },
+        { zh: '可數名詞', en: 'Countable noun', code: 'C.', aliases: ['countable noun', 'c'] },
+        { zh: '不可數名詞', en: 'Uncountable noun', code: 'u.', aliases: ['uncountable noun', 'u'] },
+        { zh: '複數詞', en: 'Plural', code: 'pl.', aliases: ['plural', 'pl'] },
+        { zh: '過去式', en: 'Past tense', code: 'pt.', aliases: ['past tense', 'pt'] },
+        { zh: '過去分詞', en: 'Past participle', code: 'pp.', aliases: ['past participle', 'pp'] },
+    ];
     const MOCK_WORDS = [
         {
             word: 'apple',
@@ -156,6 +178,18 @@
         return `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(word)}&type=2`;
     }
 
+    function partOfSpeechLabel(partOfSpeech, lang = 'zh') {
+        const normalized = String(partOfSpeech || '').trim().toLowerCase().replace(/\.$/, '');
+        const found = PARTS_OF_SPEECH.find(item =>
+            item.aliases.includes(normalized) ||
+            item.code.toLowerCase().replace(/\.$/, '') === normalized ||
+            item.en.toLowerCase() === normalized ||
+            item.zh === partOfSpeech
+        );
+        if (!found) return partOfSpeech || '';
+        return lang === 'en' ? found.en : found.zh;
+    }
+
     function wordsUpToDifficulty(words, difficultyCap) {
         const cap = difficultyRank(difficultyCap);
         return sortVocabulary(words).filter(item => difficultyRank(item.difficulty) <= cap);
@@ -168,6 +202,7 @@
 
     global.LapisLanguageData = {
         DIFFICULTIES,
+        PARTS_OF_SPEECH,
         MOCK_WORDS,
         difficultyRank,
         firstLetter,
@@ -175,6 +210,7 @@
         sortVocabulary,
         vocabularyPath,
         voiceUrl,
+        partOfSpeechLabel,
         wordsUpToDifficulty,
         loadVocabulary,
     };

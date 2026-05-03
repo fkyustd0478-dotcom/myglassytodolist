@@ -13,6 +13,17 @@
         }).join(' ');
     }
 
+    function escapeRegExp(text) {
+        return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function maskWordInExample(example, word) {
+        const text = String(example || '');
+        const target = String(word || '').trim();
+        if (!target) return text;
+        return text.replace(new RegExp(`\\b${escapeRegExp(target)}\\b`, 'gi'), () => buildHint(target));
+    }
+
     function normalizeAnswer(value) {
         return String(value || '').trim().toLowerCase();
     }
@@ -38,6 +49,39 @@
         return [...words].sort(() => Math.random() - 0.5);
     }
 
+    function searchVocabulary(words, query) {
+        const normalized = normalizeAnswer(query);
+        if (!normalized) return Data.sortVocabulary(words);
+        if (global.Fuse) {
+            const fuse = new global.Fuse(words, {
+                keys: ['word', 'example_en', 'example_zh', 'chinese_meaning', 'part_of_speech'],
+                threshold: 0.35,
+                ignoreLocation: true,
+            });
+            return Data.sortVocabulary(fuse.search(normalized).map(result => result.item));
+        }
+        return Data.sortVocabulary(words.filter(item =>
+            item.word.toLowerCase().includes(normalized) ||
+            item.example_en.toLowerCase().includes(normalized) ||
+            item.example_zh.includes(query) ||
+            item.chinese_meaning.includes(query)
+        ));
+    }
+
+    function groupByDifficultyAndLetter(words) {
+        return Data.DIFFICULTIES.map(difficulty => {
+            const levelWords = words.filter(item => item.difficulty === difficulty);
+            const letters = [...new Set(levelWords.map(item => Data.firstLetter(item.word)).filter(Boolean))].sort();
+            return {
+                difficulty,
+                letters: letters.map(letter => ({
+                    letter,
+                    words: levelWords.filter(item => Data.firstLetter(item.word) === letter),
+                })),
+            };
+        }).filter(group => group.letters.length);
+    }
+
     function achievementCounts(words, completed) {
         const unique = [...new Set(completed)];
         return {
@@ -55,6 +99,9 @@
         const { ref, computed } = Vue;
         const vocabulary = ref(Data.sortVocabulary(options.words || Data.MOCK_WORDS));
         const searchQuery = ref('');
+        const vocabDifficulty = ref('all');
+        const vocabLetter = ref('all');
+        const noteList = ref('following');
         const deckIndex = ref(0);
         const deckCycle = ref(0);
         const deckMotion = ref('');
@@ -74,15 +121,21 @@
             Data.wordsUpToDifficulty(vocabulary.value, settings.value.difficultyCap)
                 .filter(item => !mastered.value.includes(item.word))
         );
+        const vocabularyLetters = computed(() =>
+            [...new Set(vocabulary.value
+                .filter(item => vocabDifficulty.value === 'all' || item.difficulty === vocabDifficulty.value)
+                .map(item => Data.firstLetter(item.word))
+                .filter(Boolean))]
+                .sort()
+        );
         const filteredVocabulary = computed(() => {
-            const query = normalizeAnswer(searchQuery.value);
-            return Data.sortVocabulary(vocabulary.value.filter(item =>
-                !query ||
-                item.word.toLowerCase().includes(query) ||
-                item.example_en.toLowerCase().includes(query) ||
-                item.example_zh.includes(query)
-            ));
+            const searched = searchVocabulary(vocabulary.value, searchQuery.value);
+            return searched.filter(item =>
+                (vocabDifficulty.value === 'all' || item.difficulty === vocabDifficulty.value) &&
+                (vocabLetter.value === 'all' || Data.firstLetter(item.word) === vocabLetter.value)
+            );
         });
+        const vocabularyGroups = computed(() => groupByDifficultyAndLetter(filteredVocabulary.value));
         const currentWord = computed(() => studyDeck.value[deckIndex.value] || null);
         const visibleStackCards = computed(() =>
             studyDeck.value.slice(deckIndex.value, deckIndex.value + settings.value.visibleStack)
@@ -118,6 +171,11 @@
         const masteredWords = computed(() => mastered.value
             .map(word => vocabulary.value.find(item => item.word === word))
             .filter(Boolean));
+        const activeNoteWords = computed(() => {
+            if (noteList.value === 'errors') return errorWords.value;
+            if (noteList.value === 'mastered') return masteredWords.value;
+            return followingWords.value;
+        });
         const achievements = computed(() => achievementCounts(vocabulary.value, completed.value));
 
         function updateCurrentState(patch) {
@@ -200,6 +258,9 @@
         return {
             vocabulary,
             searchQuery,
+            vocabDifficulty,
+            vocabLetter,
+            noteList,
             studyDeck,
             deckIndex,
             deckCycle,
@@ -211,7 +272,9 @@
             completed,
             settings,
             eligibleWords,
+            vocabularyLetters,
             filteredVocabulary,
+            vocabularyGroups,
             currentWord,
             visibleStackCards,
             currentState,
@@ -224,6 +287,7 @@
             followingWords,
             errorWords,
             masteredWords,
+            activeNoteWords,
             achievements,
             dealDeck,
             nextCard,
@@ -239,12 +303,15 @@
 
     global.LapisLanguageLogic = {
         buildHint,
+        maskWordInExample,
         normalizeAnswer,
         addUnique,
         removeWord,
         shouldShowAnswer,
         clampDeckSize,
         shuffleWords,
+        searchVocabulary,
+        groupByDifficultyAndLetter,
         achievementCounts,
         createLanguageLearningState,
     };
