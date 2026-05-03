@@ -86,6 +86,14 @@
             ui() {
                 return TEXT[this.lang] || TEXT.zh;
             },
+            isDarkMode() {
+                const dk = ['dark','night','torii','purple','ferriswheel','starrynight','deepgray'];
+                if (!this.navSettings) return false;
+                const t = this.navSettings.theme;
+                if (t === 'system') return typeof window !== 'undefined' && window.matchMedia
+                    ? window.matchMedia('(prefers-color-scheme: dark)').matches : false;
+                return dk.includes(t);
+            },
         },
         mounted() {
             this.dealDeck('refill');
@@ -96,6 +104,15 @@
             refreshIcons();
         },
         methods: {
+            cardStyle(index) {
+                if (!this.isDarkMode) return {};
+                const fb = this.currentState.feedback;
+                if (index === this.deckIndex && (fb === 'correct' || fb === 'revealed'))
+                    return { background: 'rgba(34,197,94,0.22)', color: '#ffffff', borderColor: 'rgba(74,222,128,0.65)' };
+                if (index === this.deckIndex && fb === 'incorrect')
+                    return { background: 'rgba(239,68,68,0.18)', color: '#ffffff', borderColor: 'rgba(248,113,113,0.65)' };
+                return { background: '#000000', color: '#ffffff', borderColor: 'rgba(255,255,255,0.18)' };
+            },
             initSwiper() {
                 if (!global.Swiper || this.swiper) return;
                 this.$nextTick(() => {
@@ -179,10 +196,12 @@
                             <div v-for="(card, index) in studyDeck"
                                  :key="card.word + '-' + deckCycle"
                                  class="swiper-slide">
-                            <div class="language-study-card glass rounded-[2rem] p-5 border border-white/10 shadow-2xl min-h-[440px]"
+                            <div class="language-study-card rounded-[2rem] p-5 border shadow-2xl min-h-[440px]"
+                                 :style="cardStyle(index)"
                                  :class="{
-                                    'bg-green-500/20 border-green-400/70': index === deckIndex && (currentState.feedback === 'correct' || currentState.feedback === 'revealed'),
-                                    'bg-red-500/15 border-red-400/70': index === deckIndex && currentState.feedback === 'incorrect',
+                                    'glass border-white/10': !isDarkMode,
+                                    'bg-green-500/20 border-green-400/70': !isDarkMode && index === deckIndex && (currentState.feedback === 'correct' || currentState.feedback === 'revealed'),
+                                    'bg-red-500/15 border-red-400/70': !isDarkMode && index === deckIndex && currentState.feedback === 'incorrect',
                                     'translate-x-3 rotate-1': index === deckIndex && deckMotion === 'next',
                                     '-translate-x-3 -rotate-1': index === deckIndex && deckMotion === 'previous',
                                     'scale-95': index === deckIndex && deckMotion === 'refill'

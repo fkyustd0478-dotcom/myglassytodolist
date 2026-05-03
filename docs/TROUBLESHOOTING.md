@@ -150,6 +150,31 @@ Check:
 
 The drawer is tuned for subtle transitions. Avoid large motion changes on mobile.
 
+## Language Study Card Transparent in Dark Mode
+
+Symptom:
+
+- Vocabulary study cards appear semi-transparent or show blurred background content in dark themes.
+
+Root cause:
+
+- The `.glass` CSS class sets `background: rgba(255,255,255,0.2)` and `backdrop-filter: blur(12px) brightness(0.85)`.
+- CSS `!important` overrides in `language.html`'s `<style>` tag can be lost when Tailwind CDN's JIT runtime injects utility styles after the inline `<style>` block, creating cascade order conflicts.
+- Tailwind `bg-white/10` utility classes on inner card elements compound the perceived transparency.
+
+Fix (applied 2026-05-03):
+
+- Removed `.glass` class from the outer `.language-study-card` div in `modules/language_view.js`.
+- Added `isDarkMode` computed property to `LanguageLearningView` derived from `navSettings.theme`.
+- Added `cardStyle(index)` method that returns an inline `style` object with `background: '#000000'` and `color: '#ffffff'` for dark mode, bypassing CSS cascade entirely.
+- Feedback states (correct/incorrect) are handled via `cardStyle()` with explicit RGBA values instead of Tailwind class-based semi-transparent overlays.
+- Light mode cards retain the `.glass` class and Tailwind feedback classes unchanged.
+
+Relevant files:
+
+- `modules/language_view.js` — `isDarkMode` computed, `cardStyle()` method, card template
+- `language.html` — inline `<style>` fallback rules (kept as safety net)
+
 ## Vitest Does Not Run
 
 Run:
