@@ -30,6 +30,8 @@ window.addEventListener('DOMContentLoaded', () => {
             cancel:              '取消',
             savedTask:           '✓ 任務已新增',
             savedWeight:         '✓ 體重已記錄',
+            sectionLanguage:      '語言',
+            languageCompleted:    '完成單字',
         },
         en: {
             title:               'Stats',
@@ -54,6 +56,8 @@ window.addEventListener('DOMContentLoaded', () => {
             cancel:              'Cancel',
             savedTask:           '✓ Task added',
             savedWeight:         '✓ Weight logged',
+            sectionLanguage:      'Language',
+            languageCompleted:    'Completed Words',
         },
     };
 
@@ -101,6 +105,29 @@ window.addEventListener('DOMContentLoaded', () => {
         const latest  = weights.length > 0 ? weights[weights.length - 1] : null;
 
         return { total, thisWk, latest, exerciseCount: library.length, logs, weights };
+    }
+
+    function _languageAchievements() {
+        let completed = [];
+        try {
+            const raw = JSON.parse(localStorage.getItem('lapis_language_progress') || '{}');
+            completed = Array.isArray(raw.completed) ? [...new Set(raw.completed)] : [];
+        } catch (_) {}
+        const words = (typeof LapisLanguageData !== 'undefined' && Array.isArray(LapisLanguageData.MOCK_WORDS))
+            ? LapisLanguageData.MOCK_WORDS
+            : [];
+        const levels = (typeof LapisLanguageData !== 'undefined' && Array.isArray(LapisLanguageData.DIFFICULTIES))
+            ? LapisLanguageData.DIFFICULTIES
+            : ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+        return {
+            total: completed.length,
+            byDifficulty: levels.reduce((acc, level) => {
+                acc[level] = completed.filter(word =>
+                    words.find(item => item.word === word && item.difficulty === level)
+                ).length;
+                return acc;
+            }, {}),
+        };
     }
 
     // ── Chart series builders ─────────────────────────────────────────────────
@@ -286,7 +313,16 @@ window.addEventListener('DOMContentLoaded', () => {
             const weightSeries   = _weightSeries(weights);
             const volumeSeries   = _volumeSeries(logs);
             const catCharts      = _buildCatCharts(logs);
-            const showWeightChart = (StorageProvider.getCommonSettings() || {}).showWeightChart !== false;
+            const commonSettings = StorageProvider.getCommonSettings() || {};
+            const showWeightChart = commonSettings.showWeightChart !== false;
+            const showLanguageStats = commonSettings.showLanguageStats !== false;
+            const languageAchievements = _languageAchievements();
+            const languageLevelSummary = computed(() =>
+                Object.entries(languageAchievements.byDifficulty)
+                    .filter(([, count]) => count > 0)
+                    .map(([level, count]) => `${level} ${count}`)
+                    .join(' / ') || 'A1 0'
+            );
             const hasAnyChart    = showWeightChart || catCharts.length > 0;
 
             // ── Snap to today ─────────────────────────────────────────────────
@@ -404,6 +440,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 volumeSeries,
                 catCharts,
                 showWeightChart,
+                showLanguageStats,
+                languageAchievements,
+                languageLevelSummary,
                 hasAnyChart,
                 snapToToday,
                 quickMode, quickText, quickWeight, toastMsg, toastShow,

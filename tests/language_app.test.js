@@ -74,6 +74,29 @@ describe('language vocabulary learning module', () => {
         expect(data.partOfSpeechLabel('adj.', 'en')).toBe('Adjective');
     });
 
+    it('renders answer highlights and persists language progress helpers', () => {
+        const { logic } = loadModules();
+        const saved = [];
+        const sandbox = {
+            setTimeout,
+            Math,
+            encodeURIComponent,
+            localStorage: {
+                getItem: () => JSON.stringify({ completed: ['apple', 'apple'], following: ['horizon'] }),
+                setItem: (_key, value) => saved.push(value),
+            },
+        };
+        vm.runInNewContext(readFileSync('modules/language_data.js', 'utf8'), sandbox);
+        vm.runInNewContext(readFileSync('modules/language_logic.js', 'utf8'), sandbox);
+
+        expect(logic.exampleHtml('to peel an apple', 'apple', '')).toContain('a _ _ _ _');
+        expect(logic.exampleHtml('to peel an apple', 'apple', 'correct')).toContain('is-correct');
+        expect(logic.exampleHtml('to peel an apple', 'apple', 'revealed')).toContain('is-revealed');
+        expect(sandbox.LapisLanguageLogic.readProgress().completed).toEqual(['apple', 'apple']);
+        sandbox.LapisLanguageLogic.saveProgress({ completed: ['apple'], errors: ['river'] });
+        expect(saved[0]).toContain('"errors":["river"]');
+    });
+
     it('wires the single-page HTML to Swiper, Fuse, split modules, and settings navigation', () => {
         const html = readFileSync('language.html', 'utf8');
         const view = readFileSync('modules/language_view.js', 'utf8');
@@ -98,8 +121,34 @@ describe('language vocabulary learning module', () => {
         expect(view).toContain('setDifficultyCap');
         expect(view).toContain('setDeckSize');
         expect(readFileSync('modules/language_data.js', 'utf8')).toContain('dictvoice?audio=');
-        expect(view).toContain('maskedExample(currentWord)');
+        expect(view).toContain('v-html="exampleHtml(currentWord)"');
+        expect(view).toContain('volume-2');
+        expect(view).toContain('external-link');
+        expect(view).toContain('language-native-select');
+        expect(html).toContain('language-study-card.glass');
+        expect(html).toContain('theme-light-mode .language-study-card.glass');
         expect(view).toContain('currentWord.example_zh');
         expect(view).toContain('partLabel(currentWord) }} {{ currentWord.chinese_meaning');
+    });
+
+    it('wires language achievements into stats and settings visibility', () => {
+        const statsHtml = readFileSync('stats.html', 'utf8');
+        const stats = readFileSync('modules/stats.js', 'utf8');
+        const settingHtml = readFileSync('setting.html', 'utf8');
+        const setting = readFileSync('modules/setting.js', 'utf8');
+        const nav = readFileSync('js/nav.js', 'utf8');
+
+        expect(statsHtml).toContain('./modules/language_data.js');
+        expect(statsHtml).toContain('showLanguageStats');
+        expect(statsHtml).toContain('languageAchievements.total');
+        expect(statsHtml).toContain('languageLevelSummary');
+        expect(stats).toContain('lapis_language_progress');
+        expect(stats).toContain('function _languageAchievements');
+        expect(stats).toContain('showLanguageStats');
+        expect(settingHtml).toContain('settings.showLanguageStats');
+        expect(setting).toContain('showLanguageStats: true');
+        expect(setting).toContain('showLanguageStatsLabel');
+        expect(setting).toContain('navSettings.showLanguageStats');
+        expect(nav).toContain('showLanguageStats: true');
     });
 });

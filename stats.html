@@ -30,6 +30,7 @@
     <script src="./js/lapis_core_ui.js" defer></script>
     <script src="./modules/workout_data.js" defer></script>
     <script src="./modules/workout_config.js" defer></script>
+    <script src="./modules/language_data.js" defer></script>
     <script src="./modules/stats.js" defer></script>
 
     <style>
@@ -152,6 +153,15 @@
         </div>
 
         <!-- ── Charts section ─────────────────────────────────────────────── -->
+        <p v-if="showLanguageStats" class="section-hdr">{{ t.sectionLanguage }}</p>
+        <div v-if="showLanguageStats" class="stats-grid">
+            <div class="stat-card glass stats-wide" :style="glassStyle">
+                <p class="stat-label">{{ t.languageCompleted }}</p>
+                <p class="stat-value">{{ languageAchievements.total }}</p>
+                <p class="stat-sub">{{ languageLevelSummary }}</p>
+            </div>
+        </div>
+
         <p class="section-hdr">{{ t.sectionCharts }}</p>
 
         <!-- No charts enabled placeholder -->

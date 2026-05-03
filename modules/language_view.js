@@ -136,8 +136,8 @@
                 const audio = new Audio(this.voiceUrl(word));
                 audio.play().catch(() => {});
             },
-            maskedExample(item) {
-                return Logic.maskWordInExample(item.example_en, item.word);
+            exampleHtml(item) {
+                return Logic.exampleHtml(item.example_en, item.word, this.currentState.feedback);
             },
             partLabel(item) {
                 return Data.partOfSpeechLabel(item.part_of_speech, this.lang);
@@ -179,7 +179,7 @@
                             <div v-for="(card, index) in studyDeck"
                                  :key="card.word + '-' + deckCycle"
                                  class="swiper-slide">
-                            <div class="glass rounded-[2rem] p-5 border border-white/10 shadow-2xl min-h-[440px]"
+                            <div class="language-study-card glass rounded-[2rem] p-5 border border-white/10 shadow-2xl min-h-[440px]"
                                  :class="{
                                     'bg-green-500/20 border-green-400/70': index === deckIndex && (currentState.feedback === 'correct' || currentState.feedback === 'revealed'),
                                     'bg-red-500/15 border-red-400/70': index === deckIndex && currentState.feedback === 'incorrect',
@@ -196,7 +196,7 @@
                                     </div>
 
                                     <div class="rounded-2xl bg-white/10 p-4 space-y-3">
-                                        <p class="text-lg font-black leading-snug">{{ maskedExample(currentWord) }}</p>
+                                        <p class="text-lg font-black leading-snug" v-html="exampleHtml(currentWord)"></p>
                                         <p class="text-sm font-bold opacity-70">{{ currentWord.example_zh }}</p>
                                     </div>
 
@@ -208,13 +208,14 @@
                                             <p class="text-lg font-bold opacity-80">{{ currentWord.phonetic }}</p>
                                             <p class="text-sm font-bold opacity-70">{{ partLabel(currentWord) }} {{ currentWord.chinese_meaning }}</p>
                                             <div class="flex items-center justify-center gap-2 pt-2">
-                                                <button type="button" class="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-black"
+                                                <button type="button" class="w-11 h-11 rounded-full bg-blue-600 text-white inline-flex items-center justify-center"
+                                                        :title="ui.pronunciation"
                                                         @click="playVoice(currentWord.word)">
-                                                    {{ ui.pronunciation }}
+                                                    <i data-lucide="volume-2" class="w-5 h-5"></i>
                                                 </button>
-                                                <a class="px-3 py-2 rounded-xl bg-white/10 text-xs font-black"
+                                                <a class="w-11 h-11 rounded-full bg-white/10 inline-flex items-center justify-center"
                                                    :href="currentWord.url" target="_blank" rel="noopener">
-                                                    URI
+                                                    <i data-lucide="external-link" class="w-5 h-5"></i>
                                                 </a>
                                             </div>
                                         </div>
@@ -269,11 +270,11 @@
                            class="w-full rounded-2xl px-4 py-4 bg-white/80 text-slate-900 font-bold outline-none"
                            :placeholder="ui.search">
                     <div class="grid grid-cols-2 gap-2">
-                        <select v-model="vocabDifficulty" class="rounded-2xl px-3 py-3 bg-white/80 text-slate-900 font-bold">
+                        <select v-model="vocabDifficulty" class="language-native-select">
                             <option value="all">{{ ui.all }}</option>
                             <option v-for="level in ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']" :key="level" :value="level">{{ level }}</option>
                         </select>
-                        <select v-model="vocabLetter" class="rounded-2xl px-3 py-3 bg-white/80 text-slate-900 font-bold">
+                        <select v-model="vocabLetter" class="language-native-select">
                             <option value="all">{{ ui.all }}</option>
                             <option v-for="letter in vocabularyLetters" :key="letter" :value="letter">{{ letter.toUpperCase() }}</option>
                         </select>

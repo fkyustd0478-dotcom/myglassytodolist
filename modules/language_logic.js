@@ -17,11 +17,34 @@
         return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
+    function escapeHtml(text) {
+        return String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function maskWordInExample(example, word) {
         const text = String(example || '');
         const target = String(word || '').trim();
         if (!target) return text;
         return text.replace(new RegExp(`\\b${escapeRegExp(target)}\\b`, 'gi'), () => buildHint(target));
+    }
+
+    function exampleHtml(example, word, feedback) {
+        const text = String(example || '');
+        const target = String(word || '').trim();
+        if (!target) return escapeHtml(text);
+        if (!['correct', 'revealed'].includes(feedback)) {
+            return escapeHtml(maskWordInExample(text, target));
+        }
+        const cls = feedback === 'correct' ? 'is-correct' : 'is-revealed';
+        return escapeHtml(text).replace(
+            new RegExp(`\\b${escapeRegExp(escapeHtml(target))}\\b`, 'gi'),
+            match => `<span class="language-card-answer ${cls}">${match}</span>`
+        );
     }
 
     function normalizeAnswer(value) {
@@ -95,8 +118,38 @@
         };
     }
 
+    function _emptyProgress() {
+        return { completed: [], following: [], errors: [], mastered: [] };
+    }
+
+    function readProgress() {
+        try {
+            const raw = JSON.parse(global.localStorage?.getItem('lapis_language_progress') || '{}');
+            return {
+                completed: Array.isArray(raw.completed) ? raw.completed : [],
+                following: Array.isArray(raw.following) ? raw.following : [],
+                errors: Array.isArray(raw.errors) ? raw.errors : [],
+                mastered: Array.isArray(raw.mastered) ? raw.mastered : [],
+            };
+        } catch (_) {
+            return _emptyProgress();
+        }
+    }
+
+    function saveProgress(progress) {
+        try {
+            global.localStorage?.setItem('lapis_language_progress', JSON.stringify({
+                completed: progress.completed || [],
+                following: progress.following || [],
+                errors: progress.errors || [],
+                mastered: progress.mastered || [],
+            }));
+        } catch (_) {}
+    }
+
     function createLanguageLearningState(Vue, options = {}) {
-        const { ref, computed } = Vue;
+        const { ref, computed, watch } = Vue;
+        const savedProgress = readProgress();
         const vocabulary = ref(Data.sortVocabulary(options.words || Data.MOCK_WORDS));
         const searchQuery = ref('');
         const vocabDifficulty = ref('all');
@@ -107,10 +160,10 @@
         const deckMotion = ref('');
         const studyDeck = ref([]);
         const cardStates = ref({});
-        const following = ref([]);
-        const errors = ref([]);
-        const mastered = ref([]);
-        const completed = ref([]);
+        const following = ref(savedProgress.following);
+        const errors = ref(savedProgress.errors);
+        const mastered = ref(savedProgress.mastered);
+        const completed = ref(savedProgress.completed);
         const settings = ref({
             difficultyCap: 'C2',
             deckSize: 10,
@@ -177,6 +230,17 @@
             return followingWords.value;
         });
         const achievements = computed(() => achievementCounts(vocabulary.value, completed.value));
+
+        if (watch) {
+            watch([completed, following, errors, mastered], () => {
+                saveProgress({
+                    completed: completed.value,
+                    following: following.value,
+                    errors: errors.value,
+                    mastered: mastered.value,
+                });
+            }, { deep: true });
+        }
 
         function updateCurrentState(patch) {
             const word = currentWord.value?.word;
@@ -303,6 +367,7 @@
 
     global.LapisLanguageLogic = {
         buildHint,
+        exampleHtml,
         maskWordInExample,
         normalizeAnswer,
         addUnique,
@@ -313,6 +378,8 @@
         searchVocabulary,
         groupByDifficultyAndLetter,
         achievementCounts,
+        readProgress,
+        saveProgress,
         createLanguageLearningState,
     };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -30,6 +30,7 @@ createApp({
             showHolidayTags: true,
             showLunarDates: true,
             showWeightChart: true,
+            showLanguageStats: true,
             workoutCatCharts: { Chest: true, Back: true, Shoulders: true, Arms: true, Legs: true, Core: true, Cardio: true },
             ...StorageProvider.getCommonSettings()
         });
@@ -151,6 +152,7 @@ createApp({
                 // Workout chart settings
                 workoutSection: 'Workout Charts',
                 showWeightChartLabel: 'Weight Trend',
+                showLanguageStatsLabel: 'Language Achievements',
                 workoutCatChartsLabel: 'Category Volume Charts',
                 // Data management
                 dataSection: 'Data Management',
@@ -196,6 +198,7 @@ createApp({
                 // Workout chart settings
                 workoutSection: '健身圖表',
                 showWeightChartLabel: '體重趨勢圖',
+                showLanguageStatsLabel: '語言成就',
                 workoutCatChartsLabel: '分類訓練量圖',
                 // Data management
                 dataSection: '數據管理',
@@ -414,7 +417,8 @@ createApp({
                 StorageProvider.saveCommonSettings({
                     theme: 'system', useCustomBg: false, customBg: '',
                     lang: settings.value.lang, effect: 'none',
-                    notificationsEnabled: true, customBgOpacity: 0, themeOpacity: 1
+                    notificationsEnabled: true, customBgOpacity: 0, themeOpacity: 1,
+                    showLanguageStats: true
                 });
                 location.reload();
             }
@@ -435,6 +439,7 @@ createApp({
             navSettings.showHolidayTags     = val.showHolidayTags;
             navSettings.showLunarDates      = val.showLunarDates;
             navSettings.showWeightChart     = val.showWeightChart;
+            navSettings.showLanguageStats   = val.showLanguageStats;
             navSettings.workoutCatCharts    = val.workoutCatCharts;
             navSettings.customBg            = val.customBg;
             // customBg-only upload: Vue watch won't fire (theme/useCustomBg unchanged)

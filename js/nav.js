@@ -44,6 +44,7 @@ function useNav() {
         calendarInfoEnabled: true,
         showHolidayTags: true,
         showLunarDates: true,
+        showLanguageStats: true,
         ..._savedSettings
     });
     const i18n = typeof LapisI18n !== 'undefined' ? LapisI18n.use(navSettings) : null;
@@ -238,6 +239,7 @@ function useNav() {
                 if (s.customBgOpacity !== undefined && s.customBgOpacity !== navSettings.customBgOpacity) navSettings.customBgOpacity = s.customBgOpacity;
                 if (s.themeOpacity    !== undefined && s.themeOpacity    !== navSettings.themeOpacity)    navSettings.themeOpacity    = s.themeOpacity;
                 if (s.lang            !== undefined && s.lang            !== navSettings.lang)            navSettings.lang            = s.lang;
+                if (s.showLanguageStats !== undefined && s.showLanguageStats !== navSettings.showLanguageStats) navSettings.showLanguageStats = s.showLanguageStats;
                 if (s.customBg !== undefined && s.customBg !== navSettings.customBg) {
                     navSettings.customBg = s.customBg;
                     _applyTheme(resolvedTheme.value, navSettings.useCustomBg);

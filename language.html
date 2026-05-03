@@ -39,6 +39,36 @@
         html  { background: #0d0d0d; }
         body  { opacity: 0; transition: opacity 0.4s ease-in-out; }
         body.lapis-ready { opacity: 1; }
+        .theme-light-mode .language-study-card.glass {
+            background: rgba(255,255,255,0.92) !important;
+            color: #111827 !important;
+            border-color: rgba(0,0,0,0.12) !important;
+            backdrop-filter: blur(18px) saturate(1.1);
+        }
+        .theme-dark-mode .language-study-card.glass {
+            background: rgba(0,0,0,0.78) !important;
+            color: #ffffff !important;
+            border-color: rgba(255,255,255,0.24) !important;
+            backdrop-filter: blur(18px) saturate(1.15);
+        }
+        .language-native-select {
+            width: 100%;
+            font: inherit;
+            color: CanvasText;
+            background: Canvas;
+            border: 1px solid color-mix(in srgb, CanvasText 22%, transparent);
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+        .language-card-answer {
+            display: inline-block;
+            border-radius: 0.5rem;
+            padding: 0 0.35rem;
+            color: #fff;
+            font-weight: 900;
+        }
+        .language-card-answer.is-correct { background: #16a34a; }
+        .language-card-answer.is-revealed { background: #dc2626; }
     </style>
 </head>
 <body>
