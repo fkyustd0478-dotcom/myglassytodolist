@@ -343,7 +343,15 @@
                                 {{ ex.isCompleted ? t.completed : t.pending }}
                             </button>
                         </div>
-                        <div v-if="ex.type === 'sets'" class="space-y-0.5">
+                        <div v-if="ex.type === 'superset'" class="space-y-0.5">
+                            <div v-for="(item, iIdx) in ex.items" :key="iIdx"
+                                 class="text-xs opacity-50 font-mono flex items-center gap-1">
+                                <span class="opacity-60">{{ String.fromCharCode(65+iIdx) }}.</span>
+                                <span class="truncate">{{ item.nameZh || item.name }}</span>
+                                <span class="flex-shrink-0">{{ item.reps }}×{{ item.weight }}kg</span>
+                            </div>
+                        </div>
+                        <div v-else-if="ex.type === 'sets'" class="space-y-0.5">
                             <div v-for="(set, sIdx) in ex.sets" :key="sIdx"
                                  class="text-xs opacity-50 font-mono">
                                 {{ set.reps || '—' }} × {{ set.numSets || 1 }} × {{ set.weight || '—' }} kg
@@ -401,7 +409,15 @@
                                         {{ ex.isCompleted ? t.completed : t.pending }}
                                     </button>
                                 </div>
-                                <div v-if="ex.type === 'sets'" class="space-y-0.5">
+                                <div v-if="ex.type === 'superset'" class="space-y-0.5">
+                                    <div v-for="(item, iIdx) in ex.items" :key="iIdx"
+                                         class="text-xs opacity-50 font-mono flex items-center gap-1">
+                                        <span class="opacity-60">{{ String.fromCharCode(65+iIdx) }}.</span>
+                                        <span class="truncate">{{ item.nameZh || item.name }}</span>
+                                        <span class="flex-shrink-0">{{ item.reps }}×{{ item.weight }}kg</span>
+                                    </div>
+                                </div>
+                                <div v-else-if="ex.type === 'sets'" class="space-y-0.5">
                                     <div v-for="(set, sIdx) in ex.sets" :key="sIdx"
                                          class="text-xs opacity-50 font-mono">
                                         {{ set.reps || '—' }} × {{ set.numSets || 1 }} × {{ set.weight || '—' }} kg

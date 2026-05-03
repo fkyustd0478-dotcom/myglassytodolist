@@ -190,14 +190,23 @@ window.useWorkoutMetrics = function useWorkoutMetrics(ctx) {
     const logSummary = (log) => {
         const exCount = log.exercises.length;
         let totalSets = 0;
-        log.exercises.forEach(e => { if (_isSets(e.type)) totalSets += (e.sets || []).length; });
+        log.exercises.forEach(e => {
+            if (e.type === 'superset') totalSets += parseInt(e.rounds) || 0;
+            else if (_isSets(e.type)) totalSets += (e.sets || []).length;
+        });
         return { exCount, totalSets };
     };
 
     const logVolume = (log) => {
         let vol = 0;
         log.exercises.forEach(e => {
-            if (_isSets(e.type)) {
+            if (e.type === 'superset') {
+                const rounds = parseInt(e.rounds) || 1;
+                (e.items || []).forEach(item => {
+                    const w = parseFloat(item.weight), r = parseInt(item.reps);
+                    if (!isNaN(w) && !isNaN(r)) vol += w * r * rounds;
+                });
+            } else if (_isSets(e.type)) {
                 (e.sets || []).forEach(s => {
                     const w = parseFloat(s.weight), r = parseInt(s.reps), n = parseInt(s.numSets) || 1;
                     if (!isNaN(w) && !isNaN(r)) vol += w * r * n;
@@ -207,8 +216,13 @@ window.useWorkoutMetrics = function useWorkoutMetrics(ctx) {
         return vol > 0 ? `${Math.round(vol)} kg` : null;
     };
 
-    const exDisplayName = (entry) =>
-        (navSettings.lang === 'zh' && entry.nameZh) ? entry.nameZh : entry.name;
+    const exDisplayName = (entry) => {
+        if (entry.type === 'superset') {
+            const label = navSettings.lang === 'zh' ? '組合訓練' : 'Superset';
+            return `${label} ×${entry.rounds || 1}`;
+        }
+        return (navSettings.lang === 'zh' && entry.nameZh) ? entry.nameZh : entry.name;
+    };
 
     // ── Session groupings ─────────────────────────────────────────────────────
     const todaySessions = computed(() => {
