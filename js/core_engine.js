@@ -112,7 +112,7 @@ window.LapisCore = (() => {
     // Keeps <html> background aligned with the incoming theme before a View
     // Transition snapshot is captured.  Without this, the cross-fade reveals the
     // previous theme's html background colour between the two transition frames.
-    const _darkSet = new Set(['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight']);
+    const _darkSet = new Set(['dark', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight', 'deepgray']);
     function _syncHtmlBg(theme, hasCustBg) {
         document.documentElement.style.background =
             (!hasCustBg && _darkSet.has(theme)) ? '#0d1117' : '#f0f4ff';

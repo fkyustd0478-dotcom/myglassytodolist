@@ -126,7 +126,7 @@ createApp({
                 forest: 'Forest', sea: 'Sea', night: 'Night', torii: 'Torii',
                 waterfall: 'Waterfall', ferriswheel: 'Ferris Wheel', starrynight: 'Starry Night',
                 'plum-blossom': 'Plum Blossom',
-                orange: 'Ember', purple: 'Cosmos',
+                orange: 'Ember', purple: 'Cosmos', deepgray: 'Deep Gray',
                 cherrrypink: 'Cherry Pink', skyblue: 'Sky Blue', grassgreen: 'Grass Green',
                 beige: 'Beige', lightgrey: 'Light Grey', lavender: 'Lavender',
                 // Effects
@@ -177,7 +177,7 @@ createApp({
                 forest: '森林', sea: '大海', night: '夜景', torii: '鳥居',
                 waterfall: '瀑布', ferriswheel: '摩天輪', starrynight: '星空',
                 'plum-blossom': '梅花',
-                orange: '火焰', purple: '宇宙',
+                orange: '火焰', purple: '宇宙', deepgray: '深灰色',
                 cherrrypink: '櫻花粉', skyblue: '天空藍', grassgreen: '草綠色',
                 beige: '米黃色', lightgrey: '淺灰色', lavender: '淡紫色',
                 visualFx: '視覺特效',
@@ -222,7 +222,7 @@ createApp({
             { id: 'sea' }, { id: 'seaside' }, { id: 'sky' },
             { id: 'sunset' }, { id: 'torii' }, { id: 'plum-blossom' },
             { id: 'waterfall' }, { id: 'ferriswheel' }, { id: 'starrynight' },
-            { id: 'orange' }, { id: 'purple' },
+            { id: 'orange' }, { id: 'purple' }, { id: 'deepgray' },
             { id: 'cherrrypink' }, { id: 'skyblue' }, { id: 'grassgreen' },
             { id: 'beige' }, { id: 'lightgrey' }, { id: 'lavender' }
         ];
@@ -240,7 +240,7 @@ createApp({
             if (settings.value.theme === 'orange')     return false;
             if (settings.value.theme === 'waterfall')  return false;
             if (settings.value.theme === 'system')     return systemDark.value;
-            const darkThemes = ['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight'];
+            const darkThemes = ['dark', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight', 'deepgray'];
             if (settings.value.useCustomBg) return settings.value.customBgOpacity < 0.5;
             return darkThemes.includes(settings.value.theme);
         });

@@ -82,6 +82,31 @@ describe('static UI structure', () => {
         expect(theme).toContain('var(--lapis-theme-opacity)');
     });
 
+    it('keeps theme mode groups and opaque shared surfaces aligned', () => {
+        const nav = readFileSync('js/nav.js', 'utf8');
+        const core = readFileSync('js/core_engine.js', 'utf8');
+        const setting = readFileSync('modules/setting.js', 'utf8');
+        const sharedTheme = readFileSync('css/shared_theme.css', 'utf8');
+        const sharedUi = readFileSync('css/lapis_shared_style.css', 'utf8');
+        const startup = [
+            'index.html', 'todo.html', 'shift.html', 'workout.html',
+            'stats.html', 'studio.html', 'language.html', 'setting.html',
+        ].map(file => readFileSync(file, 'utf8')).join('\n');
+
+        expect(nav).toContain("'deepgray'");
+        expect(nav).toContain("const dark = ['dark', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight', 'deepgray']");
+        expect(core).toContain("new Set(['dark', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight', 'deepgray'])");
+        expect(setting).toContain("{ id: 'deepgray' }");
+        expect(setting).toContain("const darkThemes = ['dark', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight', 'deepgray']");
+        expect(startup).toContain("['dark','night','torii','purple','ferriswheel','starrynight','deepgray']");
+        expect(sharedTheme).toContain('body.theme-deepgray');
+        expect(sharedTheme).toContain('body.theme-seaside, body.theme-forest');
+        expect(sharedUi).not.toContain('theme-starrysky');
+        expect(sharedUi).toContain('body.theme-deepgray    .lapis-nav-capsule');
+        expect(sharedUi).toContain('background: #000000');
+        expect(sharedUi).toContain('background: #ffffff');
+    });
+
     it('keeps the index greeting paired with a 24-hour flip clock', () => {
         const html = readFileSync('index.html', 'utf8');
         const js = readFileSync('modules/index.js', 'utf8');

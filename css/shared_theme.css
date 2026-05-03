@@ -36,6 +36,12 @@ body.theme-dark {
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-shadow:    0 1px 2px rgba(0, 0, 0, 0.8);
 }
+body.theme-deepgray {
+    --bg-main:        linear-gradient(145deg, #111111 0%, #242424 45%, #1a1a1a 100%);
+    --text-primary:   #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-shadow:    0 1px 2px rgba(0, 0, 0, 0.8);
+}
 
 /* Image themes — light (dark text / frosted-white glass) */
 body.theme-cherry {
@@ -62,13 +68,19 @@ body.theme-sea {
     --text-secondary: rgba(0, 0, 0, 0.6);
     --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
 }
+body.theme-plum-blossom {
+    --bg-main:        #f0f4ff;
+    --text-primary:   #1a1a1a;
+    --text-secondary: rgba(0, 0, 0, 0.6);
+    --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
+}
 
 /* Image themes — dark (white text / dark glass) */
 body.theme-forest {
-    --bg-main:        #0d1117;
-    --text-primary:   #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-shadow:    0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5);
+    --bg-main:        #f0f4ff;
+    --text-primary:   #1a1a1a;
+    --text-secondary: rgba(0, 0, 0, 0.6);
+    --text-shadow:    0 1px 3px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.15);
 }
 body.theme-night {
     --bg-main:        #0d1117;
@@ -240,15 +252,16 @@ body {
 }
 
 /* Dark-theme glass border (white) */
-:is(body.theme-dark, body.theme-forest, body.theme-night,
+:is(body.theme-dark, body.theme-night,
     body.theme-torii, body.theme-purple, body.theme-ferriswheel,
-    body.theme-starrynight) .glass {
+    body.theme-starrynight, body.theme-deepgray) .glass {
     border: 2.5px solid rgba(255, 255, 255, 0.9);
 }
 
 /* Light-theme glass — soft frosted white (seaside moved here) */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) .glass {
@@ -338,15 +351,16 @@ body {
 /* ── Text Contrast on App Root ───────────────────────────────────────────── */
 /* Light themes (seaside moved here) */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) #app { color: #1a1a1a; }
 
 /* Dark themes */
-:is(body.theme-dark, body.theme-forest, body.theme-night,
+:is(body.theme-dark, body.theme-night,
     body.theme-torii, body.theme-purple, body.theme-ferriswheel,
-    body.theme-starrynight) #app { color: #ffffff; }
+    body.theme-starrynight, body.theme-deepgray) #app { color: #ffffff; }
 
 /* Fallback for #app class bindings still used in Vue templates */
 #app.theme-light-mode { color: #1a1a1a; }
@@ -373,7 +387,8 @@ body {
 
 /* Light-theme opaque dropdown */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) .dropdown-menu {
@@ -399,7 +414,8 @@ body {
 
 /* Light-mode dropdown hover */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) .dropdown-item:hover {
@@ -425,7 +441,8 @@ body {
 
 /* Bottom nav */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) .bottom-nav {
@@ -436,7 +453,8 @@ body {
 
 /* Form inputs */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) .glass-input {
@@ -445,7 +463,8 @@ body {
     color: #1a1a1a;
 }
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) .glass-input:focus {
@@ -459,7 +478,8 @@ select {
     border: 1.5px solid rgba(255, 255, 255, 0.15);
 }
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) select {
@@ -470,7 +490,8 @@ select {
 
 /* Buttons & cards */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) .glass-button {
@@ -479,7 +500,8 @@ select {
     color: #1a1a1a;
 }
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) .glass-card {
@@ -489,7 +511,8 @@ select {
 
 /* Scrollbar thumb */
 :is(body.theme-light, body.theme-cherry, body.theme-sky,
-    body.theme-sunset, body.theme-sea, body.theme-seaside,
+    body.theme-sunset, body.theme-sea, body.theme-seaside, body.theme-forest,
+    body.theme-plum-blossom,
     body.theme-orange, body.theme-waterfall,
     body.theme-cherrrypink, body.theme-skyblue, body.theme-grassgreen,
     body.theme-beige, body.theme-lightgrey, body.theme-lavender) ::-webkit-scrollbar-thumb {

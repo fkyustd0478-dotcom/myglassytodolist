@@ -108,6 +108,7 @@
                 'plum-blossom': 'Plum Blossom',
                 orange: 'Ember',
                 purple: 'Cosmos',
+                deepgray: 'Deep Gray',
                 cherrrypink: 'Cherry Pink',
                 skyblue: 'Sky Blue',
                 grassgreen: 'Grass Green',

@@ -23,7 +23,7 @@ function useNav() {
         'light', 'dark', 'system',
         'cherry', 'sky', 'sunset', 'sea', 'seaside', 'forest', 'night', 'torii',
         'waterfall', 'ferriswheel', 'starrynight', 'plum-blossom',
-        'orange', 'purple', 'cherrrypink', 'skyblue', 'grassgreen', 'beige', 'lightgrey', 'lavender',
+        'orange', 'purple', 'deepgray', 'cherrrypink', 'skyblue', 'grassgreen', 'beige', 'lightgrey', 'lavender',
     ]);
     const _savedSettings = StorageProvider.getCommonSettings();
     // Guard: invalid theme string in localStorage would boot into solid-color fallback
@@ -63,7 +63,7 @@ function useNav() {
         if (navSettings.theme === 'orange')     return false;
         if (navSettings.theme === 'waterfall')  return false;
         if (navSettings.theme === 'system')     return systemDark.value;
-        const dark = ['dark', 'forest', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight'];
+        const dark = ['dark', 'night', 'torii', 'purple', 'ferriswheel', 'starrynight', 'deepgray'];
         if (navSettings.useCustomBg) return navSettings.customBgOpacity < 0.5;
         return dark.includes(navSettings.theme);
     });
@@ -77,7 +77,7 @@ function useNav() {
             night: '夜景', torii: '鳥居',
             waterfall: '瀑布', ferriswheel: '摩天輪', starrynight: '星空',
             'plum-blossom': '梅花',
-            orange: '火焰', purple: '宇宙',
+            orange: '火焰', purple: '宇宙', deepgray: '深灰色',
             cherrrypink: '櫻花粉', skyblue: '天空藍', grassgreen: '草綠色',
             beige: '米黃色', lightgrey: '淺灰色', lavender: '淡紫色'
         },
@@ -88,7 +88,7 @@ function useNav() {
             night: 'Night', torii: 'Torii',
             waterfall: 'Waterfall', ferriswheel: 'Ferris Wheel', starrynight: 'Starry Night',
             'plum-blossom': 'Plum Blossom',
-            orange: 'Ember', purple: 'Cosmos',
+            orange: 'Ember', purple: 'Cosmos', deepgray: 'Deep Gray',
             cherrrypink: 'Cherry Pink', skyblue: 'Sky Blue', grassgreen: 'Grass Green',
             beige: 'Beige', lightgrey: 'Light Grey', lavender: 'Lavender'
         }
