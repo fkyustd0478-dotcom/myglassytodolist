@@ -127,6 +127,8 @@ describe('language vocabulary learning module', () => {
         expect(view).toContain('language-native-select');
         expect(html).toContain('language-study-card.glass');
         expect(html).toContain('theme-light-mode .language-study-card.glass');
+        expect(html).toContain('background: #ffffff !important');
+        expect(html).toContain('background: #000000 !important');
         expect(view).toContain('currentWord.example_zh');
         expect(view).toContain('partLabel(currentWord) }} {{ currentWord.chinese_meaning');
     });

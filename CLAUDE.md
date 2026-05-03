@@ -79,3 +79,25 @@
 2.  **Propose:** Provide implementation plans before modifying files.
 3.  **Diff Only:** Never overwrite files blindly; present a `diff` and wait for confirmation.
 4.  **Test:** Every change must include unit tests (using `Vitest`) covering happy paths and edge cases.
+
+## 8. AGENTS.md Alignment
+* **Diff Enforcement:** Produce a unified diff first, wait for explicit confirmation, then apply changes.
+* **Patch Size:** Keep each file modification under 30%; if a file needs more, stop and propose phases.
+* **No Opportunistic Refactoring:** Do not rename, reformat, or improve unrelated code.
+* **Dependency Awareness:** Before changes, identify direct and indirect dependencies and classify impact as LOCAL, MODULE, or SYSTEM.
+* **SYSTEM Impact:** Ask for confirmation before proceeding with cross-module or shared-schema changes.
+* **Virtual Execution Check:** Simulate UI behavior, data flow, storage impact, and cross-module interaction before presenting a patch.
+* **Schema Protection:** Do not change existing field meanings or add fields unless explicitly instructed.
+* **Storage Boundary:** Preserve `StorageProvider` behavior and module responsibility boundaries.
+* **Logging:** After confirmed patch application, append a task entry to `CodeX.log`.
+* **Rollback:** Provide files to restore and expected behavior after rollback for each task.
+* **Commit Simulation:** Include:
+  ```text
+  type(scope): short description
+
+  - What changed
+  - Why
+  - Scope
+  - Risk
+  ```
+* **Documentation:** After completed tasks, keep `CONTEXT.md` and relevant `/docs/` files aligned with real code only.

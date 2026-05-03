@@ -1,6 +1,6 @@
 # Lapis Project Context
 
-Last updated: 2026-05-01
+Last updated: 2026-05-03
 
 This document reflects the implemented code in this repository. It is the root context file for future maintenance, debugging, and AI-assisted development.
 
@@ -29,10 +29,10 @@ Pages:
 - `todo.html` + `modules/todo.js`: todo lists, active/completed/bin views, recurring tasks, notification scheduling.
 - `shift.html` + `modules/shift.js`: calendar-based shift schedule, pay tags, other tags, payday display, today tasks.
 - `workout.html` + `modules/workout.js`: workout orchestration, exercise records, library, weight tracking, charts.
-- `stats.html` + `modules/stats.js`: read-only workout and weight stats snapshot.
-- `setting.html` + `modules/setting.js`: settings, theme, language, user data import/export controls.
+- `stats.html` + `modules/stats.js`: read-only workout, weight, and language achievement stats snapshot.
+- `setting.html` + `modules/setting.js`: settings, theme, language, feature toggles, user data import/export controls.
 - `studio.html` + `js/lapis_studio_ui.js`: image upload, crop, collage, FX, text/stickers, PNG export.
-- `language.html`: placeholder language-learning page using existing navigation and i18n.
+- `language.html` + `modules/language_data.js` + `modules/language_logic.js` + `modules/language_view.js`: vocabulary study deck, notebook lists, CEFR filters, Fuse search, Swiper card UI, audio pronunciation, and achievements.
 
 Shared modules:
 
@@ -68,6 +68,7 @@ No data is sent to Firebase, Firestore, Realtime Database, Cloud Storage, or any
 - `todo_data`: todo lists and tasks.
 - `glassy_shift_data`: shift calendar entries.
 - `glassy_shift_settings`: shift tags, jobs, payday settings.
+- `lapis_language_progress`: language progress arrays for completed, following, errors, and mastered words.
 
 `ImageDB` uses IndexedDB for image blobs:
 
@@ -78,6 +79,7 @@ No data is sent to Firebase, Firestore, Realtime Database, Cloud Storage, or any
 Current limitations:
 
 - Workout data still has direct localStorage access in workout modules for `lapis_workout`, `lapis_workout_library`, `lapis_workout_categories`, and `lapis_workout_metrics`.
+- Language vocabulary currently uses mock bundled data while future vocabulary files are expected under `vocabulary/<difficulty>/<letter>.json`.
 - `sync()` is intentionally a placeholder and must not be treated as cloud sync.
 
 ## Authentication
@@ -139,6 +141,26 @@ Known Studio limitations:
 - Firebase Auth is unrelated to Studio export.
 - Export is local browser download only.
 - Large images may still be limited by browser memory.
+
+## Language Module Design
+
+Language is a client-side vocabulary learning tool.
+
+Files:
+
+- `language.html`: page shell, Swiper/Fuse assets, theme-specific card CSS.
+- `modules/language_data.js`: mock vocabulary, CEFR order, vocabulary path helpers, part-of-speech labels, pronunciation URL helper.
+- `modules/language_logic.js`: hint masking, answer validation, deck state, progress persistence, search and grouping.
+- `modules/language_view.js`: Vue component, Swiper card deck, bottom tabs, notebook views, audio playback.
+
+Flow:
+
+1. Vocabulary is sorted by difficulty and word.
+2. Study cards hide the target word inside the English example using hint rules.
+3. Correct answers reveal the example word with green highlight; Show Answer reveals it with red highlight.
+4. Completed, following, errors, and mastered words persist to `lapis_language_progress`.
+5. Mastered words are excluded from the study rotation.
+6. Stats can display unique completed language achievements when enabled in Settings.
 
 ## Import / Export System
 
@@ -217,8 +239,8 @@ i18n:
 - Firebase Auth requires the project config to be filled in `js/firebase_config.js`.
 - Direct localStorage calls still exist in workout metrics and some legacy helpers.
 - `CodeX.log` is ignored by git because `.gitignore` excludes `*.log`.
-- `language.html` is currently a placeholder page.
-- Vitest coverage starts with storage smoke tests only.
+- Language vocabulary file loading from `vocabulary/<difficulty>/<letter>.json` is planned but not implemented.
+- Vitest coverage includes storage, data portability, Studio static checks, user profile, and language module wiring.
 
 ## Troubleshooting Guide
 
@@ -232,6 +254,7 @@ Quick checks:
 - Auth not working: fill `window.LAPIS_FIREBASE_CONFIG` and enable providers in Firebase Console.
 - Import fails: confirm format matches the selected data type.
 - Studio export fails: verify image is loaded and output canvas is not empty.
+- Language stats missing: confirm `todo_settings.showLanguageStats !== false` and `lapis_language_progress.completed` contains completed words.
 
 ## Verification Commands
 
