@@ -265,6 +265,7 @@ createApp({
         );
 
         const themeDropdownOpen = ref(false);
+        const dataTypeDropdownOpen = ref(false);
 
         // ── Actions ────────────────────────────────────────────────────────
         // Delegate all bg-layer animation to LapisCore (triggered via navSettings.theme
@@ -560,7 +561,7 @@ createApp({
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
             settingsTab, settings, fileInput, t, otherThemes,
             systemDark, resolvedTheme, isDarkTheme, glassStyle, themeClasses,
-            customBgStyle, inactiveBtn, themeDropdownOpen,
+            customBgStyle, inactiveBtn, themeDropdownOpen, dataTypeDropdownOpen,
             selectTheme, toggleLang, toggleNotifications, toggleCustomBg,
             triggerUpload, handleUpload, clearCustomBg, clearCacheAndUpdate,
             triggerDataImport, handleDataImport, exportDataFile,

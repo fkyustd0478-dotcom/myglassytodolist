@@ -448,15 +448,25 @@
                     </div>
                     <p class="text-sm font-bold">{{ i18nT('settings.dataIo.title') }}</p>
 
-                    <div class="space-y-2">
-                        <select v-model="dataIoType"
-                                class="w-full rounded-2xl px-3 py-3 text-sm font-black outline-none"
-                                :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
-                            <option v-for="type in dataIoTypes" :key="type.id" :value="type.id">
-                                {{ type.label }}
-                            </option>
-                        </select>
-                        <p class="text-[10px] opacity-50">{{ dataIoCurrentInfo.short }}</p>
+                    <div class="custom-dropdown" :class="dataTypeDropdownOpen ? 'z-[10] relative' : ''">
+                        <div class="dropdown-trigger glass rounded-xl p-3 text-xs font-bold"
+                             :style="glassStyle"
+                             @click="dataTypeDropdownOpen = !dataTypeDropdownOpen">
+                            <span>{{ dataIoCurrentInfo.label }}</span>
+                            <i data-lucide="chevron-down" class="w-3 h-3 opacity-40"
+                               :class="{ 'rotate-180': dataTypeDropdownOpen }"></i>
+                        </div>
+                        <transition name="fade">
+                            <div v-show="dataTypeDropdownOpen" class="dropdown-menu glass" :style="glassStyle">
+                                <div v-for="type in dataIoTypes" :key="type.id"
+                                     class="dropdown-item py-2 text-xs"
+                                     :class="{ active: dataIoType === type.id }"
+                                     @click="dataIoType = type.id; dataTypeDropdownOpen = false">
+                                    {{ type.label }}
+                                </div>
+                            </div>
+                        </transition>
+                        <p class="text-[10px] opacity-50 mt-2">{{ dataIoCurrentInfo.short }}</p>
                     </div>
 
                     <div v-if="dataIoType === 'shift'" class="space-y-2">
