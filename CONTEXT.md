@@ -25,11 +25,10 @@ The app remains local-first. Firebase Auth is authentication only and does not r
 
 Pages:
 
-- `index.html` + `modules/index.js`: dashboard, today/tomorrow summary, quick add.
+- `index.html` + `modules/index.js`: dashboard (Home tab), stats snapshot (Stats tab), quick add. Stats logic merged from former stats.html.
 - `todo.html` + `modules/todo.js`: todo lists, active/completed/bin views, recurring tasks, notification scheduling.
 - `shift.html` + `modules/shift.js`: calendar-based shift schedule, pay tags, other tags, payday display, today tasks.
 - `workout.html` + `modules/workout.js`: workout orchestration, exercise records, library, weight tracking, charts.
-- `stats.html` + `modules/stats.js`: read-only workout, weight, and language achievement stats snapshot.
 - `setting.html` + `modules/setting.js`: settings, theme, language, feature toggles, user data import/export controls.
 - `studio.html` + `js/lapis_studio_ui.js`: image upload, crop, collage, FX, text/stickers, PNG export.
 - `language.html` + `modules/language_data.js` + `modules/language_logic.js` + `modules/language_view.js`: vocabulary study deck, notebook lists, CEFR filters, Fuse search, Swiper card UI, audio pronunciation, and achievements.

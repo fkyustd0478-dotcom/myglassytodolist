@@ -202,7 +202,6 @@ app.component('LapisConfirm', LapisConfirm);
 | `todo.html` | Active / Completed / Bin / Add (+) |
 | `shift.html` | Today's Tasks / Salary / Shifts / Labels |
 | `workout.html` | Workout / Exercises / Records / Add (+) |
-| `stats.html` | Home / Quick Add (+) / Stats |
 
 **Anti-Patterns:**
 - Do NOT use `bottom: 16px` or a floating capsule style — the nav must be flush with the screen edge.

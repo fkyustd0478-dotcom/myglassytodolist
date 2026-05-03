@@ -134,8 +134,8 @@ describe('language vocabulary learning module', () => {
     });
 
     it('wires language achievements into stats and settings visibility', () => {
-        const statsHtml = readFileSync('stats.html', 'utf8');
-        const stats = readFileSync('modules/stats.js', 'utf8');
+        const statsHtml = readFileSync('index.html', 'utf8');
+        const stats = readFileSync('modules/index.js', 'utf8');
         const settingHtml = readFileSync('setting.html', 'utf8');
         const setting = readFileSync('modules/setting.js', 'utf8');
         const nav = readFileSync('js/nav.js', 'utf8');

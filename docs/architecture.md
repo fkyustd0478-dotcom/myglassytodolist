@@ -22,11 +22,10 @@ Lapis is a browser-only Vue application served as static files. Pages are indepe
 
 ## Entry Points
 
-- `index.html`: dashboard.
+- `index.html`: dashboard (Home tab) + stats snapshot (Stats tab).
 - `todo.html`: todo management.
 - `shift.html`: shift schedule.
 - `workout.html`: workout tracker.
-- `stats.html`: stats snapshot.
 - `setting.html`: settings and data import/export.
 - `studio.html`: image editing.
 - `language.html`: placeholder language page.

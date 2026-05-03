@@ -90,7 +90,7 @@ describe('static UI structure', () => {
         const sharedUi = readFileSync('css/lapis_shared_style.css', 'utf8');
         const startup = [
             'index.html', 'todo.html', 'shift.html', 'workout.html',
-            'stats.html', 'studio.html', 'language.html', 'setting.html',
+            'studio.html', 'language.html', 'setting.html',
         ].map(file => readFileSync(file, 'utf8')).join('\n');
 
         expect(nav).toContain("'deepgray'");
