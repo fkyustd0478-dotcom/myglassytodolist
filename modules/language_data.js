@@ -174,6 +174,26 @@
         return `./vocabulary/${difficulty}/${String(letter || '').toLowerCase()}.json`;
     }
 
+    function normalizeDifficulty(d) {
+        // Strips suffix like '-Auto' so 'A1-Auto' → 'A1'
+        return String(d || '').replace(/-.*$/, '').toUpperCase();
+    }
+
+    const _vocabFileCache = new Map(); // key: "A1:a" → Promise<word[]>
+
+    async function fetchVocabularyFile(difficulty, letter) {
+        const diff = normalizeDifficulty(difficulty);
+        const ltr  = String(letter || '').toLowerCase();
+        const key  = `${diff}:${ltr}`;
+        if (_vocabFileCache.has(key)) return _vocabFileCache.get(key);
+        const promise = fetch(vocabularyPath(diff, ltr))
+            .then(res => res.ok ? res.json() : [])
+            .then(arr  => arr.map(normalizeWord).filter(w => w.word))
+            .catch(() => []);
+        _vocabFileCache.set(key, promise);
+        return promise;
+    }
+
     function voiceUrl(word) {
         return `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(word)}&type=2`;
     }
@@ -213,5 +233,7 @@
         partOfSpeechLabel,
         wordsUpToDifficulty,
         loadVocabulary,
+        normalizeDifficulty,
+        fetchVocabularyFile,
     };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -99,6 +99,11 @@
             this.dealDeck('refill');
             this.initSwiper();
             refreshIcons();
+            // Lazy-load initial difficulty files; re-deal once loaded if deck is empty
+            const initDiff = Data.normalizeDifficulty(this.settings.difficultyCap) || 'A1';
+            this.loadDifficultyFiles(initDiff).then(() => {
+                if (!this.studyDeck.length) this.dealDeck('refill');
+            });
         },
         updated() {
             refreshIcons();

@@ -150,7 +150,9 @@
     function createLanguageLearningState(Vue, options = {}) {
         const { ref, computed, watch } = Vue;
         const savedProgress = readProgress();
-        const vocabulary = ref(Data.sortVocabulary(options.words || Data.MOCK_WORDS));
+        const vocabulary = ref(options.words && options.words.length
+            ? Data.sortVocabulary(options.words)
+            : []);
         const searchQuery = ref('');
         const vocabDifficulty = ref('all');
         const vocabLetter = ref('all');
@@ -169,6 +171,34 @@
             deckSize: 10,
             visibleStack: 7,
         });
+
+        const isLoadingVocab = ref(false);
+        const _loadedKeys    = new Set();
+
+        async function _mergeWords(incoming) {
+            if (!incoming.length) return;
+            const existing = new Set(vocabulary.value.map(w => `${w.difficulty}:${w.word}`));
+            const fresh = incoming.filter(w => !existing.has(`${w.difficulty}:${w.word}`));
+            if (fresh.length) vocabulary.value = Data.sortVocabulary([...vocabulary.value, ...fresh]);
+        }
+
+        async function loadVocabFile(difficulty, letter) {
+            const key = `${Data.normalizeDifficulty(difficulty)}:${String(letter || '').toLowerCase()}`;
+            if (_loadedKeys.has(key)) return;
+            _loadedKeys.add(key);
+            try {
+                const words = await Data.fetchVocabularyFile(difficulty, letter);
+                _mergeWords(words);
+            } catch (_) {}
+        }
+
+        async function loadDifficultyFiles(difficulty) {
+            const diff = Data.normalizeDifficulty(difficulty);
+            if (!diff || !Data.DIFFICULTIES.includes(diff)) return;
+            isLoadingVocab.value = true;
+            await Promise.all('abcdefghijklmnopqrstuvwxyz'.split('').map(l => loadVocabFile(diff, l)));
+            isLoadingVocab.value = false;
+        }
 
         const eligibleWords = computed(() =>
             Data.wordsUpToDifficulty(vocabulary.value, settings.value.difficultyCap)
@@ -240,6 +270,12 @@
                     mastered: mastered.value,
                 });
             }, { deep: true });
+            watch(vocabDifficulty, (diff) => {
+                if (diff && diff !== 'all') loadDifficultyFiles(diff);
+            });
+            watch(() => settings.value.difficultyCap, (cap) => {
+                if (cap) loadDifficultyFiles(cap);
+            });
         }
 
         function updateCurrentState(patch) {
@@ -321,6 +357,7 @@
 
         return {
             vocabulary,
+            isLoadingVocab,
             searchQuery,
             vocabDifficulty,
             vocabLetter,
@@ -362,6 +399,7 @@
             markMastered,
             setDifficultyCap,
             setDeckSize,
+            loadDifficultyFiles,
         };
     }
 
