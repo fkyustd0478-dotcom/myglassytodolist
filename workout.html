@@ -911,41 +911,48 @@
                         </div>
                     </div>
 
-                    <!-- Inline exercise picker -->
-                    <div v-show="showPickModal" class="glass rounded-2xl p-4" :style="glassStyle">
-                        <p class="section-label mb-2">{{ t.pickExercise }}</p>
-                        <div class="glass rounded-xl flex items-center gap-2 px-3 py-2 mb-3" :style="glassStyle">
-                            <span v-html="ICON_SEARCH" class="opacity-40 flex-shrink-0"></span>
-                            <input v-model="pickSearch" :placeholder="t.search"
-                                   class="flex-1 bg-transparent outline-none text-sm font-bold min-w-0">
-                        </div>
-                        <!-- Breadcrumb path -->
-                        <div class="flex items-center gap-1 mb-2 overflow-x-auto"
-                             style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
-                            <button @click="drillTo(-1)"
-                                    class="text-xs font-black flex-shrink-0 transition-opacity"
-                                    :class="pickPath.length === 0 ? 'opacity-100' : 'opacity-45 hover:opacity-80'">
-                                {{ t.all }}
-                            </button>
-                            <template v-for="(seg, idx) in pickPath" :key="seg.name">
-                                <span class="text-xs opacity-20 flex-shrink-0 select-none">›</span>
-                                <button @click="drillTo(idx)"
-                                        class="text-xs font-black flex-shrink-0 max-w-[96px] truncate transition-opacity"
-                                        :class="idx === pickPath.length - 1 ? 'opacity-100' : 'opacity-45 hover:opacity-80'"
-                                        :style="idx === pickPath.length - 1 ? { color: 'var(--primary)' } : {}">
-                                    {{ navSettings.lang === 'zh' ? seg.nameZh : seg.name }}
+                    <!-- Inline exercise picker (fixed height — prevents layout shift on drill-down) -->
+                    <div v-show="showPickModal" class="glass rounded-2xl overflow-hidden flex flex-col"
+                         :style="glassStyle" style="height:420px">
+                        <!-- Fixed header: title + search + breadcrumb -->
+                        <div class="shrink-0 px-4 pt-4 pb-2">
+                            <p class="section-label mb-2">{{ t.pickExercise }}</p>
+                            <div class="glass rounded-xl flex items-center gap-2 px-3 py-2 mb-2" :style="glassStyle">
+                                <span v-html="ICON_SEARCH" class="opacity-40 flex-shrink-0"></span>
+                                <input v-model="pickSearch" :placeholder="t.search"
+                                       class="flex-1 bg-transparent outline-none text-sm font-bold min-w-0">
+                            </div>
+                            <!-- Breadcrumb path -->
+                            <div class="flex items-center gap-1 overflow-x-auto"
+                                 style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
+                                <button @click="drillTo(-1)"
+                                        class="text-xs font-black flex-shrink-0 transition-opacity"
+                                        :class="pickPath.length === 0 ? 'opacity-100' : 'opacity-45 hover:opacity-80'">
+                                    {{ t.all }}
                                 </button>
-                            </template>
+                                <template v-for="(seg, idx) in pickPath" :key="seg.name">
+                                    <span class="text-xs opacity-20 flex-shrink-0 select-none">›</span>
+                                    <button @click="drillTo(idx)"
+                                            class="text-xs font-black flex-shrink-0 max-w-[96px] truncate transition-opacity"
+                                            :class="idx === pickPath.length - 1 ? 'opacity-100' : 'opacity-45 hover:opacity-80'"
+                                            :style="idx === pickPath.length - 1 ? { color: 'var(--primary)' } : {}">
+                                        {{ navSettings.lang === 'zh' ? seg.nameZh : seg.name }}
+                                    </button>
+                                </template>
+                            </div>
                         </div>
-                        <!-- Current level sub-categories (drill-in pills) -->
-                        <div v-if="pickCurrentChildren.length" class="cat-filter-row mb-3">
-                            <button v-for="child in pickCurrentChildren" :key="child.name"
-                                    @click="drillInto(child)"
-                                    class="cat-filter-pill glass" :style="catPillStyle(child.name)">
-                                {{ catLabel(child.name) }}
-                            </button>
+                        <!-- Pills zone: fixed min-height reserves space so list doesn't jump -->
+                        <div class="shrink-0 px-4 pb-1" style="min-height:2.25rem">
+                            <div v-if="pickCurrentChildren.length" class="cat-filter-row">
+                                <button v-for="child in pickCurrentChildren" :key="child.name"
+                                        @click="drillInto(child)"
+                                        class="cat-filter-pill glass" :style="catPillStyle(child.name)">
+                                    {{ catLabel(child.name) }}
+                                </button>
+                            </div>
                         </div>
-                        <div class="space-y-1.5 max-h-48 overflow-y-auto">
+                        <!-- Scrollable exercise list -->
+                        <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-1.5">
                             <div v-if="filteredPick.length === 0"
                                  class="text-center py-6 opacity-30 text-sm font-bold">{{ t.noLibrary }}</div>
                             <button v-for="ex in filteredPick" :key="ex.id"
@@ -1028,41 +1035,47 @@
                     </div>
 
                     <!-- Superset slot picker -->
-                    <div v-show="supersetPickModal" class="glass rounded-2xl p-4" :style="glassStyle"
-                         style="border:1px solid rgba(168,85,247,0.3)">
-                        <p class="section-label mb-2" style="color:#a855f7">{{ t.supersetPickTitle }}</p>
-                        <div class="glass rounded-xl flex items-center gap-2 px-3 py-2 mb-2" :style="glassStyle">
-                            <span v-html="ICON_SEARCH" class="opacity-40 flex-shrink-0"></span>
-                            <input v-model="supersetPickSearch" :placeholder="t.supersetSearchPlaceholder"
-                                   class="flex-1 bg-transparent outline-none text-sm font-bold min-w-0">
-                        </div>
-                        <!-- Breadcrumb path -->
-                        <div class="flex items-center gap-1 mb-2 overflow-x-auto"
-                             style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
-                            <button @click="drillToSuperset(-1)"
-                                    class="text-xs font-black flex-shrink-0 transition-opacity"
-                                    :class="supersetPickPath.length === 0 ? 'opacity-100' : 'opacity-45 hover:opacity-80'">
-                                {{ t.all }}
-                            </button>
-                            <template v-for="(seg, idx) in supersetPickPath" :key="seg.name">
-                                <span class="text-xs opacity-20 flex-shrink-0 select-none">›</span>
-                                <button @click="drillToSuperset(idx)"
-                                        class="text-xs font-black flex-shrink-0 max-w-[96px] truncate transition-opacity"
-                                        :class="idx === supersetPickPath.length - 1 ? 'opacity-100' : 'opacity-45 hover:opacity-80'"
-                                        :style="idx === supersetPickPath.length - 1 ? { color: '#a855f7' } : {}">
-                                    {{ navSettings.lang === 'zh' ? seg.nameZh : seg.name }}
+                    <div v-show="supersetPickModal" class="glass rounded-2xl overflow-hidden flex flex-col"
+                         :style="glassStyle" style="height:420px;border:1px solid rgba(168,85,247,0.3)">
+                        <!-- Fixed header: title + search + breadcrumb -->
+                        <div class="shrink-0 px-4 pt-4 pb-2">
+                            <p class="section-label mb-2" style="color:#a855f7">{{ t.supersetPickTitle }}</p>
+                            <div class="glass rounded-xl flex items-center gap-2 px-3 py-2 mb-2" :style="glassStyle">
+                                <span v-html="ICON_SEARCH" class="opacity-40 flex-shrink-0"></span>
+                                <input v-model="supersetPickSearch" :placeholder="t.supersetSearchPlaceholder"
+                                       class="flex-1 bg-transparent outline-none text-sm font-bold min-w-0">
+                            </div>
+                            <!-- Breadcrumb path -->
+                            <div class="flex items-center gap-1 overflow-x-auto"
+                                 style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
+                                <button @click="drillToSuperset(-1)"
+                                        class="text-xs font-black flex-shrink-0 transition-opacity"
+                                        :class="supersetPickPath.length === 0 ? 'opacity-100' : 'opacity-45 hover:opacity-80'">
+                                    {{ t.all }}
                                 </button>
-                            </template>
+                                <template v-for="(seg, idx) in supersetPickPath" :key="seg.name">
+                                    <span class="text-xs opacity-20 flex-shrink-0 select-none">›</span>
+                                    <button @click="drillToSuperset(idx)"
+                                            class="text-xs font-black flex-shrink-0 max-w-[96px] truncate transition-opacity"
+                                            :class="idx === supersetPickPath.length - 1 ? 'opacity-100' : 'opacity-45 hover:opacity-80'"
+                                            :style="idx === supersetPickPath.length - 1 ? { color: '#a855f7' } : {}">
+                                        {{ navSettings.lang === 'zh' ? seg.nameZh : seg.name }}
+                                    </button>
+                                </template>
+                            </div>
                         </div>
-                        <!-- Current level sub-categories (drill-in pills) -->
-                        <div v-if="supersetPickCurrentChildren.length" class="cat-filter-row mb-3">
-                            <button v-for="child in supersetPickCurrentChildren" :key="child.name"
-                                    @click="drillIntoSuperset(child)"
-                                    class="cat-filter-pill glass" :style="catPillStyle(child.name)">
-                                {{ catLabel(child.name) }}
-                            </button>
+                        <!-- Pills zone: min-height reserves space to prevent shift -->
+                        <div class="shrink-0 px-4 pb-1" style="min-height:2.25rem">
+                            <div v-if="supersetPickCurrentChildren.length" class="cat-filter-row">
+                                <button v-for="child in supersetPickCurrentChildren" :key="child.name"
+                                        @click="drillIntoSuperset(child)"
+                                        class="cat-filter-pill glass" :style="catPillStyle(child.name)">
+                                    {{ catLabel(child.name) }}
+                                </button>
+                            </div>
                         </div>
-                        <div class="space-y-1.5 max-h-48 overflow-y-auto">
+                        <!-- Scrollable exercise list -->
+                        <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-1.5">
                             <div v-if="filteredSupersetPick.length === 0"
                                  class="text-center py-6 opacity-30 text-sm font-bold">{{ t.noLibrary }}</div>
                             <button v-for="ex in filteredSupersetPick" :key="ex.id"

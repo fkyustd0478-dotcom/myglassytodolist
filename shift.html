@@ -112,8 +112,12 @@
                  class="weekday-header text-shadow">{{ day }}</div>
             <div v-for="day in calendarDays" :key="day.dateStr"
                  class="calendar-day glass"
-                 :class="{ 'other-month': !day.isCurrentMonth, 'today': day.isToday }"
-                 @click="handleDayClick(day, $event)">
+                 :class="{ 'other-month': !day.isCurrentMonth, 'today': day.isToday, 'selected-day': selectedDay === day.dateStr }"
+                 @click="handleDayClick(day, $event)"
+                 @pointerdown.passive="startLongPress(day, $event)"
+                 @pointerup.passive="cancelLongPress()"
+                 @pointercancel.passive="cancelLongPress()"
+                 @pointerleave.passive="cancelLongPress()">
                 <!-- Date number + holiday tag in one row -->
                 <div class="day-header-row">
                     <span class="day-number">{{ day.date.getDate() }}</span>
@@ -172,7 +176,8 @@
                     <span class="text-[10px] font-black uppercase tracking-widest opacity-40">
                         {{ activeQuickTagCategory === 'shift' ? t.shiftNav : activeQuickTagCategory === 'other' ? t.otherNav : t.salary }}
                     </span>
-                    <button @click="deleteMode = !deleteMode"
+                    <button v-if="activeQuickTagCategory === 'other'"
+                            @click="deleteMode = !deleteMode"
                             class="p-1.5 rounded-lg transition-all"
                             :class="deleteMode ? 'bg-red-500/20 text-red-400' : 'opacity-30 hover:opacity-70'">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>

@@ -576,3 +576,27 @@
     border-radius: 24px;
     padding: 20px;
 }
+
+/* ── Selected Day — Marching Ants Border ──────────────────────────────── */
+:root {
+    --sel-col: rgba(59, 130, 246, 0.85);
+}
+.theme-dark-mode {
+    --sel-col: rgba(139, 92, 246, 0.90);
+}
+@keyframes sel-march {
+    to { background-position: 100% 0, 0 100%, 0 0, 100% 100%; }
+}
+.calendar-day.selected-day::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    background:
+        repeating-linear-gradient(90deg,  var(--sel-col) 0 6px, transparent 6px 12px) top    / 100% 2px no-repeat,
+        repeating-linear-gradient(90deg,  var(--sel-col) 0 6px, transparent 6px 12px) bottom / 100% 2px no-repeat,
+        repeating-linear-gradient(180deg, var(--sel-col) 0 6px, transparent 6px 12px) left   / 2px 100% no-repeat,
+        repeating-linear-gradient(180deg, var(--sel-col) 0 6px, transparent 6px 12px) right  / 2px 100% no-repeat;
+    animation: sel-march 0.6s linear infinite;
+}

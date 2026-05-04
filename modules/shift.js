@@ -448,13 +448,68 @@ const app = createApp({
         });
 
         // ── Calendar actions ─────────────────────────────────────────────────
+        let _longPressTimer     = null;
+        let _longPressActivated = false;
+
         const changeMonth = (delta) => {
             const d = new Date(calendarDate.value);
             d.setMonth(d.getMonth() + delta);
             calendarDate.value = d;
+            selectedDay.value = null;
+        };
+
+        const autoAdvanceDay = (dateStr) => {
+            const d = new Date(dateStr + 'T00:00:00');
+            d.setDate(d.getDate() + 1);
+            const ny = d.getFullYear();
+            const nm = String(d.getMonth() + 1).padStart(2, '0');
+            const nd = String(d.getDate()).padStart(2, '0');
+            const nextStr = `${ny}-${nm}-${nd}`;
+            // Only advance within the same month
+            if (nextStr.slice(0, 7) === dateStr.slice(0, 7)) {
+                selectedDay.value = nextStr;
+            }
+        };
+
+        const startLongPress = (day, event) => {
+            cancelLongPress();
+            _longPressTimer = setTimeout(() => {
+                _longPressActivated = true;
+                const rect = event?.currentTarget?.getBoundingClientRect?.();
+                if (rect && window.innerWidth && window.innerHeight) {
+                    dayDetailOrigin.value = {
+                        x: `${((rect.left + rect.width / 2) / window.innerWidth) * 100}%`,
+                        y: `${((rect.top + rect.height / 2) / window.innerHeight) * 100}%`,
+                    };
+                }
+                selectedDay.value = day.dateStr;
+                if (!shiftData.value[day.dateStr]) shiftData.value[day.dateStr] = {};
+                showDayDetail.value = true;
+            }, 500);
+        };
+
+        const cancelLongPress = () => {
+            if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
         };
 
         const handleDayClick = (day, event) => {
+            // Suppress click when long press already fired
+            if (_longPressActivated) { _longPressActivated = false; return; }
+
+            const isTagMode = activeQuickTagCategory.value === 'shift' || activeQuickTagCategory.value === 'pay';
+
+            if (isTagMode) {
+                // Select day (shows marching-ants border)
+                selectedDay.value = day.dateStr;
+                // Apply tag and auto-advance when a tag is active
+                if (activeQuickTag.value) {
+                    applyQuickTag(day.dateStr);
+                    autoAdvanceDay(day.dateStr);
+                }
+                return;
+            }
+
+            // Original behavior for other / no-mode
             if (activeQuickTag.value) {
                 applyQuickTag(day.dateStr);
             } else {
@@ -510,6 +565,7 @@ const app = createApp({
                 activeQuickTag.value = null;
                 deleteMode.value = false;
             }
+            selectedDay.value = null;
         };
 
         const confirmDeleteTag = (type, id) => {
@@ -776,7 +832,7 @@ const app = createApp({
             t,
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
             navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle, themeStyle,
-            calendarDate, calendarDays, displayMonthYear, changeMonth, handleDayClick,
+            calendarDate, calendarDays, displayMonthYear, changeMonth, handleDayClick, startLongPress, cancelLongPress,
             activeQuickTag, activeQuickTagCategory, deleteMode, selectQuickTag, toggleQuickTagCategory, confirmDeleteTag,
             shiftData, getTagName, getTagColor, applyQuickTagToDay,
             getOtherTagIcon, getOtherTagEmoji, getIconEmoji, OTHER_TAG_ICONS,
