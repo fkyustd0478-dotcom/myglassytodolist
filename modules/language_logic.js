@@ -173,6 +173,8 @@
         });
 
         const isLoadingVocab = ref(false);
+        const isLoadingDeck  = ref(false);
+        const indexEntries   = ref([]); // [{w, d, f}, ...]
         const _loadedKeys    = new Set();
 
         async function _mergeWords(incoming) {
@@ -189,6 +191,13 @@
             try {
                 const words = await Data.fetchVocabularyFile(difficulty, letter);
                 _mergeWords(words);
+            } catch (_) {}
+        }
+
+        async function loadIndex() {
+            try {
+                const entries = await Data.fetchIndexFile();
+                indexEntries.value = Array.isArray(entries) ? entries : [];
             } catch (_) {}
         }
 
@@ -287,14 +296,52 @@
             };
         }
 
-        function dealDeck(motion = 'refill') {
+        async function dealDeck(motion = 'refill') {
             const limit = clampDeckSize(settings.value.deckSize);
             settings.value = { ...settings.value, deckSize: limit };
-            studyDeck.value = shuffleWords(eligibleWords.value).slice(0, limit);
+
+            // Step 1 — ensure index is loaded
+            if (indexEntries.value.length === 0) await loadIndex();
+
+            // Step 2 — filter index by difficulty cap and mastered list
+            const capRank = Data.difficultyRank(settings.value.difficultyCap);
+            const available = indexEntries.value.filter(e =>
+                Data.difficultyRank(e.d) <= capRank && !mastered.value.includes(e.w)
+            );
+
+            const picked = [...available].sort(() => Math.random() - 0.5).slice(0, limit);
+
+            if (!picked.length) {
+                studyDeck.value = [];
+                deckIndex.value = 0;
+                deckCycle.value += 1;
+                deckMotion.value = motion;
+                setTimeout(() => { deckMotion.value = ''; }, 320);
+                return;
+            }
+
+            isLoadingDeck.value = true;
+
+            // Step 3 — pre-fetch detail files in parallel (cache shared with notebook view)
+            const results = await Promise.all(picked.map(async entry => {
+                try {
+                    const words = await Data.fetchVocabularyFile(entry.d, entry.f);
+                    return words.find(w => w.word === entry.w) || null;
+                } catch (_) { return null; }
+            }));
+
+            const validWords = results.filter(Boolean);
+
+            // Step 4 — merge into vocabulary for notes/mastered lookups
+            _mergeWords(validWords);
+
+            studyDeck.value = validWords;
             deckIndex.value = 0;
             deckCycle.value += 1;
             deckMotion.value = motion;
             setTimeout(() => { deckMotion.value = ''; }, 320);
+
+            isLoadingDeck.value = false;
         }
 
         function nextCard() {
@@ -358,6 +405,8 @@
         return {
             vocabulary,
             isLoadingVocab,
+            isLoadingDeck,
+            indexEntries,
             searchQuery,
             vocabDifficulty,
             vocabLetter,
@@ -399,6 +448,7 @@
             markMastered,
             setDifficultyCap,
             setDeckSize,
+            loadIndex,
             loadDifficultyFiles,
         };
     }

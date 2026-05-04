@@ -174,6 +174,17 @@
         return `./vocabulary/${difficulty}/${String(letter || '').toLowerCase()}.json`;
     }
 
+    let _indexPromise = null;
+
+    async function fetchIndexFile() {
+        if (!_indexPromise) {
+            _indexPromise = fetch('./vocabulary/all_vocabulary.json')
+                .then(res => res.ok ? res.json() : [])
+                .catch(() => []);
+        }
+        return _indexPromise;
+    }
+
     function normalizeDifficulty(d) {
         // Strips suffix like '-Auto' so 'A1-Auto' → 'A1'
         return String(d || '').replace(/-.*$/, '').toUpperCase();
@@ -234,6 +245,7 @@
         wordsUpToDifficulty,
         loadVocabulary,
         normalizeDifficulty,
+        fetchIndexFile,
         fetchVocabularyFile,
     };
 })(typeof window !== 'undefined' ? window : globalThis);
