@@ -42,7 +42,7 @@ const _defaultExercises = () => [
     { id: _wUid(), name: 'Running',        nameZh: '跑步機',     categories: ['Running'],      type: 'duration',                      description: '', targetMuscles: '' },
     { id: _wUid(), name: 'Cycling',        nameZh: '騎單車',     categories: ['Cycling'],      type: 'duration',                      description: '', targetMuscles: '' },
     // Snatch
-    { id: _wUid(), name: 'Hang Power Snatch',          nameZh: '膝位高抓',       categories: ['Snatch'], type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: '' },
+    { id: _wUid(), name: 'Hang Power Snatch',          nameZh: '膝位高抓',       categories: ['Hang','Snatch'], type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: '' },
     { id: _wUid(), name: 'Hang Snatch',                nameZh: '膝位抓',           categories: ['Snatch'], type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: '' },
     { id: _wUid(), name: 'Panda Pull',                 nameZh: '寬速拉',           categories: ['Snatch'], type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: '' },
     { id: _wUid(), name: 'Hang Snatch High Pull',      nameZh: '膝位高拉',         categories: ['Snatch'], type: 'sets', preferredUnit: 'kg', description: '', targetMuscles: '' },
