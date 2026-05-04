@@ -1,0 +1,178 @@
+[
+    {
+        "word": "game",
+        "phonetic": "/ɡeɪm/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "（尤指兒童玩的）遊戲，運動；遊戲用具，運動器具",
+        "example_en": "a board game",
+        "example_zh": "棋類遊戲",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/game",
+        "error": null
+    },
+    {
+        "word": "garden",
+        "phonetic": "/ˈɡɑː.dən/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "（住宅旁的）花園",
+        "example_en": "garden tools/furniture",
+        "example_zh": "園藝工具／花園用傢俱",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/garden",
+        "error": null
+    },
+    {
+        "word": "get",
+        "phonetic": "/ɡet/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "獲得，得到;買到;賺得，贏得",
+        "example_en": "He went to the shop to get some milk.",
+        "example_zh": "他到那家小店買牛奶去了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/get",
+        "error": null
+    },
+    {
+        "word": "girl",
+        "phonetic": "/ɡɜːl/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "（尤指學齡階段的）女孩，姑娘",
+        "example_en": "Two girls showed us round the classrooms.",
+        "example_zh": "兩個女孩領著我們參觀了課室。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/girl",
+        "error": null
+    },
+    {
+        "word": "give",
+        "phonetic": "/ɡɪv/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "送給;提供;贈與;給予",
+        "example_en": "She gave us a set of saucepans as a wedding present.",
+        "example_zh": "她送我的結婚禮物是一套深平底鍋。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/give",
+        "error": null
+    },
+    {
+        "word": "glass",
+        "phonetic": "/ɡlɑːs/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "玻璃",
+        "example_en": "coloured/broken glass",
+        "example_zh": "有色／碎玻璃",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/glass",
+        "error": null
+    },
+    {
+        "word": "go",
+        "phonetic": "/ɡəʊ/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "去;走",
+        "example_en": "We went into the house.",
+        "example_zh": "我們走進了那座房子。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/go",
+        "error": null
+    },
+    {
+        "word": "good",
+        "phonetic": "/ɡʊd/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "令人滿意的；令人愉快的；合意的；有趣的",
+        "example_en": "a good book",
+        "example_zh": "一本好書",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/good",
+        "error": null
+    },
+    {
+        "word": "goodbye",
+        "phonetic": "/ɡʊdˈbaɪ/",
+        "part_of_speech": "exclamation",
+        "difficulty": "A1",
+        "chinese_meaning": "再見，再會",
+        "example_en": "Goodbye Bill! See you next week.",
+        "example_zh": "再見比爾！下星期見。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/goodbye",
+        "error": null
+    },
+    {
+        "word": "grass",
+        "phonetic": "/ɡrɑːs/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "草，青草",
+        "example_en": "a blade of grass",
+        "example_zh": "一片草葉",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/grass",
+        "error": null
+    },
+    {
+        "word": "green",
+        "phonetic": "/ɡriːn/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "綠色的，草綠色的",
+        "example_en": "green vegetables",
+        "example_zh": "綠葉蔬菜",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/green",
+        "error": null
+    },
+    {
+        "word": "group",
+        "phonetic": "/ɡruːp/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "組;群;批;簇",
+        "example_en": "I'm meeting a group of friends for dinner tonight.",
+        "example_zh": "今晚我要與一班朋友聚餐。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/group",
+        "error": null
+    },
+    {
+        "word": "guitar",
+        "phonetic": "/ɡɪˈtɑːr/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "吉他，六弦琴",
+        "example_en": "He sat on the grass, strumming his guitar.",
+        "example_zh": "他坐在草地上彈著吉他。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/guitar",
+        "error": null
+    },
+    {
+        "word": "given",
+        "phonetic": "/ˈɡɪv.ən/",
+        "part_of_speech": "verb",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "（give 的過去分詞）",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/given",
+        "error": null
+    },
+    {
+        "word": "glasses",
+        "phonetic": "",
+        "part_of_speech": "phrase",
+        "difficulty": "A1",
+        "chinese_meaning": "眼鏡",
+        "example_en": "a pair of glasses",
+        "example_zh": "一副眼鏡",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/glasses",
+        "error": null
+    },
+    {
+        "word": "going",
+        "phonetic": "/ˈɡəʊ.ɪŋ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "進展速度",
+        "example_en": "The traffic was terrible, so it was slow going.",
+        "example_zh": "交通狀況很糟糕，所以進展很慢。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/going",
+        "error": null
+    }
+]

@@ -1,0 +1,112 @@
+[
+    {
+        "word": "quaint",
+        "phonetic": "/kweɪnt/",
+        "part_of_speech": "adjective",
+        "difficulty": "C2",
+        "chinese_meaning": "別緻的；（尤指）古雅的",
+        "example_en": "a quaint old cottage",
+        "example_zh": "古樸別緻的鄉村別墅",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quaint",
+        "error": null
+    },
+    {
+        "word": "quest",
+        "phonetic": "/kwest/",
+        "part_of_speech": "noun",
+        "difficulty": "C2",
+        "chinese_meaning": "探索；尋求；追求",
+        "example_en": "Nothing will stop them in their quest for truth.",
+        "example_zh": "沒有甚麼可以阻止他們對真理的追求。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quest",
+        "error": null
+    },
+    {
+        "word": "quotation",
+        "phonetic": "/kwəʊˈteɪ.ʃən/",
+        "part_of_speech": "noun",
+        "difficulty": "C2",
+        "chinese_meaning": "引語，引文，語錄",
+        "example_en": "At the beginning of the book there's a quotation from Abraham Lincoln.",
+        "example_zh": "本書的起頁引用了亞伯拉罕‧林肯的一句話。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quotation",
+        "error": null
+    },
+    {
+        "word": "quandary",
+        "phonetic": "/ˈkwɒn.dri/",
+        "part_of_speech": "noun",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "困境；猶豫不決",
+        "example_en": "I've had two job offers, and I'm in a real quandary about/over which one to accept.",
+        "example_zh": "我有兩個工作機會，但不知該接受哪個，真是左右為難。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quandary",
+        "error": null
+    },
+    {
+        "word": "quarrelsome",
+        "phonetic": "/ˈkwɒr.əl.səm/",
+        "part_of_speech": "adjective",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "愛爭吵的;好口角的",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quarrelsome",
+        "error": null
+    },
+    {
+        "word": "quench",
+        "phonetic": "/kwentʃ/",
+        "part_of_speech": "verb",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "解渴",
+        "example_en": "When it's hot, it's best to quench your thirst with water.",
+        "example_zh": "大熱天裡最好喝水解渴。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quench",
+        "error": null
+    },
+    {
+        "word": "quiver",
+        "phonetic": "/ˈkwɪv.ər/",
+        "part_of_speech": "verb",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "（常指因激動而）顫抖，發抖",
+        "example_en": "Lennie's bottom lip quivered and tears started in his eyes.",
+        "example_zh": "雷尼的下唇顫抖著，眼裡湧出了淚光。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quiver",
+        "error": null
+    },
+    {
+        "word": "quixotic",
+        "phonetic": "/kwɪkˈsɒt.ɪk/",
+        "part_of_speech": "adjective",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "不切實際的，異想天開的",
+        "example_en": "This is a vast, exciting and some say quixotic project.",
+        "example_zh": "這是一個宏大而激動人心的、甚至有人認為是異想天開的專案。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quixotic",
+        "error": null
+    },
+    {
+        "word": "quizzical",
+        "phonetic": "/ˈkwɪz.ɪ.kəl/",
+        "part_of_speech": "adjective",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "疑問的，探詢的",
+        "example_en": "She gave me a quizzical look/glance/smile.",
+        "example_zh": "她疑惑地看了我一眼／瞥了我一眼／對我笑了一下。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quizzical",
+        "error": null
+    },
+    {
+        "word": "quotidian",
+        "phonetic": "/kwəʊˈtɪd.i.ən/",
+        "part_of_speech": "adjective",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "平常的，普通的；日常的",
+        "example_en": "Television has become part of our quotidian existence.",
+        "example_zh": "電視已成為我們日常生活的一部分。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quotidian",
+        "error": null
+    }
+]

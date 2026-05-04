@@ -1,0 +1,145 @@
+[
+    {
+        "word": "occupation",
+        "phonetic": "/ˌɒk.jəˈpeɪ.ʃən/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "職業;工作",
+        "example_en": "In the space marked \"occupation\" she wrote \"police officer\".",
+        "example_zh": "在「職業」一欄裡她寫了「員警」。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/occupation",
+        "error": null
+    },
+    {
+        "word": "ocean",
+        "phonetic": "/ˈəʊ.ʃən/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "海洋，大洋;大海",
+        "example_en": "These mysterious creatures live at the bottom of the ocean.",
+        "example_zh": "這些神秘的生物居住在海底。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/ocean",
+        "error": null
+    },
+    {
+        "word": "offer",
+        "phonetic": "/ˈɒf.ər/",
+        "part_of_speech": "verb",
+        "difficulty": "A2",
+        "chinese_meaning": "主動給予;主動提出;提議",
+        "example_en": "I feel bad that I didn't offer them any food/offer any food to them.",
+        "example_zh": "沒有給他們提供任何食物，我覺得很過意不去。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/offer",
+        "error": null
+    },
+    {
+        "word": "office",
+        "phonetic": "/ˈɒf.ɪs/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "辦公室;辦公樓",
+        "example_en": "the director's office",
+        "example_zh": "主任辦公室",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/office",
+        "error": null
+    },
+    {
+        "word": "once",
+        "phonetic": "/wʌns/",
+        "part_of_speech": "adverb",
+        "difficulty": "A2",
+        "chinese_meaning": "一次，一回",
+        "example_en": "I went sailing once, but I didn't like it.",
+        "example_zh": "我玩過一次帆船，不過我不喜歡。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/once",
+        "error": null
+    },
+    {
+        "word": "onion",
+        "phonetic": "/ˈʌn.jən/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "洋蔥（頭）",
+        "example_en": "I always cry when I'm chopping onions.",
+        "example_zh": "我切洋蔥的時候，總是被嗆得流眼淚。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/onion",
+        "error": null
+    },
+    {
+        "word": "online",
+        "phonetic": "/ˈɒn.laɪn/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "（產品、服務或信息）聯網的，在線的，網上的",
+        "example_en": "an online newspaper/magazine/dictionary",
+        "example_zh": "網上報紙／網絡雜誌／在線詞典",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/online",
+        "error": null
+    },
+    {
+        "word": "open",
+        "phonetic": "/ˈəʊ.pən/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "開著的，未關的",
+        "example_en": "an open door/window",
+        "example_zh": "開著的門／窗",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/open",
+        "error": null
+    },
+    {
+        "word": "opera",
+        "phonetic": "/ˈɒp.ər.ə/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "歌劇",
+        "example_en": "\"Carmen\" is my favourite opera.",
+        "example_zh": "《卡門》是我最喜愛的歌劇。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/opera",
+        "error": null
+    },
+    {
+        "word": "order",
+        "phonetic": "/ˈɔː.dər/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "點菜；訂製；訂貨",
+        "example_en": "\"Can I take your order now?\" said the waiter.",
+        "example_zh": "侍者問：「現在可以點菜了嗎？」",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/order",
+        "error": null
+    },
+    {
+        "word": "ours",
+        "phonetic": "/aʊəz/",
+        "part_of_speech": "pronoun",
+        "difficulty": "A2",
+        "chinese_meaning": "我們的",
+        "example_en": "Which table is ours?",
+        "example_zh": "哪張桌子是我們的？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/ours",
+        "error": null
+    },
+    {
+        "word": "ourselves",
+        "phonetic": "/ˌaʊəˈselvz/",
+        "part_of_speech": "pronoun",
+        "difficulty": "A2",
+        "chinese_meaning": "（we 的反身形式）我們自己",
+        "example_en": "We went to get ourselves something to eat.",
+        "example_zh": "我們去給自己找了點吃的。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/ourselves",
+        "error": null
+    },
+    {
+        "word": "own",
+        "phonetic": "/əʊn/",
+        "part_of_speech": "determiner",
+        "difficulty": "A2",
+        "chinese_meaning": "自己（的），本人（的）；自己人",
+        "example_en": "Each neighbourhood in New York has its own characteristics.",
+        "example_zh": "紐約的每個居民區都有自己的特點。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/own",
+        "error": null
+    }
+]

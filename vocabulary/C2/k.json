@@ -1,0 +1,57 @@
+[
+    {
+        "word": "kidney",
+        "phonetic": "/ˈkɪd.ni/",
+        "part_of_speech": "noun",
+        "difficulty": "C2",
+        "chinese_meaning": "腎，腎臟",
+        "example_en": "kidney failure",
+        "example_zh": "腎衰竭",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kidney",
+        "error": null
+    },
+    {
+        "word": "knot",
+        "phonetic": "/nɒt/",
+        "part_of_speech": "noun",
+        "difficulty": "C2",
+        "chinese_meaning": "（繩等的）結",
+        "example_en": "to tie a knot",
+        "example_zh": "打個結",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/knot",
+        "error": null
+    },
+    {
+        "word": "Kaohsiung",
+        "phonetic": "",
+        "part_of_speech": "",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/Kaohsiung",
+        "error": "Word not found"
+    },
+    {
+        "word": "knuckle",
+        "phonetic": "/ˈnʌk.əl/",
+        "part_of_speech": "noun",
+        "difficulty": "C2",
+        "chinese_meaning": "指節;（尤指）掌指關節",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/knuckle",
+        "error": null
+    },
+    {
+        "word": "KTV",
+        "phonetic": "",
+        "part_of_speech": "",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/KTV",
+        "error": "Word not found"
+    }
+]

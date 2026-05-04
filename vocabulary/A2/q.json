@@ -1,0 +1,57 @@
+[
+    {
+        "word": "quarter",
+        "phonetic": "/ˈkwɔː.tər/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "四分之一",
+        "example_en": "He cut the orange into quarters.",
+        "example_zh": "他把柳橙切成了四塊。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quarter",
+        "error": null
+    },
+    {
+        "word": "queen",
+        "phonetic": "/kwiːn/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "女王;王后",
+        "example_en": "How long did Queen Victoria reign?",
+        "example_zh": "維多利亞女王在位多長時間？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/queen",
+        "error": null
+    },
+    {
+        "word": "quick",
+        "phonetic": "/kwɪk/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "快的，迅速的;短暫的",
+        "example_en": "It's a quick journey.",
+        "example_zh": "這次行程很短。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quick",
+        "error": null
+    },
+    {
+        "word": "quiet",
+        "phonetic": "/ˈkwaɪ.ət/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "靜的，安靜的;輕輕的",
+        "example_en": "She spoke in a quiet voice so as not to wake him.",
+        "example_zh": "她輕聲說話，以免吵醒他。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quiet",
+        "error": null
+    },
+    {
+        "word": "quiz",
+        "phonetic": "/kwɪz/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "問答比賽，智力競賽",
+        "example_en": "a history/sport, etc. quiz",
+        "example_zh": "歷史/體育知識等問答競賽",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quiz",
+        "error": null
+    }
+]

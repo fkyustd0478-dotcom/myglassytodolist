@@ -1,0 +1,233 @@
+[
+    {
+        "word": "name",
+        "phonetic": "/neɪm/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "名字，名稱",
+        "example_en": "\"Hi, what's your name?\" \"My name's Diane.\"",
+        "example_zh": "「嗨！你叫甚麼名字？｣ 「我叫戴安娜。｣",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/name",
+        "error": null
+    },
+    {
+        "word": "nationality",
+        "phonetic": "/ˌnæʃ.ənˈæl.ə.ti/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "國籍",
+        "example_en": "She has British nationality.",
+        "example_zh": "她擁有英國國籍。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/nationality",
+        "error": null
+    },
+    {
+        "word": "near",
+        "phonetic": "/nɪər/",
+        "part_of_speech": "adverb",
+        "difficulty": "A1",
+        "chinese_meaning": "（離…）不遠，靠近（地）",
+        "example_en": "Is there a restaurant near here?",
+        "example_zh": "這附近有餐館嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/near",
+        "error": null
+    },
+    {
+        "word": "need",
+        "phonetic": "/niːd/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "必須，需要",
+        "example_en": "Babies need constant care.",
+        "example_zh": "嬰兒時刻都需要人照顧。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/need",
+        "error": null
+    },
+    {
+        "word": "never",
+        "phonetic": "/ˈnev.ər/",
+        "part_of_speech": "adverb",
+        "difficulty": "A1",
+        "chinese_meaning": "從不;從未;永不",
+        "example_en": "We've never been to Australia.",
+        "example_zh": "我們從未去過澳大利亞。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/never",
+        "error": null
+    },
+    {
+        "word": "new",
+        "phonetic": "/njuː/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "新出現的;新興的",
+        "example_en": "a new car",
+        "example_zh": "新車",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/new",
+        "error": null
+    },
+    {
+        "word": "newspaper",
+        "phonetic": "/ˈnjuːzˌpeɪ.pər/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "報紙，報",
+        "example_en": "Do you read a newspaper regularly?",
+        "example_zh": "你常看報紙嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/newspaper",
+        "error": null
+    },
+    {
+        "word": "next",
+        "phonetic": "/nekst/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "下一個的；其次的；緊接著的",
+        "example_en": "Who works in the office next to yours?",
+        "example_zh": "誰在你隔壁的辦公室工作？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/next",
+        "error": null
+    },
+    {
+        "word": "nice",
+        "phonetic": "/naɪs/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "愉快的;美好的;滿意的",
+        "example_en": "Did you have a nice trip?",
+        "example_zh": "你旅途愉快嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/nice",
+        "error": null
+    },
+    {
+        "word": "night",
+        "phonetic": "/naɪt/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "夜晚，夜間，黑夜",
+        "example_en": "It gets cold at night.",
+        "example_zh": "夜間天氣轉涼。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/night",
+        "error": null
+    },
+    {
+        "word": "nine",
+        "phonetic": "/naɪn/",
+        "part_of_speech": "number",
+        "difficulty": "A1",
+        "chinese_meaning": "（數字）9",
+        "example_en": "The children go to bed at nine (o'clock).",
+        "example_zh": "小孩們九點鐘上床睡覺。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/nine",
+        "error": null
+    },
+    {
+        "word": "nineteen",
+        "phonetic": "/ˌnaɪnˈtiːn/",
+        "part_of_speech": "number",
+        "difficulty": "A1",
+        "chinese_meaning": "（數字）19",
+        "example_en": "Simson, aged nineteen, was convicted on two charges of burglary.",
+        "example_zh": "19歲的西姆森被判兩項盜竊罪罪成。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/nineteen",
+        "error": null
+    },
+    {
+        "word": "no",
+        "phonetic": "/nəʊ/",
+        "part_of_speech": "determiner",
+        "difficulty": "A1",
+        "chinese_meaning": "沒有，無",
+        "example_en": "There's no butter left.",
+        "example_zh": "沒有奶油了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/no",
+        "error": null
+    },
+    {
+        "word": "noise",
+        "phonetic": "/nɔɪz/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "噪聲;雜音;嘈雜聲;喧鬧聲",
+        "example_en": "The noise out in the street was deafening.",
+        "example_zh": "外面街道上的喧鬧聲震耳欲聾。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/noise",
+        "error": null
+    },
+    {
+        "word": "nose",
+        "phonetic": "/nəʊz/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "鼻，鼻子",
+        "example_en": "a large/long/pointed nose",
+        "example_zh": "大／長／尖鼻子",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/nose",
+        "error": null
+    },
+    {
+        "word": "not",
+        "phonetic": "/nɒt/",
+        "part_of_speech": "adverb",
+        "difficulty": "A1",
+        "chinese_meaning": "（用於 be，can，have，will，must 等動詞後構成否定表達，在口語中常簡略為n't）不",
+        "example_en": "He's not fat!",
+        "example_zh": "他不胖！",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/not",
+        "error": null
+    },
+    {
+        "word": "note",
+        "phonetic": "/nəʊt/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "短箋，便條",
+        "example_en": "He left a note to say he would be home late.",
+        "example_zh": "他留下字條說他會晚點回家。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/note",
+        "error": null
+    },
+    {
+        "word": "November",
+        "phonetic": "/nəʊˈvem.bər/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "十一月",
+        "example_en": "He's starting his new job in November.",
+        "example_zh": "他將於11月開始新工作。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/November",
+        "error": null
+    },
+    {
+        "word": "now",
+        "phonetic": "/naʊ/",
+        "part_of_speech": "adverb",
+        "difficulty": "A1",
+        "chinese_meaning": "現在，此刻，目前",
+        "example_en": "She used to be a teacher, but now she works in publishing.",
+        "example_zh": "她過去曾是一名教師，但現在從事出版工作。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/now",
+        "error": null
+    },
+    {
+        "word": "number",
+        "phonetic": "/ˈnʌm.bər/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "數字",
+        "example_en": "25, 300, and a billion are all numbers.",
+        "example_zh": "25、300和10億都是數字。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/number",
+        "error": null
+    },
+    {
+        "word": "nice-looking",
+        "phonetic": "/ˌnaɪsˈlʊk.ɪŋ/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "好看的，漂亮的",
+        "example_en": "Isn't her husband nice-looking?",
+        "example_zh": "他丈夫真英俊，不是嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/nice-looking",
+        "error": null
+    }
+]

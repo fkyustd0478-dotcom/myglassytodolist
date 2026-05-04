@@ -1,0 +1,79 @@
+[
+    {
+        "word": "judgment",
+        "phonetic": "/ˈdʒʌdʒ.mənt/",
+        "part_of_speech": "noun",
+        "difficulty": "C2",
+        "chinese_meaning": "判斷力;識別力",
+        "example_en": "to show good/sound/poor judgment",
+        "example_zh": "表現出良好／出色／不良的判斷力",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/judgment",
+        "error": null
+    },
+    {
+        "word": "justification",
+        "phonetic": "/ˌdʒʌs.tɪ.fɪˈkeɪ.ʃən/",
+        "part_of_speech": "noun",
+        "difficulty": "C2",
+        "chinese_meaning": "正當的理由；辯解",
+        "example_en": "There is no justification for treating people so badly.",
+        "example_zh": "沒有理由如此惡劣地對待他人。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/justification",
+        "error": null
+    },
+    {
+        "word": "jaded",
+        "phonetic": "/ˈdʒeɪ.dɪd/",
+        "part_of_speech": "adjective",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "厭倦的;膩煩的",
+        "example_en": "Flying is exciting the first time you do it, but you soon become jaded.",
+        "example_zh": "第一次坐飛機你會很興奮，但很快你就會厭倦了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jaded",
+        "error": null
+    },
+    {
+        "word": "janitor",
+        "phonetic": "/ˈdʒæn.ɪ.tər/",
+        "part_of_speech": "noun",
+        "difficulty": "C2",
+        "chinese_meaning": "管理員，看護人",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/janitor",
+        "error": null
+    },
+    {
+        "word": "jaywalk",
+        "phonetic": "/ˈdʒeɪ.wɔːk/",
+        "part_of_speech": "verb",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "（不遵守交通規則）亂過馬路",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jaywalk",
+        "error": null
+    },
+    {
+        "word": "jeer",
+        "phonetic": "/dʒɪər/",
+        "part_of_speech": "verb",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "嘲笑，嘲弄",
+        "example_en": "The people at the back of the hall jeered the speaker.",
+        "example_zh": "坐在禮堂後面的人嘲笑發言者。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jeer",
+        "error": null
+    },
+    {
+        "word": "jocular",
+        "phonetic": "/ˈdʒɒk.jə.lər/",
+        "part_of_speech": "adjective",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "有趣的;逗樂的",
+        "example_en": "a jocular comment",
+        "example_zh": "詼諧的評論",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jocular",
+        "error": null
+    }
+]

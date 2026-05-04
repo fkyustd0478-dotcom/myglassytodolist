@@ -1,0 +1,90 @@
+[
+    {
+        "word": "jam",
+        "phonetic": "/dʒæm/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "果醬",
+        "example_en": "strawberry/raspberry jam",
+        "example_zh": "草莓／覆盆子醬",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jam",
+        "error": null
+    },
+    {
+        "word": "jelly",
+        "phonetic": "/ˈdʒel.i/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "果醬",
+        "example_en": "a peanut butter and jelly sandwich",
+        "example_zh": "花生醬和果醬三明治",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jelly",
+        "error": null
+    },
+    {
+        "word": "jewelry",
+        "phonetic": "/ˈdʒuː.əl.ri/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "（總稱）珠寶，首飾",
+        "example_en": "a jewellery box",
+        "example_zh": "首飾盒",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jewelry",
+        "error": null
+    },
+    {
+        "word": "journey",
+        "phonetic": "/ˈdʒɜː.ni/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "（尤指搭乘交通工具的）旅行，行程",
+        "example_en": "I love going on long journeys.",
+        "example_zh": "我喜歡長途旅行。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/journey",
+        "error": null
+    },
+    {
+        "word": "jump",
+        "phonetic": "/dʒʌmp/",
+        "part_of_speech": "verb",
+        "difficulty": "A2",
+        "chinese_meaning": "跳，躍;跳躍",
+        "example_en": "The children were jumping up and down with excitement.",
+        "example_zh": "孩子都興奮地跳來跳去。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jump",
+        "error": null
+    },
+    {
+        "word": "jumper",
+        "phonetic": "/ˈdʒʌm.pər/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "（羊毛）套頭衫",
+        "example_en": "a red woolly jumper",
+        "example_zh": "紅色羊毛套衫",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jumper",
+        "error": null
+    },
+    {
+        "word": "just",
+        "phonetic": "/dʒʌst/",
+        "part_of_speech": "adverb",
+        "difficulty": "A2",
+        "chinese_meaning": "此時;很快;剛才",
+        "example_en": "\"Where are you, Jim?\" \"I'm just coming.\"",
+        "example_zh": "「吉姆，你在哪裡？」「我現在就來。」",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/just",
+        "error": null
+    },
+    {
+        "word": "jazz",
+        "phonetic": "/dʒæz/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "爵士樂;爵士樂曲",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jazz",
+        "error": null
+    }
+]

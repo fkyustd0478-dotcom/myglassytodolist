@@ -1,0 +1,233 @@
+[
+    {
+        "word": "ugly",
+        "phonetic": "/ˈʌɡ.li/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1",
+        "chinese_meaning": "醜陋的，難看的",
+        "example_en": "I think a lot of modern architecture is very ugly.",
+        "example_zh": "我覺得很多現代建築都非常難看。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/ugly",
+        "error": null
+    },
+    {
+        "word": "underline",
+        "phonetic": "/ˌʌn.dəˈlaɪn/",
+        "part_of_speech": "verb",
+        "difficulty": "B1",
+        "chinese_meaning": "（尤指爲了強調）在（詞語）下面畫線",
+        "example_en": "All the technical words have been underlined in red.",
+        "example_zh": "所有術語的下面都畫了紅線。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/underline",
+        "error": null
+    },
+    {
+        "word": "underneath",
+        "phonetic": "/ˌʌn.dəˈniːθ/",
+        "part_of_speech": "preposition",
+        "difficulty": "B1",
+        "chinese_meaning": "在…底下；在…下面",
+        "example_en": "The tunnel goes right underneath the city.",
+        "example_zh": "隧道正好位於城下。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/underneath",
+        "error": null
+    },
+    {
+        "word": "unemployed",
+        "phonetic": "/ˌʌn.ɪmˈplɔɪd/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1",
+        "chinese_meaning": "失業的;待業的",
+        "example_en": "He's been unemployed for over a year.",
+        "example_zh": "他失業一年多了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/unemployed",
+        "error": null
+    },
+    {
+        "word": "unemployment",
+        "phonetic": "/ˌʌn.ɪmˈplɔɪ.mənt/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "失業人數;失業率",
+        "example_en": "Unemployment has fallen/risen again for the third consecutive month.",
+        "example_zh": "失業人數連續第三個月上升／下降。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/unemployment",
+        "error": null
+    },
+    {
+        "word": "unexpected",
+        "phonetic": "/ˌʌn.ɪkˈspek.tɪd/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1",
+        "chinese_meaning": "出乎意料的，想不到的",
+        "example_en": "Her resignation was completely unexpected.",
+        "example_zh": "她的辭職完全是個意外。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/unexpected",
+        "error": null
+    },
+    {
+        "word": "unit",
+        "phonetic": "/ˈjuː.nɪt/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "單位;單元",
+        "example_en": "Each unit of the text book focuses on a different grammar point.",
+        "example_zh": "課本的每個單元各有不同的文法重點。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/unit",
+        "error": null
+    },
+    {
+        "word": "universe",
+        "phonetic": "/ˈjuː.nɪ.vɜːs/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "宇宙；天地萬物；萬象",
+        "example_en": "Is there intelligent life elsewhere in the universe?",
+        "example_zh": "宇宙中其他地方存在有智慧的生命嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/universe",
+        "error": null
+    },
+    {
+        "word": "unknown",
+        "phonetic": "/ʌnˈnəʊn/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1",
+        "chinese_meaning": "未知的；不知名的；不瞭解的；不熟悉的",
+        "example_en": "The exact number of people carrying the virus is unknown.",
+        "example_zh": "攜帶病毒的準確人數還不清楚。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/unknown",
+        "error": null
+    },
+    {
+        "word": "unless",
+        "phonetic": "/ənˈles/",
+        "part_of_speech": "conjunction",
+        "difficulty": "B1",
+        "chinese_meaning": "除非;除了在…的情況下",
+        "example_en": "You can't get a job unless you have experience (= you can only get a job if you have experience).",
+        "example_zh": "除非有工作經驗，否則你找不到工作。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/unless",
+        "error": null
+    },
+    {
+        "word": "unpack",
+        "phonetic": "/ʌnˈpæk/",
+        "part_of_speech": "verb",
+        "difficulty": "B1",
+        "chinese_meaning": "從（箱、包）中取出；打開行李箱",
+        "example_en": "I haven't even had time to unpack (my suitcase/clothes).",
+        "example_zh": "我甚至還沒有時間打開箱子整理／把衣服從箱子裡拿出來。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/unpack",
+        "error": null
+    },
+    {
+        "word": "up-to-date",
+        "phonetic": "/ˌʌp.tə ˈdeɪt/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1",
+        "chinese_meaning": "現代的;最近的;包含最新資訊的",
+        "example_en": "We work hard to keep our database up to date.",
+        "example_zh": "我們花了很大力氣不斷更新資料庫。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/up-to-date",
+        "error": null
+    },
+    {
+        "word": "upper",
+        "phonetic": "/ˈʌp.ər/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1",
+        "chinese_meaning": "（位置或水準）較高的，較上的；上層的",
+        "example_en": "The office building's upper floors were being repainted.",
+        "example_zh": "辦公樓的上面幾層在重新油漆。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/upper",
+        "error": null
+    },
+    {
+        "word": "urgent",
+        "phonetic": "/ˈɜː.dʒənt/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1",
+        "chinese_meaning": "緊急的，急迫的",
+        "example_en": "He's got to sign that paper - will you tell him it's urgent?",
+        "example_zh": "他務必要簽署那份文件——請你告訴他這很緊急，好嗎?",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/urgent",
+        "error": null
+    },
+    {
+        "word": "used",
+        "phonetic": "/juːst/",
+        "part_of_speech": "verb",
+        "difficulty": "B1",
+        "chinese_meaning": "過去慣常，過去常常做…",
+        "example_en": "She used to live in Glasgow.",
+        "example_zh": "她曾在格拉斯哥住過。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/used",
+        "error": null
+    },
+    {
+        "word": "useless",
+        "phonetic": "/ˈjuːs.ləs/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1",
+        "chinese_meaning": "無用的；無效的",
+        "example_en": "Without fuel, the vehicles will become useless for moving supplies.",
+        "example_zh": "沒有燃料，車輛就無法運送物資。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/useless",
+        "error": null
+    },
+    {
+        "word": "user",
+        "phonetic": "/ˈjuː.zər/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "使用者，用戶;客戶",
+        "example_en": "Unemployed people are the main users of this advice centre.",
+        "example_zh": "失業人員是這個諮詢中心的主要客戶。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/user",
+        "error": null
+    },
+    {
+        "word": "underwear",
+        "phonetic": "/ˈʌn.də.weər/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "內衣",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/underwear",
+        "error": null
+    },
+    {
+        "word": "upload",
+        "phonetic": "/ʌpˈləʊd/",
+        "part_of_speech": "verb",
+        "difficulty": "B1",
+        "chinese_meaning": "上傳（程式或資訊）",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/upload",
+        "error": null
+    },
+    {
+        "word": "USA",
+        "phonetic": "/ˌjuː.esˈeɪ/",
+        "part_of_speech": "noun",
+        "difficulty": "B1-Auto",
+        "chinese_meaning": "美利堅合眾國（the United States of America的縮寫）",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/USA",
+        "error": null
+    },
+    {
+        "word": "utility",
+        "phonetic": "/juːˈtɪl.ə.ti/",
+        "part_of_speech": "noun",
+        "difficulty": "B1-Auto",
+        "chinese_meaning": "公用事業；（電、煤氣、鐵路等）公共設施",
+        "example_en": "The biggest financial worries are mortgages followed by utility bills.",
+        "example_zh": "最大的財務擔憂是抵押貸款，其次是水電費。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/utility",
+        "error": null
+    }
+]

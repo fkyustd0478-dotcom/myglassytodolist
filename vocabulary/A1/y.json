@@ -1,0 +1,79 @@
+[
+    {
+        "word": "year",
+        "phonetic": "/jɪər/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "年，年份，（尤指一月一日至十二月三十一日間的）一年時間",
+        "example_en": "Annette worked in Italy for two years.",
+        "example_zh": "安妮特在義大利工作了兩年。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/year",
+        "error": null
+    },
+    {
+        "word": "yellow",
+        "phonetic": "/ˈjel.əʊ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "黃色",
+        "example_en": "It was early autumn and the leaves were turning yellow.",
+        "example_zh": "正值初秋時節，樹葉開始轉黃。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yellow",
+        "error": null
+    },
+    {
+        "word": "yes",
+        "phonetic": "/jes/",
+        "part_of_speech": "adverb",
+        "difficulty": "A1",
+        "chinese_meaning": "（用於表示接受、願意或贊同）好的，是的",
+        "example_en": "\"Would you like a glass of wine?\" \"Yes, thanks.\"",
+        "example_zh": "「你想要來杯葡萄酒嗎？」「好的，謝謝。」",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yes",
+        "error": null
+    },
+    {
+        "word": "yesterday",
+        "phonetic": "/ˈjes.tə.deɪ/",
+        "part_of_speech": "adverb",
+        "difficulty": "A1",
+        "chinese_meaning": "昨天",
+        "example_en": "He called yesterday while you were out.",
+        "example_zh": "昨天你外出時他打電話來了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yesterday",
+        "error": null
+    },
+    {
+        "word": "you",
+        "phonetic": "/juː/",
+        "part_of_speech": "pronoun",
+        "difficulty": "A1",
+        "chinese_meaning": "你;您;你們",
+        "example_en": "You look nice.",
+        "example_zh": "你看起來不錯。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/you",
+        "error": null
+    },
+    {
+        "word": "young",
+        "phonetic": "/jʌŋ/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "幼小的;年輕的",
+        "example_en": "young adults/children",
+        "example_zh": "年輕人／幼兒",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/young",
+        "error": null
+    },
+    {
+        "word": "your",
+        "phonetic": "/jɔːr/",
+        "part_of_speech": "determiner",
+        "difficulty": "A1",
+        "chinese_meaning": "你的;您的;你們的",
+        "example_en": "Is this your bag?",
+        "example_zh": "這是你的袋子嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/your",
+        "error": null
+    }
+]

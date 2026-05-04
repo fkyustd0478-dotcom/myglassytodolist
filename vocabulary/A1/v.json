@@ -1,0 +1,57 @@
+[
+    {
+        "word": "vacation",
+        "phonetic": "/veɪˈkeɪ.ʃən/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "（尤指出遊的）假期，休假",
+        "example_en": "We're taking a vacation in June.",
+        "example_zh": "我們六月份要去度假。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/vacation",
+        "error": null
+    },
+    {
+        "word": "vegetable",
+        "phonetic": "/ˈvedʒ.tə.bəl/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "蔬菜",
+        "example_en": "fresh/frozen vegetables",
+        "example_zh": "新鮮／冷凍蔬菜",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/vegetable",
+        "error": null
+    },
+    {
+        "word": "very",
+        "phonetic": "/ˈver.i/",
+        "part_of_speech": "adverb",
+        "difficulty": "A1",
+        "chinese_meaning": "（用於強調形容詞或副詞）很，非常",
+        "example_en": "The situation is very serious.",
+        "example_zh": "形勢非常嚴峻。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/very",
+        "error": null
+    },
+    {
+        "word": "village",
+        "phonetic": "/ˈvɪl.ɪdʒ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "村莊;村子",
+        "example_en": "a fishing village",
+        "example_zh": "漁村",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/village",
+        "error": null
+    },
+    {
+        "word": "visit",
+        "phonetic": "/ˈvɪz.ɪt/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "參觀;遊覽;拜訪;作客",
+        "example_en": "We visited a few galleries while we were in Prague.",
+        "example_zh": "我們在布拉格時參觀了幾家畫廊。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/visit",
+        "error": null
+    }
+]

@@ -1,0 +1,68 @@
+[
+    {
+        "word": "under",
+        "phonetic": "/ˈʌn.dər/",
+        "part_of_speech": "preposition",
+        "difficulty": "A1",
+        "chinese_meaning": "在（或到）下面；在（或到）下方",
+        "example_en": "He hid under the bed.",
+        "example_zh": "他躲在床底下。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/under",
+        "error": null
+    },
+    {
+        "word": "understand",
+        "phonetic": "/ˌʌn.dəˈstænd/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "理解;明白;懂得",
+        "example_en": "She explained the whole idea again, but I still didn't understand.",
+        "example_zh": "她把整個想法又解釋了一遍，但我還是不明白。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/understand",
+        "error": null
+    },
+    {
+        "word": "university",
+        "phonetic": "/ˌjuː.nɪˈvɜː.sə.ti/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "大學",
+        "example_en": "Which university did you go to/were you at (= did you study at)?",
+        "example_zh": "你曾就讀哪所大學？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/university",
+        "error": null
+    },
+    {
+        "word": "until",
+        "phonetic": "/ənˈtɪl/",
+        "part_of_speech": "preposition",
+        "difficulty": "A1",
+        "chinese_meaning": "到…時;直到…時",
+        "example_en": "I was up until three o'clock trying to get it finished!",
+        "example_zh": "為了完成工作，我一直熬夜做到三點！",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/until",
+        "error": null
+    },
+    {
+        "word": "us",
+        "phonetic": "/ʌs/",
+        "part_of_speech": "pronoun",
+        "difficulty": "A1",
+        "chinese_meaning": "（用作動詞或介詞的受詞）我們",
+        "example_en": "Thank you for driving us to the station.",
+        "example_zh": "謝謝您載我們去車站。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/us",
+        "error": null
+    },
+    {
+        "word": "use",
+        "phonetic": "/juːz/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "用，使用;利用;運用",
+        "example_en": "This glass has been used - could you get me a clean one?",
+        "example_zh": "這個杯子用過了——請給我拿一個乾淨的。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/use",
+        "error": null
+    }
+]

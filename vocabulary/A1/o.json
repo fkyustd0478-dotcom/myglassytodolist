@@ -1,0 +1,178 @@
+[
+    {
+        "word": "o'clock",
+        "phonetic": "/əˈklɒk/",
+        "part_of_speech": "adverb",
+        "difficulty": "A1",
+        "chinese_meaning": "（用於數字1至12後表示整點）…點鐘",
+        "example_en": "It's two o'clock.",
+        "example_zh": "兩點鐘了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/o'clock",
+        "error": null
+    },
+    {
+        "word": "October",
+        "phonetic": "/ɒkˈtəʊ.bər/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "十月",
+        "example_en": "We have a meeting in October that you are welcome to attend.",
+        "example_zh": "我們在10月份有個會，歡迎你來參加。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/October",
+        "error": null
+    },
+    {
+        "word": "of",
+        "phonetic": "/əv/",
+        "part_of_speech": "preposition",
+        "difficulty": "A1",
+        "chinese_meaning": "（用於表示歸屬或來歷）…的，屬於",
+        "example_en": "a friend of mine",
+        "example_zh": "我的一位朋友",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/of",
+        "error": null
+    },
+    {
+        "word": "often",
+        "phonetic": "/ˈɒf.ən/",
+        "part_of_speech": "adverb",
+        "difficulty": "A1",
+        "chinese_meaning": "時常，經常;多次",
+        "example_en": "I often see him in the garden.",
+        "example_zh": "我常見他在花園裡。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/often",
+        "error": null
+    },
+    {
+        "word": "oh",
+        "phonetic": "/əʊ/",
+        "part_of_speech": "exclamation",
+        "difficulty": "A1",
+        "chinese_meaning": "（表示驚訝、失望和高興等情緒）噢，哎，唉，啊",
+        "example_en": "\"He's been married three times.\" \"Oh, really? I didn't know that!\"",
+        "example_zh": "「他結過三次婚。」「噢，真的嗎？我不知道這回事！」",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/oh",
+        "error": null
+    },
+    {
+        "word": "OK",
+        "phonetic": "/ˌəʊˈkeɪ/",
+        "part_of_speech": "exclamation",
+        "difficulty": "A1",
+        "chinese_meaning": "可以的，同意的；能接受的，可行的",
+        "example_en": "\"I'll pay you back tomorrow.\" \"OK, no problem.\"",
+        "example_zh": "「我明天還錢給你。」「好，沒問題。」",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/OK",
+        "error": null
+    },
+    {
+        "word": "old",
+        "phonetic": "/əʊld/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "老的;年老的;古老的",
+        "example_en": "an old man",
+        "example_zh": "老人",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/old",
+        "error": null
+    },
+    {
+        "word": "on",
+        "phonetic": "/ɒn/",
+        "part_of_speech": "preposition",
+        "difficulty": "A1",
+        "chinese_meaning": "在…上面；到…上面",
+        "example_en": "Look at all the books on your desk!",
+        "example_zh": "看看你書桌上這麼多書！",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/on",
+        "error": null
+    },
+    {
+        "word": "one",
+        "phonetic": "/wʌn/",
+        "part_of_speech": "number",
+        "difficulty": "A1",
+        "chinese_meaning": "（數字）1",
+        "example_en": "He had two slices and I only had one.",
+        "example_zh": "他有兩片，而我只有一片。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/one",
+        "error": null
+    },
+    {
+        "word": "only",
+        "phonetic": "/ˈəʊn.li/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "唯一的，僅有的",
+        "example_en": "I was the only person on the train.",
+        "example_zh": "我是火車上唯一的乘客。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/only",
+        "error": null
+    },
+    {
+        "word": "or",
+        "phonetic": "/ɔːr/",
+        "part_of_speech": "conjunction",
+        "difficulty": "A1",
+        "chinese_meaning": "（用於連接不同的可能性）或，或者；還是，亦或",
+        "example_en": "Is it Tuesday or Wednesday today?",
+        "example_zh": "今天是星期二還是星期三？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/or",
+        "error": null
+    },
+    {
+        "word": "orange",
+        "phonetic": "/ˈɒr.ɪndʒ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "橙;橘;柑",
+        "example_en": "a glass of orange juice",
+        "example_zh": "一杯柳橙汁",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/orange",
+        "error": null
+    },
+    {
+        "word": "other",
+        "phonetic": "/ˈʌð.ər/",
+        "part_of_speech": "determiner",
+        "difficulty": "A1",
+        "chinese_meaning": "其他的，別的，另外的",
+        "example_en": "The product has many other time-saving features.",
+        "example_zh": "該產品還有許多其他的省時特性。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/other",
+        "error": null
+    },
+    {
+        "word": "our",
+        "phonetic": "/aʊər/",
+        "part_of_speech": "determiner",
+        "difficulty": "A1",
+        "chinese_meaning": "我們的",
+        "example_en": "We bought our house several years ago.",
+        "example_zh": "我們的房子是幾年前買的。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/our",
+        "error": null
+    },
+    {
+        "word": "outside",
+        "phonetic": "/ˌaʊtˈsaɪd/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "在外面（的），在室外（的）;在…外面（的）",
+        "example_en": "It was a sunny day outside.",
+        "example_zh": "外面的天氣真好。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/outside",
+        "error": null
+    },
+    {
+        "word": "one-time",
+        "phonetic": "/ˈwʌn.taɪm/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "這是電視節目主持人、曾做過記者的達根上星期宣佈的。",
+        "example_en": "Duggan, a TV personality and one-time journalist, made the announcement last week.",
+        "example_zh": "這是電視節目主持人、曾做過記者的達根上星期宣佈的。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/one-time",
+        "error": null
+    }
+]

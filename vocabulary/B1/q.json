@@ -1,0 +1,112 @@
+[
+    {
+        "word": "qualification",
+        "phonetic": "/ˌkwɒl.ɪ.fɪˈkeɪ.ʃən/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "合格證書，資格證明",
+        "example_en": "You'll never get a good job if you don't have any qualifications.",
+        "example_zh": "你要是沒有任何資格證明就永遠得不到一份好工作。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/qualification",
+        "error": null
+    },
+    {
+        "word": "qualified",
+        "phonetic": "/ˈkwɒl.ɪ.faɪd/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1",
+        "chinese_meaning": "有資格的;合格的，勝任的",
+        "example_en": "Tim is now a qualified architect.",
+        "example_zh": "提姆現在是一個合格的建築師了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/qualified",
+        "error": null
+    },
+    {
+        "word": "quality",
+        "phonetic": "/ˈkwɒl.ə.ti/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "質量，品級，品質",
+        "example_en": "a shop advertising top quality electrical goods",
+        "example_zh": "以高品質電器為口號的商店",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quality",
+        "error": null
+    },
+    {
+        "word": "quantity",
+        "phonetic": "/ˈkwɒn.tə.ti/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "（尤指可測量或確定的）量，數量，分量",
+        "example_en": "Police found a large/small quantity of drugs in his possession.",
+        "example_zh": "警方發現他攜帶大/少量的毒品。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quantity",
+        "error": null
+    },
+    {
+        "word": "questionnaire",
+        "phonetic": "/ˌkwes.tʃəˈneər/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "問卷；情況調查表",
+        "example_en": "Visitors to the country have been asked to fill in a detailed questionnaire.",
+        "example_zh": "訪問該國的遊客被要求填寫一份詳細的調查表。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/questionnaire",
+        "error": null
+    },
+    {
+        "word": "queue",
+        "phonetic": "/kjuː/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "（人或車排成的）隊，隊伍，行列",
+        "example_en": "Are you in the queue for tickets?",
+        "example_zh": "你是在排隊買票嗎?",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/queue",
+        "error": null
+    },
+    {
+        "word": "quit",
+        "phonetic": "/kwɪt/",
+        "part_of_speech": "verb",
+        "difficulty": "B1",
+        "chinese_meaning": "停止;離開;辭職;放棄",
+        "example_en": "Would you quit your job if you inherited lots of money?",
+        "example_zh": "假如繼承了一大筆錢，你會辭掉工作嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quit",
+        "error": null
+    },
+    {
+        "word": "quite",
+        "phonetic": "/kwaɪt/",
+        "part_of_speech": "adverb",
+        "difficulty": "B1",
+        "chinese_meaning": "完全地，徹底地",
+        "example_en": "The two situations are quite different.",
+        "example_zh": "兩種情況截然不同。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quite",
+        "error": null
+    },
+    {
+        "word": "quantum",
+        "phonetic": "/ˈkwɒn.təm/",
+        "part_of_speech": "noun",
+        "difficulty": "B1-Auto",
+        "chinese_meaning": "量子",
+        "example_en": "quantum theory",
+        "example_zh": "量子理論",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quantum",
+        "error": null
+    },
+    {
+        "word": "quarter-final",
+        "phonetic": "/ˌkwɔː.təˈfaɪ.nəl/",
+        "part_of_speech": "noun",
+        "difficulty": "B1-Auto",
+        "chinese_meaning": "四分之一決賽，半決賽前的比賽",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quarter-final",
+        "error": null
+    }
+]

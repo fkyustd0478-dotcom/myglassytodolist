@@ -1,0 +1,35 @@
+[
+    {
+        "word": "zip",
+        "phonetic": "/zɪp/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "拉鏈，拉鎖",
+        "example_en": "to do up/undo a zip",
+        "example_zh": "拉上／拉開拉鏈",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/zip",
+        "error": null
+    },
+    {
+        "word": "zipper",
+        "phonetic": "/ˈzɪp.ər/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "拉鍊，拉鎖",
+        "example_en": "to pull a zipper up/down",
+        "example_zh": "拉上／拉開拉鏈",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/zipper",
+        "error": null
+    },
+    {
+        "word": "zebra",
+        "phonetic": "/ˈzeb.rə/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "（產於非洲的）斑馬",
+        "example_en": "A zebra uses its black and white stripes to hide from predators.",
+        "example_zh": "斑馬利用黑白相間的條紋來躲避掠食者。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/zebra",
+        "error": null
+    }
+]

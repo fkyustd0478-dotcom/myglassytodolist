@@ -1,0 +1,35 @@
+[
+    {
+        "word": "yearn",
+        "phonetic": "/jɜːn/",
+        "part_of_speech": "verb",
+        "difficulty": "C2",
+        "chinese_meaning": "渴望，切盼，渴求",
+        "example_en": "Despite his great commercial success he still yearns for critical approval.",
+        "example_zh": "儘管他獲得了巨大的票房成功，但還是渴望得到評論家的認可。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yearn",
+        "error": null
+    },
+    {
+        "word": "yield",
+        "phonetic": "/jiːld/",
+        "part_of_speech": "verb",
+        "difficulty": "C2",
+        "chinese_meaning": "產生;出產;得出",
+        "example_en": "an attempt to yield increased profits",
+        "example_zh": "提高利潤的努力",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yield",
+        "error": null
+    },
+    {
+        "word": "yucky",
+        "phonetic": "/ˈjʌk.i/",
+        "part_of_speech": "adjective",
+        "difficulty": "C2-Auto",
+        "chinese_meaning": "令人厭惡的，讓人反感的",
+        "example_en": "a yucky green colour",
+        "example_zh": "令人生厭的綠色",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yucky",
+        "error": null
+    }
+]

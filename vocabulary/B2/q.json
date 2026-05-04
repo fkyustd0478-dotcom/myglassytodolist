@@ -1,0 +1,35 @@
+[
+    {
+        "word": "qualify",
+        "phonetic": "/ˈkwɒl.ɪ.faɪ/",
+        "part_of_speech": "verb",
+        "difficulty": "B2",
+        "chinese_meaning": "（使）具有資格，（使）合格",
+        "example_en": "She hopes to qualify (as a lawyer) at the end of the year.",
+        "example_zh": "她希望在年底取得（律師）資格。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/qualify",
+        "error": null
+    },
+    {
+        "word": "quarrel",
+        "phonetic": "/ˈkwɒr.əl/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "爭吵，不和",
+        "example_en": "They had a bitter quarrel about/over some money three years ago and they haven't spoken to each other since.",
+        "example_zh": "他們三年前因為錢的問題有過一次激烈的爭吵，從此以後就互不理睬了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/quarrel",
+        "error": null
+    },
+    {
+        "word": "query",
+        "phonetic": "/ˈkwɪə.ri/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "疑問，問題",
+        "example_en": "If you have any queries about your treatment, the doctor will answer them.",
+        "example_zh": "您如果對治療有任何疑問，醫生將會做出解答。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/query",
+        "error": null
+    }
+]

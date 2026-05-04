@@ -1,0 +1,57 @@
+[
+    {
+        "word": "yeah",
+        "phonetic": "/jeə/",
+        "part_of_speech": "adverb",
+        "difficulty": "A2",
+        "chinese_meaning": "是的;沒錯",
+        "example_en": "\"Do you like your job?\" \"Yeah, it's all right I suppose.\"",
+        "example_zh": "「你喜歡自己的工作嗎？」「是的，我覺得還不錯。」",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yeah",
+        "error": null
+    },
+    {
+        "word": "yet",
+        "phonetic": "/jet/",
+        "part_of_speech": "adverb",
+        "difficulty": "A2",
+        "chinese_meaning": "還，尚;迄今",
+        "example_en": "I haven't spoken to her yet.",
+        "example_zh": "我還沒和她談過。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yet",
+        "error": null
+    },
+    {
+        "word": "yogurt",
+        "phonetic": "/ˈjɒɡ.ət/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "酸乳，優酪乳，乳酪",
+        "example_en": "natural/plain yogurt",
+        "example_zh": "天然／純酸乳酪",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yogurt",
+        "error": null
+    },
+    {
+        "word": "yours",
+        "phonetic": "/jɔːz/",
+        "part_of_speech": "pronoun",
+        "difficulty": "A2",
+        "chinese_meaning": "你的;您的;你們的",
+        "example_en": "Is this pen yours?",
+        "example_zh": "這支鋼筆是你的嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yours",
+        "error": null
+    },
+    {
+        "word": "yourself",
+        "phonetic": "/jɔːˈself/",
+        "part_of_speech": "pronoun",
+        "difficulty": "A2",
+        "chinese_meaning": "你自己;您自己",
+        "example_en": "Be careful with that knife or you'll cut yourself!",
+        "example_zh": "用那把刀要當心，否則你會弄傷自己的！",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yourself",
+        "error": null
+    }
+]

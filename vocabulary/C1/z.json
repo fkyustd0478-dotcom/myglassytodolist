@@ -1,0 +1,35 @@
+[
+    {
+        "word": "zeal",
+        "phonetic": "/ziːl/",
+        "part_of_speech": "noun",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "熱忱，熱情；激情",
+        "example_en": "reforming/missionary/religious zeal",
+        "example_zh": "改革／傳教士般的／宗教熱情",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/zeal",
+        "error": null
+    },
+    {
+        "word": "zinc",
+        "phonetic": "/zɪŋk/",
+        "part_of_speech": "noun",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "鋅",
+        "example_en": "Many dietary supplements contain zinc to boost the immune system.",
+        "example_zh": "許多膳食補充劑含有鋅，以幫助增強免疫系統。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/zinc",
+        "error": null
+    },
+    {
+        "word": "zoom",
+        "phonetic": "/zuːm/",
+        "part_of_speech": "noun",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "Zoom雲端視訊會議",
+        "example_en": "Those of us working from home during the coronavirus pandemic soon became a lot more familiar with Zoom.",
+        "example_zh": "在冠狀病毒疫情期間，我們這些在家工作的人很快就對Zoom視訊會議熟悉了許多。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/zoom",
+        "error": null
+    }
+]

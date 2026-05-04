@@ -1,0 +1,178 @@
+[
+    {
+        "word": "keen",
+        "phonetic": "/kiːn/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1",
+        "chinese_meaning": "熱衷的；熱心的；渴望的",
+        "example_en": "She's a keen tennis player.",
+        "example_zh": "她熱衷於打網球。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/keen",
+        "error": null
+    },
+    {
+        "word": "keeper",
+        "phonetic": "/ˈkiː.pər/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "飼養者；保管人；看守人",
+        "example_en": "a zoo keeper",
+        "example_zh": "動物園飼養員",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/keeper",
+        "error": null
+    },
+    {
+        "word": "kid",
+        "phonetic": "/kɪd/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "小孩",
+        "example_en": "He took the kids to the park while I was working.",
+        "example_zh": "我工作時，他把孩子們帶到公園去了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kid",
+        "error": null
+    },
+    {
+        "word": "killer",
+        "phonetic": "/ˈkɪl.ər/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "殺人者，兇手",
+        "example_en": "Police are still hoping to find the dead woman's killer.",
+        "example_zh": "警方仍然希望找到殺害那名女性的兇手。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/killer",
+        "error": null
+    },
+    {
+        "word": "killing",
+        "phonetic": "/ˈkɪl.ɪŋ/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "謀殺",
+        "example_en": "a series of brutal killings",
+        "example_zh": "一連串殘忍的謀殺",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/killing",
+        "error": null
+    },
+    {
+        "word": "kindly",
+        "phonetic": "/ˈkaɪnd.li/",
+        "part_of_speech": "adverb",
+        "difficulty": "B1",
+        "chinese_meaning": "仁慈地;友好地",
+        "example_en": "Stella has very kindly offered to help out with the food for the party.",
+        "example_zh": "斯特拉很友善，主動提出幫忙準備派對的食物。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kindly",
+        "error": null
+    },
+    {
+        "word": "kit",
+        "phonetic": "/kɪt/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "（用於某種目的或活動的）成套工具（或服裝）",
+        "example_en": "a first-aid/tool kit",
+        "example_zh": "一套急救用品／工具",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kit",
+        "error": null
+    },
+    {
+        "word": "knee",
+        "phonetic": "/niː/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "膝，膝蓋",
+        "example_en": "The baby was crawling around on its hands and knees.",
+        "example_zh": "嬰兒用手和膝蓋著地爬來爬去。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/knee",
+        "error": null
+    },
+    {
+        "word": "knit",
+        "phonetic": "/nɪt/",
+        "part_of_speech": "verb",
+        "difficulty": "B1",
+        "chinese_meaning": "編結;編織",
+        "example_en": "She's forever knitting.",
+        "example_zh": "她總是在織東西。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/knit",
+        "error": null
+    },
+    {
+        "word": "knock",
+        "phonetic": "/nɒk/",
+        "part_of_speech": "verb",
+        "difficulty": "B1",
+        "chinese_meaning": "（反覆地）敲，擊，打",
+        "example_en": "She knocked on the window to attract his attention.",
+        "example_zh": "她敲窗想引起他的注意。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/knock",
+        "error": null
+    },
+    {
+        "word": "knowledge",
+        "phonetic": "/ˈnɒl.ɪdʒ/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "知識;學問;學識;了解;理解",
+        "example_en": "Her knowledge of English grammar is very extensive.",
+        "example_zh": "她的英語文法知識很廣博。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/knowledge",
+        "error": null
+    },
+    {
+        "word": "kangaroo",
+        "phonetic": "/ˌkæŋ.ɡərˈuː/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "袋鼠",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kangaroo",
+        "error": null
+    },
+    {
+        "word": "kitten",
+        "phonetic": "/ˈkɪt.ən/",
+        "part_of_speech": "noun",
+        "difficulty": "B1",
+        "chinese_meaning": "小貓",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kitten",
+        "error": null
+    },
+    {
+        "word": "knight",
+        "phonetic": "/naɪt/",
+        "part_of_speech": "noun",
+        "difficulty": "B1-Auto",
+        "chinese_meaning": "（英國的）爵士",
+        "example_en": "He hopes to be made a knight for his work at the Bank of England.",
+        "example_zh": "他希望因為他在英格蘭銀行的工作而被封為爵士。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/knight",
+        "error": null
+    },
+    {
+        "word": "Korea",
+        "phonetic": "/kəˈriː.ə/",
+        "part_of_speech": "noun",
+        "difficulty": "B1-Auto",
+        "chinese_meaning": "（1945年分裂為朝鮮和韓國之前的）朝鮮",
+        "example_en": "Events in Korea brought the Marshall Plan to a premature conclusion.",
+        "example_zh": "朝鮮發生的一系列事件使馬歇爾計畫過早結束。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/Korea",
+        "error": null
+    },
+    {
+        "word": "Korean",
+        "phonetic": "/kəˈriː.ən/",
+        "part_of_speech": "adjective",
+        "difficulty": "B1-Auto",
+        "chinese_meaning": "韓國的;韓國人的;韓語的",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/Korean",
+        "error": null
+    }
+]

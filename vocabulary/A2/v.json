@@ -1,0 +1,79 @@
+[
+    {
+        "word": "various",
+        "phonetic": "/ˈveə.ri.əs/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "各種不同的；各種各樣的",
+        "example_en": "We had various problems on our journey, including a flat tyre.",
+        "example_zh": "我們在旅途中遇到了各種各樣的問題，包括輪胎被紮破了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/various",
+        "error": null
+    },
+    {
+        "word": "verb",
+        "phonetic": "/vɜːb/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "動詞",
+        "example_en": "The words \"run\", \"keep\", and \"feel\" are all verbs.",
+        "example_zh": "run，keep 和 feel 都是動詞。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/verb",
+        "error": null
+    },
+    {
+        "word": "video",
+        "phonetic": "/ˈvɪd.i.əʊ/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "錄影，錄影;錄影帶",
+        "example_en": "My new laptop handles video really well.",
+        "example_zh": "我的新筆記型電腦很適合播放錄影。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/video",
+        "error": null
+    },
+    {
+        "word": "visitor",
+        "phonetic": "/ˈvɪz.ɪ.tər/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "訪問者;參觀者;遊客",
+        "example_en": "You have some visitors to see you.",
+        "example_zh": "有人來看你了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/visitor",
+        "error": null
+    },
+    {
+        "word": "vocabulary",
+        "phonetic": "/vəˈkæb.jə.lər.i/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "詞彙量;（某人掌握的）全部詞彙",
+        "example_en": "a wide/limited vocabulary",
+        "example_zh": "詞彙量很大／有限",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/vocabulary",
+        "error": null
+    },
+    {
+        "word": "violin",
+        "phonetic": "/ˌvaɪəˈlɪn/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "小提琴",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/violin",
+        "error": null
+    },
+    {
+        "word": "volleyball",
+        "phonetic": "/ˈvɒl.i.bɔːl/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "排球（運動）",
+        "example_en": "In physical education, we play volleyball or do exercises.",
+        "example_zh": "在體育課上，我們打排球或練習。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/volleyball",
+        "error": null
+    }
+]

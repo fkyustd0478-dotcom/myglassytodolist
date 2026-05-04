@@ -1,0 +1,35 @@
+[
+    {
+        "word": "yacht",
+        "phonetic": "/jɒt/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "帆船；快艇；遊艇",
+        "example_en": "a luxury yacht",
+        "example_zh": "豪華遊艇",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yacht",
+        "error": null
+    },
+    {
+        "word": "yell",
+        "phonetic": "/jel/",
+        "part_of_speech": "verb",
+        "difficulty": "B2",
+        "chinese_meaning": "（通常指生氣、疼痛或激動時）叫喊，吼叫（著說）",
+        "example_en": "Our neighbours were yelling (obscenities) at each other this morning.",
+        "example_zh": "今天早晨我們的鄰居在互相破口大罵。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/yell",
+        "error": null
+    },
+    {
+        "word": "youth",
+        "phonetic": "/juːθ/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "青年時期;年輕，青春",
+        "example_en": "I was a fairly good football player in my youth.",
+        "example_zh": "我年輕時是個相當不錯的足球員。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/youth",
+        "error": null
+    }
+]

@@ -1,0 +1,79 @@
+[
+    {
+        "word": "jacket",
+        "phonetic": "/ˈdʒæk.ɪt/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "短上衣;夾克",
+        "example_en": "a leather/denim/tweed jacket",
+        "example_zh": "皮／牛仔布／粗花呢夾克",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jacket",
+        "error": null
+    },
+    {
+        "word": "January",
+        "phonetic": "/ˈdʒæn.ju.ə.ri/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "一月",
+        "example_en": "Her father died in January.",
+        "example_zh": "她父親於一月去世了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/January",
+        "error": null
+    },
+    {
+        "word": "jeans",
+        "phonetic": "/dʒiːnz/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "牛仔褲",
+        "example_en": "jeans and a T-shirt",
+        "example_zh": "牛仔褲和T恤",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jeans",
+        "error": null
+    },
+    {
+        "word": "job",
+        "phonetic": "/dʒɒb/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "工作;職業;職位",
+        "example_en": "a temporary/permanent job",
+        "example_zh": "臨時的／固定的工作",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/job",
+        "error": null
+    },
+    {
+        "word": "juice",
+        "phonetic": "/dʒuːs/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "（水果、蔬菜的）汁，液",
+        "example_en": "orange/lemon/grapefruit/carrot juice",
+        "example_zh": "柳橙／檸檬／葡萄／胡蘿蔔汁",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/juice",
+        "error": null
+    },
+    {
+        "word": "July",
+        "phonetic": "/dʒuˈlaɪ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "七月",
+        "example_en": "The film festival is in July.",
+        "example_zh": "電影節是在七月份。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/July",
+        "error": null
+    },
+    {
+        "word": "June",
+        "phonetic": "/dʒuːn/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "六月",
+        "example_en": "A lot of people get married in June.",
+        "example_zh": "許多人在六月份結婚。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/June",
+        "error": null
+    }
+]

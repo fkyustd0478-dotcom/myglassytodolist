@@ -1,0 +1,101 @@
+[
+    {
+        "word": "jaw",
+        "phonetic": "/dʒɔː/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "下頜，下巴",
+        "example_en": "a broken jaw",
+        "example_zh": "骨折的下頜",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jaw",
+        "error": null
+    },
+    {
+        "word": "jewel",
+        "phonetic": "/ˈdʒuː.əl/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "寶石",
+        "example_en": "She was wearing a large gold necklace set with jewels.",
+        "example_zh": "她戴著一條很粗的鑲有寶石的黃金項鍊。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jewel",
+        "error": null
+    },
+    {
+        "word": "joint",
+        "phonetic": "/dʒɔɪnt/",
+        "part_of_speech": "adjective",
+        "difficulty": "B2",
+        "chinese_meaning": "共有的，共用的;共同的",
+        "example_en": "a joint bank account",
+        "example_zh": "共有的銀行戶頭",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/joint",
+        "error": null
+    },
+    {
+        "word": "joy",
+        "phonetic": "/dʒɔɪ/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "歡欣，高興，喜悅",
+        "example_en": "They were filled with joy when their first child was born.",
+        "example_zh": "第一個孩子出生時，他們滿心歡喜。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/joy",
+        "error": null
+    },
+    {
+        "word": "judge",
+        "phonetic": "/dʒʌdʒ/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "法官;審判員",
+        "example_en": "a British high-court judge",
+        "example_zh": "英國高等法院法官",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/judge",
+        "error": null
+    },
+    {
+        "word": "jury",
+        "phonetic": "/ˈdʒʊə.ri/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "陪審團",
+        "example_en": "members of the jury",
+        "example_zh": "陪審團成員",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/jury",
+        "error": null
+    },
+    {
+        "word": "justice",
+        "phonetic": "/ˈdʒʌs.tɪs/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "公正，公平；正義",
+        "example_en": "There's no justice in the world when people can be made to suffer like that.",
+        "example_zh": "如果人們被迫遭受這樣的痛苦，那麼世上就沒有公平正義可言了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/justice",
+        "error": null
+    },
+    {
+        "word": "justify",
+        "phonetic": "/ˈdʒʌs.tɪ.faɪ/",
+        "part_of_speech": "verb",
+        "difficulty": "B2",
+        "chinese_meaning": "為…辯護;證明…正當（或有理、正確）;是…的正當理由",
+        "example_en": "I can't really justify taking another day off work.",
+        "example_zh": "我真的找不出理由再多休一天假了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/justify",
+        "error": null
+    },
+    {
+        "word": "journalism",
+        "phonetic": "/ˈdʒɜː.nə.lɪ.zəm/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "新聞工作;新聞業",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/journalism",
+        "error": null
+    }
+]

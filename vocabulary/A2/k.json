@@ -1,0 +1,101 @@
+[
+    {
+        "word": "keep",
+        "phonetic": "/kiːp/",
+        "part_of_speech": "verb",
+        "difficulty": "A2",
+        "chinese_meaning": "保有;保存;保留",
+        "example_en": "Do you want this photograph back or can I keep it?",
+        "example_zh": "你想要回這張照片，還是我留著它？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/keep",
+        "error": null
+    },
+    {
+        "word": "kill",
+        "phonetic": "/kɪl/",
+        "part_of_speech": "verb",
+        "difficulty": "A2",
+        "chinese_meaning": "殺死;弄死;使致死",
+        "example_en": "Her parents were killed in a plane crash.",
+        "example_zh": "她的父母死於一次空難。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kill",
+        "error": null
+    },
+    {
+        "word": "kind",
+        "phonetic": "/kaɪnd/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "寬容的;有益的;體貼的",
+        "example_en": "She's a very kind and thoughtful person.",
+        "example_zh": "她是個非常寬容體貼的人。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kind",
+        "error": null
+    },
+    {
+        "word": "king",
+        "phonetic": "/kɪŋ/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "國王，君王",
+        "example_en": "King Richard II",
+        "example_zh": "理查二世",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/king",
+        "error": null
+    },
+    {
+        "word": "kiss",
+        "phonetic": "/kɪs/",
+        "part_of_speech": "verb",
+        "difficulty": "A2",
+        "chinese_meaning": "吻;接吻",
+        "example_en": "There was a young couple on the sofa, kissing passionately.",
+        "example_zh": "沙發上一對年輕人正在熱吻。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kiss",
+        "error": null
+    },
+    {
+        "word": "kite",
+        "phonetic": "/kaɪt/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "風箏",
+        "example_en": "to fly a kite",
+        "example_zh": "放風箏",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kite",
+        "error": null
+    },
+    {
+        "word": "keyboard",
+        "phonetic": "/ˈkiː.bɔːd/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "（電腦、打字機等的）鍵盤",
+        "example_en": "Switch off the computer and unplug the keyboard.",
+        "example_zh": "關閉計算機並拔下鍵盤。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/keyboard",
+        "error": null
+    },
+    {
+        "word": "kilogram",
+        "phonetic": "/ˈkɪl.ə.ɡræm/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "千克，公斤",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kilogram",
+        "error": null
+    },
+    {
+        "word": "kilometer",
+        "phonetic": "/ˈkɪl.əˌmiː.tər/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "千米，公里",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kilometer",
+        "error": null
+    }
+]

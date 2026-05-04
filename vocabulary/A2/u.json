@@ -1,0 +1,101 @@
+[
+    {
+        "word": "umbrella",
+        "phonetic": "/ʌmˈbrel.ə/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "傘；雨傘；陽傘",
+        "example_en": "I felt a few drops of rain, so I put my umbrella up.",
+        "example_zh": "我感到有幾滴雨點，於是便撐起了雨傘。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/umbrella",
+        "error": null
+    },
+    {
+        "word": "uncle",
+        "phonetic": "/ˈʌŋ.kəl/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "舅父;伯父;叔父;姨父;姑父",
+        "example_en": "I have lots of uncles and aunts.",
+        "example_zh": "我有很多叔叔、舅舅、姑姑和姨媽。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/uncle",
+        "error": null
+    },
+    {
+        "word": "uniform",
+        "phonetic": "/ˈjuː.nɪ.fɔːm/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "制服",
+        "example_en": "military/school uniform",
+        "example_zh": "軍裝／校服",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/uniform",
+        "error": null
+    },
+    {
+        "word": "unusual",
+        "phonetic": "/ʌnˈjuː.ʒu.əl/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "不同尋常的，非比一般的；獨特的",
+        "example_en": "\"Do you like the new couch?\" \"Yes, it's very unusual.\"",
+        "example_zh": "「你喜歡這新的沙發嗎？」「非常喜歡，它太特別了。」",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/unusual",
+        "error": null
+    },
+    {
+        "word": "up",
+        "phonetic": "/ʌp/",
+        "part_of_speech": "adverb",
+        "difficulty": "A2",
+        "chinese_meaning": "向較高處；向上；（價值、數位或水準）加大地；增高地",
+        "example_en": "Put those books up on the top shelf.",
+        "example_zh": "把那些書放到書架頂層上去。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/up",
+        "error": null
+    },
+    {
+        "word": "upstairs",
+        "phonetic": "/ʌpˈsteəz/",
+        "part_of_speech": "adverb",
+        "difficulty": "A2",
+        "chinese_meaning": "往樓上（地）;在樓上（地）",
+        "example_en": "an upstairs landing/window",
+        "example_zh": "樓上的平臺／窗戶",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/upstairs",
+        "error": null
+    },
+    {
+        "word": "useful",
+        "phonetic": "/ˈjuːs.fəl/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "有用的，有效的；有助益的",
+        "example_en": "A good knife is probably one of the most useful things you can have in a kitchen.",
+        "example_zh": "一把好刀應該是廚房裡最有用的物件之一。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/useful",
+        "error": null
+    },
+    {
+        "word": "usual",
+        "phonetic": "/ˈjuː.ʒu.əl/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "通常的；慣常的",
+        "example_en": "I went to bed at my usual time.",
+        "example_zh": "我和平常一樣準時上床睡覺。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/usual",
+        "error": null
+    },
+    {
+        "word": "usually",
+        "phonetic": "/ˈjuː.ʒu.ə.li/",
+        "part_of_speech": "adverb",
+        "difficulty": "A2",
+        "chinese_meaning": "通常地；慣常地；經常地",
+        "example_en": "He usually gets home about six o'clock.",
+        "example_zh": "他通常在六點左右到家。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/usually",
+        "error": null
+    }
+]

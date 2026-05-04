@@ -1,0 +1,211 @@
+[
+    {
+        "word": "language",
+        "phonetic": "/ˈlæŋ.ɡwɪdʒ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "語言",
+        "example_en": "She does research into how children acquire language.",
+        "example_zh": "她研究兒童是如何習得語言的。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/language",
+        "error": null
+    },
+    {
+        "word": "late",
+        "phonetic": "/leɪt/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "末期的，晚期的；接近終了",
+        "example_en": "It was late at night.",
+        "example_zh": "夜已經很深了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/late",
+        "error": null
+    },
+    {
+        "word": "learn",
+        "phonetic": "/lɜːn/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "學，學習",
+        "example_en": "They learn Russian at school.",
+        "example_zh": "他們在學校學俄語。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/learn",
+        "error": null
+    },
+    {
+        "word": "leave",
+        "phonetic": "/liːv/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "離開;離去;走開",
+        "example_en": "I'll be leaving at five o'clock tomorrow.",
+        "example_zh": "我明天早晨五點鐘離開。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/leave",
+        "error": null
+    },
+    {
+        "word": "leg",
+        "phonetic": "/leɡ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "腿，腿部",
+        "example_en": "My legs were tired after so much walking.",
+        "example_zh": "走了這麽遠的路，我的腿有些累了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/leg",
+        "error": null
+    },
+    {
+        "word": "lesson",
+        "phonetic": "/ˈles.ən/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "（一節）課",
+        "example_en": "How can we make science lessons more interesting?",
+        "example_zh": "我們怎樣才能把理科課程講得更有趣一些呢?",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/lesson",
+        "error": null
+    },
+    {
+        "word": "life",
+        "phonetic": "/laɪf/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "壽命;生命;一生，人生;生活;性命",
+        "example_en": "Life's too short to worry about money!",
+        "example_zh": "人生短暫，何必為金錢而煩惱！",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/life",
+        "error": null
+    },
+    {
+        "word": "like",
+        "phonetic": "/laɪk/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "喜歡，喜愛",
+        "example_en": "I like your new haircut.",
+        "example_zh": "我喜歡你的新髮型。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/like",
+        "error": null
+    },
+    {
+        "word": "listen",
+        "phonetic": "/ˈlɪs.ən/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "聽，傾聽",
+        "example_en": "What kind of music do you listen to?",
+        "example_zh": "你聽哪一類的音樂？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/listen",
+        "error": null
+    },
+    {
+        "word": "little",
+        "phonetic": "/ˈlɪt.əl/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "小的，少的",
+        "example_en": "It came in a little box.",
+        "example_zh": "它是裝在一個小盒子裡送來的。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/little",
+        "error": null
+    },
+    {
+        "word": "long",
+        "phonetic": "/lɒŋ/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "長時間的，長久的",
+        "example_en": "a long film/meeting",
+        "example_zh": "很長的電影／會議",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/long",
+        "error": null
+    },
+    {
+        "word": "look",
+        "phonetic": "/lʊk/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "看，瞧，注視",
+        "example_en": "Look! There's grandma.",
+        "example_zh": "看！祖母在那裡。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/look",
+        "error": null
+    },
+    {
+        "word": "lot",
+        "phonetic": "/lɒt/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "她水果吃得很多。",
+        "example_en": "She eats lots of fruit.",
+        "example_zh": "她水果吃得很多。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/lot",
+        "error": null
+    },
+    {
+        "word": "love",
+        "phonetic": "/lʌv/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "愛，喜愛",
+        "example_en": "I love you.",
+        "example_zh": "我愛你。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/love",
+        "error": null
+    },
+    {
+        "word": "lunch",
+        "phonetic": "/lʌntʃ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "午餐，午飯",
+        "example_en": "What's for lunch?",
+        "example_zh": "午飯吃甚麼？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/lunch",
+        "error": null
+    },
+    {
+        "word": "lead-in",
+        "phonetic": "/ˈliːd.ɪn/",
+        "part_of_speech": "noun",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "引子;過渡語;開場白;過場音樂",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/lead-in",
+        "error": null
+    },
+    {
+        "word": "live-in",
+        "phonetic": "/lɪv/",
+        "part_of_speech": "phrasal verb",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "住在工作（或學習）的地方",
+        "example_en": "The university guarantees accommodation in halls of residence for every first year who wants to live in.",
+        "example_zh": "大學為想住校的一年級學生保證提供學生宿舍。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/live-in",
+        "error": null
+    },
+    {
+        "word": "living room",
+        "phonetic": "/ˈlɪv.ɪŋ ˌruːm/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "客廳",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/living room",
+        "error": null
+    },
+    {
+        "word": "lord",
+        "phonetic": "/lɔːd/",
+        "part_of_speech": "noun",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "老爺，貴族",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/lord",
+        "error": null
+    }
+]

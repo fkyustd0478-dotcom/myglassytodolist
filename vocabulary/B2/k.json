@@ -1,0 +1,35 @@
+[
+    {
+        "word": "kindness",
+        "phonetic": "/ˈkaɪnd.nəs/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "仁慈;好意;體貼",
+        "example_en": "love and kindness",
+        "example_zh": "愛和仁慈",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kindness",
+        "error": null
+    },
+    {
+        "word": "kingdom",
+        "phonetic": "/ˈkɪŋ.dəm/",
+        "part_of_speech": "noun",
+        "difficulty": "B2",
+        "chinese_meaning": "王國",
+        "example_en": "the United Kingdom of Great Britain and Northern Ireland",
+        "example_zh": "大不列顛與北愛爾蘭聯合王國",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kingdom",
+        "error": null
+    },
+    {
+        "word": "kneel",
+        "phonetic": "/niːl/",
+        "part_of_speech": "verb",
+        "difficulty": "B2",
+        "chinese_meaning": "跪（下）",
+        "example_en": "She knelt (down) beside the child.",
+        "example_zh": "她在孩子身旁跪下。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kneel",
+        "error": null
+    }
+]

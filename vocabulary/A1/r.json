@@ -1,0 +1,189 @@
+[
+    {
+        "word": "radio",
+        "phonetic": "/ˈreɪ.di.əʊ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "收音機",
+        "example_en": "a car radio",
+        "example_zh": "車載收音機",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/radio",
+        "error": null
+    },
+    {
+        "word": "rain",
+        "phonetic": "/reɪn/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "雨;雨水",
+        "example_en": "Rain is forecast for tomorrow.",
+        "example_zh": "預報明天會下雨。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/rain",
+        "error": null
+    },
+    {
+        "word": "read",
+        "phonetic": "/riːd/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "閱讀;看懂;讀到",
+        "example_en": "He spent a pleasant afternoon reading (the newspaper/a book).",
+        "example_zh": "他一下午都在閱讀（報紙／書），過得很開心。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/read",
+        "error": null
+    },
+    {
+        "word": "reading",
+        "phonetic": "/ˈriː.dɪŋ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "讀，閱讀;讀書",
+        "example_en": "Reading and tennis are my favourite pastimes.",
+        "example_zh": "我最喜歡的業餘愛好就是讀書和打網球。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/reading",
+        "error": null
+    },
+    {
+        "word": "ready",
+        "phonetic": "/ˈred.i/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "準備好的，有準備的；現成的；方便使用的",
+        "example_en": "Are you ready to leave?",
+        "example_zh": "你準備好離開了嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/ready",
+        "error": null
+    },
+    {
+        "word": "red",
+        "phonetic": "/red/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "紅的，紅色的",
+        "example_en": "red lipstick",
+        "example_zh": "紅色唇膏",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/red",
+        "error": null
+    },
+    {
+        "word": "refrigerator",
+        "phonetic": "/rɪˈfrɪdʒ.ər.eɪ.tər/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "冰箱，電冰箱",
+        "example_en": "Store fruit juice in the refrigerator.",
+        "example_zh": "把水果汁儲存在冰箱裡。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/refrigerator",
+        "error": null
+    },
+    {
+        "word": "remember",
+        "phonetic": "/rɪˈmem.bər/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "記得，記起，回想起;記住，牢記",
+        "example_en": "\"Where did you park the car?\" \"I can't remember.\"",
+        "example_zh": "「你把車停在哪裡了？」「我不記得了。」",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/remember",
+        "error": null
+    },
+    {
+        "word": "rice",
+        "phonetic": "/raɪs/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "大米，米;米飯",
+        "example_en": "boiled/steamed/fried rice",
+        "example_zh": "煮米飯／蒸米飯／炒米飯",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/rice",
+        "error": null
+    },
+    {
+        "word": "ride",
+        "phonetic": "/raɪd/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "騎（腳踏車、機車或馬等）",
+        "example_en": "I learned to ride a bike when I was six.",
+        "example_zh": "我六歲學會了騎腳踏車。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/ride",
+        "error": null
+    },
+    {
+        "word": "right",
+        "phonetic": "/raɪt/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "對的，正確的",
+        "example_en": "You got three answers right and two wrong.",
+        "example_zh": "你答對了三道題，錯了兩道。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/right",
+        "error": null
+    },
+    {
+        "word": "river",
+        "phonetic": "/ˈrɪv.ər/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "河;江;川;水道",
+        "example_en": "We sailed slowly down the river.",
+        "example_zh": "我們順流而下緩緩航行。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/river",
+        "error": null
+    },
+    {
+        "word": "road",
+        "phonetic": "/rəʊd/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "路；公路，馬路；街",
+        "example_en": "We live on a busy/quiet road.",
+        "example_zh": "我們住在一條繁忙／僻靜的公路邊。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/road",
+        "error": null
+    },
+    {
+        "word": "room",
+        "phonetic": "/ruːm/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "房間，室",
+        "example_en": "I like this room - it has plenty of light.",
+        "example_zh": "我喜歡這個房間——光線非常充足。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/room",
+        "error": null
+    },
+    {
+        "word": "run",
+        "phonetic": "/rʌn/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "跑，奔跑",
+        "example_en": "The children had to run to keep up with their father.",
+        "example_zh": "孩子們得一路跑著才能跟上他們的父親。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/run",
+        "error": null
+    },
+    {
+        "word": "restaurant",
+        "phonetic": "/ˈres.tər.ɒnt/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "飯店;餐館;菜館",
+        "example_en": "We went to a little Italian restaurant and shared a pizza.",
+        "example_zh": "我們去了一家義大利小餐館，共享了一份披薩。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/restaurant",
+        "error": null
+    },
+    {
+        "word": "run-up",
+        "phonetic": "/rʌn/",
+        "part_of_speech": "phrasal verb",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "積欠（帳款或債務）",
+        "example_en": "She stayed two weeks at the hotel and ran up a bill that she couldn't pay.",
+        "example_zh": "她在賓館住了兩個星期，欠了一大筆賬，沒有能力支付。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/run-up",
+        "error": null
+    }
+]

@@ -1,0 +1,68 @@
+[
+    {
+        "word": "key",
+        "phonetic": "/kiː/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "鎖匙",
+        "example_en": "car/door keys",
+        "example_zh": "車／門鎖匙",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/key",
+        "error": null
+    },
+    {
+        "word": "kick",
+        "phonetic": "/kɪk/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "踢，踹",
+        "example_en": "I kicked the ball as hard as I could.",
+        "example_zh": "我用盡全力踢球。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kick",
+        "error": null
+    },
+    {
+        "word": "kitchen",
+        "phonetic": "/ˈkɪtʃ.ən/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "廚房",
+        "example_en": "We usually eat breakfast in the kitchen.",
+        "example_zh": "我們通常在廚房吃早餐。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kitchen",
+        "error": null
+    },
+    {
+        "word": "knife",
+        "phonetic": "/naɪf/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "刀",
+        "example_en": "a fish/butter/steak knife",
+        "example_zh": "切魚用刀／塗奶油用刀／牛排餐刀",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/knife",
+        "error": null
+    },
+    {
+        "word": "know",
+        "phonetic": "/nəʊ/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "知道，熟悉，了解",
+        "example_en": "\"Where did he go?\" \"I don't know.\"",
+        "example_zh": "「他上哪裡去了？」「我不知道。」",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/know",
+        "error": null
+    },
+    {
+        "word": "know-how",
+        "phonetic": "/ˈnəʊ.haʊ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "實際知識;技術;技能",
+        "example_en": "technical know-how",
+        "example_zh": "專業技能",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/know-how",
+        "error": null
+    }
+]

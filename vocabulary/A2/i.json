@@ -1,0 +1,189 @@
+[
+    {
+        "word": "ice",
+        "phonetic": "/aɪs/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "冰;冰塊",
+        "example_en": "The pond was covered in ice all winter.",
+        "example_zh": "這個池塘整個冬天都結著冰。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/ice",
+        "error": null
+    },
+    {
+        "word": "idea",
+        "phonetic": "/aɪˈdɪə/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "意見，想法，主意;計劃",
+        "example_en": "I've had an idea - why don't we go to the coast?",
+        "example_zh": "我有個主意——我們為甚麼不去海濱呢？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/idea",
+        "error": null
+    },
+    {
+        "word": "if",
+        "phonetic": "/ɪf/",
+        "part_of_speech": "conjunction",
+        "difficulty": "A2",
+        "chinese_meaning": "假如，如果",
+        "example_en": "I'll pay you double if you get the work finished by Friday.",
+        "example_zh": "如果你週五前完工，我付你雙倍的報酬。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/if",
+        "error": null
+    },
+    {
+        "word": "ill",
+        "phonetic": "/ɪl/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "生病的，不舒服的",
+        "example_en": "I felt ill so I went home.",
+        "example_zh": "我感到不舒服，於是就回家了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/ill",
+        "error": null
+    },
+    {
+        "word": "immediately",
+        "phonetic": "/ɪˈmiː.di.ət.li/",
+        "part_of_speech": "adverb",
+        "difficulty": "A2",
+        "chinese_meaning": "立即，馬上",
+        "example_en": "We really ought to leave immediately.",
+        "example_zh": "我們真的應該馬上就走。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/immediately",
+        "error": null
+    },
+    {
+        "word": "improve",
+        "phonetic": "/ɪmˈpruːv/",
+        "part_of_speech": "verb",
+        "difficulty": "A2",
+        "chinese_meaning": "改進，改善",
+        "example_en": "He did a lot to improve conditions for factory workers.",
+        "example_zh": "他為改善工廠工人的工作條件做了許多工作。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/improve",
+        "error": null
+    },
+    {
+        "word": "include",
+        "phonetic": "/ɪnˈkluːd/",
+        "part_of_speech": "verb",
+        "difficulty": "A2",
+        "chinese_meaning": "包含；包括",
+        "example_en": "The bill includes tax and service.",
+        "example_zh": "帳單包括稅款和服務費。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/include",
+        "error": null
+    },
+    {
+        "word": "including",
+        "phonetic": "/ɪnˈkluː.dɪŋ/",
+        "part_of_speech": "preposition",
+        "difficulty": "A2",
+        "chinese_meaning": "包括…（在內）",
+        "example_en": "Eight people, including two children, were injured in the explosion.",
+        "example_zh": "八人在爆炸中受傷，其中包括兩名兒童。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/including",
+        "error": null
+    },
+    {
+        "word": "indoor",
+        "phonetic": "/ˌɪnˈdɔːr/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "室內的，戶內的",
+        "example_en": "indoor sports/activities",
+        "example_zh": "室內運動／活動",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/indoor",
+        "error": null
+    },
+    {
+        "word": "information",
+        "phonetic": "/ˌɪn.fəˈmeɪ.ʃən/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "情報;資料;消息",
+        "example_en": "Do you have any information about/on train times?",
+        "example_zh": "你知道有關火車時刻的資訊嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/information",
+        "error": null
+    },
+    {
+        "word": "insect",
+        "phonetic": "/ˈɪn.sekt/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "昆蟲",
+        "example_en": "Ants, beetles, butterflies, and flies are all insects.",
+        "example_zh": "螞蟻、甲蟲、蝴蝶和蒼蠅都是昆蟲。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/insect",
+        "error": null
+    },
+    {
+        "word": "instead",
+        "phonetic": "/ɪnˈsted/",
+        "part_of_speech": "adverb",
+        "difficulty": "A2",
+        "chinese_meaning": "作為替代",
+        "example_en": "There's no coffee - would you like a cup of tea instead?",
+        "example_zh": "沒有咖啡——來杯茶好嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/instead",
+        "error": null
+    },
+    {
+        "word": "instrument",
+        "phonetic": "/ˈɪn.strə.mənt/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "樂器",
+        "example_en": "Which instrument do you play?",
+        "example_zh": "你演奏哪一種樂器？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/instrument",
+        "error": null
+    },
+    {
+        "word": "international",
+        "phonetic": "/ˌɪn.təˈnæʃ.ən.əl/",
+        "part_of_speech": "adjective",
+        "difficulty": "A2",
+        "chinese_meaning": "國際的",
+        "example_en": "international politics",
+        "example_zh": "國際政治",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/international",
+        "error": null
+    },
+    {
+        "word": "invitation",
+        "phonetic": "/ˌɪn.vɪˈteɪ.ʃən/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "邀請，約請",
+        "example_en": "Thanks for the invitation to your birthday party.",
+        "example_zh": "謝謝你邀請我參加你的生日聚會。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/invitation",
+        "error": null
+    },
+    {
+        "word": "island",
+        "phonetic": "/ˈaɪ.lənd/",
+        "part_of_speech": "noun",
+        "difficulty": "A2",
+        "chinese_meaning": "島，島嶼",
+        "example_en": "a desert island",
+        "example_zh": "荒島",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/island",
+        "error": null
+    },
+    {
+        "word": "itself",
+        "phonetic": "/ɪtˈself/",
+        "part_of_speech": "pronoun",
+        "difficulty": "A2",
+        "chinese_meaning": "它自己，它本身",
+        "example_en": "The cat licked itself all over.",
+        "example_zh": "貓把自己的身體整個舔了一遍。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/itself",
+        "error": null
+    }
+]

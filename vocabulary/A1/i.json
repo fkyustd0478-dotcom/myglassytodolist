@@ -1,0 +1,123 @@
+[
+    {
+        "word": "ice cream",
+        "phonetic": "/ˌaɪs ˈkriːm/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "冰淇淋",
+        "example_en": "a tub of ice cream",
+        "example_zh": "一盒冰淇淋",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/ice cream",
+        "error": null
+    },
+    {
+        "word": "important",
+        "phonetic": "/ɪmˈpɔː.tənt/",
+        "part_of_speech": "adjective",
+        "difficulty": "A1",
+        "chinese_meaning": "必需的；重要的；珍貴的",
+        "example_en": "I think his career is more important to him than I am.",
+        "example_zh": "我覺得對他而言，我不如他的事業重要。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/important",
+        "error": null
+    },
+    {
+        "word": "in",
+        "phonetic": "/ɪn/",
+        "part_of_speech": "preposition",
+        "difficulty": "A1",
+        "chinese_meaning": "在（…）裡面，在（…）內",
+        "example_en": "Is Mark still in bed?",
+        "example_zh": "馬克還在睡覺嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/in",
+        "error": null
+    },
+    {
+        "word": "into",
+        "phonetic": "/ˈɪn.tuː/",
+        "part_of_speech": "preposition",
+        "difficulty": "A1",
+        "chinese_meaning": "進入，到…裡面",
+        "example_en": "Would you put the jar back into the cupboard for me, please?",
+        "example_zh": "請幫我把罐子放回碗櫥裡，好嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/into",
+        "error": null
+    },
+    {
+        "word": "invite",
+        "phonetic": "/ɪnˈvaɪt/",
+        "part_of_speech": "verb",
+        "difficulty": "A1",
+        "chinese_meaning": "邀請，約請",
+        "example_en": "We're invited to Lola's party.",
+        "example_zh": "我們受邀參加洛拉的晚會。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/invite",
+        "error": null
+    },
+    {
+        "word": "it",
+        "phonetic": "/ɪt/",
+        "part_of_speech": "pronoun",
+        "difficulty": "A1",
+        "chinese_meaning": "（用作主詞或受詞）它，這，那（指上文提到的事物、動物或情況）",
+        "example_en": "\"Where's my pen? It was on my desk a minute ago.\" \"You left it by the phone.\"",
+        "example_zh": "「我的鋼筆在哪裡？剛才還在我的桌上。」「你放在電話旁了。」",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/it",
+        "error": null
+    },
+    {
+        "word": "its",
+        "phonetic": "/ɪts/",
+        "part_of_speech": "determiner",
+        "difficulty": "A1",
+        "chinese_meaning": "它的，其",
+        "example_en": "The dog hurt its paw.",
+        "example_zh": "狗的爪子受傷了。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/its",
+        "error": null
+    },
+    {
+        "word": "I",
+        "phonetic": "/aɪ/",
+        "part_of_speech": "noun",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "（英文字母表的第九個字母）",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/I",
+        "error": null
+    },
+    {
+        "word": "India",
+        "phonetic": "/ˈɪn.di.ə/",
+        "part_of_speech": "noun",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "印度（南亞國家）",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/India",
+        "error": null
+    },
+    {
+        "word": "Internet",
+        "phonetic": "/ˈɪn.tə.net/",
+        "part_of_speech": "noun",
+        "difficulty": "A1",
+        "chinese_meaning": "網際網路，國際互聯網",
+        "example_en": "Use your phone to connect to the internet.",
+        "example_zh": "用你的手機連接網路。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/Internet",
+        "error": null
+    },
+    {
+        "word": "is",
+        "phonetic": "/ɪz/",
+        "part_of_speech": "",
+        "difficulty": "A1-Auto",
+        "chinese_meaning": "（he、she或it 做主詞時be 的形式）",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/is",
+        "error": null
+    }
+]

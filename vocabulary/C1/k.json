@@ -1,0 +1,112 @@
+[
+    {
+        "word": "knob",
+        "phonetic": "/nɒb/",
+        "part_of_speech": "noun",
+        "difficulty": "C1",
+        "chinese_meaning": "球形把手;（機器等的）旋鈕",
+        "example_en": "a brass door knob",
+        "example_zh": "銅質的門把手",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/knob",
+        "error": null
+    },
+    {
+        "word": "knowledgeable",
+        "phonetic": "/ˈnɒl.ɪ.dʒə.bəl/",
+        "part_of_speech": "adjective",
+        "difficulty": "C1",
+        "chinese_meaning": "知識淵博的;有見識的",
+        "example_en": "He's very knowledgeable about German literature.",
+        "example_zh": "他精通德國文學。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/knowledgeable",
+        "error": null
+    },
+    {
+        "word": "kernel",
+        "phonetic": "/ˈkɜː.nəl/",
+        "part_of_speech": "noun",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "（堅果可食用的）仁，核",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kernel",
+        "error": null
+    },
+    {
+        "word": "ketchup",
+        "phonetic": "/ˈketʃ.ʌp/",
+        "part_of_speech": "noun",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "番茄醬",
+        "example_en": "Do you want some ketchup with your burger?",
+        "example_zh": "你的漢堡包要加些番茄醬嗎？",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/ketchup",
+        "error": null
+    },
+    {
+        "word": "kettle",
+        "phonetic": "/ˈket.əl/",
+        "part_of_speech": "noun",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "水壺，開水壺",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kettle",
+        "error": null
+    },
+    {
+        "word": "kidnap",
+        "phonetic": "/ˈkɪd.næp/",
+        "part_of_speech": "verb",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "綁架;劫持",
+        "example_en": "The wife of a businessman was kidnapped from her home in London last night.",
+        "example_zh": "昨天晚上，一個商人的妻子在她倫敦的家中遭綁架。",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kidnap",
+        "error": null
+    },
+    {
+        "word": "kin",
+        "phonetic": "/kɪn/",
+        "part_of_speech": "noun",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "家屬，親屬，親戚",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kin",
+        "error": null
+    },
+    {
+        "word": "kindergarten",
+        "phonetic": "/ˈkɪn.dəˌɡɑː.tən/",
+        "part_of_speech": "noun",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "（五歲兒童上的）學前班",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kindergarten",
+        "error": null
+    },
+    {
+        "word": "kindle",
+        "phonetic": "/ˈkɪn.dəl/",
+        "part_of_speech": "verb",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "燃點",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/kindle",
+        "error": null
+    },
+    {
+        "word": "koala",
+        "phonetic": "/kəʊˈɑː.lə/",
+        "part_of_speech": "noun",
+        "difficulty": "C1-Auto",
+        "chinese_meaning": "樹熊",
+        "example_en": "",
+        "example_zh": "",
+        "url": "https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/koala",
+        "error": null
+    }
+]
