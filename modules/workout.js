@@ -212,14 +212,6 @@ window.addEventListener('DOMContentLoaded', () => {
             const supersetRounds     = ref(3);
             const supersetPickModal  = ref(false);
             const supersetPickSlot   = ref(-1);
-            const supersetPickSearch = ref('');
-
-            const filteredSupersetPick = computed(() => {
-                const q = supersetPickSearch.value.trim().toLowerCase();
-                return libData.exercises
-                    .filter(e => e.type === 'sets')
-                    .filter(e => !q || e.name.toLowerCase().includes(q) || (e.nameZh || '').includes(q));
-            });
 
             const openSupersetPanel = () => {
                 supersetItems.value = [
@@ -245,7 +237,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
             const openPickForSlot = (idx) => {
                 supersetPickSlot.value = idx;
-                supersetPickSearch.value = '';
+                lib.resetSupersetPicker();
                 supersetPickModal.value = true;
             };
 
@@ -596,7 +588,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 ...metrics,
                 // superset
                 showSupersetPanel, supersetItems, supersetRounds,
-                supersetPickModal, supersetPickSearch, filteredSupersetPick,
+                supersetPickModal,
                 openSupersetPanel, cancelSuperset, addSupersetSlot, removeSupersetSlot,
                 openPickForSlot, pickForSupersetSlot, commitSuperset, toggleSupersetComplete,
             };

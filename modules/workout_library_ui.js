@@ -333,6 +333,47 @@ window.useWorkoutLibrary = function useWorkoutLibrary(ctx) {
         });
     };
 
+    // ── Superset slot picker — breadcrumb drill-down ─────────────────────────
+    const supersetPickSearch = ref('');
+    const supersetPickPath   = ref([]);
+
+    const supersetPickCurrentChildren = computed(() => {
+        const nodes = supersetPickPath.value.length
+            ? _findChildren(supersetPickPath.value[supersetPickPath.value.length - 1].name)
+            : catTree.value;
+        return (nodes || []).filter(n => _hasExercises(n.name));
+    });
+
+    const supersetPickCategory = computed(() =>
+        supersetPickPath.value.length ? supersetPickPath.value[supersetPickPath.value.length - 1].name : ''
+    );
+
+    const drillIntoSuperset = (node) => {
+        supersetPickPath.value = [...supersetPickPath.value, { name: node.name, nameZh: node.nameZh || node.name }];
+    };
+
+    const drillToSuperset = (idx) => {
+        supersetPickPath.value = idx < 0 ? [] : supersetPickPath.value.slice(0, idx + 1);
+    };
+
+    const resetSupersetPicker = () => {
+        supersetPickSearch.value = '';
+        supersetPickPath.value   = [];
+    };
+
+    const filteredSupersetPick = computed(() => {
+        let list = libData.exercises.filter(e => e.type === 'sets' || e.type === 'sets_reps');
+        const q = supersetPickSearch.value.trim().toLowerCase();
+        if (q) list = list.filter(e =>
+            e.name.toLowerCase().includes(q) || (e.nameZh && e.nameZh.includes(supersetPickSearch.value.trim()))
+        );
+        if (supersetPickCategory.value) {
+            const sub = _subtreeNames(supersetPickCategory.value);
+            list = list.filter(e => (e.categories || []).some(c => sub.includes(c)));
+        }
+        return list;
+    });
+
     return {
         // display helpers
         catLabel, catPillStyle, unitLabel,
@@ -355,5 +396,8 @@ window.useWorkoutLibrary = function useWorkoutLibrary(ctx) {
         pickPath, pickCategory, pickCurrentChildren,
         drillInto, drillTo,
         filteredPick, pickExercise,
+        // superset slot picker (breadcrumb drill-down)
+        supersetPickSearch, supersetPickPath, supersetPickCategory, supersetPickCurrentChildren,
+        drillIntoSuperset, drillToSuperset, resetSupersetPicker, filteredSupersetPick,
     };
 };

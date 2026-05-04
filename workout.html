@@ -833,8 +833,8 @@
                                         <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-black"
                                              style="background:rgba(168,85,247,0.2);color:#a855f7">S</div>
                                         <div>
-                                            <p class="font-black text-sm leading-tight">組合訓練</p>
-                                            <p class="text-[10px] opacity-40 font-mono leading-tight">{{ entry.rounds }} rounds</p>
+                                            <p class="font-black text-sm leading-tight">{{ t.superset }}</p>
+                                            <p class="text-[10px] opacity-40 font-mono leading-tight">{{ entry.rounds }} {{ t.rounds }}</p>
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2">
@@ -970,7 +970,7 @@
                     <!-- Superset builder panel -->
                     <div v-show="showSupersetPanel" class="glass rounded-2xl p-4" :style="glassStyle"
                          style="border:1px solid rgba(168,85,247,0.3)">
-                        <p class="section-label mb-3" style="color:#a855f7">組合訓練</p>
+                        <p class="section-label mb-3" style="color:#a855f7">{{ t.superset }}</p>
 
                         <!-- Slot list -->
                         <div class="space-y-2 mb-3">
@@ -981,17 +981,17 @@
                                     <button @click="openPickForSlot(sIdx)"
                                             class="flex-1 text-left text-xs font-bold rounded-lg px-2 py-1 truncate"
                                             style="background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.2)">
-                                        {{ slot.name ? (slot.nameZh || slot.name) : '選擇動作...' }}
+                                        {{ slot.name ? (slot.nameZh || slot.name) : t.supersetPlaceholder }}
                                     </button>
                                     <button v-if="supersetItems.length > 2" @click="removeSupersetSlot(sIdx)"
                                             class="opacity-30 hover:opacity-70 active:scale-90" v-html="ICON_X"></button>
                                 </div>
                                 <div v-if="slot.name" class="flex items-center gap-2">
                                     <input v-model="slot.reps" type="number" inputmode="numeric"
-                                           placeholder="次數" min="1" class="compact-input flex-1">
+                                           :placeholder="t.reps" min="1" class="compact-input flex-1">
                                     <span class="compact-x text-[10px]">×</span>
                                     <input v-model="slot.weight" type="number" inputmode="decimal"
-                                           placeholder="重量 kg" min="0" class="compact-input flex-1">
+                                           :placeholder="t.weight + ' kg'" min="0" class="compact-input flex-1">
                                     <span class="text-[10px] opacity-40">kg</span>
                                 </div>
                             </div>
@@ -1001,12 +1001,12 @@
                         <button @click="addSupersetSlot()"
                                 class="w-full py-1.5 rounded-xl text-xs font-black opacity-40 hover:opacity-70 mb-3"
                                 style="border:1px dashed rgba(168,85,247,0.4)">
-                            + 新增動作
+                            {{ t.supersetAdd }}
                         </button>
 
                         <!-- Rounds -->
                         <div class="flex items-center gap-3 mb-4">
-                            <span class="text-xs font-black opacity-60 flex-shrink-0">總輪數</span>
+                            <span class="text-xs font-black opacity-60 flex-shrink-0">{{ t.supersetRounds }}</span>
                             <input v-model="supersetRounds" type="number" inputmode="numeric" min="1"
                                    class="flex-1 rounded-xl px-3 py-1.5 text-sm font-bold text-center outline-none"
                                    style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.25)">
@@ -1016,13 +1016,13 @@
                         <div class="flex gap-2">
                             <button @click="cancelSuperset()"
                                     class="flex-1 py-2.5 rounded-xl text-xs font-black glass" :style="glassStyle">
-                                取消
+                                {{ t.cancel }}
                             </button>
                             <button @click="commitSuperset()"
                                     class="flex-1 py-2.5 rounded-xl text-xs font-black text-white"
                                     style="background:linear-gradient(135deg,#a855f7,#7c3aed)"
                                     :class="{ 'opacity-40 pointer-events-none': supersetItems.filter(s=>s.name).length < 2 }">
-                                加入訓練
+                                {{ t.supersetCommit }}
                             </button>
                         </div>
                     </div>
@@ -1030,11 +1030,37 @@
                     <!-- Superset slot picker -->
                     <div v-show="supersetPickModal" class="glass rounded-2xl p-4" :style="glassStyle"
                          style="border:1px solid rgba(168,85,247,0.3)">
-                        <p class="section-label mb-2" style="color:#a855f7">選擇組合動作</p>
-                        <div class="glass rounded-xl flex items-center gap-2 px-3 py-2 mb-3" :style="glassStyle">
+                        <p class="section-label mb-2" style="color:#a855f7">{{ t.supersetPickTitle }}</p>
+                        <div class="glass rounded-xl flex items-center gap-2 px-3 py-2 mb-2" :style="glassStyle">
                             <span v-html="ICON_SEARCH" class="opacity-40 flex-shrink-0"></span>
-                            <input v-model="supersetPickSearch" placeholder="搜尋動作..."
+                            <input v-model="supersetPickSearch" :placeholder="t.supersetSearchPlaceholder"
                                    class="flex-1 bg-transparent outline-none text-sm font-bold min-w-0">
+                        </div>
+                        <!-- Breadcrumb path -->
+                        <div class="flex items-center gap-1 mb-2 overflow-x-auto"
+                             style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
+                            <button @click="drillToSuperset(-1)"
+                                    class="text-xs font-black flex-shrink-0 transition-opacity"
+                                    :class="supersetPickPath.length === 0 ? 'opacity-100' : 'opacity-45 hover:opacity-80'">
+                                {{ t.all }}
+                            </button>
+                            <template v-for="(seg, idx) in supersetPickPath" :key="seg.name">
+                                <span class="text-xs opacity-20 flex-shrink-0 select-none">›</span>
+                                <button @click="drillToSuperset(idx)"
+                                        class="text-xs font-black flex-shrink-0 max-w-[96px] truncate transition-opacity"
+                                        :class="idx === supersetPickPath.length - 1 ? 'opacity-100' : 'opacity-45 hover:opacity-80'"
+                                        :style="idx === supersetPickPath.length - 1 ? { color: '#a855f7' } : {}">
+                                    {{ navSettings.lang === 'zh' ? seg.nameZh : seg.name }}
+                                </button>
+                            </template>
+                        </div>
+                        <!-- Current level sub-categories (drill-in pills) -->
+                        <div v-if="supersetPickCurrentChildren.length" class="cat-filter-row mb-3">
+                            <button v-for="child in supersetPickCurrentChildren" :key="child.name"
+                                    @click="drillIntoSuperset(child)"
+                                    class="cat-filter-pill glass" :style="catPillStyle(child.name)">
+                                {{ catLabel(child.name) }}
+                            </button>
                         </div>
                         <div class="space-y-1.5 max-h-48 overflow-y-auto">
                             <div v-if="filteredSupersetPick.length === 0"
@@ -1070,7 +1096,7 @@
                                 class="flex-1 py-3 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
                                 style="background:rgba(168,85,247,0.15);border:1px dashed rgba(168,85,247,0.4);color:#a855f7">
                             <span v-html="ICON_PLUS"></span>
-                            組合訓練
+                            {{ t.supersetBtn }}
                         </button>
                     </div>
 

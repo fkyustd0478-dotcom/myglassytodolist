@@ -245,6 +245,15 @@ const _wT = {
         weightHistory: '體重記錄', weightDeleteConfirm: '確定要刪除此體重紀錄嗎？',
         sortNewest: '最新', sortOldest: '最舊', sortHeaviest: '最重', sortLightest: '最輕',
         noWeightInMonth: '本月無紀錄',
+        superset: '組合訓練',
+        supersetAdd: '+ 新增動作至組合',
+        supersetRounds: '總輪數',
+        supersetPickTitle: '選擇組合動作',
+        supersetCommit: '加入訓練',
+        supersetPlaceholder: '選擇動作...',
+        supersetSearchPlaceholder: '搜尋動作...',
+        supersetBtn: '組合訓練',
+        rounds: '輪',
     },
     en: {
         navIndex: 'Glassy Todo', navShift: 'Glassy Shift', navSetting: 'Settings', navWorkout: 'Glassy Workout',
@@ -289,6 +298,15 @@ const _wT = {
         weightHistory: 'Weight History', weightDeleteConfirm: 'Delete this weight entry?',
         sortNewest: 'Newest', sortOldest: 'Oldest', sortHeaviest: 'Heaviest', sortLightest: 'Lightest',
         noWeightInMonth: 'No entries this month',
+        superset: 'Superset',
+        supersetAdd: '+ Add Exercise',
+        supersetRounds: 'Total Rounds',
+        supersetPickTitle: 'Pick Superset Exercise',
+        supersetCommit: 'Add to Log',
+        supersetPlaceholder: 'Select exercise...',
+        supersetSearchPlaceholder: 'Search exercises...',
+        supersetBtn: 'Superset',
+        rounds: 'rounds',
     }
 };
 
