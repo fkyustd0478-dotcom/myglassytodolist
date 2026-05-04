@@ -36,6 +36,7 @@
             source: '來源',
             all: '全部',
             list: '清單',
+            letter: '字母',
         },
         en: {
             level: 'Level',
@@ -68,6 +69,7 @@
             source: 'Source',
             all: 'All',
             list: 'List',
+            letter: 'Letter',
         },
     };
 
@@ -81,6 +83,12 @@
         props: ['activeTab', 'lang', 'navSettings'],
         setup() {
             return Logic.createLanguageLearningState(global.Vue);
+        },
+        data() {
+            return {
+                difficultyDropdownOpen: false,
+                letterDropdownOpen: false,
+            };
         },
         computed: {
             ui() {
@@ -290,14 +298,50 @@
                            class="w-full rounded-2xl px-4 py-4 bg-white/80 text-slate-900 font-bold outline-none"
                            :placeholder="ui.search">
                     <div class="grid grid-cols-2 gap-2">
-                        <select v-model="vocabDifficulty" class="language-native-select">
-                            <option value="all">{{ ui.all }}</option>
-                            <option v-for="level in ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']" :key="level" :value="level">{{ level }}</option>
-                        </select>
-                        <select v-model="vocabLetter" class="language-native-select">
-                            <option value="all">{{ ui.all }}</option>
-                            <option v-for="letter in vocabularyLetters" :key="letter" :value="letter">{{ letter.toUpperCase() }}</option>
-                        </select>
+                        <!-- Difficulty custom dropdown -->
+                        <div class="custom-dropdown" :class="difficultyDropdownOpen ? 'z-[11]' : ''">
+                            <div class="dropdown-trigger glass rounded-xl px-3 py-2.5 text-xs font-bold"
+                                 @click="difficultyDropdownOpen = !difficultyDropdownOpen; letterDropdownOpen = false">
+                                <span>{{ ui.level }}: {{ vocabDifficulty === 'all' ? ui.all : vocabDifficulty }}</span>
+                                <i data-lucide="chevron-down" class="w-3 h-3 opacity-40 flex-shrink-0"
+                                   :class="{ 'rotate-180': difficultyDropdownOpen }"></i>
+                            </div>
+                            <transition name="fade">
+                                <div v-show="difficultyDropdownOpen" class="dropdown-menu glass">
+                                    <div class="dropdown-item" :class="{ active: vocabDifficulty === 'all' }"
+                                         @click="vocabDifficulty = 'all'; difficultyDropdownOpen = false">
+                                        {{ ui.all }}
+                                    </div>
+                                    <div v-for="level in ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']" :key="level"
+                                         class="dropdown-item" :class="{ active: vocabDifficulty === level }"
+                                         @click="vocabDifficulty = level; difficultyDropdownOpen = false">
+                                        {{ level }}
+                                    </div>
+                                </div>
+                            </transition>
+                        </div>
+                        <!-- Letter custom dropdown -->
+                        <div class="custom-dropdown" :class="letterDropdownOpen ? 'z-[11]' : ''">
+                            <div class="dropdown-trigger glass rounded-xl px-3 py-2.5 text-xs font-bold"
+                                 @click="letterDropdownOpen = !letterDropdownOpen; difficultyDropdownOpen = false">
+                                <span>{{ ui.letter }}: {{ vocabLetter === 'all' ? ui.all : vocabLetter.toUpperCase() }}</span>
+                                <i data-lucide="chevron-down" class="w-3 h-3 opacity-40 flex-shrink-0"
+                                   :class="{ 'rotate-180': letterDropdownOpen }"></i>
+                            </div>
+                            <transition name="fade">
+                                <div v-show="letterDropdownOpen" class="dropdown-menu glass">
+                                    <div class="dropdown-item" :class="{ active: vocabLetter === 'all' }"
+                                         @click="vocabLetter = 'all'; letterDropdownOpen = false">
+                                        {{ ui.all }}
+                                    </div>
+                                    <div v-for="letter in vocabularyLetters" :key="letter"
+                                         class="dropdown-item" :class="{ active: vocabLetter === letter }"
+                                         @click="vocabLetter = letter; letterDropdownOpen = false">
+                                        {{ letter.toUpperCase() }}
+                                    </div>
+                                </div>
+                            </transition>
+                        </div>
                     </div>
                     <div class="space-y-4">
                         <div v-for="group in vocabularyGroups" :key="group.difficulty" class="space-y-3">

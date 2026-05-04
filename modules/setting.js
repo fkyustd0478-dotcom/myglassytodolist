@@ -166,6 +166,19 @@ createApp({
                 importGuideTodoDesc: 'Stored in localStorage key: todo_data',
                 importGuideSafetyNote: 'Tip: Use the browser DevTools → Application → Local Storage to directly edit or import JSON data. Changes are applied immediately on next page load.',
                 importGuideClose: 'Close',
+                // User Profile
+                userProfileSection: 'User Profile',
+                signedIn: 'Signed in',
+                notSignedIn: 'Not signed in',
+                authOptional: 'Firebase account is optional.',
+                nicknameLabel: 'Nickname',
+                birthdayLabel: 'Birthday',
+                saveProfile: 'Save Profile',
+                loginLabel: 'Login',
+                loginGoogle: 'Login with Google',
+                signUpLabel: 'Sign Up',
+                logoutLabel: 'Logout',
+                profileSaved: 'Profile saved.',
             },
             zh: {
                 tabTheme: '主題設定', tabUser: '使用者頁面', tabCalendar: '頁面功能設定',
@@ -212,6 +225,19 @@ createApp({
                 importGuideTodoDesc: 'localStorage 鍵名：todo_data',
                 importGuideSafetyNote: '提示：使用瀏覽器 DevTools → Application → Local Storage 可直接編輯或貼入 JSON 資料，重新載入頁面後立即生效。',
                 importGuideClose: '關閉',
+                // 使用者資料
+                userProfileSection: '使用者資料',
+                signedIn: '已登入',
+                notSignedIn: '尚未登入',
+                authOptional: 'Firebase 帳號為選用功能。',
+                nicknameLabel: '暱稱',
+                birthdayLabel: '生日',
+                saveProfile: '儲存個人資料',
+                loginLabel: '登入',
+                loginGoogle: '以 Google 登入',
+                signUpLabel: '註冊',
+                logoutLabel: '登出',
+                profileSaved: '個人資料已儲存。',
             }
         };
 
@@ -472,7 +498,7 @@ createApp({
             try {
                 if (typeof LapisUserProfile === 'undefined') throw new Error('Profile storage is not available.');
                 userProfile.value = LapisUserProfile.save(userProfile.value);
-                profileMessage.value = 'Profile saved.';
+                profileMessage.value = t.value.profileSaved;
                 authError.value = '';
             } catch (error) {
                 profileMessage.value = '';

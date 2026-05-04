@@ -352,16 +352,16 @@
                 <div class="glass rounded-3xl p-5 space-y-4" :style="glassStyle">
                     <div class="flex items-center gap-2 opacity-40">
                         <i data-lucide="user-circle" class="w-4 h-4"></i>
-                        <h3 class="text-[10px] font-black uppercase tracking-widest">User Profile</h3>
+                        <h3 class="text-[10px] font-black uppercase tracking-widest">{{ t.userProfileSection }}</h3>
                     </div>
 
                     <div class="rounded-2xl p-3 space-y-1"
                          :style="isDarkTheme ? 'background:rgba(0,0,0,0.22)' : 'background:rgba(0,0,0,0.05)'">
                         <p class="text-xs font-black opacity-70">
-                            {{ authUser ? 'Signed in' : 'Not signed in' }}
+                            {{ authUser ? t.signedIn : t.notSignedIn }}
                         </p>
                         <p class="text-[11px] opacity-60 break-all">
-                            {{ authUser ? (authUser.email || authUser.uid) : 'Firebase account is optional.' }}
+                            {{ authUser ? (authUser.email || authUser.uid) : t.authOptional }}
                         </p>
                         <p v-if="authUser && authUser.uid" class="text-[10px] opacity-40 break-all">
                             ID: {{ authUser.uid }}
@@ -369,22 +369,28 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input v-model="userProfile.nickname"
-                               type="text"
-                               maxlength="80"
-                               placeholder="Nickname"
-                               class="rounded-2xl px-3 py-3 text-sm font-bold outline-none"
-                               :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
-                        <input v-model="userProfile.birthday"
-                               type="date"
-                               class="rounded-2xl px-3 py-3 text-sm font-bold outline-none"
-                               :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black opacity-50 px-1">{{ t.nicknameLabel }}</label>
+                            <input v-model="userProfile.nickname"
+                                   type="text"
+                                   maxlength="80"
+                                   :placeholder="t.nicknameLabel"
+                                   class="w-full rounded-2xl px-3 py-3 text-sm font-bold outline-none"
+                                   :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black opacity-50 px-1">{{ t.birthdayLabel }}</label>
+                            <input v-model="userProfile.birthday"
+                                   type="date"
+                                   class="w-full rounded-2xl px-3 py-3 text-sm font-bold outline-none"
+                                   :style="isDarkTheme ? 'background:rgba(0,0,0,0.24)' : 'background:rgba(0,0,0,0.06)'">
+                        </div>
                     </div>
 
                     <button @click="saveUserProfile"
                             class="w-full h-12 rounded-2xl bg-blue-600 text-white text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-transform">
                         <i data-lucide="save" class="w-4 h-4"></i>
-                        Save Profile
+                        {{ t.saveProfile }}
                     </button>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -405,13 +411,13 @@
                                 class="h-11 rounded-2xl glass text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-transform"
                                 :style="glassStyle">
                             <i data-lucide="log-in" class="w-4 h-4"></i>
-                            Login
+                            {{ t.loginLabel }}
                         </button>
                         <button @click="signupWithEmail"
                                 class="h-11 rounded-2xl glass text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-transform"
                                 :style="glassStyle">
                             <i data-lucide="user-plus" class="w-4 h-4"></i>
-                            Sign Up
+                            {{ t.signUpLabel }}
                         </button>
                     </div>
 
@@ -419,13 +425,13 @@
                         <button @click="loginWithGoogle"
                                 class="h-11 rounded-2xl bg-white text-slate-900 text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-transform border border-black/10 shadow-sm">
                             <span class="google-g-logo" aria-hidden="true">G</span>
-                            Login with Google
+                            {{ t.loginGoogle }}
                         </button>
                         <button @click="logoutAuth"
                                 class="h-11 rounded-2xl glass text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-transform"
                                 :style="glassStyle">
                             <i data-lucide="log-out" class="w-4 h-4"></i>
-                            Logout
+                            {{ t.logoutLabel }}
                         </button>
                     </div>
 
