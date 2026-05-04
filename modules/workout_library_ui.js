@@ -253,7 +253,33 @@ window.useWorkoutLibrary = function useWorkoutLibrary(ctx) {
     // ── Pick-exercise modal (add exercise to log) ─────────────────────────────
     const showPickModal = ref(false);
     const pickSearch    = ref('');
-    const pickCategory  = ref('');
+    const pickL1        = ref('');
+    const pickL2        = ref('');
+    const pickL3        = ref('');
+
+    // Deepest active selection drives filter; readonly computed replaces old pickCategory ref
+    const pickCategory = computed(() => pickL3.value || pickL2.value || pickL1.value);
+
+    // Children of selected L1 node (shown as second filter row)
+    const pickL2Options = computed(() => {
+        if (!pickL1.value) return [];
+        const node = catTree.value.find(l => l.name === pickL1.value);
+        return node ? (node.children || []) : [];
+    });
+
+    // Children of selected L2 node (shown as third filter row)
+    const pickL3Options = computed(() => {
+        if (!pickL2.value) return [];
+        for (const l1 of catTree.value) {
+            const l2node = (l1.children || []).find(l => l.name === pickL2.value);
+            if (l2node) return l2node.children || [];
+        }
+        return [];
+    });
+
+    const setPickL1 = (name) => { pickL1.value = name; pickL2.value = ''; pickL3.value = ''; };
+    const setPickL2 = (name) => { pickL2.value = name; pickL3.value = ''; };
+    const setPickL3 = (name) => { pickL3.value = name; };
 
     const filteredPick = computed(() => {
         let list = libData.exercises;
@@ -279,7 +305,9 @@ window.useWorkoutLibrary = function useWorkoutLibrary(ctx) {
         });
         showPickModal.value = false;
         pickSearch.value    = '';
-        pickCategory.value  = '';
+        pickL1.value        = '';
+        pickL2.value        = '';
+        pickL3.value        = '';
         nextTick(() => {
             if (isSets) {
                 const inputs = document.querySelectorAll('.log-body .compact-input');
@@ -308,7 +336,11 @@ window.useWorkoutLibrary = function useWorkoutLibrary(ctx) {
         exCatSel, exCatL2s, exCatL3s, addCatToForm, removeCatFromForm,
         // grouped rows
         exGroupedRows,
-        // pick modal
-        showPickModal, pickSearch, pickCategory, filteredPick, pickExercise,
+        // pick modal (drill-down filter)
+        showPickModal, pickSearch,
+        pickL1, pickL2, pickL3, pickCategory,
+        pickL2Options, pickL3Options,
+        setPickL1, setPickL2, setPickL3,
+        filteredPick, pickExercise,
     };
 };

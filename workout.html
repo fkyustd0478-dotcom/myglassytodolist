@@ -919,13 +919,33 @@
                             <input v-model="pickSearch" :placeholder="t.search"
                                    class="flex-1 bg-transparent outline-none text-sm font-bold min-w-0">
                         </div>
-                        <div class="cat-filter-row mb-3">
-                            <button @click="pickCategory = ''" class="cat-filter-pill glass" :style="glassStyle"
-                                    :class="{ active: pickCategory === '' }">{{ t.all }}</button>
+                        <!-- L1 filter -->
+                        <div :class="pickL2Options.length ? 'mb-2' : 'mb-3'" class="cat-filter-row">
+                            <button @click="setPickL1('')" class="cat-filter-pill glass" :style="glassStyle"
+                                    :class="{ active: pickL1 === '' }">{{ t.all }}</button>
                             <button v-for="l1 in catTree" :key="l1.name"
-                                    @click="pickCategory = l1.name"
+                                    @click="setPickL1(l1.name)"
                                     class="cat-filter-pill glass" :style="catPillStyle(l1.name)"
-                                    :class="{ active: pickCategory === l1.name }">{{ catLabel(l1.name) }}</button>
+                                    :class="{ active: pickL1 === l1.name }">{{ catLabel(l1.name) }}</button>
+                        </div>
+                        <!-- L2 filter (visible when L1 has children) -->
+                        <div v-if="pickL2Options.length"
+                             :class="pickL3Options.length ? 'mb-2' : 'mb-3'" class="cat-filter-row">
+                            <button @click="setPickL2('')" class="cat-filter-pill glass" :style="glassStyle"
+                                    :class="{ active: pickL2 === '' }">{{ t.all }}</button>
+                            <button v-for="l2 in pickL2Options" :key="l2.name"
+                                    @click="setPickL2(l2.name)"
+                                    class="cat-filter-pill glass" :style="catPillStyle(l2.name)"
+                                    :class="{ active: pickL2 === l2.name }">{{ catLabel(l2.name) }}</button>
+                        </div>
+                        <!-- L3 filter (visible when L2 has children) -->
+                        <div v-if="pickL3Options.length" class="cat-filter-row mb-3">
+                            <button @click="setPickL3('')" class="cat-filter-pill glass" :style="glassStyle"
+                                    :class="{ active: pickL3 === '' }">{{ t.all }}</button>
+                            <button v-for="l3 in pickL3Options" :key="l3.name"
+                                    @click="setPickL3(l3.name)"
+                                    class="cat-filter-pill glass" :style="catPillStyle(l3.name)"
+                                    :class="{ active: pickL3 === l3.name }">{{ catLabel(l3.name) }}</button>
                         </div>
                         <div class="space-y-1.5 max-h-48 overflow-y-auto">
                             <div v-if="filteredPick.length === 0"
@@ -1272,7 +1292,7 @@
     <!-- ── Bottom Navigation ──────────────────────────────────────────────── -->
     <nav class="bottom-nav glass" :style="glassStyle">
         <button @click="activeTab = 'workout'" class="nav-item" :class="{ active: activeTab === 'workout' }">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16"/><path d="M18 4v16"/><path d="M6 8h12"/><path d="M6 16h12"/><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h.5"/><path d="M3 17.5A1.5 1.5 0 0 0 4.5 19h.5"/><path d="M21 6.5A1.5 1.5 0 0 0 19.5 5h-.5"/><path d="M21 17.5A1.5 1.5 0 0 1 19.5 19h-.5"/></svg>
             <span>{{ t.tabWorkout }}</span>
         </button>
         <button @click="activeTab = 'exercises'" class="nav-item" :class="{ active: activeTab === 'exercises' }">
