@@ -253,33 +253,49 @@ window.useWorkoutLibrary = function useWorkoutLibrary(ctx) {
     // ── Pick-exercise modal (add exercise to log) ─────────────────────────────
     const showPickModal = ref(false);
     const pickSearch    = ref('');
-    const pickL1        = ref('');
-    const pickL2        = ref('');
-    const pickL3        = ref('');
+    const pickPath      = ref([]);  // [{ name, nameZh }, ...]  — breadcrumb segments
 
-    // Deepest active selection drives filter; readonly computed replaces old pickCategory ref
-    const pickCategory = computed(() => pickL3.value || pickL2.value || pickL1.value);
-
-    // Children of selected L1 node (shown as second filter row)
-    const pickL2Options = computed(() => {
-        if (!pickL1.value) return [];
-        const node = catTree.value.find(l => l.name === pickL1.value);
-        return node ? (node.children || []) : [];
-    });
-
-    // Children of selected L2 node (shown as third filter row)
-    const pickL3Options = computed(() => {
-        if (!pickL2.value) return [];
+    // ── Breadcrumb drill-down helpers ─────────────────────────────────────────
+    const _findChildren = (name) => {
         for (const l1 of catTree.value) {
-            const l2node = (l1.children || []).find(l => l.name === pickL2.value);
-            if (l2node) return l2node.children || [];
+            if (l1.name === name) return l1.children || [];
+            for (const l2 of (l1.children || [])) {
+                if (l2.name === name) return l2.children || [];
+                for (const l3 of (l2.children || [])) {
+                    if (l3.name === name) return l3.children || [];
+                }
+            }
         }
         return [];
+    };
+
+    // Returns true if any exercise is reachable via this node's subtree
+    const _hasExercises = (name) => {
+        const sub = new Set(_subtreeNames(name));
+        return libData.exercises.some(e => (e.categories || []).some(c => sub.has(c)));
+    };
+
+    // Children at current drill level that have exercises; drives next-level pills
+    const pickCurrentChildren = computed(() => {
+        const nodes = pickPath.value.length
+            ? _findChildren(pickPath.value[pickPath.value.length - 1].name)
+            : catTree.value;
+        return (nodes || []).filter(n => _hasExercises(n.name));
     });
 
-    const setPickL1 = (name) => { pickL1.value = name; pickL2.value = ''; pickL3.value = ''; };
-    const setPickL2 = (name) => { pickL2.value = name; pickL3.value = ''; };
-    const setPickL3 = (name) => { pickL3.value = name; };
+    // Deepest selected node drives _subtreeNames filter
+    const pickCategory = computed(() =>
+        pickPath.value.length ? pickPath.value[pickPath.value.length - 1].name : ''
+    );
+
+    const drillInto = (node) => {
+        pickPath.value = [...pickPath.value, { name: node.name, nameZh: node.nameZh || node.name }];
+    };
+
+    // idx = -1 → reset to All; otherwise slice to idx inclusive
+    const drillTo = (idx) => {
+        pickPath.value = idx < 0 ? [] : pickPath.value.slice(0, idx + 1);
+    };
 
     const filteredPick = computed(() => {
         let list = libData.exercises;
@@ -305,9 +321,7 @@ window.useWorkoutLibrary = function useWorkoutLibrary(ctx) {
         });
         showPickModal.value = false;
         pickSearch.value    = '';
-        pickL1.value        = '';
-        pickL2.value        = '';
-        pickL3.value        = '';
+        pickPath.value      = [];
         nextTick(() => {
             if (isSets) {
                 const inputs = document.querySelectorAll('.log-body .compact-input');
@@ -336,11 +350,10 @@ window.useWorkoutLibrary = function useWorkoutLibrary(ctx) {
         exCatSel, exCatL2s, exCatL3s, addCatToForm, removeCatFromForm,
         // grouped rows
         exGroupedRows,
-        // pick modal (drill-down filter)
+        // pick modal (breadcrumb drill-down)
         showPickModal, pickSearch,
-        pickL1, pickL2, pickL3, pickCategory,
-        pickL2Options, pickL3Options,
-        setPickL1, setPickL2, setPickL3,
+        pickPath, pickCategory, pickCurrentChildren,
+        drillInto, drillTo,
         filteredPick, pickExercise,
     };
 };

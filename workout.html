@@ -919,33 +919,31 @@
                             <input v-model="pickSearch" :placeholder="t.search"
                                    class="flex-1 bg-transparent outline-none text-sm font-bold min-w-0">
                         </div>
-                        <!-- L1 filter -->
-                        <div :class="pickL2Options.length ? 'mb-2' : 'mb-3'" class="cat-filter-row">
-                            <button @click="setPickL1('')" class="cat-filter-pill glass" :style="glassStyle"
-                                    :class="{ active: pickL1 === '' }">{{ t.all }}</button>
-                            <button v-for="l1 in catTree" :key="l1.name"
-                                    @click="setPickL1(l1.name)"
-                                    class="cat-filter-pill glass" :style="catPillStyle(l1.name)"
-                                    :class="{ active: pickL1 === l1.name }">{{ catLabel(l1.name) }}</button>
+                        <!-- Breadcrumb path -->
+                        <div class="flex items-center gap-1 mb-2 overflow-x-auto"
+                             style="scrollbar-width:none;-webkit-overflow-scrolling:touch">
+                            <button @click="drillTo(-1)"
+                                    class="text-xs font-black flex-shrink-0 transition-opacity"
+                                    :class="pickPath.length === 0 ? 'opacity-100' : 'opacity-45 hover:opacity-80'">
+                                {{ t.all }}
+                            </button>
+                            <template v-for="(seg, idx) in pickPath" :key="seg.name">
+                                <span class="text-xs opacity-20 flex-shrink-0 select-none">›</span>
+                                <button @click="drillTo(idx)"
+                                        class="text-xs font-black flex-shrink-0 max-w-[96px] truncate transition-opacity"
+                                        :class="idx === pickPath.length - 1 ? 'opacity-100' : 'opacity-45 hover:opacity-80'"
+                                        :style="idx === pickPath.length - 1 ? { color: 'var(--primary)' } : {}">
+                                    {{ navSettings.lang === 'zh' ? seg.nameZh : seg.name }}
+                                </button>
+                            </template>
                         </div>
-                        <!-- L2 filter (visible when L1 has children) -->
-                        <div v-if="pickL2Options.length"
-                             :class="pickL3Options.length ? 'mb-2' : 'mb-3'" class="cat-filter-row">
-                            <button @click="setPickL2('')" class="cat-filter-pill glass" :style="glassStyle"
-                                    :class="{ active: pickL2 === '' }">{{ t.all }}</button>
-                            <button v-for="l2 in pickL2Options" :key="l2.name"
-                                    @click="setPickL2(l2.name)"
-                                    class="cat-filter-pill glass" :style="catPillStyle(l2.name)"
-                                    :class="{ active: pickL2 === l2.name }">{{ catLabel(l2.name) }}</button>
-                        </div>
-                        <!-- L3 filter (visible when L2 has children) -->
-                        <div v-if="pickL3Options.length" class="cat-filter-row mb-3">
-                            <button @click="setPickL3('')" class="cat-filter-pill glass" :style="glassStyle"
-                                    :class="{ active: pickL3 === '' }">{{ t.all }}</button>
-                            <button v-for="l3 in pickL3Options" :key="l3.name"
-                                    @click="setPickL3(l3.name)"
-                                    class="cat-filter-pill glass" :style="catPillStyle(l3.name)"
-                                    :class="{ active: pickL3 === l3.name }">{{ catLabel(l3.name) }}</button>
+                        <!-- Current level sub-categories (drill-in pills) -->
+                        <div v-if="pickCurrentChildren.length" class="cat-filter-row mb-3">
+                            <button v-for="child in pickCurrentChildren" :key="child.name"
+                                    @click="drillInto(child)"
+                                    class="cat-filter-pill glass" :style="catPillStyle(child.name)">
+                                {{ catLabel(child.name) }}
+                            </button>
                         </div>
                         <div class="space-y-1.5 max-h-48 overflow-y-auto">
                             <div v-if="filteredPick.length === 0"
