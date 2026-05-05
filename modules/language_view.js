@@ -41,6 +41,8 @@
             quizMode: '測驗模式',
             learningMode: '學習模式',
             markError: '記錯誤',
+            autoPlay: '自動發音',
+            autoPlayHint: '僅在學習模式下生效',
         },
         en: {
             level: 'Level',
@@ -78,6 +80,8 @@
             quizMode: 'Quiz Mode',
             learningMode: 'Learning Mode',
             markError: 'Mark Error',
+            autoPlay: 'Auto-play',
+            autoPlayHint: 'Only active in Learning Mode',
         },
     };
 
@@ -113,7 +117,7 @@
         },
         watch: {
             currentWord(newWord) {
-                if (newWord && this.isLearningMode) {
+                if (newWord && this.isLearningMode && this.settings.autoPlay) {
                     this.$nextTick(() => this.playVoice(newWord.word));
                 }
             },
@@ -206,6 +210,9 @@
             },
             handleSetStudyMode(mode) {
                 this.setStudyMode(mode);
+            },
+            handleSetAutoPlay(value) {
+                this.setAutoPlay(value);
             },
             handleMarkError() {
                 if (!this.currentWord) return;
@@ -499,6 +506,19 @@
                                     {{ ui.learningMode }}
                                 </button>
                             </div>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-black opacity-70">{{ ui.autoPlay }}</p>
+                                <p class="text-xs opacity-40 mt-0.5">{{ ui.autoPlayHint }}</p>
+                            </div>
+                            <button type="button"
+                                    class="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
+                                    :class="settings.autoPlay ? 'bg-blue-600' : 'bg-white/20'"
+                                    @click="handleSetAutoPlay(!settings.autoPlay)">
+                                <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+                                      :class="settings.autoPlay ? 'translate-x-5' : 'translate-x-0.5'"></span>
+                            </button>
                         </div>
                         <label class="block space-y-2">
                             <span class="text-sm font-black opacity-70">{{ ui.difficultyCap }}</span>

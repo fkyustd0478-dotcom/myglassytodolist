@@ -158,6 +158,14 @@
         try { global.localStorage?.setItem('lapis_lang_study_mode', mode); } catch (_) {}
     }
 
+    function readAutoPlay() {
+        try { return global.localStorage?.getItem('lapis_lang_auto_play') === '1'; } catch (_) { return false; }
+    }
+
+    function saveAutoPlay(value) {
+        try { global.localStorage?.setItem('lapis_lang_auto_play', value ? '1' : '0'); } catch (_) {}
+    }
+
     function createLanguageLearningState(Vue, options = {}) {
         const { ref, computed, watch } = Vue;
         const savedProgress = readProgress();
@@ -182,6 +190,7 @@
             deckSize: 10,
             visibleStack: 7,
             studyMode: readStudyMode(),
+            autoPlay: readAutoPlay(),
         });
 
         const isLoadingVocab = ref(false);
@@ -422,6 +431,11 @@
             saveStudyMode(settings.value.studyMode);
         }
 
+        function setAutoPlay(value) {
+            settings.value = { ...settings.value, autoPlay: !!value };
+            saveAutoPlay(settings.value.autoPlay);
+        }
+
         return {
             vocabulary,
             isLoadingVocab,
@@ -471,6 +485,7 @@
             setDifficultyCap,
             setDeckSize,
             setStudyMode,
+            setAutoPlay,
             loadIndex,
             loadDifficultyFiles,
         };
