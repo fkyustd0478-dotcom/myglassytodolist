@@ -37,6 +37,10 @@
             all: '全部',
             list: '清單',
             letter: '字母',
+            studyPreference: '學習偏好',
+            quizMode: '測驗模式',
+            learningMode: '學習模式',
+            markError: '記錯誤',
         },
         en: {
             level: 'Level',
@@ -70,6 +74,10 @@
             all: 'All',
             list: 'List',
             letter: 'Letter',
+            studyPreference: 'Study Preference',
+            quizMode: 'Quiz Mode',
+            learningMode: 'Learning Mode',
+            markError: 'Mark Error',
         },
     };
 
@@ -101,6 +109,13 @@
                 if (t === 'system') return typeof window !== 'undefined' && window.matchMedia
                     ? window.matchMedia('(prefers-color-scheme: dark)').matches : false;
                 return dk.includes(t);
+            },
+        },
+        watch: {
+            currentWord(newWord) {
+                if (newWord && this.isLearningMode) {
+                    this.$nextTick(() => this.playVoice(newWord.word));
+                }
             },
         },
         mounted() {
@@ -163,7 +178,8 @@
                 audio.play().catch(() => {});
             },
             exampleHtml(item) {
-                return Logic.exampleHtml(item.example_en, item.word, this.currentState.feedback);
+                const fb = this.isLearningMode ? 'revealed' : this.currentState.feedback;
+                return Logic.exampleHtml(item.example_en, item.word, fb);
             },
             partLabel(item) {
                 return Data.partOfSpeechLabel(item.part_of_speech, this.lang);
@@ -187,6 +203,21 @@
             handleDeckSize(value) {
                 this.setDeckSize(value);
                 this.syncSwiper();
+            },
+            handleSetStudyMode(mode) {
+                this.setStudyMode(mode);
+            },
+            handleMarkError() {
+                if (!this.currentWord) return;
+                this.addCurrentError();
+                if (this.canGoNext) this.handleNext();
+                else this.handleRefill();
+            },
+            handleMarkMastered() {
+                if (!this.currentWord) return;
+                this.markMastered(this.currentWord.word);
+                if (this.canGoNext) this.handleNext();
+                else this.handleRefill();
             },
             stackStyle(index) {
                 const offset = Math.min(index, 7);
@@ -216,26 +247,84 @@
                                     'scale-95': index === deckIndex && deckMotion === 'refill'
                                   }">
                                 <div v-if="index === deckIndex" class="space-y-5">
-                                    <div class="flex items-center justify-between gap-3">
-                                        <span class="text-xs font-black uppercase opacity-50">{{ ui.level }} {{ currentWord.difficulty }}</span>
-                                        <button type="button" class="px-3 py-2 rounded-xl bg-white/10 text-xs font-black" @click="addToNotes">
-                                            {{ ui.addNotes }}
+
+                                    <!-- ── Quiz Mode ────────────────────────────────── -->
+                                    <template v-if="!isLearningMode">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <span class="text-xs font-black uppercase opacity-50">{{ ui.level }} {{ currentWord.difficulty }}</span>
+                                            <button type="button" class="px-3 py-2 rounded-xl bg-white/10 text-xs font-black" @click="addToNotes">
+                                                {{ ui.addNotes }}
+                                            </button>
+                                        </div>
+                                        <div class="rounded-2xl bg-white/10 p-4 space-y-3">
+                                            <p class="text-lg font-black leading-snug" v-html="exampleHtml(currentWord)"></p>
+                                            <p class="text-sm font-bold opacity-70">{{ currentWord.example_zh }}</p>
+                                        </div>
+                                        <div class="text-center py-4">
+                                            <p class="text-4xl font-black tracking-widest break-all">
+                                                {{ currentState.feedback === 'correct' || currentState.feedback === 'revealed' ? currentWord.word : hintText }}
+                                            </p>
+                                            <div v-if="currentState.feedback === 'correct' || currentState.feedback === 'revealed'" class="mt-4 space-y-2">
+                                                <p class="text-lg font-bold opacity-80">{{ currentWord.phonetic }}</p>
+                                                <p class="text-sm font-bold opacity-70">{{ partLabel(currentWord) }} {{ currentWord.chinese_meaning }}</p>
+                                                <div class="flex items-center justify-center gap-2 pt-2">
+                                                    <button type="button" class="w-11 h-11 rounded-full bg-blue-600 text-white inline-flex items-center justify-center"
+                                                            :title="ui.pronunciation"
+                                                            @click="playVoice(currentWord.word)">
+                                                        <i data-lucide="volume-2" class="w-5 h-5"></i>
+                                                    </button>
+                                                    <a class="w-11 h-11 rounded-full bg-white/10 inline-flex items-center justify-center"
+                                                       :href="currentWord.url" target="_blank" rel="noopener">
+                                                        <i data-lucide="external-link" class="w-5 h-5"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input v-model="typedAnswer"
+                                               type="text"
+                                               autocomplete="off"
+                                               class="w-full rounded-2xl px-4 py-4 bg-white/80 text-slate-900 font-bold outline-none"
+                                               :placeholder="ui.typeWord"
+                                               @keyup.enter="submitAnswer">
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <button type="button" class="rounded-2xl py-3 bg-white/10 font-black disabled:opacity-35"
+                                                    :disabled="!canGoPrevious" @click="handlePrevious">
+                                                {{ ui.previous }}
+                                            </button>
+                                            <button type="button" class="rounded-2xl py-3 bg-blue-600 text-white font-black" @click="submitAnswer">
+                                                {{ ui.check }}
+                                            </button>
+                                            <button type="button" class="rounded-2xl py-3 bg-white/10 font-black disabled:opacity-35"
+                                                    :disabled="!canGoNext" @click="handleNext">
+                                                {{ ui.next }}
+                                            </button>
+                                        </div>
+                                        <button v-if="canShowAnswer" type="button" class="w-full rounded-2xl py-3 bg-red-600 text-white font-black" @click="showAnswer">
+                                            {{ ui.showAnswer }}
                                         </button>
-                                    </div>
-
-                                    <div class="rounded-2xl bg-white/10 p-4 space-y-3">
-                                        <p class="text-lg font-black leading-snug" v-html="exampleHtml(currentWord)"></p>
-                                        <p class="text-sm font-bold opacity-70">{{ currentWord.example_zh }}</p>
-                                    </div>
-
-                                    <div class="text-center py-4">
-                                        <p class="text-4xl font-black tracking-widest break-all">
-                                            {{ currentState.feedback === 'correct' || currentState.feedback === 'revealed' ? currentWord.word : hintText }}
+                                        <button v-if="deckFinished" type="button" class="w-full rounded-2xl py-3 bg-emerald-600 text-white font-black" @click="handleRefill">
+                                            {{ ui.continue }}
+                                        </button>
+                                        <p class="text-center text-xs font-bold opacity-50">
+                                            {{ deckIndex + 1 }} / {{ studyDeck.length }} · {{ ui.attempts }} {{ currentState.attempts }} / 3
                                         </p>
-                                        <div v-if="currentState.feedback === 'correct' || currentState.feedback === 'revealed'" class="mt-4 space-y-2">
-                                            <p class="text-lg font-bold opacity-80">{{ currentWord.phonetic }}</p>
-                                            <p class="text-sm font-bold opacity-70">{{ partLabel(currentWord) }} {{ currentWord.chinese_meaning }}</p>
-                                            <div class="flex items-center justify-center gap-2 pt-2">
+                                    </template>
+
+                                    <!-- ── Learning Mode ──────────────────────────── -->
+                                    <template v-else>
+                                        <div class="flex items-center justify-between gap-3">
+                                            <span class="text-xs font-black uppercase opacity-50">{{ ui.level }} {{ currentWord.difficulty }}</span>
+                                            <button type="button" class="px-3 py-2 rounded-xl bg-white/10 text-xs font-black" @click="addToNotes">
+                                                {{ ui.addNotes }}
+                                            </button>
+                                        </div>
+                                        <div class="text-center py-2">
+                                            <p class="text-4xl font-black tracking-widest break-all">{{ currentWord.word }}</p>
+                                            <div class="mt-3 space-y-1">
+                                                <p class="text-lg font-bold opacity-80">{{ currentWord.phonetic }}</p>
+                                                <p class="text-sm font-bold opacity-70">{{ partLabel(currentWord) }} {{ currentWord.chinese_meaning }}</p>
+                                            </div>
+                                            <div class="flex items-center justify-center gap-2 pt-3">
                                                 <button type="button" class="w-11 h-11 rounded-full bg-blue-600 text-white inline-flex items-center justify-center"
                                                         :title="ui.pronunciation"
                                                         @click="playVoice(currentWord.word)">
@@ -247,36 +336,34 @@
                                                 </a>
                                             </div>
                                         </div>
-                                    </div>
+                                        <div class="rounded-2xl bg-white/10 p-4 space-y-3">
+                                            <p class="text-lg font-black leading-snug" v-html="exampleHtml(currentWord)"></p>
+                                            <p class="text-sm font-bold opacity-70">{{ currentWord.example_zh }}</p>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <button type="button" class="rounded-2xl py-3 bg-white/10 font-black disabled:opacity-35"
+                                                    :disabled="!canGoPrevious" @click="handlePrevious">
+                                                {{ ui.previous }}
+                                            </button>
+                                            <button type="button" class="rounded-2xl py-3 bg-red-600/80 text-white font-black" @click="handleMarkError">
+                                                {{ ui.markError }}
+                                            </button>
+                                            <button type="button" class="rounded-2xl py-3 bg-white/10 font-black disabled:opacity-35"
+                                                    :disabled="!canGoNext" @click="handleNext">
+                                                {{ ui.next }}
+                                            </button>
+                                        </div>
+                                        <button type="button" class="w-full rounded-2xl py-3 bg-green-600 text-white font-black" @click="handleMarkMastered">
+                                            {{ ui.markMastered }}
+                                        </button>
+                                        <button v-if="deckFinished" type="button" class="w-full rounded-2xl py-3 bg-emerald-600 text-white font-black" @click="handleRefill">
+                                            {{ ui.continue }}
+                                        </button>
+                                        <p class="text-center text-xs font-bold opacity-50">
+                                            {{ deckIndex + 1 }} / {{ studyDeck.length }}
+                                        </p>
+                                    </template>
 
-                                    <input v-model="typedAnswer"
-                                           type="text"
-                                           autocomplete="off"
-                                           class="w-full rounded-2xl px-4 py-4 bg-white/80 text-slate-900 font-bold outline-none"
-                                           :placeholder="ui.typeWord"
-                                           @keyup.enter="submitAnswer">
-                                    <div class="grid grid-cols-3 gap-2">
-                                        <button type="button" class="rounded-2xl py-3 bg-white/10 font-black disabled:opacity-35"
-                                                :disabled="!canGoPrevious" @click="handlePrevious">
-                                            {{ ui.previous }}
-                                        </button>
-                                        <button type="button" class="rounded-2xl py-3 bg-blue-600 text-white font-black" @click="submitAnswer">
-                                            {{ ui.check }}
-                                        </button>
-                                        <button type="button" class="rounded-2xl py-3 bg-white/10 font-black disabled:opacity-35"
-                                                :disabled="!canGoNext" @click="handleNext">
-                                            {{ ui.next }}
-                                        </button>
-                                    </div>
-                                    <button v-if="canShowAnswer" type="button" class="w-full rounded-2xl py-3 bg-red-600 text-white font-black" @click="showAnswer">
-                                        {{ ui.showAnswer }}
-                                    </button>
-                                    <button v-if="deckFinished" type="button" class="w-full rounded-2xl py-3 bg-emerald-600 text-white font-black" @click="handleRefill">
-                                        {{ ui.continue }}
-                                    </button>
-                                    <p class="text-center text-xs font-bold opacity-50">
-                                        {{ deckIndex + 1 }} / {{ studyDeck.length }} · {{ ui.attempts }} {{ currentState.attempts }} / 3
-                                    </p>
                                 </div>
                                 <div v-else class="h-[400px]"></div>
                             </div>
@@ -396,6 +483,23 @@
                 <section v-show="activeTab === 'settings'" class="space-y-4">
                     <div class="glass rounded-2xl p-4 space-y-4">
                         <h2 class="font-black">{{ ui.settings }}</h2>
+                        <div class="space-y-2">
+                            <span class="text-sm font-black opacity-70">{{ ui.studyPreference }}</span>
+                            <div class="grid grid-cols-2 gap-1 rounded-2xl bg-white/10 p-1">
+                                <button type="button"
+                                        class="rounded-xl py-2 text-xs font-black transition-all"
+                                        :class="!isLearningMode ? 'bg-blue-600 text-white' : 'opacity-50 hover:opacity-80'"
+                                        @click="handleSetStudyMode('quiz')">
+                                    {{ ui.quizMode }}
+                                </button>
+                                <button type="button"
+                                        class="rounded-xl py-2 text-xs font-black transition-all"
+                                        :class="isLearningMode ? 'bg-blue-600 text-white' : 'opacity-50 hover:opacity-80'"
+                                        @click="handleSetStudyMode('learn')">
+                                    {{ ui.learningMode }}
+                                </button>
+                            </div>
+                        </div>
                         <label class="block space-y-2">
                             <span class="text-sm font-black opacity-70">{{ ui.difficultyCap }}</span>
                             <select class="w-full rounded-2xl px-4 py-3 bg-white/80 text-slate-900 font-bold"

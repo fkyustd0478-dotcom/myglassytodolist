@@ -147,6 +147,17 @@
         } catch (_) {}
     }
 
+    function readStudyMode() {
+        try {
+            const v = global.localStorage?.getItem('lapis_lang_study_mode');
+            return v === 'learn' ? 'learn' : 'quiz';
+        } catch (_) { return 'quiz'; }
+    }
+
+    function saveStudyMode(mode) {
+        try { global.localStorage?.setItem('lapis_lang_study_mode', mode); } catch (_) {}
+    }
+
     function createLanguageLearningState(Vue, options = {}) {
         const { ref, computed, watch } = Vue;
         const savedProgress = readProgress();
@@ -170,6 +181,7 @@
             difficultyCap: 'C2',
             deckSize: 10,
             visibleStack: 7,
+            studyMode: readStudyMode(),
         });
 
         const isLoadingVocab = ref(false);
@@ -245,15 +257,18 @@
             shouldShowAnswer(currentState.value.attempts) && !['correct', 'revealed'].includes(currentState.value.feedback)
         );
         const canGoPrevious = computed(() => deckIndex.value > 0);
-        const canGoNext = computed(() =>
-            ['correct', 'revealed'].includes(currentState.value.feedback) &&
-            deckIndex.value < studyDeck.value.length - 1
-        );
-        const deckFinished = computed(() =>
-            studyDeck.value.length > 0 &&
-            deckIndex.value >= studyDeck.value.length - 1 &&
-            ['correct', 'revealed'].includes(currentState.value.feedback)
-        );
+        const isLearningMode = computed(() => settings.value.studyMode === 'learn');
+        const canGoNext = computed(() => {
+            if (isLearningMode.value) return deckIndex.value < studyDeck.value.length - 1;
+            return ['correct', 'revealed'].includes(currentState.value.feedback) &&
+                deckIndex.value < studyDeck.value.length - 1;
+        });
+        const deckFinished = computed(() => {
+            if (studyDeck.value.length === 0) return false;
+            if (isLearningMode.value) return deckIndex.value >= studyDeck.value.length - 1;
+            return deckIndex.value >= studyDeck.value.length - 1 &&
+                ['correct', 'revealed'].includes(currentState.value.feedback);
+        });
         const followingWords = computed(() => following.value
             .map(word => vocabulary.value.find(item => item.word === word))
             .filter(Boolean));
@@ -402,6 +417,11 @@
             dealDeck('refill');
         }
 
+        function setStudyMode(mode) {
+            settings.value = { ...settings.value, studyMode: mode === 'learn' ? 'learn' : 'quiz' };
+            saveStudyMode(settings.value.studyMode);
+        }
+
         return {
             vocabulary,
             isLoadingVocab,
@@ -434,6 +454,7 @@
             canGoPrevious,
             canGoNext,
             deckFinished,
+            isLearningMode,
             followingWords,
             errorWords,
             masteredWords,
@@ -443,11 +464,13 @@
             nextCard,
             previousCard,
             addToNotes,
+            addCurrentError,
             submitAnswer,
             showAnswer,
             markMastered,
             setDifficultyCap,
             setDeckSize,
+            setStudyMode,
             loadIndex,
             loadDifficultyFiles,
         };
