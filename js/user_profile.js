@@ -2,7 +2,7 @@
 
 (function () {
     const PROFILE_KEY = 'lapis_user_profile';
-    const EMPTY_PROFILE = { nickname: '', birthday: '' };
+    const EMPTY_PROFILE = { nickname: '', birthday: '', birthdayTs: 0 };
 
     function _storage() {
         if (typeof LapisStorage === 'undefined') throw new Error('LapisStorage is required.');
@@ -17,7 +17,8 @@
     function normalize(profile) {
         return {
             nickname: String(profile?.nickname || '').trim().substring(0, 80),
-            birthday: _normalizeBirthday(profile?.birthday)
+            birthday: _normalizeBirthday(profile?.birthday),
+            birthdayTs: Number(profile?.birthdayTs) || 0,
         };
     }
 

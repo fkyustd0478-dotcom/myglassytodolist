@@ -451,11 +451,48 @@ const app = createApp({
         let _longPressTimer     = null;
         let _longPressActivated = false;
 
+        const connectorLine = ref(null);
+
+        function _openDetailModal(day, event) {
+            const rect = event?.currentTarget?.getBoundingClientRect?.();
+            if (rect && window.innerWidth && window.innerHeight) {
+                dayDetailOrigin.value = {
+                    x: `${((rect.left + rect.width / 2) / window.innerWidth) * 100}%`,
+                    y: `${((rect.top + rect.height / 2) / window.innerHeight) * 100}%`,
+                };
+            }
+            selectedDay.value = day.dateStr;
+            if (!shiftData.value[selectedDay.value]) shiftData.value[selectedDay.value] = {};
+            showDayDetail.value = true;
+        }
+
+        function _updateConnectorLine() {
+            const isTagMode = activeQuickTagCategory.value === 'shift' || activeQuickTagCategory.value === 'pay';
+            if (!isTagMode || !selectedDay.value || !activeQuickTag.value) {
+                connectorLine.value = null;
+                return;
+            }
+            nextTick(() => {
+                const pill  = document.querySelector('.tag-pill.active');
+                const dayEl = document.querySelector('.calendar-day.selected-day');
+                if (!pill || !dayEl) { connectorLine.value = null; return; }
+                const pr = pill.getBoundingClientRect();
+                const dr = dayEl.getBoundingClientRect();
+                connectorLine.value = {
+                    x1: pr.left + pr.width / 2,
+                    y1: pr.top,
+                    x2: dr.left + dr.width / 2,
+                    y2: dr.bottom,
+                };
+            });
+        }
+
         const changeMonth = (delta) => {
             const d = new Date(calendarDate.value);
             d.setMonth(d.getMonth() + delta);
             calendarDate.value = d;
             selectedDay.value = null;
+            connectorLine.value = null;
         };
 
         const autoAdvanceDay = (dateStr) => {
@@ -468,6 +505,9 @@ const app = createApp({
             // Only advance within the same month
             if (nextStr.slice(0, 7) === dateStr.slice(0, 7)) {
                 selectedDay.value = nextStr;
+            } else {
+                selectedDay.value = null;
+                connectorLine.value = null;
             }
         };
 
@@ -475,21 +515,25 @@ const app = createApp({
             cancelLongPress();
             _longPressTimer = setTimeout(() => {
                 _longPressActivated = true;
-                const rect = event?.currentTarget?.getBoundingClientRect?.();
-                if (rect && window.innerWidth && window.innerHeight) {
-                    dayDetailOrigin.value = {
-                        x: `${((rect.left + rect.width / 2) / window.innerWidth) * 100}%`,
-                        y: `${((rect.top + rect.height / 2) / window.innerHeight) * 100}%`,
-                    };
-                }
-                selectedDay.value = day.dateStr;
-                if (!shiftData.value[day.dateStr]) shiftData.value[day.dateStr] = {};
-                showDayDetail.value = true;
+                _openDetailModal(day, event);
             }, 500);
         };
 
         const cancelLongPress = () => {
             if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+        };
+
+        const removeTagFromDay = (dateStr) => {
+            if (!activeQuickTag.value) return;
+            const { type, id } = activeQuickTag.value;
+            const field = type === 'shift' ? 'shiftIds' : type === 'other' ? 'otherIds' : 'payIds';
+            const dayRecord = shiftData.value[dateStr];
+            if (!dayRecord || !Array.isArray(dayRecord[field])) return;
+            const idx = dayRecord[field].indexOf(id);
+            if (idx > -1) {
+                dayRecord[field].splice(idx, 1);
+                StorageProvider.saveShiftData(shiftData.value);
+            }
         };
 
         const handleDayClick = (day, event) => {
@@ -498,32 +542,25 @@ const app = createApp({
 
             const isTagMode = activeQuickTagCategory.value === 'shift' || activeQuickTagCategory.value === 'pay';
 
-            if (isTagMode) {
-                // Select day (shows marching-ants border)
-                selectedDay.value = day.dateStr;
-                // Apply tag and auto-advance when a tag is active
-                if (activeQuickTag.value) {
-                    applyQuickTag(day.dateStr);
-                    autoAdvanceDay(day.dateStr);
-                }
+            if (!isTagMode) {
+                // State A: click always opens detail modal (same as long press)
+                _openDetailModal(day, event);
                 return;
             }
 
-            // Original behavior for other / no-mode
+            // State B: select day (solid border)
+            selectedDay.value = day.dateStr;
+
             if (activeQuickTag.value) {
-                applyQuickTag(day.dateStr);
-            } else {
-                const rect = event?.currentTarget?.getBoundingClientRect?.();
-                if (rect && window.innerWidth && window.innerHeight) {
-                    dayDetailOrigin.value = {
-                        x: `${((rect.left + rect.width / 2) / window.innerWidth) * 100}%`,
-                        y: `${((rect.top + rect.height / 2) / window.innerHeight) * 100}%`,
-                    };
+                // Tag pre-selected (Scenario 2) → apply/remove + advance
+                if (deleteMode.value) {
+                    removeTagFromDay(day.dateStr);
+                } else {
+                    applyQuickTag(day.dateStr);
                 }
-                selectedDay.value = day.dateStr;
-                if (!shiftData.value[selectedDay.value]) shiftData.value[selectedDay.value] = {};
-                showDayDetail.value = true;
+                autoAdvanceDay(day.dateStr);
             }
+            // else Scenario 1: wait for label click
         };
 
         const applyQuickTag = (dateStr) => {
@@ -566,6 +603,7 @@ const app = createApp({
                 deleteMode.value = false;
             }
             selectedDay.value = null;
+            connectorLine.value = null;
         };
 
         const confirmDeleteTag = (type, id) => {
@@ -589,10 +627,25 @@ const app = createApp({
         };
 
         const selectQuickTag = (type, id) => {
-            if (activeQuickTag.value && activeQuickTag.value.type === type && activeQuickTag.value.id === id)
+            // Toggle off
+            if (activeQuickTag.value?.type === type && activeQuickTag.value?.id === id) {
                 activeQuickTag.value = null;
-            else
-                activeQuickTag.value = { type, id };
+                connectorLine.value = null;
+                return;
+            }
+            activeQuickTag.value = { type, id };
+
+            // Scenario 1: day pre-selected in shift/pay mode → apply immediately
+            const isTagMode = activeQuickTagCategory.value === 'shift' || activeQuickTagCategory.value === 'pay';
+            if (isTagMode && selectedDay.value) {
+                const dateStr = selectedDay.value;
+                if (deleteMode.value) {
+                    removeTagFromDay(dateStr);
+                } else {
+                    applyQuickTag(dateStr);
+                }
+                autoAdvanceDay(dateStr);
+            }
         };
 
         const getTagName = (type, id) => {
@@ -817,6 +870,7 @@ const app = createApp({
             document.removeEventListener('click', closeJumpPicker);
         });
 
+        watch([selectedDay, activeQuickTag], _updateConnectorLine);
         watch(() => navSettings.effect, (eff) => { if (window.ParticleEngine) ParticleEngine.setEffect(eff); });
         watch(shiftSettings, (val) => StorageProvider.saveShiftSettings(val), { deep: true });
         watch([showTodayTasks, showDayDetail, showTagsModal, tagsTab], () => {
@@ -833,6 +887,7 @@ const app = createApp({
             navDropdownOpen, currentPageTitle, toggleNavDropdown,
             navSettings, isDarkTheme, glassStyle, themeClasses, customBgStyle, themeStyle,
             calendarDate, calendarDays, displayMonthYear, changeMonth, handleDayClick, startLongPress, cancelLongPress,
+            connectorLine, removeTagFromDay,
             activeQuickTag, activeQuickTagCategory, deleteMode, selectQuickTag, toggleQuickTagCategory, confirmDeleteTag,
             shiftData, getTagName, getTagColor, applyQuickTagToDay,
             getOtherTagIcon, getOtherTagEmoji, getIconEmoji, OTHER_TAG_ICONS,

@@ -50,9 +50,11 @@ createApp({
         const userProfile = ref(
             typeof LapisUserProfile !== 'undefined'
                 ? LapisUserProfile.get()
-                : { nickname: '', birthday: '' }
+                : { nickname: '', birthday: '', birthdayTs: 0 }
         );
         const profileMessage = ref('');
+        const showBirthdayPicker = ref(false);
+        let _birthdayPicker = null;
         const authUser = ref(null);
         const authEmail = ref('');
         const authPassword = ref('');
@@ -494,6 +496,35 @@ createApp({
         const _authErrorMessage = (error) =>
             error && error.message ? error.message : 'Authentication failed.';
 
+        const toggleBirthdayPicker = () => {
+            showBirthdayPicker.value = !showBirthdayPicker.value;
+            if (showBirthdayPicker.value && _birthdayPicker) {
+                // Show container first, then set value (per CLAUDE.md picker rule)
+                nextTick(() => {
+                    if (!_birthdayPicker) return;
+                    let y = 1995, m = 1, d = 1;
+                    if (userProfile.value.birthdayTs) {
+                        const dt = new Date(userProfile.value.birthdayTs);
+                        y = dt.getFullYear(); m = dt.getMonth() + 1; d = dt.getDate();
+                    } else if (/^\d{4}-\d{2}-\d{2}$/.test(userProfile.value.birthday)) {
+                        [y, m, d] = userProfile.value.birthday.split('-').map(Number);
+                    }
+                    _birthdayPicker.setValue(y, m, d);
+                });
+            }
+        };
+
+        const confirmBirthdayPicker = () => {
+            if (!_birthdayPicker) return;
+            const val = _birthdayPicker.getValue();
+            userProfile.value = {
+                ...userProfile.value,
+                birthday: val.iso,
+                birthdayTs: new Date(val.iso + 'T00:00:00').getTime(),
+            };
+            showBirthdayPicker.value = false;
+        };
+
         const saveUserProfile = () => {
             try {
                 if (typeof LapisUserProfile === 'undefined') throw new Error('Profile storage is not available.');
@@ -577,6 +608,21 @@ createApp({
                     authUser.value = AuthProvider.getUser();
                 }
             }
+
+            // Birthday picker init
+            if (typeof LapisDatePicker !== 'undefined') {
+                const bpEl = document.getElementById('birthday-picker');
+                if (bpEl) {
+                    let y = 1995, m = 1, d = 1;
+                    if (userProfile.value.birthdayTs) {
+                        const dt = new Date(userProfile.value.birthdayTs);
+                        y = dt.getFullYear(); m = dt.getMonth() + 1; d = dt.getDate();
+                    } else if (/^\d{4}-\d{2}-\d{2}$/.test(userProfile.value.birthday)) {
+                        [y, m, d] = userProfile.value.birthday.split('-').map(Number);
+                    }
+                    _birthdayPicker = new LapisDatePicker(bpEl, { year: y, month: m, day: d });
+                }
+            }
         });
 
         onUnmounted(() => {
@@ -598,6 +644,7 @@ createApp({
             dataIoTypes: dataIoLocalizedTypes, dataIoCurrentInfo,
             dataIoMessage, dataIoError,
             userProfile, saveUserProfile, profileMessage,
+            showBirthdayPicker, toggleBirthdayPicker, confirmBirthdayPicker,
             authUser, authEmail, authPassword, authMessage, authError,
             loginWithGoogle, loginWithEmail, signupWithEmail, logoutAuth,
             i18nT,
